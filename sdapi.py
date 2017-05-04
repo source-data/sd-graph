@@ -45,9 +45,9 @@ class Util():
                 
     @staticmethod
     def quote4neo(attributes):
-        quotes_added = {k:'"{}"'.format(v.encode('utf-8').replace("'",r"\'").replace('"',r'\"')) if isinstance(v, basestring) else v for k,v in attributes.items()}
+        quotes_added = {k:'"{}"'.format(Util.unescape(v.encode('utf-8').replace("'",r"\'").replace('"',r'\"'))) if isinstance(v, basestring) else v for k,v in attributes.items()}
         #include some cleanup of HTML entities eg &nbsp;
-        properties = ','.join(["{}:{}".format(k,Utils.unescape(v)) for (k,v) in quotes_added.items()])
+        properties = ','.join(["{}:{}".format(k,v) for (k,v) in quotes_added.items()])
         return properties
         
 
