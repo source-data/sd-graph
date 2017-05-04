@@ -11,8 +11,8 @@ GET_ARTICLE = "paper/"
 GET_FIGURE  = "figure/"
 GET_PANEL   = "panel/"
 
-USER = "lemberger"
-PASS = "ONuYev3ydK9L"
+USER = ""
+PASS = ""
 
 #temporary hack: dictionary of collections
 COLLECTIONS = {'EMBOpress_EMBOR': 99, 'EMBOpress_EMBOJ': 98, 'EMBOpress_EMM': 103, 'EMBOJ_2015': 107, 'PUBLICSEARCH': 97, 'goettingen':124, '_NPG':80, '_OpenAccess':93}

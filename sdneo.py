@@ -3,10 +3,6 @@ import sys
 import argparse
 from neo4jrestclient.client import GraphDatabase, Node, Relationship
 
-#Amazon: http://34.202.28.116:7474/db/data
-#password = the project on amazon...
-#passwrod = classic publishing on local
-
 DEBUG_MODE = False
 
 class SD_neo():
