@@ -3,20 +3,21 @@
 We provide here the scripts required to build the SourceData sd-graph database in neo4j and examples of analyses. 
 When refering to SourceData, please cite the following paper:
 
-1. Install the neo4j database according to the instructions provided at http://neo4j.com
+Install the neo4j database according to the instructions provided at http://neo4j.com
 (the scripts were tested under neo4j 2.2)
-2. To download the content of the SourceData database through the SourceData API and populate the neo4j database, run this command:
+
+To download the content of the SourceData database through the SourceData API and populate the neo4j database, run this command:
 
     python sdneo.py --password <your_password_to_your_neo4j_instance> PUBLICSEARCH
   
-3. Next, build the relationships to create the sd-graph model:
+Next, build the relationships to create the sd-graph model:
 
     neo4j-shell -file SD-constraints.cql
     neo4j-shell -file SD-processing.cql
 
 This will create the following model:
 
-4. Now, we need to create a protein to gene mapping. First, go in the neo4j client in your browser and run this CYPHER command:
+Now, we need to create a protein to gene mapping. First, go in the neo4j client in your browser and run this CYPHER command:
 
     MATCH (t:Tag)
     WHERE t.type = "protein" AND t.ext_id <> ""
@@ -26,7 +27,7 @@ This will create the following model:
 
 Save the results as csv to a `export.csv` file. Go to http://www.uniprot.org/uploadlists/ and generate a `UniProtKB AC/ID` to `GeneID (Entrez Gene)` mapping `protein2gene.tab` file.
 
-5. The final step is to upload this file and build the protein to gene mapping run
+The final step is to upload this file and build the protein to gene mapping run
 
     neo4j-shell SD-protein2gene.cql
  
