@@ -12,6 +12,14 @@ We provide here instructions to build the SourceData sd-graph database in [neo4j
 Install the neo4j database according to the instructions provided at http://neo4j.com
 Note: these scripts were tested under neo4j 2.2.
 
+Install the [Neo4j Python REST Client](https://pypi.python.org/pypi/neo4jrestclient/) with
+
+    pip install neo4jrestclient
+    
+or
+
+	easy_install neo4jrestclient 
+
 To download the content of the SourceData database through the SourceData API and populate the neo4j database, run this command:
 
     python sdneo.py --password <your_password_to_your_neo4j_instance> PUBLICSEARCH
