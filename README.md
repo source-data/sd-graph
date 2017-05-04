@@ -1,7 +1,7 @@
 # sd-graph
 [Source Data](http://sourcedata.embo.org) is a platform built by [EMBO](embo.org) in collaboration with (SIB)[http://vital-it.sib.ch] to make papers and datasets discoverable based on the experiments show in figures.
 
-When refering to SourceData, please cite the following paper:
+When refering to SourceData, please cite the following preprint:
 
 > __SourceData - a semantic platform for curating and searching figures.__  
 > Robin Liechti, Nancy George, Sara El-Gebali, Lou Götz, Isaac Crespo, Ioannis Xenarios, Thomas Lemberger.  
