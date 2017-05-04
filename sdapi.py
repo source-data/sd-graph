@@ -5,10 +5,8 @@ from neo4jrestclient.client import GraphDatabase,Node,Relationship
 
 REST_API    = "http://sourcedata.vital-it.ch/public/php/api/index.php/"
 
-SELECT_COLLECTION = "collection/"
-#GET_LIST_BY_COLLECTION = "collection/"
-GET_LIST_BY_COLLECTION = "papersByCollection/"
-GET_LIST    = "papers/"
+GET_COLLECTION = "collection/"
+GET_LIST    = "papers"
 GET_ARTICLE = "paper/"
 GET_FIGURE  = "figure/"
 GET_PANEL   = "panel/"
@@ -102,23 +100,33 @@ class SD_item(object):
 
 class SD_collection(SD_item):
 
+    def _set_id(self):
+        self.id = self.data[0]['collection_id']
+        
+    def _set_name(self):
+        self.name = self.data[0]['name']
+    
+    def __init__(self, url):
+        super(SD_collection, self).__init__(url)
+        self._set_id()
+        self._set_name()
+
+class SD_article_list(SD_item):
+
     def _set_doi_list(self):
-        #self.doi_list = [a['doi'] for a in self.data if self.name in a['collections'] and a['doi'] is not None]
         self.doi_list = [a['doi'] for a in self.data]
         
     def _set_title_list(self):
-        #self.title_list = [a['title'] for a in self.data if self.name in a['collections'] and a['title'] is not None]
         self.title_list = [a['title'] for a in self.data]
         
     def _set_title_doi_dictionary(self):
-        #self.title_doi_dictionary = {a['id']:{"title":a['title'], "doi":a['doi']} for a in self.data if self.name in a['collections']}
-        self.title_doi_dictionary = {a['paper_id']:{"title":a['title'], "doi":a['doi']} for a in self.data}
+        self.title_doi_dictionary = {a['id']:{"title":a['title'], "doi":a['doi']} for a in self.data}
     
     def item_print(self):
         ", ".join([doi for doi in self.doi_list])
     
     def __init__(self, url):
-        super(SD_collection, self).__init__(url)
+        super(SD_article_list, self).__init__(url)
         self.doi_list = []
         self._set_doi_list()
         self._set_title_list()
@@ -350,24 +358,28 @@ class SD_tag(SD_item):
 class SDAPI():  
     @staticmethod
     def request_collection(name ="PUBLICSEARCH"):
-        url = REST_API+ GET_LIST_BY_COLLECTION + name
+        url = REST_API+ GET_COLLECTION + name
+        print url
         collection = SD_collection(url)
-        #HACK: using internal global COLLECTIONS table until proper collection/ methods in REST API
-        return {"name":name, "id": COLLECTIONS[name], "doi_list":collection.doi_list, "title_list":collection.title_list, "title_doi_dictionary": collection.title_doi_dictionary}
+        return collection
+    
+    @staticmethod
+    def request_article_list(collection_id):
+        url = REST_API+ GET_COLLECTION + collection_id + "/" + GET_LIST
+        print url
+        article_list = SD_article_list(url)
+        return article_list
     
     @staticmethod
     def request_article(doi, collection_id):
-        #DANGER need now collection id list
-        #/collection/{collection_id}/paper/{doi}
-        #url = REST_API+collection_id+GET_ARTICLE+doi
-        url = REST_API + SELECT_COLLECTION + str(collection_id) +"/" + GET_ARTICLE+doi
+        url = REST_API + GET_COLLECTION + collection_id + "/" + GET_ARTICLE+doi
         print url
         article = SD_article(url)
         return article
             
     @staticmethod
     def request_figure(doi, collection_id, figure_order=1):
-        url = REST_API + SELECT_COLLECTION + str(collection_id) +"/" + GET_ARTICLE + doi + "/" + GET_FIGURE + str(figure_order)
+        url = REST_API + GET_COLLECTION + collection_id +"/" + GET_ARTICLE + doi + "/" + GET_FIGURE + str(figure_order)
         print url
         figure = SD_figure(url)
         return figure

@@ -16,28 +16,30 @@ class SD_neo():
         N = 0
         skipped = 0
         collection = SDAPI.request_collection(name=name)
-        doi_list = collection['doi_list']
+        collection_id = collection.id
+        article_list = SDAPI.request_article_list(collection_id)
+        doi_list = article_list.doi_list
         total = str(len(doi_list))
-        print "collection " + str(collection['id']) + " contains " + total + " papers with a DOI."   
+        print "collection " + collection_id + " contains " + total + " papers with a DOI."   
         for doi in doi_list:
            if not doi:
                print "Skipping empty doi"
                skipped+=1
            else:
                print "Trying paper {}".format(doi)
-               a = SDAPI.request_article(doi, collection['id'])
+               a = SDAPI.request_article(doi, collection_id)
                if not a.data:
                    print "no data in " + doi
                else:
                    #problem if article already exists
                    try:
-                       article_node = a.node(DB, collection['name'])
+                       article_node = a.node(DB, collection.name)
                        N+=1
                        print doi +" has " + str(a.nb_figures) + " figures"
                        for i in range(1, a.nb_figures+1):
-                          f = SDAPI.request_figure(doi, collection['id'], figure_order=i)
+                          f = SDAPI.request_figure(doi, collection_id, figure_order=i)
                           if f.data:
-                              figure_node = f.node(DB, collection['name'])
+                              figure_node = f.node(DB, collection.name)
                               if f.data:
                                   article_node.relationships.create("has_figure", figure_node)
                                   N+=1
@@ -47,7 +49,7 @@ class SD_neo():
                                          print "    Trying panel {}".format(panel_id)
                                          p = SDAPI.request_panel(panel_id)
                                          if p.data:  
-                                             panel_node = p.node(DB, collection['name'])
+                                             panel_node = p.node(DB, collection.name)
                                              figure_node.relationships.create("has_panel", panel_node)
                                              N+=1
                  
@@ -55,7 +57,7 @@ class SD_neo():
                                          
                                                  for t in p.tags[category]:
                                                      #print "cypher: ", t._cypher_create()
-                                                     tag_node = t.node(DB, collection['name'])
+                                                     tag_node = t.node(DB, collection.name)
                                                      panel_node.relationships.create("has_tag", tag_node)
                                                      N+=1
                    except Exception as e:
