@@ -10,6 +10,7 @@ When refering to SourceData, please cite the following preprint:
 We provide here instructions to build the SourceData sd-graph database in [neo4j](http://neo4j.com) and examples of analyses:
 
 Install the neo4j database according to the instructions provided at http://neo4j.com
+
 Note: these scripts were tested under neo4j 2.2 (https://neo4j.com/download/other-releases/).
 
 Install the [Neo4j Python REST Client](https://pypi.python.org/pypi/neo4jrestclient/) with
