@@ -161,10 +161,6 @@ SKIP 0 LIMIT 100;
 //Tested
 
 //drug-->protein<-->gene-->subcellular structure
-//need prioritization
-//can it be used to prioritize combinations affecting same phenotype?
-//for example fix target and aggregate h2
-//check for bacteria as target eg tuberculosis
 MATCH
    (small_mol:H_Entity {type:"molecule"})-->(h1:Hypothesis)-->(protein:H_Entity {type:"protein"}),
    (gene)-[:gene2protein]->(protein),
