@@ -23,7 +23,7 @@ Next, build the relationships to create the sd-graph model:
 
 This will create the following model:
 
-![data model](sd-graph/blob/master/sd-graph-data-model.png) 
+![data model](sd-graph-data-model.png) 
 
 Now, we need to create a protein to gene mapping. First, go in the neo4j client in your browser and run this CYPHER command:
 
