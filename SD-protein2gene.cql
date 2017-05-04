@@ -8,7 +8,7 @@
 //UNWIND ids as id
 //RETURN DISTINCT id
 //save to export.csv
-//upload expoert.csv at http://www.uniprot.org/uploadlists/ to generate a "UniProtKB AC/ID" to "GeneID (Entrez Gene)" mapping protein2gene.tab file
+//upload expert.csv at http://www.uniprot.org/uploadlists/ to generate a "UniProtKB AC/ID" to "GeneID (Entrez Gene)" mapping protein2gene.tab file
 //run this in neo4j-shell or browser
 LOAD CSV WITH HEADERS FROM "file:///Users/lemberger/Documents/code/sd/sd_graph/protein2gene.tab" AS csvLine FIELDTERMINATOR "\t"
 CREATE (m:Map {uniprot: csvLine.From, gene: csvLine.To})
