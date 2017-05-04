@@ -33,7 +33,7 @@ Now, we need to create a protein to gene mapping. First, go in the neo4j client 
 
 Save the results as csv to a `export.csv` file. Go to http://www.uniprot.org/uploadlists/ and generate a `UniProtKB AC/ID` to `GeneID (Entrez Gene)` mapping `protein2gene.tab` file.
 
-The final step is to upload this file and build the protein to gene mapping run
+Update `SD-protein2gene.cql` with the absolute path of the `protein2gene.tab` file and build the protein-to-gene mapping with
 
     neo4j-shell -file SD-protein2gene.cql
  
