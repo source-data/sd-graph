@@ -7,39 +7,39 @@ MATCH (a:Article)
 WITH a
 MATCH (a:Article)-[fr]->(f:Figure)
 WITH
-	a,f,
-	fr
+    a,f,
+    fr
 MATCH (f:Figure)-[pr]->(p:Panel)
 WITH
-	a,f,p,
-	fr,pr
+    a,f,p,
+    fr,pr
 MATCH 
-	(p)-[tr1]->(t1:Tag),(p)-[tr2]->(t2:Tag),
-	(p)-[tr3]->(t3:Tag)
+    (p)-[tr1]->(t1:Tag),(p)-[tr2]->(t2:Tag),
+    (p)-[tr3]->(t3:Tag)
 WITH 
-	a,f,p,t1,t2,t3,
-	fr,pr,tr1,tr2,tr3 
+    a,f,p,t1,t2,t3,
+    fr,pr,tr1,tr2,tr3 
 MATCH 
-	(t1)-[ctr1]->(ct1:CondTag),
-	(t2)-[ctr2]->(ct1:CondTag),
-	(t3)-[ctr3]->(ct2:CondTag)
+    (t1)-[ctr1]->(ct1:CondTag),
+    (t2)-[ctr2]->(ct1:CondTag),
+    (t3)-[ctr3]->(ct2:CondTag)
 WHERE ct1.role="assayed" AND ct2.role="intervention" AND ct2.type = "gene"
 WITH 
-	a,f,p,t1,t2,t3,ct1,ct2,
-	fr,pr,tr1,tr2,tr3,ctr1,ctr2,ctr3
+    a,f,p,t1,t2,t3,ct1,ct2,
+    fr,pr,tr1,tr2,tr3,ctr1,ctr2,ctr3
 MATCH 
-	(ct1)-[er1:Identified_by]->(e1:H_Entity),
-	(ct2)-[er2:Identified_by]->(e2:H_Entity)
+    (ct1)-[er1:Identified_by]->(e1:H_Entity),
+    (ct2)-[er2:Identified_by]->(e2:H_Entity)
 WHERE ct1.ext_id <>"" AND ct2.ext_id=""
 WITH 
-	a,f,p,t1,t2,t3,ct1,ct2,e1,e2,
-	fr,pr,tr1,tr2,tr3,ctr1,ctr2,ctr3,er1,er2 LIMIT 1
+    a,f,p,t1,t2,t3,ct1,ct2,e1,e2,
+    fr,pr,tr1,tr2,tr3,ctr1,ctr2,ctr3,er1,er2 LIMIT 1
 MATCH
    (e1)-[ert1:Has_text]->(te1:Term),
    (e2)-[ert2:Has_text]->(te2:Term)
 RETURN
- 	a,f,p,t1,t2,t3,ct1,ct2,e1,e2,te1,te2,
-	fr,pr,tr1,tr2,tr3,ctr1,ctr2,ctr3,er1,er2,ert1,ert2;
+    a,f,p,t1,t2,t3,ct1,ct2,e1,e2,te1,te2,
+    fr,pr,tr1,tr2,tr3,ctr1,ctr2,ctr3,er1,er2,ert1,ert2;
 //Tested
 
 //////////GLOBAL STATS/////////////////
@@ -75,7 +75,7 @@ MATCH (tag:Tag {type:"organism"}) RETURN DISTINCT lower(tag.text) AS organism, C
 MATCH (tag:Tag {type:"undefined"}) RETURN DISTINCT lower(tag.text) AS undefine, COUNT(tag) AS n ORDER BY n DESC;
 //Tested
 
-//p(intervention | small_molecule) = p(small_molecule | intervention) * p(intervention) / p(small_molecule)
+//p(role|type) = p(type|role) * p(role) / p(type)
 MATCH (tags:Tag)
 WHERE tags.role <> "" AND tags.type <> ""
 WITH COUNT(tags) AS N
@@ -107,14 +107,14 @@ RETURN role, type, `p(role | type)`, `p(role)`,`p(type | role)`,`p(type)`;
 //master regulator --> many intermediate genes or proteins <--> proteins --> common target
 //requires gene2protein mapping
 MATCH 
-	(mr:H_Entity)-[divergent_H:Tested]->(intermediate1:H_Entity),
+    (mr:H_Entity)-[divergent_H:Tested]->(intermediate1:H_Entity),
     (intermediate2:H_Entity)-[convergent_H:Tested]->(target:H_Entity),
     (intermediate2)-[:gene2protein]->(intermediate1),
     (mr)-->(mrte:Term), (target)-->(targette:Term)
 
 WHERE 
     mr.scale = 2 AND target.scale >= mr.scale AND
-	mr <> intermediate1 AND mr <> target AND target<>intermediate2 AND
+    mr <> intermediate1 AND mr <> target AND target<>intermediate2 AND
     mr <> intermediate2 AND target <> intermediate1 AND
     (intermediate1.type = "gene" OR intermediate1.type = "protein") AND
     (intermediate2.type = "gene" OR intermediate2.type = "protein") AND
@@ -123,12 +123,12 @@ WHERE
     AND lower(targette.text) =~ ".*autophag.*" 
 
 WITH 
-	mr, target, 
+    mr, target, 
     COLLECT(DISTINCT mrte)[0] AS mr_tag, COLLECT(DISTINCT targette)[0] AS target_tag,
-	COLLECT(DISTINCT intermediate1) + COLLECT(DISTINCT intermediate2) AS intermediates,
+    COLLECT(DISTINCT intermediate1) + COLLECT(DISTINCT intermediate2) AS intermediates,
     COLLECT(DISTINCT divergent_H) AS divergent_Hs,
     COLLECT(DISTINCT convergent_H) AS convergent_Hs,
-	COUNT(DISTINCT intermediate1) AS N //this is metric to be maximized
+    COUNT(DISTINCT intermediate1) AS N //this is metric to be maximized
 
 OPTIONAL MATCH
     (mr)-[divergent_H_direct:Tested]->(direct:H_Entity)-[convergent_H_direct:Tested]->(target)
