@@ -35,7 +35,7 @@ Save the results as csv to a `export.csv` file. Go to http://www.uniprot.org/upl
 
 The final step is to upload this file and build the protein to gene mapping run
 
-    neo4j-shell SD-protein2gene.cql
+    neo4j-shell -file SD-protein2gene.cql
  
 Et voilà!
 
