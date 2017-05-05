@@ -9,9 +9,21 @@ When refering to SourceData, please cite the following preprint:
 
 We provide here instructions to build the SourceData sd-graph database in [neo4j](http://neo4j.com) and examples of analyses:
 
-Install the neo4j database according to the instructions provided at http://neo4j.com
+Install and start the neo4j database according to the instructions provided at http://neo4j.com. __IMPORTANT: To be able to run the commands below with the neo4j-tool, please download the [TAR/ZIP distributions](https://neo4j.com/download/community-edition/).__ The scripts below were tested under neo4j community edition 2.2 and 3.1.4.
 
-Note: these scripts were tested under neo4j 2.2 (https://neo4j.com/download/other-releases/).
+To enable the use of the `neo4j-shell` tool, uncomment this line in `neo4j/conf/neo4j.conf`:
+
+    # Enable a remote shell server which Neo4j Shell clients can log in to.
+    dbms.shell.enabled=true
+    
+If you run into trouble due to insufficient memory for Java, you may have to edit `neo4j/conf/neo4j.conf` and increase the Java heap size:
+
+    # Java Heap Size: by default the Java heap size is dynamically
+    # calculated based on available system resources.
+    # Uncomment these lines to set specific initial and maximum
+    # heap size.
+    #dbms.memory.heap.initial_size=512m
+    #dbms.memory.heap.max_size=512m
 
 Install the [Neo4j Python REST Client](https://pypi.python.org/pypi/neo4jrestclient/) with
 
@@ -21,7 +33,7 @@ or
 
 	easy_install neo4jrestclient 
 
-To download the content of the SourceData database through the SourceData API and populate the neo4j database, run this command:
+Download the content of the SourceData database through the SourceData API and populate the neo4j database:
 
     python sdneo.py --password <your_password_to_your_neo4j_instance> PUBLICSEARCH
   
@@ -30,11 +42,11 @@ Next, build the relationships to create the sd-graph model:
     neo4j-shell -file SD-constraints.cql
     neo4j-shell -file SD-processing.cql
 
-This will create the following model:
+This will create the following model, linking papers, figures, panels, tags and biological entities:
 
 ![data model](sd-graph-data-model.png) 
 
-Now, we need to create a protein to gene mapping. First, go in the neo4j client in your browser and run this CYPHER command:
+As a last step, we create a protein to gene mapping. First, go in the neo4j client in your browser and run this CYPHER command to extract all the Uniprot identifiers:
 
     MATCH (t:Tag)
     WHERE t.type = "protein" AND t.ext_id <> ""
@@ -44,10 +56,10 @@ Now, we need to create a protein to gene mapping. First, go in the neo4j client 
 
 Save the results as csv to a `export.csv` file. Go to http://www.uniprot.org/uploadlists/ and generate a `UniProtKB AC/ID` to `GeneID (Entrez Gene)` mapping `protein2gene.tab` file.
 
-Update `SD-protein2gene.cql` with the absolute path of the `protein2gene.tab` file and build the protein-to-gene mapping with
+Move the `protein2gene.tab` into the `neo4j/import/` directory (this is set in `neo4j.conf` as the default directory for importing files) and build the protein-to-gene mapping with
 
     neo4j-shell -file SD-protein2gene.cql
  
 Et voilà!
 
-The database is now ready and the examples provided in SD-scripts can then be run directly in the neo4j client.
+The database is now ready and the examples provided in SD-scripts can then be run directly in the neo4j browser client.
