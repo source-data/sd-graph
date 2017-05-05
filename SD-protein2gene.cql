@@ -15,7 +15,7 @@
 //UPDATE FILE PATH!!!
 //
 
-LOAD CSV WITH HEADERS FROM "file:///<absolute>/<path>/<to>/sd-graph/protein2gene.tab" AS csvLine FIELDTERMINATOR "\t"
+LOAD CSV WITH HEADERS FROM "file:///protein2gene.tab" AS csvLine FIELDTERMINATOR "\t"
 CREATE (m:Map {uniprot: csvLine.From, gene: csvLine.To})
 RETURN COUNT(m) AS `mapped uniprot to gene ids`;
 
