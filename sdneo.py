@@ -3,7 +3,6 @@ import sys
 import argparse
 from neo4jrestclient.client import GraphDatabase, Node, Relationship
 
-DEBUG_MODE = False
 
 class SD_neo():
 
@@ -52,7 +51,6 @@ class SD_neo():
                                              for category in ['assay', 'entities', 'time', 'physical']:
                                          
                                                  for t in p.tags[category]:
-                                                     #print "cypher: ", t._cypher_create()
                                                      tag_node = t.node(DB, collection.name)
                                                      panel_node.relationships.create("has_tag", tag_node)
                                                      N+=1
