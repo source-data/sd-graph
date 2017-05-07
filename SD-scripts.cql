@@ -1,5 +1,9 @@
 //////////////////////////////
-//©     Thomas Lemberger    //
+//      Thomas Lemberger    //
+//////////////////////////////
+
+
+
 //////////////DEMO////////////
 
 //demo data model
@@ -44,25 +48,27 @@ RETURN
 
 //////////GLOBAL STATS/////////////////
 
+//global database statistics
+MATCH (n)
+RETURN labels(n), COUNT(n)
+
 //statistics by entity type
-MATCH (tag:Tag)
-WHERE tag.type<>""
-WITH collect(DISTINCT(tag.type)) AS types
-UNWIND types AS type
 MATCH (t:Tag)
-WHERE t.type = type
-RETURN  type, COUNT(t) AS tags, COUNT(DISTINCT(t.text)) AS terms, COUNT(DISTINCT(t.ext_id)) AS ids ORDER BY tags DESC;
-//Tested
+WHERE t.type<>""
+RETURN  DISTINCT t.type AS type, COUNT(t) AS tags, COUNT(DISTINCT(t.text)) AS terms, COUNT(DISTINCT(t.ext_id)) AS ids 
+ORDER BY tags DESC;
 
 //statistics by entitiy role
-MATCH (t:Tag) 
-WHERE t.role<>""
-WITH collect(DISTINCT t.role) AS roles
-UNWIND roles AS role
 MATCH (t:Tag)
-WHERE t.role = role
-RETURN  role, COUNT(t) AS tags, COUNT(DISTINCT(t.text)) AS terms, COUNT(DISTINCT(t.ext_id)) AS ids ORDER BY tags DESC;
-//Test
+WHERE t.role <> ""
+RETURN  DISTINCT t.role AS role, COUNT(t) AS tags, COUNT(DISTINCT(t.text)) AS terms, COUNT(DISTINCT(t.ext_id)) AS ids 
+ORDER BY tags DESC;
+
+//statistics by role and type
+MATCH (t:Tag)
+WHERE t.type <> "" and t.role <> ""
+WITH DISTINCT t.type AS type, t.role AS role, COUNT(DISTINCT t) AS N
+RETURN type,reduce(s="",r in collect(role+":"+toString(N)) | s+r+" | ") AS list
 
 //most frequent tags by type
 MATCH (tag:Tag {type:"molecule"}) RETURN DISTINCT lower(tag.text) AS small_mol, COUNT(tag) AS n ORDER BY n DESC;
@@ -73,7 +79,6 @@ MATCH (tag:Tag {type:"cell"}) RETURN DISTINCT lower(tag.text) AS cell_type, COUN
 MATCH (tag:Tag {type:"tissue"}) RETURN DISTINCT lower(tag.text) AS tissues, COUNT(tag) AS n ORDER BY n DESC;
 MATCH (tag:Tag {type:"organism"}) RETURN DISTINCT lower(tag.text) AS organism, COUNT(tag) AS n ORDER BY n DESC;
 MATCH (tag:Tag {type:"undefined"}) RETURN DISTINCT lower(tag.text) AS undefine, COUNT(tag) AS n ORDER BY n DESC;
-//Tested
 
 //p(role|type) = p(type|role) * p(role) / p(type)
 MATCH (tags:Tag)
@@ -98,12 +103,24 @@ WITH
 role, type, 
 `p(role)` * `p(type | role)` / `p(type)` AS `p(role | type)`, `p(role)`,`p(type | role)`,`p(type)`
 RETURN role, type, `p(role | type)`, `p(role)`,`p(type | role)`,`p(type)`;
-//Tested
+
+//fraction of panels with at least one intervention assayed pair
+MATCH (p:Panel)
+WITH COUNT(p) AS N
+MATCH (intervention:Tag {role:"intervention"})<--(p:Panel)-->(assayed:Tag {role:"assayed"})
+WITH COUNT(DISTINCT p) AS n,N
+RETURN N as `total number of panels`, n AS `panel with hypothesis test`, tostring(ROUND(100*n/N)+"%") AS `fraction`
+
+//fraction of tags included in the text of the caption
+MATCH (in_caption:Tag {in_caption:true})
+WITH COUNT(DISTINCT in_caption) AS c
+MATCH (floating:Tag {in_caption:false}) 
+WITH c, COUNT(DISTINCT floating) AS f
+RETURN c AS `in caption`, f AS `not in caption`, toString(ROUND(100*tofloat(c)/(c+f)))+"%" AS `%`
 
 ///////////HYPOTHESIS SEARCH/////////////////////
 
-
-//master regulator motif
+//'master regulator' motif
 //master regulator --> many intermediate genes or proteins <--> proteins --> common target
 //requires gene2protein mapping
 MATCH 
@@ -158,7 +175,6 @@ WHERE score > 5
 RETURN mr_tag, target_tag, score
 ORDER BY score DESC 
 SKIP 0 LIMIT 100;
-//Tested
 
 //drug-->protein<-->gene-->subcellular structure
 MATCH
@@ -186,8 +202,8 @@ RETURN DISTINCT
    protein, txt_protein,
    subcell, text_subcell,
    COLLECT(DISTINCT a1.doi) AS drug_papers,
-   COLLECT(DISTINCT a2.doi) AS phenotype_papers
-//Tested
+   COLLECT(DISTINCT a2.doi) AS phenotype_papers;
+   
    
    
    
