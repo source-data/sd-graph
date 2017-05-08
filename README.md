@@ -33,20 +33,23 @@ or
 
 	easy_install neo4jrestclient 
 
+Before populating the database, set some constraints:
+
+    neo4j-shell -file SD-constraints.cql
+    
 Download the content of the SourceData database through the SourceData API and populate the neo4j database:
 
     python sdneo.py --password <your_password_to_your_neo4j_instance> PUBLICSEARCH
   
 Next, build the relationships to create the sd-graph model:
 
-    neo4j-shell -file SD-constraints.cql
     neo4j-shell -file SD-processing.cql
 
 This will create the following model, linking papers, figures, panels, tags and biological entities:
 
 ![data model](sd-graph-data-model.png) 
 
-As a last step, we create a protein to gene mapping. First, go in the neo4j client in your browser and run this CYPHER command to extract all the Uniprot identifiers:
+As a last step, genes and proteins have to be mapped to each other. First, go in the neo4j client in your browser and run this CYPHER command to extract all the Uniprot identifiers:
 
     MATCH (t:Tag)
     WHERE t.type = "protein" AND t.ext_id <> ""
@@ -54,7 +57,7 @@ As a last step, we create a protein to gene mapping. First, go in the neo4j clie
     UNWIND ids as id
     RETURN DISTINCT id
 
-Save the results as csv to a `export.csv` file. Go to http://www.uniprot.org/uploadlists/ and generate a `UniProtKB AC/ID` to `GeneID (Entrez Gene)` mapping `protein2gene.tab` file.
+Save the results as csv file (for example to a `export.csv`). Go to http://www.uniprot.org/uploadlists/ and upload this file to generate a `UniProtKB AC/ID` to `GeneID (Entrez Gene)` mapping `protein2gene.tab` file.
 
 Move the `protein2gene.tab` into the `neo4j/import/` directory (this is set in `neo4j.conf` as the default directory for importing files) and build the protein-to-gene mapping with
 
