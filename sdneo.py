@@ -1,3 +1,4 @@
+#!/usr/bin/python
 from sdapi import SDAPI
 import sys
 import argparse
