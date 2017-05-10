@@ -1,4 +1,5 @@
-import requests, urllib
+import requests
+import argparse
 import sys
 import re
 from neo4jrestclient.client import GraphDatabase,Node,Relationship
@@ -90,7 +91,6 @@ class SD_item(object):
         return self.neo
           
     def __init__(self, url):
-
         data = Util.rest2data(url)
         self.data = data
 
@@ -107,6 +107,7 @@ class SD_collection(SD_item):
         super(SD_collection, self).__init__(url)
         self._set_id()
         self._set_name()
+
 
 class SD_article_list(SD_item):
 
@@ -389,35 +390,42 @@ class SDAPI():
 
 
 if __name__ == '__main__':
-    method = sys.argv[1]
-    id     = sys.argv[2]
-    if id is not None:
-        if method == 'collection':
-           a = SDAPI.request_collection(name=id)
-           d =a['title_doi_dictionary']
-           print a['name'], a['id']
-           for i in d:
-              print "\t".join([str(d[i]['doi']), re.sub("[\n\r]+"," ", d[i]['title'].encode('utf-8'))])
-           #a.item_print
-        
-        elif method == 'paper':
-            a = SDAPI.request_article(id)
-            a.item_print()
+    parser = argparse.ArgumentParser( description="interace to the SourceData API" )
+    parser.add_argument('-C', '--collection', default="", help="Takes the name of a collection (try \"PUBLICSEARCH\") nd returns the list of papers")
+    parser.add_argument('-D', '--doi', default = '', help="Takes a doi and return article information")
+    parser.add_argument('-F', '--figure', default = '1', help="Takes the figure index and returns the figure legend for the figure in the paper specified with the --doi option") 
+    parser.add_argument('-u', '--username', default='', help='username to connect to the SourceData API; not necessary for accessing the public collection PUBLICSEARCH')
+    parser.add_argument('-p', '--password', default='', help='password to connect to the SourceData API; not necessary for accessing the public collection PUBLICSEARCH')
+
+    args = parser.parse_args()
+
+    collection_name = args.collection
+    doi = args.doi
+    fig = args.figure
+    default_collection_id = SDAPI.request_collection("PUBLICSEARCH").id
+    
+    if collection_name:
+        c = SDAPI.request_collection(collection_name) 
+        article_list = SDAPI.request_article_list(c.id)
+        title_doi_dictionary = article_list.title_doi_dictionary
+        for id in title_doi_dictionary:
+            print title_doi_dictionary[id]['doi'], title_doi_dictionary[id]['title']
             
-        elif method == 'figure': 
-            fig_order = sys.argv[3]
-            if fig_order is not None:
-               f = SDAPI.request_figure(id, fig_order)
-               f.item_print()
-            else:
-               f = SDAPI.request_figure(id)
-               
-        elif method == 'panel':
-            p = SDAPI.request_panel(id)
-            print p.href
-            print "exp assay:", ", ".join([t.text for t in p.tags['assay']])
-            print "entities:", ", ".join([t.text+"("+"/".join(t.ext_dbs)+":"+"/".join(t.ext_ids)+") as "+t.role for t in p.tags['entities']])         
-        else:
-            print method, " not known"
-    else:
-        print "no id provided"  
+    if doi: 
+        article = SDAPI.request_article(doi, default_collection_id)
+        print 'doi:', article.doi
+        print 'title:', article.title
+        print 'journal:', article.journal
+        print 'year:', article.year
+        print 'pmid:', article.pmid
+        print 'number of figures:', article.nb_figures
+        
+    if fig:
+        figure = SDAPI.request_figure(doi, default_collection_id, fig)
+        print "label:", figure.label
+        print "caption:", figure.caption
+        print "url:", figure.href
+        print "panel ids:", "\t".join(figure.panels)
+        
+        
+         
