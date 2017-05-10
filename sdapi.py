@@ -393,15 +393,16 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser( description="interace to the SourceData API" )
     parser.add_argument('-C', '--collection', default="", help="Takes the name of a collection (try \"PUBLICSEARCH\") nd returns the list of papers")
     parser.add_argument('-D', '--doi', default = '', help="Takes a doi and return article information")
-    parser.add_argument('-F', '--figure', default = '1', help="Takes the figure index and returns the figure legend for the figure in the paper specified with the --doi option") 
+    parser.add_argument('-F', '--figure', default = '', help="Takes the figure index and returns the figure legend for the figure in the paper specified with the --doi option") 
+    parser.add_argument('-P', '--panel', default='', help="Takes the id of a panel and returns the tagged text of the legend")
     parser.add_argument('-u', '--username', default='', help='username to connect to the SourceData API; not necessary for accessing the public collection PUBLICSEARCH')
     parser.add_argument('-p', '--password', default='', help='password to connect to the SourceData API; not necessary for accessing the public collection PUBLICSEARCH')
-
     args = parser.parse_args()
 
     collection_name = args.collection
     doi = args.doi
     fig = args.figure
+    panel_id = args.panel
     default_collection_id = SDAPI.request_collection("PUBLICSEARCH").id
     
     if collection_name:
@@ -426,6 +427,12 @@ if __name__ == '__main__':
         print "caption:", figure.caption
         print "url:", figure.href
         print "panel ids:", "\t".join(figure.panels)
+        
+    if panel_id:
+        panel = SDAPI.request_panel(panel_id)
+        print "lbel:", panel.label
+        print "url:", panel.href
+        print "caption:", panel.caption
         
         
          
