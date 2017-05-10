@@ -114,7 +114,7 @@ RETURN c AS `in caption`, f AS `not in caption`, toString(ROUND(100*tofloat(c)/(
 
 ///////////HYPOTHESIS SEARCH/////////////////////
 
-//'master regulator' motif
+//convergent-divergent 'master regulator' motif
 //master regulator --> many intermediate genes or proteins <--> proteins --> common target
 //requires gene2protein mapping
 MATCH 
