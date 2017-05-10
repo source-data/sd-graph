@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import requests
 import argparse
 import sys
@@ -76,7 +77,9 @@ class Util():
         return re.sub("&#?\w+;", fixup, text)
 
 class SD_item(object):
-
+    
+    verbose = False
+    
     def item_print(self):
         for k in self.data: 
            print k,":", self.data[k]
@@ -91,6 +94,7 @@ class SD_item(object):
         return self.neo
           
     def __init__(self, url):
+        if self.verbose: print url
         data = Util.rest2data(url)
         self.data = data
 
@@ -241,6 +245,7 @@ class SD_panel(SD_item):
              tags = self.me['tags']
              for category in ['assay','time', 'physical']:
                  self.tags[category] = [SD_tag(t) for t in tags if t['category'] == category]
+             #by convention, entities are assigned an empty category attribute
              self.tags['entities'] = [SD_tag(t) for t in tags if t['category'] is None]
          else:
              for c in ['entities', 'assay','time', 'physical']: self.tags[c] = [] 
@@ -357,28 +362,24 @@ class SDAPI():
     @staticmethod
     def request_collection(name ="PUBLICSEARCH"):
         url = REST_API+ GET_COLLECTION + name
-        print url
         collection = SD_collection(url)
         return collection
     
     @staticmethod
     def request_article_list(collection_id):
         url = REST_API+ GET_COLLECTION + collection_id + "/" + GET_LIST
-        print url
         article_list = SD_article_list(url)
         return article_list
     
     @staticmethod
     def request_article(doi, collection_id):
         url = REST_API + GET_COLLECTION + collection_id + "/" + GET_ARTICLE+doi
-        print url
         article = SD_article(url)
         return article
             
     @staticmethod
     def request_figure(doi, collection_id, figure_order=1):
         url = REST_API + GET_COLLECTION + collection_id +"/" + GET_ARTICLE + doi + "/" + GET_FIGURE + str(figure_order)
-        print url
         figure = SD_figure(url)
         return figure
 
@@ -397,12 +398,16 @@ if __name__ == '__main__':
     parser.add_argument('-P', '--panel', default='', help="Takes the id of a panel and returns the tagged text of the legend")
     parser.add_argument('-u', '--username', default='', help='username to connect to the SourceData API; not necessary for accessing the public collection PUBLICSEARCH')
     parser.add_argument('-p', '--password', default='', help='password to connect to the SourceData API; not necessary for accessing the public collection PUBLICSEARCH')
+    parser.add_argument('-v', '--verbose', action='store_const', const=True, default=False , help='verbose mode')
+    
     args = parser.parse_args()
 
     collection_name = args.collection
     doi = args.doi
     fig = args.figure
     panel_id = args.panel
+    
+    SD_item.verbose = args.verbose
     default_collection_id = SDAPI.request_collection("PUBLICSEARCH").id
     
     if collection_name:
@@ -430,9 +435,13 @@ if __name__ == '__main__':
         
     if panel_id:
         panel = SDAPI.request_panel(panel_id)
-        print "lbel:", panel.label
+        print "label:", panel.label
         print "url:", panel.href
         print "caption:", panel.caption
+        for category in panel.tags:
+           print category
+           for t in panel.tags[category]:
+               print '"{}"[{}:{}] {} {}'.format(t.text,t.ext_dbs, t.ext_ids, t.role, t.type)
         
         
          
