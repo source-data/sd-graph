@@ -1,6 +1,5 @@
 #!/usr/bin/python
 from sdapi import SDAPI
-import sys
 import argparse
 from neo4jrestclient.client import GraphDatabase, Node, Relationship
 

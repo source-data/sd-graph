@@ -1,7 +1,6 @@
 #!/usr/bin/python
 import requests
 import argparse
-import sys
 import re
 from neo4jrestclient.client import GraphDatabase,Node,Relationship
 
