@@ -37,7 +37,7 @@ Before populating the database, set some constraints:
 
     neo4j-shell -file SD-constraints.cql
     
-Download the content of the SourceData database through the SourceData API and populate the neo4j database:
+Download the content of the SourceData database through the SourceData API and populate the neo4j database (Warning: this will take a while, so be patient...):
 
     python sdneo.py --password <your_password_to_your_neo4j_instance> PUBLICSEARCH
   
@@ -57,7 +57,7 @@ As a last step, genes and proteins have to be mapped to each other. First, go in
     UNWIND ids as id
     RETURN DISTINCT id
 
-Save the results as csv file (for example to a `export.csv`). Go to http://www.uniprot.org/uploadlists/ and upload this file to generate a `UniProtKB AC/ID` to `GeneID (Entrez Gene)` mapping `protein2gene.tab` file.
+Save the results as csv file (for example to a `export.csv`). Go to http://www.uniprot.org/uploadlists/ and upload this file to generate a `UniProtKB AC/ID` to `GeneID (Entrez Gene)` mapping `protein2gene.tab` file (select the "mapping table" format).
 
 Move the `protein2gene.tab` into the `neo4j/import/` directory (this is set in `neo4j.conf` as the default directory for importing files) and build the protein-to-gene mapping with
 
