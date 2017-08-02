@@ -19,7 +19,8 @@ class TestSDAPI(unittest.TestCase):
         self.default_collection_id)    
 
     def test_request_article_list(self):
-        self.assertEqual(len(SDAPI.request_article_list(self.default_collection_id).doi_list), 713)
+        #./sdapi.py --collection_id 97 | wc -l
+        self.assertEqual(len(SDAPI.request_article_list(self.default_collection_id).doi_list), 712)
         
     def test_request_article(self):
         #./sdapi.py --doi 10.15252/embj.201592559
