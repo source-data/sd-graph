@@ -33,6 +33,10 @@ or
 
 	easy_install neo4jrestclient 
 
+Don't forget to launch neo4j
+
+    neo4j start
+
 Before populating the database, set some constraints:
 
     neo4j-shell -file SD-constraints.cql
