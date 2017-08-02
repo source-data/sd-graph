@@ -392,6 +392,7 @@ class SDAPI():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser( description="interace to the SourceData API" )
     parser.add_argument('-C', '--collection', default="", help="Takes the name of a collection (try \"PUBLICSEARCH\") nd returns the list of papers")
+    parser.add_argument('-I', '--collection_id', default="", help="Takes the id of a collection (try \"97\") and returns the list of papers")
     parser.add_argument('-D', '--doi', default = '', help="Takes a doi and return article information")
     parser.add_argument('-F', '--figure', default = '', help="Takes the figure index and returns the figure legend for the figure in the paper specified with the --doi option") 
     parser.add_argument('-P', '--panel', default='', help="Takes the id of a panel and returns the tagged text of the legend")
@@ -402,6 +403,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     collection_name = args.collection
+    collection_id = args.collection_id
     doi = args.doi
     fig = args.figure
     panel_id = args.panel
@@ -415,6 +417,14 @@ if __name__ == '__main__':
         title_doi_dictionary = article_list.title_doi_dictionary
         for id in title_doi_dictionary:
             print title_doi_dictionary[id]['doi'], title_doi_dictionary[id]['title']
+            
+    if collection_id:
+        article_list = SDAPI.request_article_list(collection_id)
+        print len(article_list.doi_list), len(article_list.title_list), len(article_list.title_doi_dictionary)
+        counter = 1
+        for doi in article_list.doi_list:
+            print counter, doi
+            counter += 1
             
     if doi: 
         article = SDAPI.request_article(doi, default_collection_id)
