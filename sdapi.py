@@ -4,7 +4,7 @@ import argparse
 import re
 from neo4jrestclient.client import GraphDatabase,Node,Relationship
 
-REST_API    = "http://sourcedata.vital-it.ch/public/php/api/index.php/"
+REST_API    = "https://api.sourcedata.io/"
 
 GET_COLLECTION = "collection/"
 GET_LIST    = "papers"
