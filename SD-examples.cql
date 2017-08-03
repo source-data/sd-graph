@@ -117,6 +117,20 @@ RETURN c AS `in caption`, f AS `not in caption`, toString(ROUND(100*tofloat(c)/(
 //convergent-divergent 'master regulator' motif
 //master regulator --> many intermediate genes or proteins <--> proteins --> common target
 //requires gene2protein mapping
+// 
+// In this demo, we illustrate the search for network motifs. Consider a motif that 
+// includes a specific gene that was tested across multiple studies for its impact on 
+// multiple gene products which, in turn, have all been tested for their converging effect 
+// on a specific cellular structure or cell type. This kind of divergent-convergent motif 
+// might be expected for regulators of cellular processes, whereby a ‘master regulator’ 
+// controls a series of intermediate gene products which are all involved in regulating a 
+// given biological function (e.g. SREBP controlling several enzymes that are all involved 
+// in cholesterol biosynthesis). When such a query is run on our dataset using 
+// “mitochondria” as endpoint of the motif, it is able to prioritize known regulators of 
+// mitochondrial fission Drp1 and Fis1.  Similarly, when querying the system with 
+// “autophagosomes” as target, key regulators of autophagy such as Atg5, LC3 and beclin-1 
+// are prioritized.
+
 MATCH 
     (mr:H_Entity)-[divergent_H:Tested]->(intermediate1:H_Entity),
     (intermediate2:H_Entity)-[convergent_H:Tested]->(target:H_Entity),
@@ -171,6 +185,14 @@ ORDER BY score DESC
 SKIP 0 LIMIT 100;
 
 //drug-->protein<-->gene-->subcellular structure
+//In this demo, we search whether a given entity X was tested for its effect on a gene 
+// product Y which was in turn tested for its effect on larger biological structure Z. For 
+// example, using infliximab, a TNF-α inhibitor, as starting point of the query (X), the 
+// system can identify experiments testing the effect of this drug on Amyloid ß (Y) and 
+// the effect of presenilin on dendrites or axons (Z), thus providing a set of articles 
+// and data delineating a potential mechanistic path (X-->Y-->Z) from the small molecule 
+// to a cellular structure. 
+
 MATCH
    (small_mol:H_Entity {type:"molecule"})-->(h1:Hypothesis)-->(protein:H_Entity {type:"protein"}),
    (gene)-[:gene2protein]->(protein),
