@@ -2,6 +2,7 @@
 import requests
 import argparse
 import re
+import htmlentitydefs
 from neo4jrestclient.client import GraphDatabase,Node,Relationship
 
 REST_API    = "https://api.sourcedata.io/"
