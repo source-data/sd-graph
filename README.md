@@ -1,11 +1,11 @@
 # sd-graph
 [Source Data](http://sourcedata.embo.org) is a platform built by [EMBO](embo.org) in collaboration with [Vital-IT](https://www.vital-it.ch/) to make papers and datasets discoverable based on the experiments show in figures.
 
-When refering to SourceData, please cite the following preprint:
+When refering to SourceData, please cite the following paper:
 
 > __SourceData - a semantic platform for curating and searching figures.__  
-> Robin Liechti, Nancy George, Sara El-Gebali, Lou Götz, Isaac Crespo, Ioannis Xenarios, Thomas Lemberger.  
-> _BioRxiv_  (2016), doi: https://doi.org/10.1101/058529  
+> Liechti R, George N, Götz L, El-Gebali S, Chasapi A, Crespo I, Xenarios I, Lemberger T. (2017) 
+> _Nature Methods_
 
 We provide here instructions to build the SourceData sd-graph database in [neo4j](http://neo4j.com) and examples of analyses.
 
@@ -15,7 +15,7 @@ Install neo4j according to the instructions provided at http://neo4j.com. __IMPO
 
 Unzip `graph.db.zip` in the `neo4j/data/databases/` directory.
 
-Start neo4j
+Start neo4j with:
 
     neo4j start
 
