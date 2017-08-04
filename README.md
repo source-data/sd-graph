@@ -7,9 +7,21 @@ When refering to SourceData, please cite the following preprint:
 > Robin Liechti, Nancy George, Sara El-Gebali, Lou Götz, Isaac Crespo, Ioannis Xenarios, Thomas Lemberger.  
 > _BioRxiv_  (2016), doi: https://doi.org/10.1101/058529  
 
-We provide here instructions to build the SourceData sd-graph database in [neo4j](http://neo4j.com) and examples of analyses:
+We provide here instructions to build the SourceData sd-graph database in [neo4j](http://neo4j.com) and examples of analyses.
+
+## Easy install
 
 Install and start the neo4j database according to the instructions provided at http://neo4j.com. __IMPORTANT: To be able to run the commands below with the neo4j-tool, please download the [TAR/ZIP distributions](https://neo4j.com/download/community-edition/).__ The scripts below were tested under neo4j community edition 2.2 and 3.1.4.
+
+Unzip `graph.db.zip` in the `neo4j/data/databases/` directory.
+
+Start neo4j
+
+    neo4j start
+
+That's it.
+
+## Build the database from the SourceData API
 
 To enable the use of the `neo4j-shell` tool, uncomment this line in `neo4j/conf/neo4j.conf`:
 
