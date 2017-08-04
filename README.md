@@ -4,8 +4,8 @@
 When refering to SourceData, please cite the following paper:
 
 > __SourceData - a semantic platform for curating and searching figures.__  
-> Liechti R, George N, Götz L, El-Gebali S, Chasapi A, Crespo I, Xenarios I, Lemberger T. (2017) 
-> _Nature Methods_
+> Liechti R, George N, Götz L, El-Gebali S, Chasapi A, Crespo I, Xenarios I, Lemberger T.  
+> _Nature Methods_ (2017)
 
 We provide here instructions to build the SourceData sd-graph database in [neo4j](http://neo4j.com) and examples of analyses.
 
