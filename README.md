@@ -11,7 +11,7 @@ We provide here instructions to build the SourceData sd-graph database in [neo4j
 
 ## Easy install
 
-Install and start the neo4j database according to the instructions provided at http://neo4j.com. __IMPORTANT: To be able to run the commands below with the neo4j-tool, please download the [TAR/ZIP distributions](https://neo4j.com/download/community-edition/).__ The scripts below were tested under neo4j community edition 2.2 and 3.1.4.
+Install neo4j according to the instructions provided at http://neo4j.com. __IMPORTANT: To be able to run the commands below with the neo4j-tool, please download the [TAR/ZIP distributions](https://neo4j.com/download/community-edition/).__ The scripts below were tested under neo4j community edition 2.2 and 3.1.4.
 
 Unzip `graph.db.zip` in the `neo4j/data/databases/` directory.
 
