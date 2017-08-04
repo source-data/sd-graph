@@ -83,4 +83,4 @@ Move the `protein2gene.tab` into the `neo4j/import/` directory (this is set in `
  
 Et voilà!
 
-The database is now ready and the examples provided in SD-scripts can then be run directly in the neo4j browser client.
+The database is now ready and the examples provided in `SD-examples.cql` can then be run directly in the neo4j browser client.
