@@ -21,7 +21,7 @@ Start neo4j with:
 
 That's it.
 
-## Build the database from the SourceData API
+## Building sd-graph from the SourceData API
 
 Install neo4j according to the instructions provided at http://neo4j.com. __IMPORTANT: To be able to run the commands below with the neo4j-tool, please download the [TAR/ZIP distributions](https://neo4j.com/download/community-edition/).__ The scripts below were tested under neo4j community edition 2.2 and 3.1.4.
 
