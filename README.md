@@ -9,7 +9,18 @@ When refering to SourceData, please cite the following paper:
 
 We provide here instructions to build the SourceData sd-graph database in [neo4j](http://neo4j.com) and examples of analyses.
 
-## Easy install
+## Easy install (docker)
+
+The SourceData sd-graph database is available as a docker image. Using this image is the easiest way to explore the database.
+
+- Install and start [docker](https://www.docker.com/)
+- Download the SourceData neo4j-sd-graph docker image: `docker pull sourcedata/neo4j-sd-graph`
+- Start the Neo4J database engine: `docker run -d --publish=7474:7474 --publish=7687:7687 neo4j/sd`
+- Open your web browser at: [http://localhost:7474/browser/](http://localhost:7474/browser/)
+- If necessary log-in with user:`neo4j` and password:`1234`
+- You will be able to start exploring the database. You might want to have a look at example analyses available in the file: `SD-examples.cql`
+
+## Fresh install
 
 Install neo4j according to the instructions provided at http://neo4j.com.
 
