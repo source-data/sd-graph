@@ -234,6 +234,11 @@ class SD_panel(SD_item):
          if 'caption' in self.me:
              self.caption = self.me['caption'] or ''
              
+    def _set_formatted_caption(self):
+         self.formatted_captionn = ""
+         if 'formatted_caption' in self.me:
+             self.formatted_caption = self.me['formatted_caption'] or ''
+             
     def _set_href(self):
          self.href = ""
          if 'href' in self.me:
@@ -266,6 +271,7 @@ class SD_panel(SD_item):
         self._set_href()
         self._set_label()
         self._set_caption()
+        self._set_formatted_caption()
         self._set_tags()
         self._set_assay()
             
@@ -448,10 +454,13 @@ if __name__ == '__main__':
         print "label:", panel.label
         print "url:", panel.href
         print "caption:", panel.caption
+        print
+        print "formatted caption:", panel.formatted_caption
         for category in panel.tags:
-           print category
+           print
+           print "Tag category: ", category
            for t in panel.tags[category]:
-               print '"{}"[{}:{}] {} {}'.format(t.text,t.ext_dbs, t.ext_ids, t.role, t.type)
+               print u'"{}"[{}:{}] {} {} tag id={}'.format(t.text,t.ext_dbs, t.ext_ids, t.role, t.type, t.id)
         
         
          
