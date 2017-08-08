@@ -244,6 +244,13 @@ class SD_panel(SD_item):
          if 'href' in self.me:
              self.href = self.me['href'] or ''
     
+    def _set_coords(self):
+         self.coord = ""
+         if 'coords' in self.me:
+             coords = self.me['coords']
+             print "coords", coords
+             self.coords = ", ".join(["{}={}".format(c,coords[c]) for c in coords]) 
+    
     def _set_tags(self):
          self.tags = dict()
          if 'tags' in self.me:
@@ -260,7 +267,7 @@ class SD_panel(SD_item):
          self.assays = "///".join([t.text for t in self.tags['assay']])
          
     def _cypher_create(self):
-        attributes = Util.quote4neo({"panel_id":self.id, "label":self.label, "caption":self.caption, "image_link":self.href}) 
+        attributes = Util.quote4neo({"panel_id":self.id, "label":self.label, "caption":self.caption, "formatted_caption":self.formatted_caption, "coords":self.coords, "image_link":self.href}) 
         return "CREATE (n:Panel {{ {} }})".format(attributes)
 
         
@@ -272,6 +279,7 @@ class SD_panel(SD_item):
         self._set_label()
         self._set_caption()
         self._set_formatted_caption()
+        self._set_coords()
         self._set_tags()
         self._set_assay()
             
@@ -456,6 +464,7 @@ if __name__ == '__main__':
         print "caption:", panel.caption
         print
         print "formatted caption:", panel.formatted_caption
+        print "coordinates:", panel.coords
         for category in panel.tags:
            print
            print "Tag category: ", category
