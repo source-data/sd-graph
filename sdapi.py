@@ -248,7 +248,6 @@ class SD_panel(SD_item):
          self.coord = ""
          if 'coords' in self.me:
              coords = self.me['coords']
-             print "coords", coords
              self.coords = ", ".join(["{}={}".format(c,coords[c]) for c in coords]) 
     
     def _set_tags(self):
