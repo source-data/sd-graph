@@ -1,5 +1,5 @@
 # sd-graph
-[SourceData](http://sourcedata.embo.org) is a platform built by [EMBO](https://embo.org) in collaboration with [Vital-IT](https://www.vital-it.ch/) to make papers and datasets discoverable based on the experiments shown in figures.
+[SourceData](http://sourcedata.embo.org) is a platform built by [EMBO](http://embo.org) in collaboration with [Vital-IT](https://www.vital-it.ch/) to make papers and datasets discoverable based on the experiments shown in figures.
 
 When refering to SourceData, please cite the following paper:
 
