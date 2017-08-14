@@ -266,7 +266,9 @@ class SD_panel(SD_item):
          self.assays = "///".join([t.text for t in self.tags['assay']])
          
     def _cypher_create(self):
-        attributes = Util.quote4neo({"panel_id":self.id, "label":self.label, "caption":self.caption, "formatted_caption":self.formatted_caption, "coords":self.coords, "image_link":self.href}) 
+        attributes = Util.quote4neo({"panel_id":self.id, "label":self.label, "caption":self.caption, 
+        "formatted_caption":self.formatted_caption, 
+        "coords":self.coords, "image_link":self.href}) 
         return "CREATE (n:Panel {{ {} }})".format(attributes)
 
         
