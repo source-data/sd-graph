@@ -1,5 +1,5 @@
 # sd-graph
-[Source Data](http://sourcedata.embo.org) is a platform built by [EMBO](embo.org) in collaboration with [Vital-IT](https://www.vital-it.ch/) to make papers and datasets discoverable based on the experiments show in figures.
+[SourceData](http://sourcedata.embo.org) is a platform built by [EMBO](https://embo.org) in collaboration with [Vital-IT](https://www.vital-it.ch/) to make papers and datasets discoverable based on the experiments shown in figures.
 
 When refering to SourceData, please cite the following paper:
 
@@ -9,18 +9,18 @@ When refering to SourceData, please cite the following paper:
 
 We provide here instructions to build the SourceData sd-graph database in [neo4j](http://neo4j.com) and examples of analyses.
 
-## Easy install (docker)
+## Easy install #1 (Docker)
 
-The SourceData sd-graph database is available as a docker image. Using this image is the easiest way to explore the database.
+The SourceData sd-graph database is available as a docker image.
 
-- Install and start [docker](https://www.docker.com/)
-- Download the SourceData neo4j-sd-graph docker image: `docker pull sourcedata/neo4j-sd-graph`
+- Install and start [Docker](https://www.docker.com/)
+- Download the SourceData neo4j-sd-graph Docker image: `docker pull sourcedata/neo4j-sd-graph`
 - Start the Neo4J database engine: `docker run -d --publish=7474:7474 --publish=7687:7687 sourcedata/neo4j-sd-graph`
 - Open your web browser at: [http://localhost:7474/browser/](http://localhost:7474/browser/) (you might need to wait a few seconds for the engine to start).
 - If necessary log-in with user:`neo4j` and password:`1234`
 - You will be able to start exploring the database. You might want to have a look at example analyses available in the file: `SD-examples.cql`
 
-## Fresh install
+## Fresh install #2 (neo4j graph)
 
 Install neo4j according to the instructions provided at http://neo4j.com.
 
@@ -32,7 +32,10 @@ Start neo4j with:
 
 That's it.
 
-## Building sd-graph from the SourceData API
+The examples from `SD-examples.cql` can be run directly in the neo4j browser client at [http://localhost:7474/browser/](http://localhost:7474/browser/)
+
+
+## Building sd-graph from scratch using the SourceData API
 
 Install neo4j according to the instructions provided at http://neo4j.com. __IMPORTANT: To be able to run the commands below with the neo4j-tool, please download the [TAR/ZIP distributions](https://neo4j.com/download/community-edition/).__ The scripts below were tested under neo4j community edition 2.2 and 3.1.4.
 
