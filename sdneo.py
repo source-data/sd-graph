@@ -77,7 +77,7 @@ if __name__ == "__main__":
     url = args.host
     
     DB = GraphDatabase(url, username=username, password=password)
-    print("Importing"+", ".join(collections))
+    print("Importing: "+", ".join(collections))
     for collection in collections:
          collection = collection.strip()
          total, skipped, N = SD_neo.create_graph(collection, years=years)
