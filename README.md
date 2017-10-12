@@ -5,7 +5,7 @@ When refering to SourceData, please cite the following paper:
 
 > __SourceData - a semantic platform for curating and searching figures.__  
 > Liechti R, George N, Götz L, El-Gebali S, Chasapi A, Crespo I, Xenarios I, Lemberger T.  
-> _Nature Methods_ (2017)
+> __Nature Methods__ (2017) _in press_
 
 We provide here instructions to build the SourceData sd-graph database in [neo4j](http://neo4j.com) and examples of analyses.
 
@@ -20,13 +20,11 @@ The SourceData sd-graph database is available as a docker image.
 - If necessary log-in with user:`neo4j` and password:`1234`
 - You will be able to start exploring the database. You might want to have a look at example analyses available in the file: `SD-examples.cql`
 
-## Fresh install #2 (neo4j graph)
+## Easy install #2 (neo4j graph)
 
-Install neo4j according to the instructions provided at http://neo4j.com.
-
-Unzip `graph.db.zip` in the `neo4j/data/databases/` directory.
-
-Start neo4j with:
+- Install neo4j according to the instructions provided at http://neo4j.com.
+- Unzip `graph.db.zip` in the `neo4j/data/databases/` directory.
+- Start neo4j with:
 
     neo4j start
 
