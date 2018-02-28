@@ -7,7 +7,7 @@ from neo4jrestclient.client import GraphDatabase, Node, Relationship
 class SD_neo():
 
     @staticmethod
-    def create_graph(name, years=range(1997, 2016+1)):
+    def create_graph(name, years=range(1997, 2018+1)):
         N = 0
         skipped = 0
         collection = SDAPI.request_collection(name=name)
@@ -55,14 +55,14 @@ class SD_neo():
                                                      panel_node.relationships.create("has_tag", tag_node)
                                                      N+=1
                    except Exception as e:
-                      print e
+                      print e.message
 
         return total, skipped, N
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser( description="Uploads collection to neo4j datatbase" )
     parser.add_argument('collections', help="Comma-separated name(s) of the collection(s) to download")
-    parser.add_argument( '-y', '--years', default='1997:2016', help='Year range to download (default: %(default))' )
+    parser.add_argument( '-y', '--years', default='1997:2018', help='Year range to download (default: %(default))' )
     parser.add_argument('-u', '--username', default='neo4j', help='username to connect to neo4j')
     parser.add_argument('-p', '--password', default='', help='password to connect to neo4j')
     parser.add_argument('-H', '--host', default='http://localhost:7474/db/data/', help='url to access neo4j')
