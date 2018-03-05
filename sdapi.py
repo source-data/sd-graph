@@ -13,17 +13,14 @@ GET_ARTICLE = "paper/"
 GET_FIGURE  = "figure/"
 GET_PANEL   = "panel/"
 
-USER = ""
-PASS = ""
-
 class Util():
     @staticmethod
-    def rest2data(url):
+    def rest2data(url, usr, pswd):
         data = dict()
         #print "API request: ", url
         try:
-            response = requests.get(url, auth=(USER, PASS))
-            #print "server response: ", response.text
+            response = requests.get(url, auth=(usr, pswd))
+            #print "server response: ", response.text, usr, pswd
             try: 
                 data = response.json()
             except Exception as e:
@@ -64,9 +61,9 @@ class SD_item(object):
         self.neo = neo4j_db.query(q, returns = Node)[0][0]
         return self.neo
           
-    def __init__(self, url):
+    def __init__(self, url, usr, pswd):
         if self.verbose: print url
-        data = Util.rest2data(url)
+        data = Util.rest2data(url, usr, pswd)
         self.data = data
 
 
@@ -78,8 +75,8 @@ class SD_collection(SD_item):
     def _set_name(self):
         self.name = self.data[0]['name']
     
-    def __init__(self, url):
-        super(SD_collection, self).__init__(url)
+    def __init__(self, url, usr, pswd):
+        super(SD_collection, self).__init__(url, usr, pswd)
         self._set_id()
         self._set_name()
 
@@ -98,8 +95,8 @@ class SD_article_list(SD_item):
     def item_print(self):
         ", ".join([doi for doi in self.doi_list])
     
-    def __init__(self, url):
-        super(SD_article_list, self).__init__(url)
+    def __init__(self, url, usr, pswd):
+        super(SD_article_list, self).__init__(url, usr, pswd)
         self.doi_list = []
         self._set_doi_list()
         self._set_title_list()
@@ -141,8 +138,8 @@ class SD_article(SD_item):
         attributes = Util.quote4neo({'doi':self.doi, 'pmid':self.pmid, 'title':self.title, 'journalName':self.journal, 'year':self.year})
         return 'CREATE (n:Article {{ {} }})'.format(attributes)
                
-    def __init__(self, url):
-        super(SD_article, self).__init__(url)
+    def __init__(self, url, usr, pswd):
+        super(SD_article, self).__init__(url, usr, pswd)
         self._set_title()
         self._set_journal()
         self._set_year()
@@ -177,8 +174,8 @@ class SD_figure(SD_item):
         attributes = Util.quote4neo({'fig_label':self.label, 'caption':self.caption, 'image_link': self.href})
         return 'CREATE (n:Figure {{ {} }})'.format(attributes)
         
-    def __init__(self, url):
-        super(SD_figure, self).__init__(url)
+    def __init__(self, url, usr, pswd):
+        super(SD_figure, self).__init__(url, usr, pswd)
         
         self._set_caption()
         self._set_label()
@@ -243,8 +240,8 @@ class SD_panel(SD_item):
         return "CREATE (n:Panel {{ {} }})".format(attributes)
 
         
-    def __init__(self, url):
-        super(SD_panel, self).__init__(url)
+    def __init__(self, url, usr, pswd):
+        super(SD_panel, self).__init__(url, usr, pswd)
         self._set_id()
         self._set_me()
         self._set_href()
@@ -345,35 +342,49 @@ class SD_tag(SD_item):
         self._set_ext_urls()
 
 class SDAPI():  
-    @staticmethod
-    def request_collection(name ="PUBLICSEARCH"):
-        url = REST_API+ GET_COLLECTION + name
-        collection = SD_collection(url)
+    
+    @property
+    def usr(self):
+        return self._usr
+    
+    @usr.setter
+    def usr(self, usr = ''):
+        self._usr = usr
+        
+    @property
+    def pswd(self):
+        return self._pswd
+    
+    @pswd.setter
+    def usr(self, pswd = ''):
+        self._pswd = pswd
+    
+    def request_collection(self, name ="PUBLICSEARCH"):
+        url = REST_API + GET_COLLECTION + name
+        collection = SD_collection(url, self.usr, self.pswd)
         return collection
     
-    @staticmethod
-    def request_article_list(collection_id):
-        url = REST_API+ GET_COLLECTION + collection_id + "/" + GET_LIST
-        article_list = SD_article_list(url)
+    def request_article_list(self, collection_id):
+        url = REST_API + GET_COLLECTION + collection_id + "/" + GET_LIST
+        article_list = SD_article_list(url, self.usr, self.pswd)
         return article_list
     
-    @staticmethod
-    def request_article(doi, collection_id):
+    def request_article(self, doi, collection_id):
         url = REST_API + GET_COLLECTION + collection_id + "/" + GET_ARTICLE+doi
-        article = SD_article(url)
+        article = SD_article(url, self.usr, self.pswd)
         return article
             
-    @staticmethod
-    def request_figure(doi, collection_id, figure_order=1):
+    def request_figure(self, doi, collection_id, figure_order=1):
         url = REST_API + GET_COLLECTION + collection_id +"/" + GET_ARTICLE + doi + "/" + GET_FIGURE + str(figure_order)
-        figure = SD_figure(url)
+        figure = SD_figure(url, self.usr, self.pswd)
         return figure
 
-    @staticmethod
-    def request_panel(id):
+    def request_panel(self, id):
         url = REST_API + GET_PANEL + id
-        panel = SD_panel(url)
+        panel = SD_panel(url, self.usr, self.pswd)
         return panel
+    
+    
 
 
 if __name__ == '__main__':
@@ -394,19 +405,27 @@ if __name__ == '__main__':
     doi = args.doi
     fig = args.figure
     panel_id = args.panel
+    usr = args.username
+    pswd = args.password
     
     SD_item.verbose = args.verbose
-    default_collection_id = SDAPI.request_collection("PUBLICSEARCH").id
     
+    sdapi = SDAPI()
+    sdapi.usr = usr
+    sdapi.pswd = pswd
+    
+    default_collection_id = sdapi.request_collection("PUBLICSEARCH").id
+    print "default collection id = {}".format(default_collection_id) 
     if collection_name:
-        c = SDAPI.request_collection(collection_name) 
-        article_list = SDAPI.request_article_list(c.id)
+        c = sdapi.request_collection(collection_name) 
+        print "collection id = {}".format(c.id)
+        article_list = sdapi.request_article_list(c.id)
         title_doi_dictionary = article_list.title_doi_dictionary
         for id in title_doi_dictionary:
             print title_doi_dictionary[id]['doi'], title_doi_dictionary[id]['title']
             
     if collection_id:
-        article_list = SDAPI.request_article_list(collection_id)
+        article_list = sdapi.request_article_list(collection_id)
         print len(article_list.doi_list), len(article_list.title_list), len(article_list.title_doi_dictionary)
         counter = 1
         for doi in article_list.doi_list:
@@ -414,7 +433,7 @@ if __name__ == '__main__':
             counter += 1
             
     if doi: 
-        article = SDAPI.request_article(doi, default_collection_id)
+        article = sdapi.request_article(doi, default_collection_id)
         print 'doi:', article.doi
         print 'title:', article.title
         print 'journal:', article.journal
@@ -423,14 +442,14 @@ if __name__ == '__main__':
         print 'number of figures:', article.nb_figures
         
     if fig:
-        figure = SDAPI.request_figure(doi, default_collection_id, fig)
+        figure = sdapi.request_figure(doi, default_collection_id, fig)
         print "label:", figure.label
         print "caption:", figure.caption
         print "url:", figure.href
         print "panel ids:", "\t".join(figure.panels)
         
     if panel_id:
-        panel = SDAPI.request_panel(panel_id)
+        panel = sdapi.request_panel(panel_id)
         print "label:", panel.label
         print "url:", panel.href
         print "caption:", panel.caption
@@ -441,7 +460,8 @@ if __name__ == '__main__':
            print
            print "Tag category: ", category
            for t in panel.tags[category]:
-               print u'"{}"[{}:{}] {} {} tag id={}'.format(t.text,t.ext_dbs, t.ext_ids, t.role, t.type, t.id)
-        
+               print u'"{}"[{}:{}] {} {} {} tag id={}'.format(t.text,t.ext_dbs, t.ext_ids, t.role, t.type, 'in_caption' if t.in_caption else 'floating tag', t.id)
+               
+
         
          

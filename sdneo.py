@@ -7,12 +7,15 @@ from neo4jrestclient.client import GraphDatabase, Node, Relationship
 class SD_neo():
 
     @staticmethod
-    def create_graph(name, years=range(1997, 2018+1)):
+    def create_graph(name, years, username_sdapi, password_sdapi):
         N = 0
         skipped = 0
-        collection = SDAPI.request_collection(name=name)
+        sdapi = SDAPI()
+        sdapi.usr = username_sdapi
+        sdapi.pswd = password_sdapi
+        collection = sdapi.request_collection(name=name)
         collection_id = collection.id
-        article_list = SDAPI.request_article_list(collection_id)
+        article_list = sdapi.request_article_list(collection_id)
         doi_list = article_list.doi_list
         total = str(len(doi_list))
         print "collection " + collection_id + " contains " + total + " papers with a DOI."   
@@ -22,7 +25,7 @@ class SD_neo():
                skipped+=1
            else:
                print "Trying paper {}".format(doi)
-               a = SDAPI.request_article(doi, collection_id)
+               a = sdapi.request_article(doi, collection_id)
                if not a.data:
                    print "no data in " + doi
                else:
@@ -32,7 +35,7 @@ class SD_neo():
                        N+=1
                        print doi +" has " + str(a.nb_figures) + " figures"
                        for i in range(1, a.nb_figures+1):
-                          f = SDAPI.request_figure(doi, collection_id, figure_order=i)
+                          f = sdapi.request_figure(doi, collection_id, figure_order=i)
                           if f.data:
                               figure_node = f.node(DB, collection.name)
                               if f.data:
@@ -42,7 +45,7 @@ class SD_neo():
                                   for panel_id in f.panels:
                                      if panel_id:
                                          print "    Trying panel {}".format(panel_id)
-                                         p = SDAPI.request_panel(panel_id)
+                                         p = sdapi.request_panel(panel_id)
                                          if p.data:  
                                              panel_node = p.node(DB, collection.name)
                                              figure_node.relationships.create("has_panel", panel_node)
@@ -66,7 +69,9 @@ if __name__ == "__main__":
     parser.add_argument('-u', '--username', default='neo4j', help='username to connect to neo4j')
     parser.add_argument('-p', '--password', default='', help='password to connect to neo4j')
     parser.add_argument('-H', '--host', default='http://localhost:7474/db/data/', help='url to access neo4j')
-
+    parser.add_argument('-U', '--username_sdapi', default='', help='username to connect to sourcedata api')
+    parser.add_argument('-P', '--password_sdapi', default='', help='password to connect to sourcedata api')
+    
     args = parser.parse_args()
 
     collections = args.collections.split(',')
@@ -74,13 +79,15 @@ if __name__ == "__main__":
     years = range(int(y[0]),int(y[1])+1)
     username = args.username
     password = args.password
+    username_sdapi = args.username_sdapi
+    password_sdapi = args.password_sdapi
     url = args.host
     
     DB = GraphDatabase(url, username=username, password=password)
     print("Importing: "+", ".join(collections))
     for collection in collections:
          collection = collection.strip()
-         total, skipped, N = SD_neo.create_graph(collection, years=years)
+         total, skipped, N = SD_neo.create_graph(collection, years, username_sdapi, password_sdapi)
          print "created: {} nodes from {} papers (skipped: {}) for collection {}".format(N, total, skipped, collection)
     
 
