@@ -162,7 +162,7 @@ class SD_figure(SD_item):
     def _set_href(self):
         self.href = ""
         if 'href' in self.data:
-           self.href = self.data['href'] or''
+           self.href = self.data['href'] or ''
 
     def _set_panels(self):
         self.panels = []
@@ -171,7 +171,7 @@ class SD_figure(SD_item):
             
             
     def _cypher_create(self):
-        attributes = Util.quote4neo({'fig_label':self.label, 'caption':self.caption, 'image_link': self.href})
+        attributes = Util.quote4neo({'fig_label':self.label, 'caption':self.caption, 'href': self.href})
         return 'CREATE (n:Figure {{ {} }})'.format(attributes)
         
     def __init__(self, url, usr, pswd):
@@ -211,6 +211,7 @@ class SD_panel(SD_item):
          self.href = ""
          if 'href' in self.me:
              self.href = self.me['href'] or ''
+             
     
     def _set_coords(self):
          self.coord = ""
@@ -236,7 +237,7 @@ class SD_panel(SD_item):
     def _cypher_create(self):
         attributes = Util.quote4neo({"panel_id":self.id, "label":self.label, "caption":self.caption, 
         "formatted_caption":self.formatted_caption, 
-        "coords":self.coords, "image_link":self.href}) 
+        "coords":self.coords, "href":self.href}) 
         return "CREATE (n:Panel {{ {} }})".format(attributes)
 
         
