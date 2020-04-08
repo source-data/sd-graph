@@ -96,6 +96,14 @@ MERGE (te:Term {text:text})
 MERGE (hyb)-[r:Has_text]->(te)
 RETURN COUNT(r) AS `unique terms`;
 
+// Filling in missing names
+
+MATCH (h:H_Entity)-->(t:Term)
+WHERE h.name = ""
+WITH h, COLLECT(DISTINCT t.text)[0] AS some_name
+SET h.name = some_name
+RETURN COUNT(h) AS `entities updated to fill in with a name`;
+
 //infer tested hypotheses at condensed tag level
 
 MATCH 
@@ -147,5 +155,6 @@ MATCH (e:H_Entity {type:"tissue"}) SET e.scale = 5;
 MATCH (e:H_Entity {type:"organism"}) SET e.scale = 6;
 RETURN "added scales to entities";
 
-/Full text indexing
-CALL db.index.fulltext.createNodeIndex("titles_captions_names",["Article", "Panel", "H_Entity"],["title", "formatted_caption", "name"])
+//Full text indexing
+
+CALL db.index.fulltext.createNodeIndex("titles_captions_names",["Article"],["title"]);

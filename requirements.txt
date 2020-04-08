@@ -1,0 +1,3 @@
+requests
+neo4jrestclient
+python-dotenv
