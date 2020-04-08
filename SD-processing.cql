@@ -157,4 +157,4 @@ RETURN "added scales to entities";
 
 //Full text indexing
 
-CALL db.index.fulltext.createNodeIndex("titles_captions_names",["Article"],["title"]);
+CALL db.index.fulltext.createNodeIndex("titles_captions_names",["Article", "Panel", "H_Entity"],["title", "formatted_caption", "name"]);

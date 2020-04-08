@@ -1,6 +1,8 @@
 #!/usr/bin/python
 from sdapi import SDAPI
 import argparse
+import os
+from dotenv import load_dotenv
 from neo4jrestclient.client import GraphDatabase, Node, Relationship
 
 
@@ -64,16 +66,23 @@ class SD_neo():
         return total, skipped, N
     
 if __name__ == "__main__":
+    load_dotenv()
+    URI = os.getenv('NEo_URI')
+    NEO_USERNAME = os.getenv("NEO_USERNAME")
+    NEO_PASSWORD = os.getenv("NEO_PASSWORD")
+    SD_API_USERNAME = os.getenv("SD_API_USERNAME")
+    SD_API_PASSWORD = os.getenv("SD_API_PASSWORD")
+
     parser = argparse.ArgumentParser( description="Uploads collection to neo4j datatbase" )
     parser.add_argument('collections', help="Comma-separated name(s) of the collection(s) to download")
     parser.add_argument( '-y', '--years', default='1997:2018', help='Year range to download (default: %(default))' )
-    parser.add_argument('-u', '--username', default='neo4j', help='username to connect to neo4j')
-    parser.add_argument('-p', '--password', default='', help='password to connect to neo4j')
+    parser.add_argument('-u', '--username', default=NEO_USERNAME, help='username to connect to neo4j')
+    parser.add_argument('-p', '--password', default=NEO_PASSWORD, help='password to connect to neo4j')
     parser.add_argument('-H', '--host', default='http://localhost:7474/db/data/', help='url to access neo4j')
-    parser.add_argument('-U', '--username_sdapi', default='', help='username to connect to sourcedata api')
-    parser.add_argument('-P', '--password_sdapi', default='', help='password to connect to sourcedata api')
+    parser.add_argument('-U', '--username_sdapi', default=SD_API_USERNAME, help='username to connect to sourcedata api')
+    parser.add_argument('-P', '--password_sdapi', default=SD_API_PASSWORD, help='password to connect to sourcedata api')
     
-    # usage: python -m sdneo Sars-CoV-2 -u neo4j -p sourcedata -U lemberger -P ONuYev3ydK9L
+    # usage: python -m sdneo Sars-CoV-2 -u neo4j -p sourcedata -U sourcedata_api_username -P sourcedata_api_password
 
     args = parser.parse_args()
 
