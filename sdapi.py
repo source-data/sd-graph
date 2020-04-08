@@ -2,7 +2,6 @@
 import requests
 import argparse
 import re
-import htmlentitydefs
 from neo4jrestclient.client import GraphDatabase,Node,Relationship
 
 REST_API    = "https://api.sourcedata.io/"
@@ -17,29 +16,29 @@ class Util():
     @staticmethod
     def rest2data(url, usr, pswd):
         data = dict()
-        #print "API request: ", url
+        #print("API request: ", url)
         try:
             response = requests.get(url, auth=(usr, pswd))
-            #print "server response: ", response.text, usr, pswd
+            #print("server response: ", response.text, usr, pswd)
             try: 
                 data = response.json()
             except Exception as e:
-                print "WARNING: problem with loading json object with %s" % url
-                print type(e), e
-                print response.json()
+                print("WARNING: problem with loading json object with %s" % url)
+                print(type(e), e)
+                print(response.json())
         except Exception as e:
-            print "failed to get response from server"
-            print type(e), e
+            print("failed to get response from server")
+            print(type(e), e)
         finally:
             if data is not None:
                 return data
             else:
-                print "response is empty"
+                print("response is empty")
                 return dict()
                 
     @staticmethod
     def quote4neo(attributes):
-        quotes_added = {k:'"{}"'.format(v.encode('utf-8').replace("'",r"\'").replace('"',r'\"')) if isinstance(v, basestring) else v for k,v in attributes.items()}
+        quotes_added = {k:'"{}"'.format(v.replace("'",r"\'").replace('"',r'\"')) if isinstance(v, str) else v for k,v in attributes.items()}
         #include some cleanup of HTML entities eg &nbsp;
         properties = ','.join(["{}:{}".format(k,v) for (k,v) in quotes_added.items()])
         return properties
@@ -50,7 +49,7 @@ class SD_item(object):
     
     def item_print(self):
         for k in self.data: 
-           print k,":", self.data[k]
+           print(k,":", self.data[k])
     
     def _cypher_create(self,db):
         return ""
@@ -62,7 +61,7 @@ class SD_item(object):
         return self.neo
           
     def __init__(self, url, usr, pswd):
-        if self.verbose: print url
+        if self.verbose: print(url)
         data = Util.rest2data(url, usr, pswd)
         self.data = data
 
@@ -187,7 +186,7 @@ class SD_panel(SD_item):
     def _set_me(self):
          panels = self.data['figure']['panels']
          #fancy generator expression to find current panel which is provided in a list and not in a dictionary :-(
-         self.me = (p for p in panels if p['panel_id']==self.id).next()
+         self.me = [p for p in panels if p['panel_id']==self.id][0]
 
     def _set_id(self):
          self.id = self.data['current_panel_id']
@@ -349,16 +348,16 @@ class SDAPI():
         return self._usr
     
     @usr.setter
-    def usr(self, usr = ''):
-        self._usr = usr
+    def usr(self, u = ''):
+        self._usr = u
         
     @property
     def pswd(self):
         return self._pswd
     
     @pswd.setter
-    def usr(self, pswd = ''):
-        self._pswd = pswd
+    def pswd(self, p = ''):
+        self._pswd = p
     
     def request_collection(self, name ="PUBLICSEARCH"):
         url = REST_API + GET_COLLECTION + name
@@ -416,52 +415,52 @@ if __name__ == '__main__':
     sdapi.pswd = pswd
     
     default_collection_id = sdapi.request_collection("PUBLICSEARCH").id
-    print "default collection id = {}".format(default_collection_id) 
+    print("default collection id = {}".format(default_collection_id) )
     if collection_name:
         c = sdapi.request_collection(collection_name) 
-        print "collection id = {}".format(c.id)
+        print("collection id = {}".format(c.id))
         article_list = sdapi.request_article_list(c.id)
         title_doi_dictionary = article_list.title_doi_dictionary
         for id in title_doi_dictionary:
-            print title_doi_dictionary[id]['doi'], title_doi_dictionary[id]['title']
+            print(title_doi_dictionary[id]['doi'], title_doi_dictionary[id]['title'])
             
     if collection_id:
         article_list = sdapi.request_article_list(collection_id)
-        print len(article_list.doi_list), len(article_list.title_list), len(article_list.title_doi_dictionary)
+        print(len(article_list.doi_list), len(article_list.title_list), len(article_list.title_doi_dictionary))
         counter = 1
         for doi in article_list.doi_list:
-            print counter, doi
+            print(counter, doi)
             counter += 1
             
     if doi: 
         article = sdapi.request_article(doi, default_collection_id)
-        print 'doi:', article.doi
-        print 'title:', article.title
-        print 'journal:', article.journal
-        print 'year:', article.year
-        print 'pmid:', article.pmid
-        print 'number of figures:', article.nb_figures
+        print('doi:', article.doi)
+        print('title:', article.title)
+        print('journal:', article.journal)
+        print('year:', article.year)
+        print('pmid:', article.pmid)
+        print('number of figures:', article.nb_figures)
         
     if fig:
         figure = sdapi.request_figure(doi, default_collection_id, fig)
-        print "label:", figure.label
-        print "caption:", figure.caption
-        print "url:", figure.href
-        print "panel ids:", "\t".join(figure.panels)
+        print("label:", figure.label)
+        print("caption:", figure.caption)
+        print("url:", figure.href)
+        print("panel ids:", "\t".join(figure.panels))
         
     if panel_id:
         panel = sdapi.request_panel(panel_id)
-        print "label:", panel.label
-        print "url:", panel.href
-        print "caption:", panel.caption
-        print
-        print "formatted caption:", panel.formatted_caption
-        print "coordinates:", panel.coords
+        print("label:", panel.label)
+        print("url:", panel.href)
+        print("caption:", panel.caption)
+        print()
+        print("formatted caption:", panel.formatted_caption)
+        print("coordinates:", panel.coords)
         for category in panel.tags:
-           print
-           print "Tag category: ", category
+           print()
+           print("Tag category: ", category)
            for t in panel.tags[category]:
-               print u'"{}"[{}:{}] {} {} {} tag id={}'.format(t.text,t.ext_dbs, t.ext_ids, t.role, t.type, 'in_caption' if t.in_caption else 'floating tag', t.id)
+               print(u'"{}"[{}:{}] {} {} {} tag id={}'.format(t.text,t.ext_dbs, t.ext_ids, t.role, t.type, 'in_caption' if t.in_caption else 'floating tag', t.id))
                
 
         

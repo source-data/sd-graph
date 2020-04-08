@@ -18,22 +18,22 @@ class SD_neo():
         article_list = sdapi.request_article_list(collection_id)
         doi_list = article_list.doi_list
         total = str(len(doi_list))
-        print "collection " + collection_id + " contains " + total + " papers with a DOI."   
+        print("collection " + collection_id + " contains " + total + " papers with a DOI.")  
         for doi in doi_list:
            if not doi:
-               print "Skipping empty doi"
+               print("Skipping empty doi")
                skipped+=1
            else:
-               print "Trying paper {}".format(doi)
+               print("Trying paper {}".format(doi))
                a = sdapi.request_article(doi, collection_id)
                if not a.data:
-                   print "no data in " + doi
+                   print("no data in " + doi)
                else:
                    #problem if article already exists
                    try:
                        article_node = a.node(DB, collection.name)
                        N+=1
-                       print doi +" has " + str(a.nb_figures) + " figures"
+                       print(doi +" has " + str(a.nb_figures) + " figures")
                        for i in range(1, a.nb_figures+1):
                           f = sdapi.request_figure(doi, collection_id, figure_order=i)
                           if f.data:
@@ -44,7 +44,7 @@ class SD_neo():
               
                                   for panel_id in f.panels:
                                      if panel_id:
-                                         print "    Trying panel {}".format(panel_id)
+                                         print("    Trying panel {}".format(panel_id))
                                          p = sdapi.request_panel(panel_id)
                                          if p.data:  
                                              panel_node = p.node(DB, collection.name)
@@ -58,7 +58,8 @@ class SD_neo():
                                                      panel_node.relationships.create("has_tag", tag_node)
                                                      N+=1
                    except Exception as e:
-                      print e.message
+                      print(e)
+                      raise
 
         return total, skipped, N
     
@@ -72,6 +73,8 @@ if __name__ == "__main__":
     parser.add_argument('-U', '--username_sdapi', default='', help='username to connect to sourcedata api')
     parser.add_argument('-P', '--password_sdapi', default='', help='password to connect to sourcedata api')
     
+    # usage: python -m sdneo Sars-CoV-2 -u neo4j -p sourcedata -U lemberger -P ONuYev3ydK9L
+
     args = parser.parse_args()
 
     collections = args.collections.split(',')
@@ -88,6 +91,6 @@ if __name__ == "__main__":
     for collection in collections:
          collection = collection.strip()
          total, skipped, N = SD_neo.create_graph(collection, years, username_sdapi, password_sdapi)
-         print "created: {} nodes from {} papers (skipped: {}) for collection {}".format(N, total, skipped, collection)
+         print("created: {} nodes from {} papers (skipped: {}) for collection {}".format(N, total, skipped, collection))
     
 
