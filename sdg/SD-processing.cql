@@ -11,19 +11,19 @@ RETURN COUNT(DISTINCT r) AS `taggers as original relationships` ;
 
 //tag indexes
 
-CREATE INDEX ON :Tag(text);
-CREATE INDEX ON :Tag(ext_id);
-CREATE INDEX ON :Tag(Type);
-CREATE INDEX ON :Tag(Role);
+CREATE INDEX ON :SDTag(text);
+CREATE INDEX ON :SDTag(ext_ids);
+CREATE INDEX ON :SDTag(type);
+CREATE INDEX ON :SDTag(role);
 RETURN "indexed tags";
 
 //fill in ext names for tags that would miss it
 
-MATCH (t1:Tag)
+MATCH (t1:SDTag)
 WHERE 
     t1.ext_names = ""
 WITH t1
-MATCH (t2:Tag {ext_id:t1.ext_id})
+MATCH (t2:SDTag {ext_ids: t1.ext_ids})
 WHERE t2.ext_names <> ""
 WITH DISTINCT t1, t2.ext_names as names
 SET t1.ext_names = names
@@ -31,66 +31,66 @@ RETURN COUNT(t1) AS `tags with filled in names`;
 
 //A: condense tags with same ext id and role
 
-MATCH (p:Panel)-->(t:Tag)
+MATCH (p:SDPanel)-->(t:SDTag)
 WHERE
-    t.ext_id <> ""
-WITH DISTINCT p, t.role AS role, t.type as type, t.category as category, t.ext_id AS ext_id, t.ext_names as ext_names
-    CREATE (c:CondTag {role:role, type:type, category:category, ext_id:ext_id, text:ext_names}) //check if p has cond tag with same ext id but different names
+    t.ext_ids <> ""
+WITH DISTINCT p, t.role AS role, t.type as type, t.category as category, t.ext_ids AS ext_ids, t.ext_names as ext_names
+    CREATE (c:CondTag {role: role, type: type, category: category, ext_ids: ext_ids, text: ext_names}) //check if p has cond tag with same ext id but different names
     MERGE (p)-[rel:HasCondTag]->(c)
 WITH p,c
 MATCH 
-    (p)-->(t:Tag)
+    (p)-->(t:SDTag)
 WHERE
-    t.role = c.role AND t.ext_id = c.ext_id AND t.type = c.type AND t.ext_names = c.text
+    t.role = c.role AND t.ext_ids = c.ext_ids AND t.type = c.type AND t.ext_names = c.text
 MERGE (t)-[:Condensed_into]->(c)
 RETURN COUNT(c)  AS `condensed tags`
 
 UNION
 
-//B: condense tags that have no ext_id but same text and same type and role
+//B: condense tags that have no ext_ids but same text and same type and role
 
-MATCH (p:Panel)-->(t:Tag {ext_id: ""})
+MATCH (p:SDPanel)-->(t:SDTag {ext_ids: ""})
 WHERE
     t.category <> "" OR t.type <> ""
 WITH DISTINCT p, trim(lower(t.text)) AS text, t.role AS role, t.type AS type, t.category AS category
-    CREATE (c:CondTag {role:role, type:type, category:category, ext_id:"", text:text})
+    CREATE (c:CondTag {role: role, type:type, category: category, ext_ids: "", text: text})
     MERGE (p)-[:HasCondTag]->(c)
 WITH p,c
 MATCH 
-    (p)-->(t:Tag)
+    (p)-->(t:SDTag)
 WHERE
     t.role = c.role AND t.type = c.type AND t.category = c.category AND trim(lower(t.text)) = c.text AND 
-    t.ext_id=""
+    t.ext_ids = ""
 MERGE (t)-[:Condensed_into]->(c)
 RETURN COUNT(c) AS `condensed tags`;
 
 //index condensed tags
 
-CREATE INDEX ON :CondTag(ext_id);
+CREATE INDEX ON :CondTag(ext_ids);
 RETURN "indexed condensed tags";
 
 //Create hybrid entities
 
 MATCH (ct:CondTag)
-WHERE ct.ext_id <>""
-WITH split(ct.ext_id,'///') as ids, ct.type AS type, ct.text AS text, ct.category AS category, ct
+WHERE ct.ext_ids <> ""
+WITH split(ct.ext_ids,'///') as ids, ct.type AS type, ct.text AS text, ct.category AS category, ct
 UNWIND ids AS id
-MERGE (hyb:H_Entity {ext_id: category + type + ":"+ id, type: type, name: text})
+MERGE (hyb:H_Entity {ext_ids: category + type + ":" + id, type: type, name: text})
 MERGE (ct)-[:Identified_by]->(hyb)
 RETURN COUNT(hyb) AS `unique hybrid entities`
 
 UNION
 
 MATCH (ct:CondTag)
-WHERE ct.ext_id = ""
+WHERE ct.ext_ids = ""
 WITH trim(lower(ct.text)) AS text, ct.type AS type, ct.category AS category, ct
-MERGE (hyb:H_Entity {ext_id: category + type + ":" + text, type: type, name: text}) 
+MERGE (hyb:H_Entity {ext_ids: category + type + ":" + text, type: type, name: text}) 
 MERGE (ct)-[:Identified_by]->(hyb)
 RETURN COUNT(hyb) AS `unique hybrid entities`;
 
 //Create unique terms
 
-MATCH (t:Tag)-->(c:CondTag)-->(hyb:H_Entity)
+MATCH (t:SDTag)-->(c:CondTag)-->(hyb:H_Entity)
 WITH DISTINCT trim(toLower(t.text)) AS text, hyb
 MERGE (te:Term {text:text})
 MERGE (hyb)-[r:Has_text]->(te)
@@ -107,15 +107,15 @@ RETURN COUNT(h) AS `entities updated to fill in with a name`;
 //infer tested hypotheses at condensed tag level
 
 MATCH 
-   (p:Panel)-->(intervention:CondTag {role:"intervention"}),
-   (p:Panel)-->(assayed:CondTag {role:"assayed"})
+   (p:SDPanel)-->(intervention:CondTag {role: "intervention"}),
+   (p:SDPanel)-->(assayed:CondTag {role: "assayed"})
 MERGE (intervention)-[r:H]->(assayed)
 RETURN COUNT(r) AS `hypotheses at tag level`;
 
 //create hypotheses summaries at paper level
 
 MATCH 
-    (art:Article)-->(f1:Figure)-->(p1:Panel)-->(i1:CondTag)-[h1:H]->(a1:CondTag)<--(p1),
+    (art:SDArticle)-->(f1:SDFigure)-->(p1:SDPanel)-->(i1:CondTag)-[h1:H]->(a1:CondTag)<--(p1),
     (i1)-->(ih:H_Entity), (a1)-->(ah:H_Entity)
 //RETURN art,ih,ah,COLLECT(f1),COLLECT(p1),COLLECT(i1),COLLECT(a1),COUNT(DISTINCT p1) AS N_p,COUNT(DISTINCT f1) AS N_f ORDER BY N_p DESC LIMIT 1
 WITH art,ih,ah, COUNT(DISTINCT(p1)) AS N_p, COUNT(DISTINCT(f1)) AS N_f
@@ -126,7 +126,7 @@ RETURN COUNT(DISTINCT h) AS `hypotheses at paper level`;
 //ad weight to hypotheses
 
 MATCH 
-   (art:Article)-[rel:HasH]->(h:Hypothesis)
+   (art:SDArticle)-[rel:HasH]->(h:Hypothesis)
 WITH h, COUNT(DISTINCT art) AS N
 SET h.N = N;
 RETURN "added weight to hypotheses";
@@ -157,4 +157,4 @@ RETURN "added scales to entities";
 
 //Full text indexing
 
-CALL db.index.fulltext.createNodeIndex("titles_captions_names",["Article", "Panel", "H_Entity"],["title", "formatted_caption", "name"]);
+CALL db.index.fulltext.createNodeIndex("titles_captions_names",["SDArticle", "SDPanel", "H_Entity"],["title", "formatted_caption", "name"]);

@@ -1,3 +1,7 @@
-requests
-neo4jrestclient
-python-dotenv
+python-dotenv==0.12.0
+neo4j==1.7.6
+lxml==4.5.0
+requests==2.23.0
+flask-cors
+Flask==0.12.2
+Flask-DotEnv==0.1.1

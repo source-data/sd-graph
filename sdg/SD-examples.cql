@@ -1,19 +1,19 @@
 //////////////DEMO////////////
 
 //demo data model
-MATCH (a:Article)
+MATCH (a:SDArticle)
 WITH a
-MATCH (a:Article)-[fr]->(f:Figure)
+MATCH (a:SDArticle)-[fr]->(f:SDFigure)
 WITH
     a,f,
     fr
-MATCH (f:Figure)-[pr]->(p:Panel)
+MATCH (f:SDFigure)-[pr]->(p:SDPanel)
 WITH
     a,f,p,
     fr,pr
 MATCH 
-    (p)-[tr1]->(t1:Tag),(p)-[tr2]->(t2:Tag),
-    (p)-[tr3]->(t3:Tag)
+    (p)-[tr1]->(t1:SDTag),(p)-[tr2]->(t2:SDTag),
+    (p)-[tr3]->(t3:SDTag)
 WITH 
     a,f,p,t1,t2,t3,
     fr,pr,tr1,tr2,tr3 
@@ -47,46 +47,46 @@ MATCH (n)
 RETURN labels(n), COUNT(n)
 
 //statistics by entity type
-MATCH (t:Tag)
+MATCH (t:SDTag)
 WHERE t.type<>""
 RETURN  DISTINCT t.type AS type, COUNT(t) AS tags, COUNT(DISTINCT(t.text)) AS terms, COUNT(DISTINCT(t.ext_id)) AS ids 
 ORDER BY tags DESC;
 
 //statistics by entitiy role
-MATCH (t:Tag)
+MATCH (t:SDTag)
 WHERE t.role <> ""
 RETURN  DISTINCT t.role AS role, COUNT(t) AS tags, COUNT(DISTINCT(t.text)) AS terms, COUNT(DISTINCT(t.ext_id)) AS ids 
 ORDER BY tags DESC;
 
 //statistics by role and type
-MATCH (t:Tag)
+MATCH (t:SDTag)
 WHERE t.type <> "" and t.role <> ""
 WITH DISTINCT t.type AS type, t.role AS role, COUNT(DISTINCT t) AS N
 RETURN type,reduce(s="",r in collect(role+":"+toString(N)) | s+r+" | ") AS list
 
 //most frequent tags by type
-MATCH (tag:Tag {type:"molecule"}) RETURN DISTINCT lower(tag.text) AS small_mol, COUNT(tag) AS n ORDER BY n DESC;
-MATCH (tag:Tag {type:"gene"}) RETURN DISTINCT lower(tag.text) AS gene, COUNT(tag) AS n ORDER BY n DESC;
-MATCH (tag:Tag {type:"protein"}) RETURN DISTINCT lower(tag.text) AS protein, COUNT(tag) AS n ORDER BY n DESC;
-MATCH (tag:Tag {type:"subcellular"}) RETURN DISTINCT lower(tag.text) AS subcellular_struct, COUNT(tag) AS n ORDER BY n DESC;
-MATCH (tag:Tag {type:"cell"}) RETURN DISTINCT lower(tag.text) AS cell_type, COUNT(tag) AS n ORDER BY n DESC;
-MATCH (tag:Tag {type:"tissue"}) RETURN DISTINCT lower(tag.text) AS tissues, COUNT(tag) AS n ORDER BY n DESC;
-MATCH (tag:Tag {type:"organism"}) RETURN DISTINCT lower(tag.text) AS organism, COUNT(tag) AS n ORDER BY n DESC;
-MATCH (tag:Tag {type:"undefined"}) RETURN DISTINCT lower(tag.text) AS undefine, COUNT(tag) AS n ORDER BY n DESC;
+MATCH (tag:SDTag {type:"molecule"}) RETURN DISTINCT lower(tag.text) AS small_mol, COUNT(tag) AS n ORDER BY n DESC;
+MATCH (tag:SDTag {type:"gene"}) RETURN DISTINCT lower(tag.text) AS gene, COUNT(tag) AS n ORDER BY n DESC;
+MATCH (tag:SDTag {type:"protein"}) RETURN DISTINCT lower(tag.text) AS protein, COUNT(tag) AS n ORDER BY n DESC;
+MATCH (tag:SDTag {type:"subcellular"}) RETURN DISTINCT lower(tag.text) AS subcellular_struct, COUNT(tag) AS n ORDER BY n DESC;
+MATCH (tag:SDTag {type:"cell"}) RETURN DISTINCT lower(tag.text) AS cell_type, COUNT(tag) AS n ORDER BY n DESC;
+MATCH (tag:SDTag {type:"tissue"}) RETURN DISTINCT lower(tag.text) AS tissues, COUNT(tag) AS n ORDER BY n DESC;
+MATCH (tag:SDTag {type:"organism"}) RETURN DISTINCT lower(tag.text) AS organism, COUNT(tag) AS n ORDER BY n DESC;
+MATCH (tag:SDTag {type:"undefined"}) RETURN DISTINCT lower(tag.text) AS undefine, COUNT(tag) AS n ORDER BY n DESC;
 
 //p(role|type) = p(type|role) * p(role) / p(type)
-MATCH (tags:Tag)
+MATCH (tags:SDTag)
 WHERE tags.role <> "" AND tags.type <> ""
 WITH COUNT(tags) AS N
 WITH N, ["intervention", "assayed", "normalizing", "reporter", "experimental", "biological"] AS roles
 UNWIND roles as role
-MATCH (t_role:Tag {role:role}) 
+MATCH (t_role:SDTag {role:role}) 
 WITH role, N, COUNT(t_role) AS N_role,
 ["molecule", "gene", "protein", "subcellular", "cell", "tissue", "organism"] AS types
 UNWIND types as type
-MATCH (t_type:Tag {type:type})
+MATCH (t_type:SDTag {type:type})
 WITH role, type, N, N_role,  COUNT(t_type) AS N_type
-MATCH (t_type_with_role:Tag {role:role, type:type})
+MATCH (t_type_with_role:SDTag {role:role, type:type})
 WITH role, type, N, N_role, N_type, COUNT(t_type_with_role) AS N_type_with_role
 WITH 
 role, type,
@@ -99,16 +99,16 @@ role, type,
 RETURN role, type, `p(role | type)`, `p(role)`,`p(type | role)`,`p(type)`;
 
 //fraction of panels with at least one intervention assayed pair
-MATCH (p:Panel)
+MATCH (p:SDPanel)
 WITH COUNT(p) AS N
-MATCH (intervention:Tag {role:"intervention"})<--(p:Panel)-->(assayed:Tag {role:"assayed"})
+MATCH (intervention:SDTag {role:"intervention"})<--(p:SDPanel)-->(assayed:SDTag {role:"assayed"})
 WITH COUNT(DISTINCT p) AS n,N
 RETURN N as `total number of panels`, n AS `panel with hypothesis test`, tostring(ROUND(100*n/N)+"%") AS `fraction`
 
 //fraction of tags included in the text of the caption
-MATCH (in_caption:Tag {in_caption:true})
+MATCH (in_caption:SDTag {in_caption:true})
 WITH COUNT(DISTINCT in_caption) AS c
-MATCH (floating:Tag {in_caption:false}) 
+MATCH (floating:SDTag {in_caption:false}) 
 WITH c, COUNT(DISTINCT floating) AS f
 RETURN c AS `in caption`, f AS `not in caption`, toString(ROUND(100*tofloat(c)/(c+f)))+"%" AS `%`
 
@@ -208,8 +208,8 @@ WITH DISTINCT
    protein, COLLECT(DISTINCT t3.text) AS txt_protein,
    subcell, COLLECT(DISTINCT t4.text) AS text_subcell
 MATCH
-   (a1:Article)-->(h1:Hypothesis),
-   (a2:Article)-->(h2:Hypothesis)
+   (a1:SDArticle)-->(h1:Hypothesis),
+   (a2:SDArticle)-->(h2:Hypothesis)
 //enforcing results from different papers, only a few possibilities left
 WHERE a1<>a2
 RETURN DISTINCT
