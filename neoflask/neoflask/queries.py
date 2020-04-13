@@ -4,8 +4,8 @@ from neotools.db import Cypher
 
 # Cypher queries, with the required names of the substitution variables and names of result fields
 BY_DOI = Cypher(
-    code = "MATCH (a:SDArticle) WHERE a.doi = {doi} RETURN a.title AS title;",
-    params = {'doi': []}, # the $doi var is the string of the request
+    code = "MATCH (a:SDArticle) WHERE a.doi = $doi RETURN a.title AS title;",
+    params = {'doi': []}, # the doi var is the string of the request
     returns = ['title']
 )
 
@@ -75,34 +75,34 @@ SEARCH = Cypher(
     code = '''
 /// Full-text search on the index created with:
 // CALL db.index.fulltext.createNodeIndex("titles_captions_names",["SDArticle"],["title"])
-CALL db.index.fulltext.queryNodes("titles_captions_names", {query}) YIELD node, score
+CALL db.index.fulltext.queryNodes("titles_captions_names", $query) YIELD node, score
 WHERE node.doi <> ""
 WITH node.doi AS doi, node.title as text, score, "title" as source
 RETURN doi, text, score, source
 ORDER BY score DESC
-LIMIT toInteger({limit})
+LIMIT toInteger($limit)
 
 UNION
 
-CALL db.index.fulltext.queryNodes("titles_captions_names", {query}) YIELD node, score
+CALL db.index.fulltext.queryNodes("titles_captions_names", $query) YIELD node, score
 WHERE node.panel_id <> ""
 WITH node, score
 MATCH (article_from_panel:SDArticle)-->(f:SDFigure)-->(p:SDPanel {panel_id:node.panel_id})
 WITH article_from_panel.doi as doi, p.formatted_caption as text, score, "caption" AS source
 RETURN doi, text, score, source
 ORDER BY score DESC
-LIMIT toInteger({limit})
+LIMIT toInteger($limit)
 
 UNION
 
-CALL db.index.fulltext.queryNodes("titles_captions_names", {query}) YIELD node, score
+CALL db.index.fulltext.queryNodes("titles_captions_names", $query) YIELD node, score
 WHERE node.ext_ids <> ""
 WITH node, score
 MATCH (article_from_entity:SDArticle)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(h:H_Entity {ext_ids: node.ext_ids})
 WITH article_from_entity.doi as doi, h.name as text, score, "entity" as source
 RETURN doi, text, score, source
 ORDER BY score DESC
-LIMIT toInteger({limit})
+LIMIT toInteger($limit)
 ''',
     params = {'query': ['query', ''], 'limit': ['limit', 10]},
     returns = ['doi', 'text', 'score', 'source']

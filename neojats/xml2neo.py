@@ -7,6 +7,7 @@ from io import BytesIO
 from argparse import ArgumentParser
 from .utils import inner_text
 from neotools.db import Cypher
+from .model import JATS_GRAPH_MODEL
 from . import DB
 
 NS = {
@@ -15,36 +16,6 @@ NS = {
 }
 
 DEBUG_MODE = False
-
-
-GRAPH_MODEL = {
-    'has_doi': {
-        'XPath': 'front/article-meta/article-id[@pub-id-type="doi"]',
-        'children': {}
-    },
-    'has_title': {
-        'XPath': 'front/article-meta/title-group/article-title',
-        'children': {}
-    },
-    'has_figure': {
-        'XPath': './/fig',
-        'children': {
-            'has_label': {'XPath': 'label', 'children': {}},
-            'has_caption': {'XPath': 'caption', 'children': {}},
-            'has_graphic': {'XPath': 'graphic', 'children': {}},
-        }
-    },
-}
-
-
-def quote4neo(attributes):
-    quotes_added = {}
-    for k, v in attributes.items():
-        if isinstance(v, str):
-            v = '"' + v.replace("'", r"\'").replace('"', r'\"') + '"'
-        quotes_added[k] = v
-    return quotes_added
-
 
 def cleanup_name(name):
     hyphen = re.compile(r'-')
@@ -133,10 +104,10 @@ def load_dir(path: Path):
                 article_item = x_manifest.xpath('ns:item[@type="article"]/ns:instance[@media-type="application/xml"]', namespaces=ns)[0]
                 path_full_text = article_item.attrib['href']
             with z.open(path_full_text) as full_text_xml:
-                print(f"parsing {path_full_text}")
+                print(f"parsing {meca_archive}/{path_full_text}")
                 xml = parse(full_text_xml).getroot()
                 source = meca_archive.name
-                xml_node = XMLNode(xml, GRAPH_MODEL)
+                xml_node = XMLNode(xml, JATS_GRAPH_MODEL)
                 print(f"graph from {xml_node.children['has_doi'][0].properties['text']}")
                 build_neo_graph(xml_node, source)
 
@@ -149,7 +120,7 @@ def self_test():
             <article-meta>
                 <article-id pub-id-type="doi">10.1101/2020.03.02.972935</article-id>
                 <title-group>
-                    <article-title>Isolation and characterization of SARS-CoV-2 from the first US COVID-19 patient</article-title>
+                    <article-title>Isolation 'and' "characterization"  $of {SARS-CoV-2} from the first \US COVID-19 patient</article-title>
                 </title-group>
             </article-meta>
         </front>
@@ -165,18 +136,18 @@ def self_test():
     '''
     tree = parse(BytesIO(xml_str))
     xml_element = tree.getroot()
-    graph = XMLNode(xml_element, GRAPH_MODEL)
+    graph = XMLNode(xml_element, JATS_GRAPH_MODEL)
     print(graph)
     build_neo_graph(graph, 'test')
 
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Generative Adverserial Trainer for fraud detection.')
-    parser.add_argument('path', help='Paths to directory contraining meca archives.')
+    parser.add_argument('path', nargs="?", help='Paths to directory contraining meca archives.')
     args = parser.parse_args()
     path = args.path
-    path = Path(path)
     if path:
+        path = Path(path)
         load_dir(path)
     else:
         self_test()

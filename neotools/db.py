@@ -9,7 +9,10 @@ def quote4neo(attributes):
         if v is None:
             v = '""'
         elif isinstance(v, str):
-            v = '"' + v.replace("'", r"\'").replace('"', r'\"') + '"'
+            v = v.replace("'", r"\'")
+            v = v.replace('"', r"'")
+            v = v.replace('\\', r'\\')
+            v = f'"{v}"'
         quotes_added[k] = v
     return quotes_added
 
@@ -25,13 +28,10 @@ class Cypher:
         self.code = code
         self.params = params
         self.returns = returns
-        substitution_variables = re.findall(r"\{(\w+)\}", self.code)
+        substitution_variables = re.findall(r"\$(\w+)", self.code)
         # check that parameters needed appear in the cypher code
         for p in self.params:
-            assert p in substitution_variables, f"variable {p} missing in {substitution_variables} extracted from the cypher code {self.code}"
-        if substitution_variables is not None:
-            for v in substitution_variables:
-                assert v in self.params, f"variable {v} is not registered in the Cypher object ({self.params})."
+            assert p in substitution_variables, f"variable '{p}' missing in {substitution_variables} extracted from the cypher code \"{self.code}\""
 
 
 class Instance:
@@ -51,7 +51,7 @@ class Instance:
         label = n.label
         properties_str = to_string(n.properties)
         q = Cypher(
-            code=f"{clause} (n: {label} {{ {properties_str} }}) RETURn n"
+            code=f"{clause} (n: {label} {{ {properties_str} }}) RETURN n"
         )
         record = self.query(q).single()
         node = record['n']
