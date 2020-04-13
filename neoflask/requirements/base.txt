@@ -1,0 +1,5 @@
+neo4j-driver==1.7.6
+flask-cors
+Flask==0.12.2
+Flask-DotEnv==0.1.1
+python-dotenv==0.10.1

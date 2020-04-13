@@ -1,0 +1,57 @@
+version: '3'
+
+volumes:
+  production_neo4j_data: {}
+  production_neo4j_logs: {}
+  production_traefik: {}
+
+services:
+  flask:
+    build:
+      context: .
+      dockerfile: ./compose/production/flask/Dockerfile
+    image: neoflask_production_flask
+    depends_on:
+      - neo4j
+    env_file:
+      - ./.env
+    ports:
+      - "5000:5000"
+    command: /start
+
+  neo4j:
+    image: neo4j:3.5
+    volumes:
+      - production_neo4j_data:/data
+      - production_neo4j_logs:/logs
+    env_file:
+      - ./.env
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+
+  traefik:
+    build:
+      context: .
+      dockerfile: ./compose/production/traefik/Dockerfile
+    image: neoflask_production_traefik
+    depends_on:
+      - flask
+    volumes:
+      - production_traefik:/etc/traefik/acme
+    ports:
+      - "0.0.0.0:80:80"
+      - "8080:8080" # debugging UI
+      # - "0.0.0.0:443:443"
+  vuejs:
+    build:
+      context: .
+      dockerfile: ./compose/production/vuejs/Dockerfile
+    image: neoflask_production_vuejs
+    volumes:
+      - .:/app
+    env_file:
+      - ./.env
+    # ports:
+    #   - "8080:8080"
+    # command: /start

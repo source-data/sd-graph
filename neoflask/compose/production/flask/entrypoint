@@ -1,0 +1,17 @@
+#!/bin/bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+
+check_service_status () {
+    >&2 echo "waiting for \"$2\" to become available with $4 timeout"
+    dockerize -wait ${1}://${2}:${3} -timeout ${4}
+    >&2 echo "$2 is up. continuing..."
+}
+
+# Check for neo4j
+check_service_status tcp neo4j 7687 60s
+
+exec "$@"

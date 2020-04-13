@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+
+export FLASK_APP=neoflask
+export FLASK_DEBUG=true
+cd /app
+# /usr/local/bin/gunicorn config.wsgi --bind 0.0.0.0:5000 --chdir=/app
+/usr/local/bin/gunicorn wsgi:app --bind 0.0.0.0:5000 --chdir=/app
+

@@ -1,0 +1,41 @@
+version: '3'
+
+services:
+  flask:
+    build:
+      context: .
+      dockerfile: ./compose/local/flask/Dockerfile
+    image: neoflask_local_flask
+    depends_on:
+      - neo4j
+    volumes:
+      - .:/app
+    env_file:
+      - ./.env
+    ports:
+      # - "0.0.0.0:5000:5000"
+      - "5000:5000"
+    command: /start
+
+  neo4j:
+    image: neo4j:3.5
+    volumes:
+      - ./neo4j-data:/data
+    env_file:
+      - ./.env
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+
+  vuejs:
+    build:
+      context: .
+      dockerfile: ./compose/local/vuejs/Dockerfile
+    image: neoflask_local_vuejs
+    volumes:
+      - .:/app
+    env_file:
+      - ./.env
+    ports:
+      - "8080:8080"
+    command: /start
