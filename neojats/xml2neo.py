@@ -1,13 +1,13 @@
 from lxml.etree import Element, XMLParser, parse
-from typing import Dict
+from typing import Dict, List
 import re
 from zipfile import ZipFile
 from pathlib import Path
 from io import BytesIO
 from argparse import ArgumentParser
 from .utils import inner_text
-from neotools.db import Cypher
 from .model import JATS_GRAPH_MODEL
+from .queries import SOURCE_BY_UUID
 from . import DB
 
 NS = {
@@ -16,6 +16,7 @@ NS = {
 }
 
 DEBUG_MODE = False
+
 
 def cleanup_name(name):
     hyphen = re.compile(r'-')
@@ -95,21 +96,55 @@ def build_neo_graph(xml_node: XMLNode, source: str):
     return node
 
 
-def load_dir(path: Path):
-    for meca_archive in path.glob('*.meca'):
-        with ZipFile(meca_archive) as z:
-            with z.open('manifest.xml') as manifest:
-                x_manifest = parse(manifest).getroot()
-                ns = {'ns': x_manifest.nsmap[None]}
-                article_item = x_manifest.xpath('ns:item[@type="article"]/ns:instance[@media-type="application/xml"]', namespaces=ns)[0]
-                path_full_text = article_item.attrib['href']
-            with z.open(path_full_text) as full_text_xml:
-                print(f"parsing {meca_archive}/{path_full_text}")
-                xml = parse(full_text_xml).getroot()
-                source = meca_archive.name
-                xml_node = XMLNode(xml, JATS_GRAPH_MODEL)
-                print(f"graph from {xml_node.children['has_doi'][0].properties['text']}")
-                build_neo_graph(xml_node, source)
+class ArchiveLoader:
+
+    def __init__(self, path: Path, glob_pattern='*.meca'):
+        self.path = path
+        self.archives = self.path.glob(glob_pattern)
+
+    def load_full_text(self, z: ZipFile, meca_archive, path_full_text: str):
+        with z.open(path_full_text) as full_text_xml:
+            print(f"parsing {meca_archive}/{path_full_text}")
+            xml = parse(full_text_xml).getroot()
+            source = meca_archive.name
+            xml_node = XMLNode(xml, JATS_GRAPH_MODEL)
+            print(f"building graph from {xml_node.children['has_doi'][0].properties['text']}")
+            build_neo_graph(xml_node, source)
+
+    def already_loaded(self, meca_archive: Path):
+        results = DB.query(SOURCE_BY_UUID, {'source': meca_archive.name})
+        return results.single() is not None
+
+    def extract_from_manifest(self, z: ZipFile):
+        with z.open('manifest.xml') as manifest:
+            x_manifest = parse(manifest).getroot()
+            ns = {'ns': x_manifest.nsmap[None]}
+            article_item = x_manifest.xpath('ns:item[@type="article"]/ns:instance[@media-type="application/xml"]', namespaces=ns)[0]
+            path_full_text = article_item.attrib['href']
+        return path_full_text
+
+    def find_alternative(self, xml_file_list: List, path_full_text):
+        for filename in xml_file_list:
+            basename_from_manifest = Path(path_full_text).stem
+            existing_basename = Path(filename).stem
+            # trying conservative method to find an alternative xml file with only version number as alteration
+            if re.match(basename_from_manifest + r'v\d+', existing_basename):
+                break
+        return filename
+
+    def load_dir(self):
+        for meca_archive in self.archives:
+            if self.already_loaded(meca_archive):
+                print(f"WARNING: {meca_archive.name} already loaded. Skipping.", end='\r')
+            else:
+                with ZipFile(meca_archive) as z:
+                    xml_file_list = [f for f in z.namelist() if Path(f).suffix == '.xml']
+                    path_full_text = self.extract_from_manifest(z)
+                    if path_full_text not in xml_file_list:
+                        print(f"WARNING: the file {path_full_text} indicated in the manifest is not in {meca_archive}")
+                        path_full_text = self.find_alternative(xml_file_list, path_full_text)
+                        print(f"Trying {path_full_text} instead.")
+                    self.load_full_text(z, meca_archive, path_full_text)
 
 
 def self_test():
@@ -142,12 +177,11 @@ def self_test():
 
 
 if __name__ == '__main__':
-    parser = ArgumentParser(description='Generative Adverserial Trainer for fraud detection.')
-    parser.add_argument('path', nargs="?", help='Paths to directory contraining meca archives.')
+    parser = ArgumentParser(description='Parsing xml documents from meca archive and loading into neo4j.')
+    parser.add_argument('path', nargs="?", help='Paths to directory containing meca archives.')
     args = parser.parse_args()
     path = args.path
     if path:
-        path = Path(path)
-        load_dir(path)
+        ArchiveLoader(Path(path)).load_dir()
     else:
         self_test()
