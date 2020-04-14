@@ -1,6 +1,6 @@
 import re
-from typing import Dict
-from neo4j import GraphDatabase, Node
+from typing import Dict, Callable
+from neo4j import GraphDatabase, Node, BoltStatementResult, BoltStatementResultSummary
 
 
 def quote4neo(attributes):
@@ -47,23 +47,45 @@ class Instance:
             results = session.write_transaction(self._run_transaction, q.code, params)
             return results
 
+    def query_with_tx_funct(self, tx_funct: Callable, q: Cypher, params={}):
+        # To enable consuming results within session according to https://neo4j.com/docs/api/python-driver/current/transactions.html
+        # "Results should be fully consumed within the function and only aggregate or status values should be returned"
+        with self._driver.session() as session:
+            results = session.write_transaction(tx_funct, q.code, params)
+            return results
+
     def node(self, n: Node, clause="MERGE"):
         label = n.label
         properties_str = to_string(n.properties)
         q = Cypher(
-            code=f"{clause} (n: {label} {{ {properties_str} }}) RETURN n"
+            code=f"{clause} (n: {label} {{ {properties_str} }}) RETURN n;"
         )
-        record = self.query(q).single()
-        node = record['n']
+        res = self.query_with_tx_funct(self._tx_funct_single, q)
+        node = res['n']
         return node
 
     def relationship(self, a, b, r: str, clause="MERGE"):
         q = Cypher(
-             code=f"MATCH (a), (b) WHERE id(a)={a.id} AND id(b)={b.id} {clause} (a)-[r:{r}]->(b) RETURN r"
+            code=f"MATCH (a), (b) WHERE id(a)={a.id} AND id(b)={b.id} {clause} (a)-[r:{r}]->(b) RETURN r;"
         )
-        record = self.query(q).single()
-        rel = record['r']
+        res = self.query_with_tx_funct(self._tx_funct_single, q)
+        rel = res['r']
         return rel
+
+    @staticmethod
+    def _tx_funct_single(tx, q, params={}):
+        results: BoltStatementResult = tx.run(q)
+        records = [r for r in results] # consume results right here
+        if len(records) > 1:
+            summary: BoltStatementResultSummary = results.summary()
+            print(f"WARNING: {len(records)} > 1 records returned with statement:'")
+            print(summary.statement)
+            print(f"with params {summary.parameters}.")
+            print("Affected records:")
+            for r in records:
+                print(r)
+        r = records[0]
+        return r
 
     @staticmethod
     def _run_transaction(tx, q, params):
