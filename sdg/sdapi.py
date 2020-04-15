@@ -65,13 +65,15 @@ class SDArticle(SDNode):
         self.year = self._data.get('year', '')
         self.doi = self._data.get('doi', '')
         self.pmid = self._data.get('pmid' '')
+        self.import_id = self._data.get('pmcid', '')
         self.nb_figures = int(self._data.get('nbFigures', 0))
         self.properties = {
-            'doi': self.doi, 
-            'pmid': self.pmid, 
-            'title': self.title, 
-            'journalName': self.journal, 
-            'year': self.year, 
+            'doi': self.doi,
+            'pmid': self.pmid,
+            'import_id': self.import_id,
+            'title': self.title,
+            'journalName': self.journal,
+            'year': self.year,
             'nb_figures': self.nb_figures
         }
         self.children = range(1, self.nb_figures+1)
@@ -85,8 +87,8 @@ class SDFigure(SDNode):
         self.href = self._data.get('href', '')
         panels = self._data.get('panels', [])
         self.properties = {
-            'fig_label': self.fig_label, 
-            'caption': self.caption, 
+            'fig_label': self.fig_label,
+            'caption': self.caption,
             'href': self.href,
         }
         self.children = self.rm_empty(panels)
@@ -119,7 +121,7 @@ class SDPanel(SDNode):
         self.properties = {
             "paper_doi": self.paper_doi,
             "fig_label": self.fig_label,
-            "panel_id": self.panel_id, 
+            "panel_id": self.panel_id,
             "panel_label": self.panel_label,
             "caption": self.caption, 
             "formatted_caption": self.formatted_caption, 
@@ -141,7 +143,7 @@ class SDTag(SDNode):
         elif category is None:
             self.category = ''
         else:
-            self.category = category 
+            self.category = category
         self.type = self._data.get('type', '')
         self.role = self._data.get('role', '')
         self.text = self._data.get('text', '')
@@ -177,14 +179,14 @@ class ArticleList:
         self.title_list = [a.get('title', '') for a in data]
         self.title_doi_dictionary = {a['id']: {"title": a['title'], "doi": a['doi']} for a in data}
 
-class SDAPI:  
+class SDAPI:
 
     def __init__(self, collection_name):
         self.collection_name = collection_name
         self.collection_id = self.get_collection_id(self.collection_name)
         self.doi_list = self.article_list().doi_list
         self.N = len(self.doi_list)
-        print(f"collection {self.collection_id } contains {self.N} papers.")  
+        print(f"collection {self.collection_id } contains {self.N} papers.")
     
     def get_collection_id(self, collection_name):
         url = SD_API_URL + GET_COLLECTION + collection_name
@@ -229,20 +231,28 @@ class SDAPI:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser( description="interace to the SourceData API" )
     parser.add_argument('collection', nargs="?", default="PUBLICSEARCH", help="Takes the name of a collection (try \"PUBLICSEARCH\") nd returns the list of papers")
+    parser.add_argument('-L', '--listing', action="store_true", help="List of articles in the collection.") 
     parser.add_argument('-D', '--doi', default = '', help="Takes a doi and return article information")
     parser.add_argument('-F', '--figure', default = '', help="Takes the figure index and returns the figure legend for the figure in the paper specified with the --doi option") 
     parser.add_argument('-P', '--panel', default='', help="Takes the id of a panel and returns the tagged text of the legend")
     args = parser.parse_args()
     collection_name = args.collection
+    listing = args.listing
     doi = args.doi
     fig = args.figure
     panel_id = args.panel
     sdapi = SDAPI(collection_name)
     if collection_name:
-        collection_id = sdapi.collection_id 
+        collection_id = sdapi.collection_id
         print(f"collection {sdapi.collection_name} has id = {collection_id} and has {len(sdapi)} articles.")
 
-    if doi: 
+    if listing:
+        article_list = sdapi.article_list()
+        for doi in article_list.doi_list:
+            a = sdapi.article(doi)
+            print(f"{a.doi}\t{a.import_id}\t{a.title}")
+
+    if doi:
         article = sdapi.article(doi)
         print('doi:', article.doi)
         print('title:', article.title)

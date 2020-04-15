@@ -47,12 +47,6 @@ class Instance:
             results = session.write_transaction(self._run_transaction, q.code, params)
             return results
 
-    def multi_statement_query(self, q: Cypher, params=()):
-        with self._driver.session() as session:
-            tx = session.begin_transaction()
-            results = tx.run(q.code, params)
-            return results
-
     def query_with_tx_funct(self, tx_funct: Callable, q: Cypher, params={}):
         # To enable consuming results within session according to https://neo4j.com/docs/api/python-driver/current/transactions.html
         # "Results should be fully consumed within the function and only aggregate or status values should be returned"

@@ -1,6 +1,7 @@
 from lxml.etree import Element
 from .utils import inner_text
 
+
 # need a function factory to determin which attribute to get the value from
 def get_attr_factory(key, default=None):
     def f(e: Element):
@@ -36,11 +37,18 @@ def get_datetime(e: Element):
     year = e.xpath('year/text()')[0]
     return f"{year}-{month}-{day}"
 
+
 def get_caption(e: Element):
-    title = e.xpath('title')[0]
-    paragraphs = e.xpath('p')[0]
-    text = " ".join(inner_text(paragraphs))
-    caption = title + " " + text
+    title = e.xpath('title')
+    paragraphs = e.xpath('p')
+    if title and paragraphs:
+        title = title[0]
+        paragraphs = "".join([inner_text(p) for p in paragraphs])
+        title_text = title.text or ''
+        title_tail = title.tail or ''
+        caption = title_text + title_tail + paragraphs
+    else:
+        caption = inner_text(e)
     return caption
 
 

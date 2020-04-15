@@ -7,7 +7,13 @@ from io import BytesIO
 from argparse import ArgumentParser
 from .utils import inner_text
 from .model import JATS_GRAPH_MODEL
-from .queries import SOURCE_BY_UUID, CREATE_FULLTEXT_INDEX
+from .queries import (
+    SOURCE_BY_UUID, 
+    CREATE_FULLTEXT_INDEX_ON_ABSTRACT,
+    CREATE_FULLTEXT_INDEX_ON_CAPTION,
+    CREATE_FULLTEXT_INDEX_ON_NAME,
+    CREATE_FULLTEXT_INDEX_ON_TITLE,
+)
 from . import DB
 
 NS = {
@@ -120,10 +126,6 @@ def build_neo_graph(xml_node: XMLNode, source: str):
     return node
 
 
-def add_index():
-    DB.multi_statement_query(CREATE_FULLTEXT_INDEX)
-
-
 class ArchiveLoader:
 
     def __init__(self, path: Path, glob_pattern='*.meca', check_for_duplicate=False):
@@ -185,6 +187,13 @@ class ArchiveLoader:
                         path_full_text = self.find_alternative(xml_file_list, path_full_text)
                         print(f"Trying {path_full_text} instead.")
                     self.load_full_text(z, meca_archive, path_full_text)
+
+
+def add_indices():
+    DB.query(CREATE_FULLTEXT_INDEX_ON_ABSTRACT)
+    DB.query(CREATE_FULLTEXT_INDEX_ON_CAPTION)
+    DB.query(CREATE_FULLTEXT_INDEX_ON_NAME)
+    DB.query(CREATE_FULLTEXT_INDEX_ON_TITLE)
 
 
 def self_test():

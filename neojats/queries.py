@@ -8,11 +8,15 @@ SOURCE_BY_UUID = Cypher(
     returns=['n']
 )
 
-CREATE_FULLTEXT_INDEX = Cypher(
-    code='''
-CALL db.index.fulltext.createNodeIndex("title",["Article"], ["title"]);
-CALL db.index.fulltext.createNodeIndex("abstract",["Article"], ["abstract"]);
-CALL db.index.fulltext.createNodeIndex("caption",["Fig"], ["caption"]);
-CALL db.index.fulltext.createNodeIndex("name",["Contrib"], ["surname"]);
-'''
+CREATE_FULLTEXT_INDEX_ON_TITLE = Cypher(
+    code='''CALL db.index.fulltext.createNodeIndex("title", ["Article"], ["title"]);'''
+)
+CREATE_FULLTEXT_INDEX_ON_ABSTRACT = Cypher(
+    code='''CALL db.index.fulltext.createNodeIndex("abstract", ["Article"], ["abstract"]);'''
+)
+CREATE_FULLTEXT_INDEX_ON_CAPTION = Cypher(
+    code='''CALL db.index.fulltext.createNodeIndex("caption", ["Fig"], ["caption"]);'''
+)
+CREATE_FULLTEXT_INDEX_ON_NAME = Cypher(
+    code='''CALL db.index.fulltext.createNodeIndex("name", ["Contrib"], ["surname"]);'''
 )
