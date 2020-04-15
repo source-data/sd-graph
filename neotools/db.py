@@ -1,6 +1,6 @@
 import re
 from typing import Dict, Callable
-from neo4j import GraphDatabase, Node, BoltStatementResult, BoltStatementResultSummary
+from neo4j import GraphDatabase, Node, BoltStatementResult, BoltStatementResultSummary, Session, Transaction
 
 
 def quote4neo(attributes):
@@ -45,6 +45,12 @@ class Instance:
     def query(self, q: Cypher, params={}):
         with self._driver.session() as session:
             results = session.write_transaction(self._run_transaction, q.code, params)
+            return results
+
+    def multi_statement_query(self, q: Cypher, params=()):
+        with self._driver.session() as session:
+            tx = session.begin_transaction()
+            results = tx.run(q.code, params)
             return results
 
     def query_with_tx_funct(self, tx_funct: Callable, q: Cypher, params={}):

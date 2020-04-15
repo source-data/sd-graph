@@ -156,5 +156,5 @@ MATCH (e:H_Entity {type:"organism"}) SET e.scale = 6;
 RETURN "added scales to entities";
 
 //Full text indexing
-
-CALL db.index.fulltext.createNodeIndex("titles_captions_names",["SDArticle", "SDPanel", "H_Entity"],["title", "formatted_caption", "name"]);
+CALL db.index.fulltext.createNodeIndex("entity_name",["H_Entity"],["name"]);
+CALL db.index.fulltext.createNodeIndex("synonym",["Term"],["text"]);

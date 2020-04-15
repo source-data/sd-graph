@@ -36,6 +36,12 @@ def get_datetime(e: Element):
     year = e.xpath('year/text()')[0]
     return f"{year}-{month}-{day}"
 
+def get_caption(e: Element):
+    title = e.xpath('title')[0]
+    paragraphs = e.xpath('p')[0]
+    text = " ".join(inner_text(paragraphs))
+    caption = title + " " + text
+    return caption
 
 
 # format of the graph model
@@ -75,7 +81,7 @@ JATS_GRAPH_MODEL = {
             'XPath': './/fig',
             'properties': {
                 'label': ('label', get_text),
-                'caption': ('caption', get_text),
+                'caption': ('caption', get_caption),
                 'graphic': ('graphic', get_attr_factory('{http://www.w3.org/1999/xlink}href')),
             },
         },

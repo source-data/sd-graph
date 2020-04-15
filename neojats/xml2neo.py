@@ -7,7 +7,7 @@ from io import BytesIO
 from argparse import ArgumentParser
 from .utils import inner_text
 from .model import JATS_GRAPH_MODEL
-from .queries import SOURCE_BY_UUID
+from .queries import SOURCE_BY_UUID, CREATE_FULLTEXT_INDEX
 from . import DB
 
 NS = {
@@ -118,6 +118,10 @@ def build_neo_graph(xml_node: XMLNode, source: str):
             child_node = build_neo_graph(child, source)
             DB.relationship(node, child_node, rel)
     return node
+
+
+def add_index():
+    DB.multi_statement_query(CREATE_FULLTEXT_INDEX)
 
 
 class ArchiveLoader:
@@ -238,5 +242,6 @@ if __name__ == '__main__':
     check_for_duplicate = not args.no_duplicate_check
     if path:
         ArchiveLoader(Path(path), check_for_duplicate=check_for_duplicate).load_dir()
+        add_index()
     else:
         self_test()

@@ -62,7 +62,7 @@ WITH DISTINCT
   paper.doi AS doi, 
   method.name AS method_names, method
 RETURN 
-  method_names, method.ext_ids AS method_id, COLLECT(DISTINCT paper.doi) AS doi, COUNT(DISTINCT doi) AS popularity
+  method_names, method.ext_ids AS method_id, COLLECT(DISTINCT doi) AS doi, COUNT(DISTINCT doi) AS popularity
 ORDER BY popularity DESC
 ''',
     returns=['method_names', 'method_id', 'doi']
@@ -90,9 +90,9 @@ ORDER BY popularity DESC
 SEARCH = Cypher(
     code='''
 /// Full-text search on the index created with:
-// CALL db.index.fulltext.createNodeIndex("titles_captions_names",["SDArticle"],["title"])
-CALL db.index.fulltext.queryNodes("titles_captions_names", $query) YIELD node, score
-WHERE node.doi <> ""
+
+//CALL db.index.fulltext.createNodeIndex("title",["Article"], ["title"]);
+CALL db.index.fulltext.queryNodes("title", $query) YIELD node, score
 WITH node.doi AS doi, node.title as text, score, "title" as source
 RETURN doi, text, score, source
 ORDER BY score DESC
@@ -100,22 +100,53 @@ LIMIT toInteger($limit)
 
 UNION
 
-CALL db.index.fulltext.queryNodes("titles_captions_names", $query) YIELD node, score
-WHERE node.panel_id <> ""
-WITH node, score
-MATCH (article_from_panel:SDArticle)-->(f:SDFigure)-->(p:SDPanel {panel_id:node.panel_id})
-WITH article_from_panel.doi as doi, p.formatted_caption as text, score, "caption" AS source
+//CALL db.index.fulltext.createNodeIndex("abstract",["Article"], ["abstract"]);
+CALL db.index.fulltext.queryNodes("abstract", $query) YIELD node, score
+WITH node.doi AS doi, node.title as text, score, "abstract" as source
 RETURN doi, text, score, source
 ORDER BY score DESC
 LIMIT toInteger($limit)
 
 UNION
 
-CALL db.index.fulltext.queryNodes("titles_captions_names", $query) YIELD node, score
-WHERE node.ext_ids <> ""
-WITH node, score
-MATCH (article_from_entity:SDArticle)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(h:H_Entity {ext_ids: node.ext_ids})
-WITH article_from_entity.doi as doi, h.name as text, score, "entity" as source
+//CALL db.index.fulltext.createNodeIndex("caption",["Fig"], ["caption"]);
+CALL db.index.fulltext.queryNodes("caption", $query) YIELD node, score
+MATCH (article:Article)-[:has_figure]->(node)
+WITH article.doi as doi, node.caption as text, score, "caption" AS source
+RETURN doi, text, score, source
+ORDER BY score DESC
+LIMIT toInteger($limit)
+
+UNION
+
+//CALL db.index.fulltext.createNodeIndex("name",["Contrib"], ["surname"]);
+CALL db.index.fulltext.queryNodes("name", $query) YIELD node, score
+MATCH (article:Article)-->(author:Contrib)
+WHERE author.surname = node.surname
+WITH DISTINCT article.doi as doi, node.surname as text, score, "author" AS source
+RETURN doi, text, score, source
+ORDER BY score DESC
+LIMIT toInteger($limit)
+
+UNION
+
+//CALL db.index.fulltext.createNodeIndex("entity_name",["H_Entity"],["name"]);
+CALL db.index.fulltext.queryNodes("entity_name", $query) YIELD node, score
+WHERE node.name <> ""
+MATCH (sd_article:SDArticle)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(h:H_Entity)
+WHERE h.name = node.name
+WITH DISTINCT sd_article.doi as doi, h.name as text, score, "entity" as source
+RETURN doi, text, score, source
+ORDER BY score DESC
+LIMIT toInteger($limit)
+
+UNION
+
+//CALL db.index.fulltext.createNodeIndex("synonym",["Term"],["text"]);
+CALL db.index.fulltext.queryNodes("synonym", $query) YIELD node, score
+MATCH (sd_article:SDArticle)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(h:H_Entity)-->(te:Term)
+WHERE te.text = node.text
+WITH DISTINCT sd_article.doi as doi, te.text as text, score, "synonym" as source
 RETURN doi, text, score, source
 ORDER BY score DESC
 LIMIT toInteger($limit)
@@ -123,4 +154,3 @@ LIMIT toInteger($limit)
     params={'query': ['query', ''], 'limit': ['limit', 10]},
     returns=['doi', 'text', 'score', 'source']
 )
-
