@@ -109,7 +109,7 @@ class XMLNode:
 
 
 def build_neo_graph(xml_node: XMLNode, source: str):
-    properties = xml_node.properties
+    properties = xml_node.properties # deal with types!
     properties['source'] = source
     node = DB.node(xml_node)
 
