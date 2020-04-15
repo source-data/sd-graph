@@ -13,38 +13,46 @@ from flask_cors import CORS
 
 ASKNEO = Engine(DB)
 
+
 @app.route('/')
 def root():
     return render_template('index.html')
 
+
 @app.route('/doc')
 def doc():
     return render_template('doc.html', name='me')
+
 
 @app.route('/api/v1/by_molecule', methods=['GET', 'POST'])
 def by_molecule():
     app.logger.info(f"list by molecule")
     return R(ASKNEO.by_molecule(request))
 
+
 @app.route('/api/v1/by_method', methods=['GET', 'POST'])
 def by_method():
     app.logger.info(f"list by method")
     return R(ASKNEO.by_method(request))
+
 
 @app.route('/api/v1/by_hyp', methods=['GET', 'POST'])
 def by_hyp():
     app.logger.info(f"list by hypotheses")
     return R(ASKNEO.by_hyp(request))
 
+
 @app.route('/api/v1/doi/<path:doi>', methods=['GET', 'POST'])
-def by_doi(doi:str):
+def by_doi(doi: str):
     app.logger.info(f"search doi:{doi}")
     return R(ASKNEO.by_doi(doi))
+
 
 @app.route('/api/v1/search/', methods=['GET'])
 def entity():
     app.logger.info(f"search '{request.args.get('query')}'")
     return R(ASKNEO.search(request))
+
 
 def R(response):
     mimetype = 'application/json'

@@ -6,10 +6,12 @@ from .queries import BY_DOI, BY_MOLECULE, BY_HYP, BY_METHOD, SEARCH
 # symbolic type for a json string
 json_str = NewType('json_str', str)
 
-def param_from_request(request, query:Cypher) -> Dict:
+
+def param_from_request(request, query: Cypher) -> Dict:
     """
     Extracts from the response received by flast the values of the parameters that are required to substitute in the cypher query.
     """
+    # simplify this: assume same name in cypher as in query, provide only default value
     params_dict = {}
     for cypher_var, request_param in query.params.items():
         if request_param:
@@ -19,30 +21,22 @@ def param_from_request(request, query:Cypher) -> Dict:
             params_dict[cypher_var] = request # the request is a string and is the content of the cypher variable
     return params_dict
 
-def neo2response(results, query:Cypher) -> Dict:
-    """
-    Extracts the values returned by the database so that they can be used to build the response of of the flask server.
-    """
-    response = []
-    for record in results.records():
-        row = {}
-        for key in query.returns:
-            row[key] = record[key]
-        response.append(row)
-    return response
 
 class Engine:
 
-    def __init__(self, neo4j_db:Instance):
+    def __init__(self, neo4j_db: Instance):
         self.neo4j_db = neo4j_db
 
-    def ask_neo(self, query:Cypher, request) -> json_str:
+    def ask_neo(self, query: Cypher, request) -> json_str:
+        def tx_funct(tx, code, params):
+            results = tx.run(code, params)
+            data = [r.data(*query.returns) for r in results] # consuming the data inside the transaction https://neo4j.com/docs/api/python-driver/current/transactions.html 
+            return data
         params = param_from_request(request, query) # need to know which param to extract from request depending on the query
-        results = self.neo4j_db.query(query, params)
-        response = neo2response(results, query)
-        j = json.dumps(response, indent=3)
+        data = self.neo4j_db.query_with_tx_funct(tx_funct, query, params) # if query would carry params value, could be simplified to db.query(query)
+        j = json.dumps(data, indent=3)
         return j
-    
+
     def by_molecule(self, request):
         response = self.ask_neo(BY_MOLECULE, request)
         return response
