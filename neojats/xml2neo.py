@@ -5,6 +5,7 @@ from zipfile import ZipFile
 from pathlib import Path
 from io import BytesIO
 from argparse import ArgumentParser
+from neo4j.exceptions import ClientError
 from .utils import inner_text
 from .model import JATS_GRAPH_MODEL
 from .queries import (
@@ -175,9 +176,11 @@ class ArchiveLoader:
         return filename
 
     def load_dir(self):
-        for meca_archive in self.archives:
+        skipped = 0
+        for count, meca_archive in enumerate(self.archives):
             if self.check_for_duplicate and self.already_loaded(meca_archive):
-                print(f"WARNING: {meca_archive.name} already loaded. Skipping.", end='\r')
+                print(f"WARNING: {meca_archive.name} already loaded. Skipping.", end="\r")
+                skipped += 1 
             else:
                 with ZipFile(meca_archive) as z:
                     xml_file_list = [f for f in z.namelist() if Path(f).suffix == '.xml']
@@ -187,13 +190,19 @@ class ArchiveLoader:
                         path_full_text = self.find_alternative(xml_file_list, path_full_text)
                         print(f"Trying {path_full_text} instead.")
                     self.load_full_text(z, meca_archive, path_full_text)
+        print()
+        print(f"skipped {skipped} out of {count+1}")
 
 
 def add_indices():
-    DB.query(CREATE_FULLTEXT_INDEX_ON_ABSTRACT)
-    DB.query(CREATE_FULLTEXT_INDEX_ON_CAPTION)
-    DB.query(CREATE_FULLTEXT_INDEX_ON_NAME)
-    DB.query(CREATE_FULLTEXT_INDEX_ON_TITLE)
+    try:
+        DB.query(CREATE_FULLTEXT_INDEX_ON_ABSTRACT)
+        DB.query(CREATE_FULLTEXT_INDEX_ON_CAPTION)
+        DB.query(CREATE_FULLTEXT_INDEX_ON_NAME)
+        DB.query(CREATE_FULLTEXT_INDEX_ON_TITLE)
+    except ClientError as error:
+        print()
+        print(error)
 
 
 def self_test():
@@ -251,6 +260,6 @@ if __name__ == '__main__':
     check_for_duplicate = not args.no_duplicate_check
     if path:
         ArchiveLoader(Path(path), check_for_duplicate=check_for_duplicate).load_dir()
-        add_index()
+        add_indices()
     else:
         self_test()

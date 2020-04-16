@@ -14,41 +14,45 @@ WITH
     author.corresp = "yes" AS corr_author,
     id.text AS ORCID
 ORDER BY a.title ASC, author_rank DESC
-RETURN title, abstract, COLLECT([surname, given_name, ORCID, corr_author]) AS auth
+RETURN title, abstract, COLLECT([surname, given_name, ORCID, corr_author]) AS authors
 ''',
     params={'doi': []},
-    returns=['title', 'abstract', 'auth']
+    returns=['title', 'abstract', 'authors']
 )
 
 BY_HYP = Cypher(
     code='''
 // by hyp v4
 MATCH
-  (paper:SDArticle)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(h:H_Entity),
-  (p)-->(i:SDTag)-->(:CondTag)-->(var_controlled:H_Entity),
-  (p)-->(a:SDTag)-->(:CondTag)-->(var_measured:H_Entity),
-  (p)-->(e:SDTag {category: "assay"})-->(:CondTag)-->(method:H_Entity)
+    (paper:SDArticle)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(h:H_Entity),
+    (p)-->(i:SDTag)-->(:CondTag)-->(var_controlled:H_Entity),
+    (p)-->(a:SDTag)-->(:CondTag)-->(var_measured:H_Entity),
+    (p)-->(e:SDTag {category: "assay"})-->(:CondTag)-->(method:H_Entity)
 WHERE
-  i.role = "intervention" AND 
-  a.role = "assayed" AND
-  var_controlled.ext_ids <> var_measured.ext_ids
+    i.role = "intervention" AND 
+    a.role = "assayed" AND
+    var_controlled.ext_ids <> var_measured.ext_ids
 WITH DISTINCT
-  paper,
-  p,
-  COLLECT(DISTINCT method.name) AS methods, 
-  COLLECT(DISTINCT var_controlled.name) AS controlled_variables, 
-  COLLECT(DISTINCT var_measured.name) AS measured_variables,
-  COUNT(DISTINCT var_controlled) AS N_1,  
-  COUNT(DISTINCT var_measured) AS N_2
+    paper.doi AS doi,
+    p.panel_id AS panel_id,
+    COLLECT(DISTINCT method.name) AS methods,
+    COLLECT(DISTINCT var_controlled.name) AS controlled,
+    COLLECT(DISTINCT var_measured.name) AS measured,
+    COUNT(DISTINCT var_controlled) AS N_1,
+    COUNT(DISTINCT var_measured) AS N_2
 WHERE (N_1 + N_2 > 1) OR (N_2 > 1)
 MATCH (jats_paper:Article)
-WHERE jats_paper.doi = paper.doi
-WITH DISTINCT p, methods, controlled_variables, measured_variables, jats_paper.doi AS doi, jats_paper.publication_date as pub_date
-RETURN 
-  doi, pub_date, COLLECT(DISTINCT p.panel_id) AS panel_ids, methods, controlled_variables, measured_variables
-ORDER BY pub_date DESC''',
-returns=['doi', 'pub_date', 'panel_ids', 'methods', 'controlled_variables', 'measured_variables']
-
+WHERE jats_paper.doi = doi
+RETURN DISTINCT
+    doi,
+    COLLECT(DISTINCT panel_id) AS panel_ids,
+    methods,
+    controlled,
+    measured,
+    jats_paper.publication_date as pub_date
+ORDER BY pub_date DESC
+''',
+    returns=['doi', 'panel_ids', 'methods', 'controlled', 'measured', 'pub_date']
 )
 
 BY_METHOD = Cypher(
@@ -60,12 +64,17 @@ MATCH
 WHERE e.ext_ids <> ""
 WITH DISTINCT
   paper.doi AS doi, 
-  method.name AS method_names, method
+  method.name AS item_name, 
+  [method.ext_ids] as item_ids,
+  COLLECT(DISTINCT p.panel_id) AS panel_ids
 RETURN 
-  method_names, method.ext_ids AS method_id, COLLECT(DISTINCT doi) AS doi, COUNT(DISTINCT doi) AS popularity
-ORDER BY popularity DESC
+  item_name, 
+  item_ids, 
+  COLLECT(DISTINCT {doi: doi, panel_ids: panel_ids}) AS content_ids, 
+  COUNT(DISTINCT doi) AS score
+ORDER BY score DESC
 ''',
-    returns=['method_names', 'method_id', 'doi']
+    returns=['item_name', 'item_ids', 'content_ids', 'score']
 )
 
 BY_MOLECULE = Cypher(
@@ -76,14 +85,19 @@ MATCH
 WHERE 
   (mol.type = "gene" OR mol.type = "protein" OR mol.type = "molecule") AND
   (ct.role = "intervention" OR ct.role = "assayed" OR ct.role = "experiment")
-RETURN DISTINCT 
-  mol.name AS molecule,
-  COLLECT(DISTINCT mol.ext_ids) AS mol_ids,
-  COLLECT(DISTINCT paper.doi) AS doi,
-  COUNT(DISTINCT paper) AS popularity
-ORDER BY popularity DESC
+WITH DISTINCT
+  paper.doi AS doi,
+  mol.name AS item_name,
+  COLLECT(DISTINCT mol.ext_ids) AS item_ids,
+  COLLECT(DISTINCT p.panel_id) AS panel_ids
+RETURN
+  item_name,
+  item_ids,
+  COLLECT(DISTINCT {doi: doi, panel_ids: panel_ids}) AS content_ids, 
+  COUNT(DISTINCT doi) AS score
+ORDER BY score DESC
 ''',
-    returns=['molecule', 'mol_ids', 'doi', 'popularity']
+    returns=['item_name', 'item_ids', 'content_ids', 'score']
 )
 
 
