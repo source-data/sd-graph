@@ -1,22 +1,18 @@
 import requests
 import argparse
-import re
-from neotools.db import Cypher
 from . import SD_API_URL, SD_API_USERNAME, SD_API_PASSWORD
 
 GET_COLLECTION = "collection/"
-GET_LIST    = "papers"
+GET_LIST = "papers"
 GET_ARTICLE = "paper/"
-GET_FIGURE  = "figure/"
-GET_PANEL   = "panel/"
+GET_FIGURE = "figure/"
+GET_PANEL = "panel/"
 
 
 def rest2data(url, usr=SD_API_USERNAME, pswd=SD_API_PASSWORD):
     data = dict()
-    #print("API request: ", url)
     try:
         response = requests.get(url, auth=(usr, pswd))
-        #print("server response: ", response.text, usr, pswd)
         try: 
             data = response.json()
         except Exception as e:
@@ -33,6 +29,7 @@ def rest2data(url, usr=SD_API_USERNAME, pswd=SD_API_PASSWORD):
             print("response is empty")
             return dict()
 
+
 class SDNode:
 
     def __init__(self, data):
@@ -40,7 +37,6 @@ class SDNode:
         if self._data is not None:
             self.properties = {}
             self.label = self.__class__.__name__
-            self.cypher = None
             self.children = {}
         else:
             self = None
@@ -51,10 +47,6 @@ class SDNode:
 
     def __str__(self):
         return "; ".join([f"{k}: {v}" for k, v in  self._data.items()])
-
-    # def _node(self, collection = ''):
-    #     set_collection = ' SET n.source = "SD_{collection}" '
-    #     q = self._cypher_create() + set_collection + " RETURN n"
 
 
 class SDArticle(SDNode):
@@ -128,10 +120,8 @@ class SDPanel(SDNode):
             "coords": self.coords, 
             "href": self.href
         }
-        self.cypher = Cypher(
-            code = f"MERGE (n:{self.label}) {{ {self.properties} }} RETURN n;"
-        )
         self.children = self.rm_empty(tags)
+
 
 class SDTag(SDNode):
     def __init__(self, data):
@@ -168,9 +158,7 @@ class SDTag(SDNode):
             'ext_tax_names': self.ext_tax_names, 
             'ext_urls': self.ext_urls,
         }
-        self.cypher = Cypher(
-            code = f"MERGE (n:{self.label}) {{ {self.properties} }} RETURN n;"
-        )
+
 
 class ArticleList:
 
@@ -178,6 +166,7 @@ class ArticleList:
         self.doi_list = [a.get('doi', '') for a in data]
         self.title_list = [a.get('title', '') for a in data]
         self.title_doi_dictionary = {a['id']: {"title": a['title'], "doi": a['doi']} for a in data}
+
 
 class SDAPI:
 
@@ -187,7 +176,7 @@ class SDAPI:
         self.doi_list = self.article_list().doi_list
         self.N = len(self.doi_list)
         print(f"collection {self.collection_id } contains {self.N} papers.")
-    
+
     def get_collection_id(self, collection_name):
         url = SD_API_URL + GET_COLLECTION + collection_name
         data = rest2data(url)

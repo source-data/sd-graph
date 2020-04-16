@@ -1,8 +1,8 @@
-from neotools.db import Cypher
+from neotools.db import Query
 
 
-# Cypher queries, with the required names of the substitution variables and names of result fields
-BY_DOI = Cypher(
+# Query queries, with the required names of the substitution variables and names of result fields
+BY_DOI = Query(
     code='''MATCH (a:Article {doi: $doi})-->(author:Contrib)
 OPTIONAL MATCH (author)-->(id:Contrib_id)
 WITH 
@@ -16,13 +16,15 @@ WITH
 ORDER BY a.title ASC, author_rank DESC
 RETURN title, abstract, COLLECT([surname, given_name, ORCID, corr_author]) AS authors
 ''',
-    params={'doi': []},
+    map={'doi': []},
     returns=['title', 'abstract', 'authors']
 )
 
-BY_HYP = Cypher(
+BY_HYP = Query(
     code='''
-// by hyp v4
+//Provides a content list based on observations and testded hypotheses
+//Args
+///
 MATCH
     (paper:SDArticle)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(h:H_Entity),
     (p)-->(i:SDTag)-->(:CondTag)-->(var_controlled:H_Entity),
@@ -55,7 +57,7 @@ ORDER BY pub_date DESC
     returns=['doi', 'panel_ids', 'methods', 'controlled', 'measured', 'pub_date']
 )
 
-BY_METHOD = Cypher(
+BY_METHOD = Query(
     code='''
 // by method
 MATCH
@@ -77,7 +79,7 @@ ORDER BY score DESC
     returns=['item_name', 'item_ids', 'content_ids', 'score']
 )
 
-BY_MOLECULE = Cypher(
+BY_MOLECULE = Query(
     code='''
 // by molecule
 MATCH
@@ -101,7 +103,7 @@ ORDER BY score DESC
 )
 
 
-SEARCH = Cypher(
+SEARCH = Query(
     code='''
 /// Full-text search on the index created with:
 
@@ -165,6 +167,6 @@ RETURN doi, text, score, source
 ORDER BY score DESC
 LIMIT toInteger($limit)
 ''',
-    params={'query': ['query', ''], 'limit': ['limit', 10]},
+    map={'query': ['query', ''], 'limit': ['limit', 10]},
     returns=['doi', 'text', 'score', 'source']
 )

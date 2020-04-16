@@ -143,8 +143,8 @@ class ArchiveLoader:
             build_neo_graph(xml_node, source)
 
     def already_loaded(self, meca_archive: Path):
-        def tx_funct(tx, q, params):
-            results = tx.run(q, params)
+        def tx_funct(tx, code, params):
+            results = tx.run(code, params)
             found_one = results.single() is not None
             summary = results.summary()
             notifications = summary.notifications
@@ -153,9 +153,9 @@ class ArchiveLoader:
                 print(summary.statement)
                 print(summary.parameters)
             return found_one
-        found_it = DB.query_with_tx_funct(tx_funct, SOURCE_BY_UUID, {'source': meca_archive.name})
-        # results = DB.query(SOURCE_BY_UUID, {'source': meca_archive.name})
-        # return results.single() is not None
+        query = SOURCE_BY_UUID
+        query.params = {'source': meca_archive.name}
+        found_it = DB.query_with_tx_funct(tx_funct, query)
         return found_it
 
     def extract_from_manifest(self, z: ZipFile):

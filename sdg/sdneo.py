@@ -1,5 +1,4 @@
 import argparse
-import os
 from .sdapi import SDAPI
 from . import DB
 
@@ -25,7 +24,7 @@ def create_graph(collection_name):
                     print(f"figure {fig_id} from doi={doi} cold not be retrieved")
                     skipped['figure'].append(f"{doi}: {fig_id}")
                 else:
-                    figure_node = DB.node(f) # f has to have label and properties
+                    figure_node = DB.node(f)
                     N+=1
                     DB.relationship(article_node, figure_node, "has_figure")
                     for panel_id in f.children:
