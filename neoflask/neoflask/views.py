@@ -56,7 +56,7 @@ def entity():
 
 @app.route('/api/v1/smartfigure/<id>', methods=['GET', 'POST'])
 def smartfigure(id: str):
-    smartfigure_url = 'https://search.sourcedata.io/panel/' + id
+    smartfigure_url = f'https://search.sourcedata.io/panel/{id}'
     return redirect(smartfigure_url)
 
 
