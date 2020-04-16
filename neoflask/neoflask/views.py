@@ -54,7 +54,12 @@ def entity():
     return R(ASKNEO.search(request))
 
 
+@app.route('/api/v1/smartfigure/<id>', methods=['GET', 'POST'])
+def smartfigure(id: str):
+    smartfigure_url = 'https://search.sourcedata.io/panel/' + id
+    return redirect(smartfigure_url)
+
+
 def R(response):
     mimetype = 'application/json'
     return Response(response, mimetype=mimetype)
-
