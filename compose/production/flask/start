@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+cd /app
+/usr/local/bin/gunicorn neoflask.wsgi:app --bind 0.0.0.0:5000 --chdir=/app/neoflask
+
