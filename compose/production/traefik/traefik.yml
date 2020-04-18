@@ -15,19 +15,19 @@ entryPoints:
     #                    # to overwrite it with the real IP.
     #                    # With this trick, ip-whitelisting by traefik seems reliable and secure, but i'm not sure
     #                    # if this opened other kind of attacks
-  # web-secure:
-  #   # https
-  #   address: ":443"
+  web-secure:
+    # https
+    address: ":443"
 
-# certificatesResolvers:
-#   letsencrypt:
-#     # https://docs.traefik.io/master/https/acme/#lets-encrypt
-#     acme:
-#       email: "embo_it@embo.org"
-#       storage: /etc/traefik/acme/acme.json
-#       # https://docs.traefik.io/master/https/acme/#httpchallenge
-#       httpChallenge:
-#         entryPoint: web
+certificatesResolvers:
+  letsencrypt:
+    # https://docs.traefik.io/master/https/acme/#lets-encrypt
+    acme:
+      email: "embo_it@embo.org"
+      storage: /etc/traefik/acme/acme.json
+      # https://docs.traefik.io/master/https/acme/#httpchallenge
+      httpChallenge:
+        entryPoint: web
 
 http:
   routers:
@@ -41,17 +41,17 @@ http:
     #     - csrf
     #   service: django
 
-    api-router:
-      # rule: "Host(`0.0.0.0`)"
-      # rule: "PathPrefix(`/api`)"
-      rule: "( Host(`0.0.0.0`) || Host(`ec2-3-125-193-124.eu-central-1.compute.amazonaws.com`) || Host(`covid19.sourcedata.io`) )  && PathPrefix(`/api`)"
-      # priority: 1
-      entryPoints:
-        - web
-      middlewares:
-        # - redirect
-        - csrf
-      service: flask
+          #api-router:
+          #  # rule: "Host(`0.0.0.0`)"
+          #  # rule: "PathPrefix(`/api`)"
+          #  rule: "( Host(`0.0.0.0`) || Host(`ec2-3-125-193-124.eu-central-1.compute.amazonaws.com`) || Host(`covid19.sourcedata.io`) )  && PathPrefix(`/api`)"
+          #  # priority: 1
+          #  entryPoints:
+          #    - web
+          #  middlewares:
+          #    # - redirect
+          #    - csrf
+          #  service: flask
 
     vuejs-router:
       rule: "Host(`0.0.0.0`) || Host(`ec2-3-125-193-124.eu-central-1.compute.amazonaws.com`) || Host(`covid19.sourcedata.io`)"
@@ -59,27 +59,38 @@ http:
       entryPoints:
         - web
       middlewares:
-        # - redirect
+        - redirect
         # - csrf
       service: vuejs
 
-    # web-secure-router:
-    #   rule: "Host(`accounts.embo.org`)"
-    #   entryPoints:
-    #     - web-secure
-    #   middlewares:
-    #     - csrf
-    #   service: django
-    #   tls:
-    #     # https://docs.traefik.io/master/routing/routers/#certresolver
-    #     certResolver: letsencrypt
+    web-secure-vuejs-router:
+      rule: "Host(`covid19.sourcedata.io`)"
+      entryPoints:
+        - web-secure
+      middlewares:
+        - csrf
+      service: vuejs
+      tls:
+        # https://docs.traefik.io/master/routing/routers/#certresolver
+        certResolver: letsencrypt
+    web-secure-api-router:
+      rule: "Host(`covid19.sourcedata.io`)  && PathPrefix(`/api`)"
+      entryPoints:
+        - web-secure
+      middlewares:
+        - csrf
+      service: flask
+      tls:
+        # https://docs.traefik.io/master/routing/routers/#certresolver
+        certResolver: letsencrypt
+
 
   middlewares:
-    # redirect:
-    #   # https://docs.traefik.io/master/middlewares/redirectscheme/
-    #   redirectScheme:
-    #     scheme: https
-    #     permanent: true
+    redirect:
+      # https://docs.traefik.io/master/middlewares/redirectscheme/
+      redirectScheme:
+        scheme: https
+        permanent: true
     csrf:
       # https://docs.traefik.io/master/middlewares/headers/#hostsproxyheaders
       # https://docs.djangoproject.com/en/dev/ref/csrf/#ajax
@@ -111,8 +122,8 @@ providers:
   file:
     filename: /etc/traefik/traefik.yml
     watch: true
-api:
-  insecure: true # for web UI debugging
-  debug: true
-log:
-  level: DEBUG
+#api:
+#  insecure: true # for web UI debugging
+#  debug: true
+#log:
+#  level: DEBUG
