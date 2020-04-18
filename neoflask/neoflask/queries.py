@@ -3,7 +3,10 @@ from neotools.db import Query
 
 # Query queries, with the required names of the substitution variables and names of result fields
 BY_DOI = Query(
-    code='''MATCH (a:Article {doi: $doi})-->(author:Contrib)
+    code='''
+//by doi
+//
+MATCH (a:Article {doi: $doi})-->(author:Contrib)
 OPTIONAL MATCH (author)-->(id:Contrib_id)
 WITH 
     a.title AS title, 
@@ -22,9 +25,15 @@ RETURN title, abstract, COLLECT([surname, given_name, ORCID, corr_author]) AS au
 
 BY_HYP = Query(
     code='''
-//Provides a content list based on observations and testded hypotheses
-//Args
-///
+//by hyp
+//Provides a content list based on observations and testded hypotheses.
+//Returns:
+//    doi: the DOI of the relevant paper
+//    panel_ids: the panel_ids of the relevant panels 
+//    methods: the name of the method
+//    controlled: the names of the controlled variables
+//    measured: the names of the measured variables
+//    jats_paper.publication_date as pub_date
 MATCH
     (paper:SDArticle)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(h:H_Entity),
     (p)-->(i:SDTag)-->(:CondTag)-->(var_controlled:H_Entity),
@@ -59,7 +68,7 @@ ORDER BY pub_date DESC
 
 BY_METHOD = Query(
     code='''
-// by method
+//by method
 MATCH
   (paper:SDArticle)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(h:H_Entity),
   (p)-->(e:SDTag {category: "assay"})-->(:CondTag)-->(method:H_Entity)
@@ -81,7 +90,7 @@ ORDER BY score DESC
 
 BY_MOLECULE = Query(
     code='''
-// by molecule
+//by molecule
 MATCH
   (paper:SDArticle)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(mol:H_Entity)
 WHERE 
@@ -105,9 +114,9 @@ ORDER BY score DESC
 
 SEARCH = Query(
     code='''
-/// Full-text search on the index created with:
-
-//CALL db.index.fulltext.createNodeIndex("title",["Article"], ["title"]);
+//search
+// Full-text search on multiple indices.
+//CALL db.index.fulltext.createNodeIndex("title", ["Article"], ["title"]);
 CALL db.index.fulltext.queryNodes("title", $query) YIELD node, score
 WITH node.doi AS doi, node.title as text, score, "title" as source
 RETURN doi, text, score, source
