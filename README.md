@@ -41,3 +41,34 @@ cat sdg/SD-processing.cql | docker-compose -f local.yml run --rm neo4j cypher-sh
 docker-compose -f local.yml run --rm flask python -m neojats.xml2neo data/meca
 ```
 
+
+
+# Deploying
+## first setup
+
+```bash
+# initial config
+cp .env.example .env # and setup
+mkdir -p data
+cd data
+wget https://oc.embl.de/index.php/s/sG0cLDYQtIFFejM/download
+unzip download
+rm download
+cd ..
+
+#
+docker-compose -f production.yml build
+docker-compose -f production.yml up -d
+docker-compose -f production.yml run --rm flask python -m sdg.sdneo SARS-CoV-2
+cat sdg/SD-processing.cql | docker-compose -f production.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>
+docker-compose -f production.yml run --rm flask python -m neojats.xml2neo data/meca
+```
+
+## on subsequent deployments
+Probably this will be enough:
+
+```bash
+git pull
+docker-compose -f production.yml build
+docker-compose -f production.yml up -d
+```
