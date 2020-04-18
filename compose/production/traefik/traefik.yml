@@ -43,7 +43,8 @@ http:
 
     api-router:
       # rule: "Host(`0.0.0.0`)"
-      rule: "PathPrefix(`/api`)"
+      # rule: "PathPrefix(`/api`)"
+      rule: "( Host(`0.0.0.0`) || Host(`ec2-3-125-193-124.eu-central-1.compute.amazonaws.com`) || Host(`covid19.sourcedata.io`) )  && PathPrefix(`/api`)"
       # priority: 1
       entryPoints:
         - web
@@ -53,7 +54,7 @@ http:
       service: flask
 
     vuejs-router:
-      rule: "Host(`0.0.0.0`)"
+      rule: "Host(`0.0.0.0`) || Host(`ec2-3-125-193-124.eu-central-1.compute.amazonaws.com`) || Host(`covid19.sourcedata.io`)"
       # priority: 1
       entryPoints:
         - web

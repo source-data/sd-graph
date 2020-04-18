@@ -41,17 +41,14 @@ services:
       - production_traefik:/etc/traefik/acme
     ports:
       - "0.0.0.0:80:80"
-      - "8080:8080" # debugging UI
+      # - "8080:8080" # debugging UI
       # - "0.0.0.0:443:443"
   vuejs:
     build:
       context: .
       dockerfile: ./compose/production/vuejs/Dockerfile
     image: neoflask_production_vuejs
-    volumes:
-      - .:/app
     env_file:
       - ./.env
     # ports:
-    #   - "8080:8080"
-    # command: /start
+    #   - "9080:80"
