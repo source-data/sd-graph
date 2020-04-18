@@ -1,4 +1,7 @@
 version: '3'
+volumes:
+  local_neo4j_data: {}
+  local_neo4j_logs: {}
 
 services:
   flask:
@@ -20,7 +23,8 @@ services:
   neo4j:
     image: neo4j:3.5
     volumes:
-      - ./neo4j-data:/data
+      - local_neo4j_data:/data
+      - local_neo4j_logs:/logs
     env_file:
       - ./.env
     ports:
@@ -33,7 +37,8 @@ services:
       dockerfile: ./compose/local/vuejs/Dockerfile
     image: neoflask_local_vuejs
     volumes:
-      - .:/app
+      - './frontend:/app'
+      - '/app/node_modules'
     env_file:
       - ./.env
     ports:

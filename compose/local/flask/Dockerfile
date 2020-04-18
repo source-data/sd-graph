@@ -21,7 +21,7 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
     && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
 # Requirements are installed here to ensure they will be cached.
-COPY requirements/base.txt requirements/base.txt
+COPY requirements/ requirements
 RUN pip install -r requirements/base.txt
 
 COPY ./compose/production/flask/entrypoint /entrypoint

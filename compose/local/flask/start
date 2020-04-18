@@ -5,7 +5,7 @@
 # set -o nounset
 
 
-export FLASK_APP=neoflask
+export FLASK_APP=neoflask.neoflask
 export FLASK_DEBUG=true
 cd /app
 python -m flask run --host 0.0.0.0
