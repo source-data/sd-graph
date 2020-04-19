@@ -15,8 +15,8 @@ services:
       - neo4j
     env_file:
       - ./.env
-    ports:
-      - "5000:5000"
+    # ports:
+    #   - "5000:5000"
     command: /start
 
   neo4j:
@@ -26,9 +26,9 @@ services:
       - production_neo4j_logs:/logs
     env_file:
       - ./.env
-    ports:
-      - "7474:7474"
-      - "7687:7687"
+    # ports:
+    #   - "7474:7474"
+    #   - "7687:7687"
 
   traefik:
     build:
