@@ -54,7 +54,7 @@
 <script>
 import SearchBar from './components/search-bar.vue'
 import QuickAccess from './components/quick-access.vue'
-import Highlights from './components/highlights.vue'
+import Highlights from './components/highlights/index.vue'
 
 export default {
   name: 'app',
