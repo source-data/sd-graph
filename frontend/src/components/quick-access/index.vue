@@ -5,8 +5,8 @@
         el-tab-pane(label="By Method")
           .filter-list
             QuickAccessByMethod(@change="onChangeByMethod")
-        el-tab-pane(label="By Molecule") By Molecule filters
-        el-tab-pane(label="By observation and tested hypothesis") By observation and tested hypothesis filters
+        el-tab-pane(label="By Molecule") Coming soon ...
+        el-tab-pane(label="By observation and tested hypothesis") Coming soon ...
 </template>
 
 <script>
