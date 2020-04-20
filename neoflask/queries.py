@@ -8,19 +8,20 @@ BY_DOI = Query(
 //
 MATCH (a:Article {doi: $doi})-->(author:Contrib)
 OPTIONAL MATCH (author)-->(id:Contrib_id)
-WITH 
-    a.title AS title, 
-    a.abstract AS abstract, 
-    author.surname AS surname, 
-    author.given_names AS given_name, 
+WITH
+    a.doi AS doi,
+    a.title AS title,
+    a.abstract AS abstract,
+    author.surname AS surname,
+    author.given_names AS given_name,
     author.position_idx AS author_rank,
     author.corresp = "yes" AS corr_author,
     id.text AS ORCID
 ORDER BY a.title ASC, author_rank DESC
-RETURN title, abstract, COLLECT([surname, given_name, ORCID, corr_author]) AS authors
+RETURN doi, title, abstract, COLLECT([surname, given_name, ORCID, corr_author]) AS authors
 ''',
     map={'doi': []},
-    returns=['title', 'abstract', 'authors']
+    returns=['doi', 'title', 'abstract', 'authors']
 )
 
 BY_HYP = Query(
@@ -29,7 +30,7 @@ BY_HYP = Query(
 //Provides a content list based on observations and testded hypotheses.
 //Returns:
 //    doi: the DOI of the relevant paper
-//    panel_ids: the panel_ids of the relevant panels 
+//    panel_ids: the panel_ids of the relevant panels
 //    methods: the name of the method
 //    controlled: the names of the controlled variables
 //    measured: the names of the measured variables
@@ -40,7 +41,7 @@ MATCH
     (p)-->(a:SDTag)-->(:CondTag)-->(var_measured:H_Entity),
     (p)-->(e:SDTag {category: "assay"})-->(:CondTag)-->(method:H_Entity)
 WHERE
-    i.role = "intervention" AND 
+    i.role = "intervention" AND
     a.role = "assayed" AND
     var_controlled.ext_ids <> var_measured.ext_ids
 WITH DISTINCT
@@ -74,14 +75,14 @@ MATCH
   (p)-->(e:SDTag {category: "assay"})-->(:CondTag)-->(method:H_Entity)
 WHERE e.ext_ids <> ""
 WITH DISTINCT
-  paper.doi AS doi, 
-  method.name AS item_name, 
+  paper.doi AS doi,
+  method.name AS item_name,
   [method.ext_ids] as item_ids,
   COLLECT(DISTINCT p.panel_id) AS panel_ids
-RETURN 
-  item_name, 
-  item_ids, 
-  COLLECT(DISTINCT {doi: doi, panel_ids: panel_ids}) AS content_ids, 
+RETURN
+  item_name,
+  item_ids,
+  COLLECT(DISTINCT {doi: doi, panel_ids: panel_ids}) AS content_ids,
   COUNT(DISTINCT doi) AS score
 ORDER BY score DESC
 ''',
@@ -93,7 +94,7 @@ BY_MOLECULE = Query(
 //by molecule
 MATCH
   (paper:SDArticle)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(mol:H_Entity)
-WHERE 
+WHERE
   (mol.type = "gene" OR mol.type = "protein" OR mol.type = "molecule") AND
   (ct.role = "intervention" OR ct.role = "assayed" OR ct.role = "experiment")
 WITH DISTINCT
@@ -104,7 +105,7 @@ WITH DISTINCT
 RETURN
   item_name,
   item_ids,
-  COLLECT(DISTINCT {doi: doi, panel_ids: panel_ids}) AS content_ids, 
+  COLLECT(DISTINCT {doi: doi, panel_ids: panel_ids}) AS content_ids,
   COUNT(DISTINCT doi) AS score
 ORDER BY score DESC
 ''',
