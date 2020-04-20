@@ -53,7 +53,7 @@
 
 <script>
 import SearchBar from './components/search-bar.vue'
-import QuickAccess from './components/quick-access.vue'
+import QuickAccess from './components/quick-access/index.vue'
 import Highlights from './components/highlights/index.vue'
 
 export default {
@@ -67,6 +67,9 @@ export default {
     thisYear () {
       return new Date().getFullYear()
     },
+  },
+  beforeCreate () {
+    this.$store.dispatch('byMethod/getAll')
   },
 }
 </script>
