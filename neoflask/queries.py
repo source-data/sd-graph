@@ -76,7 +76,7 @@ WHERE e.ext_ids <> ""
 WITH DISTINCT
   paper.doi AS doi, 
   method.name AS item_name, 
-  [method.ext_ids] as item_ids,
+  COLLECT(DISTINCT method.ext_ids) as item_ids,
   COLLECT(DISTINCT p.panel_id) AS panel_ids
 RETURN 
   item_name, 
