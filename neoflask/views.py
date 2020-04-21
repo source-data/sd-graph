@@ -60,6 +60,11 @@ def smartfigure(id: str):
     return redirect(smartfigure_url)
 
 
+@app.route('/api/v1/summary/<panel_id>', methods=['GET', 'POST'])
+def panel_summary(panel_id: str):
+    return R(ASKNEO.panel_summary(panel_id))
+
+
 def R(response):
     mimetype = 'application/json'
     return Response(response, mimetype=mimetype)

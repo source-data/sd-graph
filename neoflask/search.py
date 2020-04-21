@@ -1,7 +1,7 @@
 import json
 from typing import List, Dict, NewType
 from neotools.db import Instance, Query
-from .queries import BY_DOI, BY_MOLECULE, BY_HYP, BY_METHOD, SEARCH
+from .queries import BY_DOI, BY_MOLECULE, BY_HYP, BY_METHOD, SEARCH, PANEL_SUMMARY
 
 # symbolic type for a json string
 json_str = NewType('json_str', str)
@@ -32,8 +32,8 @@ class Engine:
             results = tx.run(code, params)
             data = [r.data(*query.returns) for r in results] # consuming the data inside the transaction https://neo4j.com/docs/api/python-driver/current/transactions.html 
             return data
-        query.params = param_from_request(request, query) # need to know which param to extract from request depending on the query
-        data = self.neo4j_db.query_with_tx_funct(tx_funct, query) # if query would carry params value, could be simplified to db.query(query)
+        query.params = param_from_request(request, query) # need to know which param to extract from request depending on query.map
+        data = self.neo4j_db.query_with_tx_funct(tx_funct, query)
         j = json.dumps(data, indent=3)
         return j
 
@@ -51,6 +51,10 @@ class Engine:
 
     def by_hyp(self, request):
         response = self.ask_neo(BY_HYP, request)
+        return response
+
+    def panel_summary(self, request):
+        response = self.ask_neo(PANEL_SUMMARY, request)
         return response
 
     def search(self, request):

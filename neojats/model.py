@@ -41,12 +41,12 @@ def get_datetime(e: Element):
 def get_caption(e: Element):
     title = e.xpath('title')
     paragraphs = e.xpath('p')
-    if title and paragraphs:
-        title = title[0]
-        paragraphs = "".join([inner_text(p) for p in paragraphs])
-        title_text = title.text or ''
-        title_tail = title.tail or ''
-        caption = title_text + title_tail + paragraphs
+    if title:
+        caption = ""
+        for p in paragraphs:
+            caption += inner_text(p)
+            tail = p.tail or ''
+            caption += tail
     else:
         caption = inner_text(e)
     return caption
@@ -90,6 +90,7 @@ JATS_GRAPH_MODEL = {
             'properties': {
                 'label': ('label', get_text),
                 'caption': ('caption', get_caption),
+                'title': ('caption/title', get_inner_text),
                 'graphic': ('graphic', get_attr_factory('{http://www.w3.org/1999/xlink}href')),
             },
         },

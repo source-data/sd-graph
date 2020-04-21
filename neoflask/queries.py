@@ -180,3 +180,42 @@ LIMIT toInteger($limit)
     map={'query': ['query', ''], 'limit': ['limit', 10]},
     returns=['doi', 'text', 'score', 'source']
 )
+
+PANEL_SUMMARY = Query(
+    code='''
+// panel summary
+MATCH
+    (a:SDArticle)-->(f:SDFigure)-->(p:SDPanel {panel_id: $panel_id})
+WITH
+    a.doi AS doi,
+    f.fig_label AS fig_label,
+    p
+MATCH
+    (ax:Article {doi:doi})-->(fx:Fig {label: fig_label})
+WITH 
+    doi,
+    fig_label,
+    fx.title as fig_title,
+    p.panel_label as panel_label,
+    p.caption as caption,
+    p
+MATCH
+    (p)-->(ct:CondTag)-->(h:H_Entity)
+WHERE
+    ct.role <> "reporter" AND ct.role <>"normalizing"
+WITH 
+    fig_label,
+    fig_title,
+    panel_label,
+    caption,
+    COLLECT(DISTINCT ct) AS entities
+RETURN
+    [e IN entities WHERE e.role='intervention' OR e.role='experiment' | e.text] AS controlled_var,
+    [e IN entities WHERE e.role='assayed' | e.text] AS measured_var,
+    [e IN entities WHERE e.category='assay' | e.text] AS method,
+    [e IN entities WHERE e.type='component' OR e.category='disease' | e.text] AS other_entities,
+    fig_label, fig_title, panel_label, caption
+    ''',
+    map={'panel_id': []},
+    returns=['fig_label', 'fig_title', 'panel_label', 'caption', 'other_entities', 'controlled_var', 'measured_var', 'method']
+)
