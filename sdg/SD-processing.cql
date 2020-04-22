@@ -29,13 +29,19 @@ WITH DISTINCT t1, t2.ext_names as names
 SET t1.ext_names = names
 RETURN COUNT(t1) AS `tags with filled in names`;
 
+//report tags with no names
+MATCH (t1:SDTag)
+WHERE 
+    t1.ext_names = ""
+RETURN COUNT(t1) AS `tags remaining without an ext name`;
+
 //A: condense tags with same ext id and role
 
 MATCH (p:SDPanel)-->(t:SDTag)
 WHERE
     t.ext_ids <> ""
-WITH DISTINCT p, t.role AS role, t.type as type, t.category as category, t.ext_ids AS ext_ids, t.ext_names as ext_names
-    CREATE (c:CondTag {role: role, type: type, category: category, ext_ids: ext_ids, text: ext_names}) //check if p has cond tag with same ext id but different names
+WITH DISTINCT p, t.role AS role, t.type as type, t.category as category, t.ext_ids AS ext_ids, t.ext_names AS ext_names, t.ext_tax_names AS ext_tax_names, t.ext_dbs as ext_dbs
+    CREATE (c:CondTag {role: role, type: type, category: category, ext_ids: ext_ids, text: ext_names, ext_tax_names: ext_tax_names, ext_dbs: ext_dbs}) //check if p has cond tag with same ext id but different names
     MERGE (p)-[rel:HasCondTag]->(c)
 WITH p,c
 MATCH 
@@ -52,8 +58,8 @@ UNION
 MATCH (p:SDPanel)-->(t:SDTag {ext_ids: ""})
 WHERE
     t.category <> "" OR t.type <> ""
-WITH DISTINCT p, trim(lower(t.text)) AS text, t.role AS role, t.type AS type, t.category AS category
-    CREATE (c:CondTag {role: role, type:type, category: category, ext_ids: "", text: text})
+WITH DISTINCT p, trim(lower(t.text)) AS text, t.role AS role, t.type AS type, t.category AS category, t.ext_tax_names AS ext_tax_names
+    CREATE (c:CondTag {role: role, type:type, category: category, ext_ids: "", text: text, ext_tax_names: ext_tax_names, ext_dbs:""})
     MERGE (p)-[:HasCondTag]->(c)
 WITH p,c
 MATCH 
@@ -154,6 +160,21 @@ MATCH (e:H_Entity {type:"cell"}) SET e.scale = 4;
 MATCH (e:H_Entity {type:"tissue"}) SET e.scale = 5;
 MATCH (e:H_Entity {type:"organism"}) SET e.scale = 6;
 RETURN "added scales to entities";
+
+// resolver nodes to map resource to base url and possibly to id regex pattern (according to identifiers.org)
+// need to provide a recipt to transform in to compact identifier and just use identifiers.org
+// this is a complete mess
+MERGE(:Resolver {name: "NCBI gene", url: "http://www.ncbi.nlm.nih.gov/gene/"}); // 59272
+MERGE(:Resolver {name: "NCBI taxon", url: "http://www.ncbi.nlm.nih.gov/taxonomy/"}); // 10090
+MERGE(:Resolver {name: "OBI", url: "https://bioportal.bioontology.org/ontologies/OBI/?p=classes&conceptid=http://purl.obolibrary.org/obo/"}); // OBI_0000445
+MERGE(:Resolver {name: "Uberon", url:"http://purl.bioontology.org/ontology/UBERON/"}); // UBERON:0000955
+MERGE(:Resolver {name: "CVCL", url:"https://identifiers.org/cellosaurus:"}); // CVCL_0574
+MERGE(:Resolver {name: "BAO", url:"http://bioportal.bioontology.org/ontologies/BAO/bao:"}); // BAO_0000134
+MERGE(:Resolver {name: "Gene Ontology", url:"http://purl.bioontology.org/ontology/GO/"}); // GO:0071735
+MERGE(:Resolver {name: "CL", url:"http://purl.bioontology.org/ontology/CL/"}); // CL:0000583
+MERGE(:Resolver {name: "Uniprot", url:"https://www.uniprot.org/uniprot/"}); // P0DTC2
+MERGE(:Resolver {name: "ChEBI", url:"http://www.ebi.ac.uk/chebi/searchId.do?chebiId="}); // CHEBI:29687
+MERGE(:Resolver {name: "Disease ontology", url:"http://purl.bioontology.org/ontology/DOID/"}); // DOID:2801
 
 //Full text indexing
 CALL db.index.fulltext.createNodeIndex("entity_name",["H_Entity"],["name"]);

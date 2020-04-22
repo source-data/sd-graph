@@ -190,6 +190,7 @@ WITH
     a.doi AS doi,
     f.fig_label AS fig_label,
     p
+// find the matching figures from jats to extract the figure title
 MATCH
     (ax:Article {doi:doi})-->(fx:Fig {label: fig_label})
 WITH 
@@ -199,23 +200,63 @@ WITH
     p.panel_label as panel_label,
     p.caption as caption,
     p
+// find the entities linked to the target panel
 MATCH
-    (p)-->(ct:CondTag)-->(h:H_Entity)
+    (p)-->(ct:CondTag), (resolver:Resolver)
 WHERE
-    ct.role <> "reporter" AND ct.role <>"normalizing"
+    ct.role <> "reporter" AND ct.role <>"normalizing" AND
+    ct.ext_dbs = resolver.name
+WITH
+    doi,
+    fig_label,
+    fig_title,
+    panel_label,
+    caption,
+    ct,
+    resolver
+// find the corresponding entities in the full paper to make a statistic for ranking
+MATCH
+    (a:SDArticle {doi: doi})-->(:SDFigure)--> (all_panels:SDPanel)-->(other_ct:CondTag {text:ct.text})
+WITH DISTINCT
+    doi,
+    fig_label,
+    fig_title,
+    panel_label,
+    caption,
+    ct,
+    resolver,
+    COUNT(DISTINCT other_ct) AS freq
+// combine entities with frequency into single list that can be processed
 WITH 
     fig_label,
     fig_title,
     panel_label,
     caption,
-    COLLECT(DISTINCT ct) AS entities
+    COLLECT(DISTINCT {
+        text: ct.text,
+        ext_ids: ct.ext_ids, 
+        role: ct.role,
+        type: ct.type,
+        category: ct.category, 
+        freq: freq, 
+        ext_tax_names: ct.ext_tax_names,
+        href: resolver.url + ct.ext_ids
+    }) AS entities
+// sort and aggregate depending on role
+WITH
+    [e IN entities WHERE (e['role']='intervention' OR e['role']='experiment') | e] AS controlled_entities,
+    [e IN entities WHERE e['role']='assayed' | e] AS measured_entities,
+    [e IN entities WHERE e['category']='assay' | e] AS assays,
+    [e IN entities WHERE (e['type']='component' OR e['category']='disease') | e] AS other_entities,
+    fig_label, fig_title, panel_label, caption
+// standardize the format of the output
 RETURN
-    [e IN entities WHERE e.role='intervention' OR e.role='experiment' | e.text] AS controlled_var,
-    [e IN entities WHERE e.role='assayed' | e.text] AS measured_var,
-    [e IN entities WHERE e.category='assay' | e.text] AS method,
-    [e IN entities WHERE e.type='component' OR e.category='disease' | e.text] AS other_entities,
+    [e in controlled_entities | {primary_label: e.text, secondary_label: e.ext_tax_names, href: e.href}] as controlled_var,
+    [e IN measured_entities WHERE e['role']='assayed' | {primary_label:e.text, secondary_label: e.ext_tax_names, href: e.href}] AS measured_var,
+    [e IN assays WHERE e['category']='assay' | {primary_label: e.text, secondary_label: "", href: e.href}] AS methods,
+    [e IN other_entities WHERE (e['type']='component' OR e['category']='disease') | {primary_label: e.text, secondary_label: e.ext_tax_names, href: e.href}] AS other,
     fig_label, fig_title, panel_label, caption
     ''',
     map={'panel_id': []},
-    returns=['fig_label', 'fig_title', 'panel_label', 'caption', 'other_entities', 'controlled_var', 'measured_var', 'method']
+    returns=['fig_label', 'fig_title', 'panel_label', 'caption', 'other', 'controlled_var', 'measured_var', 'methods']
 )

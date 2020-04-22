@@ -25,10 +25,10 @@ Normally you just need this:
 ```bash
 docker-compose -f local.yml build
 docker-compose -f local.yml up -d
-docker-compose -f local.yml run --rm flask python -m sdg.sdneo SARS-CoV-2
-# download https://oc.embl.de/index.php/s/sG0cLDYQtIFFejM and unzip in ./data/meca/
+docker-compose -f local.yml run flask --rm python -m sdg.sdneo SARS-CoV-2
 cat sdg/SD-processing.cql | docker-compose -f local.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>
 docker-compose -f local.yml run --rm flask python -m neojats.xml2neo data/meca
+docker-compose -f local.yml run --rm flask 
 ```
 
 ## Production
@@ -96,5 +96,5 @@ Transform and load JATS XML documents into the database from meca archives:
 
 Launch server for REST API:
 
-    export FLASK_APP='neoflask.neoflask'; export FLASK_DEBUG=true; python -m flask run
+    export FLASK_APP='neoflask'; export FLASK_DEBUG=true; python -m flask run
 
