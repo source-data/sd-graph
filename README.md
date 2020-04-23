@@ -81,20 +81,4 @@ docker-compose -f production.yml build
 docker-compose -f production.yml up -d
 ```
 
-## Manual local build
-
-Select meca archives to be processed and place them into data/meca
-
-Build the SD graph:
-
-    python -m sdg.sdneo <collection_name>
-    cat sdg/SD-processing.cql | cypher-shell -a bolt://localhost:7687 -u <neo4j_username> -p <neo4j_password>
-
-Transform and load JATS XML documents into the database from meca archives:
-
-    python -m neojats.xml2neo path/to/meca
-
-Launch server for REST API:
-
-    export FLASK_APP='neoflask'; export FLASK_DEBUG=true; python -m flask run
 
