@@ -9,7 +9,7 @@ When refering to SourceData, please cite the following paper:
 > _Nature Methods_ (2017) __14__:1021 [doi:10.1038/nmeth.4471](http://doi.org/10.1038/nmeth.4471)
 Set up .env from .env.example with appropriate credentials.
 
-This repository includes several tools currently under development. These tools allow to generate the SourceData knowledge graph (`sdg`), to upload MECA/JATS archive (`neojats`) as graphs compatible with the SourceData graph and a server (`neoflask`) that implements pre-formed cypher queries and exposes a RESTful interface for easy integration in web applications.
+This repository includes several tools currently under development. These tools allow to generate the SourceData knowledge graph (`sdg`), to upload MECA/JATS archives (`neojats`) as graphs compatible with the SourceData graph and run a server (`neoflask`) that implements pre-formed cypher queries and exposes a RESTful interface for  integration in web applications.
 
 ## Build the resource with docker-compose
 
