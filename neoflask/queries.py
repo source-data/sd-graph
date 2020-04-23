@@ -184,6 +184,23 @@ LIMIT toInteger($limit)
 PANEL_SUMMARY = Query(
     code='''
 // panel summary
+// Thi query provides a simplified summary of a panel.
+// Entities are listed in a simplified way for display.
+// Each entity has a primary label (i.e. the name of the entity),
+// a secondary label providing complementary info depending on entity type,
+// and a url pointing to an external knowledge base
+//
+// Args:
+//    panel_id: the panel id
+// Returns
+//    fig_label: the label of the parent figure
+//    fig_title: the title of the parent figure
+//    panel_label: the lable of the panel
+//    caption: the caption of the panel
+//    controlled_var: a list of entities linked to the controlled variable(s) of the experiment
+//    measured_var: a list of entities linked to the measured variable(s) of the experiment
+//    other: a list of other entities involved in the experiment
+//    methods: the experimental observation and measurement assays
 MATCH
     (a:SDArticle)-->(f:SDFigure)-->(p:SDPanel {panel_id: $panel_id})
 WITH
@@ -258,5 +275,5 @@ RETURN
     fig_label, fig_title, panel_label, caption
     ''',
     map={'panel_id': []},
-    returns=['fig_label', 'fig_title', 'panel_label', 'caption', 'other', 'controlled_var', 'measured_var', 'methods']
+    returns=['fig_label', 'fig_title', 'panel_label', 'caption', 'controlled_var', 'measured_var', 'other', 'methods']
 )
