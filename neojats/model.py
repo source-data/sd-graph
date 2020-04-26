@@ -1,5 +1,5 @@
 from lxml.etree import Element
-from .utils import inner_text
+from neotools.utils import inner_text
 
 
 # need a function factory to determin which attribute to get the value from

@@ -55,7 +55,7 @@ class Instance:
 
     def query(self, q: Query):
         with self._driver.session() as session:
-            results = session.write_transaction(self._run_transaction, q.code, q.params)  # would be nicer to have q.code, q.params
+            results = session.write_transaction(self._run_transaction, q.code, q.params)
             return results
 
     def query_with_tx_funct(self, tx_funct: Callable, q: Query):
