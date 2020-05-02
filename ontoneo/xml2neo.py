@@ -28,7 +28,8 @@ def load_ontology(path: Path, graph_model: Dict):
         namespaces = xml.nsmap
         if None in namespaces:
             namespaces['default'] = namespaces[None]  # XPath does not have None as namespace entry; so creating one if needed
-            del namespaces[None]  # why did we do this again???
+            del namespaces[None]  # need to remove it otherwise XPath raises TypeError: empty namespace prefix is not supported in XPath
+        # compile(graph_model, namespaces)
         source = path.name
         print()
         xml_node = XMLNode(xml, graph_model, namespaces=namespaces)
@@ -42,6 +43,22 @@ def load_ontology(path: Path, graph_model: Dict):
         res = DB.query(MAKE)
         for row in res:
             print("MAKE: ", "; ".join([str(row[column]) for column in MAKE.returns]))
+
+
+# map of local file names with graph model
+ALL_GRAPH_MODELS = {
+    'go.owl': GO_GRAPH_MODEL,
+    'uniprot_sprot.xml': UNIPROT_GRAPH_MODEL,
+    'uniprot-test.owl': UNIPROT_GRAPH_MODEL,
+    'uberon.owl': UBERON_GRAPH_MODEL,
+    'chebi.owl': CHEBI_GRAPH_MODEL,
+    'cellosaurus.xml': CVCL_GRAPH_MODEL,
+    'cl.owl': CL_GRAPH_MODEL,
+    'ncbitaxon.owl': NCBITAXON_GRAPH_MODEL,
+    'doid.owl': DOID_GRAPH_MODEL,
+    'obi.owl': OBI_GRAPH_MODEL,
+    'bao.xrdf': BAO_GRAPH_MODEL
+}
 
 
 def self_test():
@@ -111,20 +128,7 @@ def self_test():
         print("; ".join([str(row[column]) for column in MAKE.returns]))
 
 
-# map of local file names with graph model
-ALL_GRAPH_MODELS = {
-    'go.owl': GO_GRAPH_MODEL,
-    'uniprot_sprot.xml': UNIPROT_GRAPH_MODEL,
-    'uniprot-test.owl': UNIPROT_GRAPH_MODEL,
-    'uberon.owl': UBERON_GRAPH_MODEL,
-    'chebi.owl': CHEBI_GRAPH_MODEL,
-    'cellosaurus.xml': CVCL_GRAPH_MODEL,
-    'cl.owl': CL_GRAPH_MODEL,
-    'ncbitaxon.owl': NCBITAXON_GRAPH_MODEL,
-    'doid.owl': DOID_GRAPH_MODEL,
-    'obi.owl': OBI_GRAPH_MODEL,
-    'bao.owl': BAO_GRAPH_MODEL
-}
+
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Loading the disease ontology into neo4j.')

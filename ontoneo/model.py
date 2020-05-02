@@ -1,5 +1,7 @@
 from lxml.etree import Element
 from neotools.utils import inner_text
+from copy import deepcopy
+import re
 
 NS = {
     'owl': 'http://www.w3.org/2002/07/owl#',
@@ -17,6 +19,10 @@ RDF = "{%s}" % NS['rdf']
 RDFS = "{%s}" % NS['rdfs']
 DC = "{%s}" % NS['dc']
 
+
+# CHANGE TO compiled xp_f = etree.ETXPath("//{ns}b")
+# compile model
+# model['Xpath'] = etree.ETXPath(model['Xpath'])
 
 # need a function factory to determin which attribute to get the value from
 def get_attr_factory(key, default=None):
@@ -82,14 +88,14 @@ OBO_GRAPH_MODEL = {
         'version': ('owl:versionIRI', get_attr_factory(RDF+'resource')),
     },
     'children': {
-        'classes': {
+        None: {
             'XPath': 'owl:Class',
             'properties': {
                 'about': ('.', get_attr_factory(RDF+'about')),
                 'definition': ('obo:IAO_0000115', get_text),
                 'exact_synonyms': ('oboInOwl:hasExactSynonym', get_text),
                 'hasRelatedSynonym': ('oboInOwl:hasRelatedSynonym', get_text), 
-                'owl_id': ('oboInOwl:id', get_text),
+                'compact_id': ('oboInOwl:id', get_text),
                 'owl_label': ('rdfs:label', get_text),
                 'subClassOf': ('rdfs:subClassOf', get_attr_factory(RDF+'resource'), 'as_list'),
                 'deprecated': ('owl:deprecated', get_text),
@@ -98,23 +104,31 @@ OBO_GRAPH_MODEL = {
     },
 }
 
-DOID_GRAPH_MODEL = OBO_GRAPH_MODEL
+DOID_GRAPH_MODEL = deepcopy(OBO_GRAPH_MODEL)
 
-UBERON_GRAPH_MODEL = OBO_GRAPH_MODEL
+UBERON_GRAPH_MODEL = deepcopy(OBO_GRAPH_MODEL)
 
-GO_GRAPH_MODEL = OBO_GRAPH_MODEL
+GO_GRAPH_MODEL = deepcopy(OBO_GRAPH_MODEL)
 
-CHEBI_GRAPH_MODEL = OBO_GRAPH_MODEL
+CHEBI_GRAPH_MODEL = deepcopy(OBO_GRAPH_MODEL)
 
-CL_GRAPH_MODEL = OBO_GRAPH_MODEL
+CL_GRAPH_MODEL = deepcopy(OBO_GRAPH_MODEL)
 
-OBI_GRAPH_MODEL = OBO_GRAPH_MODEL
+OBI_GRAPH_MODEL = deepcopy(OBO_GRAPH_MODEL)
 
-BAO_GRAPH_MODEL = OBO_GRAPH_MODEL
+
+# <Class rdf:about="http://www.bioassayontology.org/bao#BAO_0002424">
+#     <rdfs:subClassOf rdf:resource="http://www.bioassayontology.org/bao#BAO_0002422"/>
+#     <metadata:prefixIRI rdf:datatype="http://www.w3.org/2001/XMLSchema#string">bao:BAO_0002424</metadata:prefixIRI>
+#     <obo:IAO_0000115>The western blot (alternatively, protein immunoblot) is an analytical technique used to detect specific proteins in a given sample of tissue homogenate or extract. It uses gel electrophoresis to separate native or denatured proteins by the length of the polypeptide (denaturing conditions) or by the 3-D structure of the protein (native/ non-denaturing conditions). The proteins are then transferred to a membrane (typically nitrocellulose or PVDF), where they are probed (detected) using antibodies specific to the target protein.</obo:IAO_0000115>
+#     <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">western blot</rdfs:label>
+# </Class>
+
+BAO_GRAPH_MODEL = deepcopy(OBO_GRAPH_MODEL)
+BAO_GRAPH_MODEL['children'][None]['properties']['compact_id'] = ('metadata:prefixIRI', get_text)
 
 
 # CELLOSAURUS
-
 # <cell-line category="Hybridoma" created="2013-02-11" last_updated="2019-05-24" entry_version="5">
 #   <accession-list>
 #     <accession type="primary">CVCL_G217</accession>
@@ -154,13 +168,23 @@ BAO_GRAPH_MODEL = OBO_GRAPH_MODEL
 #   </xref-list>
 # </cell-line>
 
+
+def get_id_from_cvcl_accession(e: Element):
+    compact_identifier = None
+    accession = e.text
+    if accession:
+        prefix, id = accession.split('_')
+        compact_identifier = prefix + ":" + id
+    return compact_identifier
+
+
 CVCL_GRAPH_MODEL = {
     'XPath': 'Cellosaurus',
     'properties': {
         'description': ('header/description', get_text),
     },
     'children': {
-        'classes': {
+        None: {
             'XPath': 'cell-line-list/cell-line',
             'properties': {
                 'category': ('.', get_attr_factory('category')),
@@ -169,6 +193,7 @@ CVCL_GRAPH_MODEL = {
                 'accession': ('accession-list/accession[@type="primary"]', get_text),
                 'name-list': ('name-list', get_text, 'is_list'),
                 'subClassOf': ('derived-from/cv-term', get_attr_factory('accession'), 'is_list'),
+                'compact_id': ('accession-list/accession[@type="primary"]', get_id_from_cvcl_accession)
             }
         }
 
@@ -287,21 +312,30 @@ CVCL_GRAPH_MODEL = {
 #   <sequence length="60" mass="6514" checksum="12F072778EE6DFE4" modified="2004-07-19" version="1">MNAKYDTDQGVGRMLFLGTIGLAVVVGGLMAYGYYYDGKTPSSGTSFHTASPSFSSRYRY</sequence>
 # </entry>
 
+
+def get_taxonomy_id_from_organism(e: Element):
+    compact_id = None
+    id = e.get('id', None)
+    if id is not None:
+        compact_id = 'taxonomy:'+id
+    return compact_id
+
+
 UNIPROT_GRAPH_MODEL = {
     'XPath': 'uniprot',
     'children': {
-        'classes': {
+        None: {
             'XPath': 'default:entry[@dataset="Swiss-Prot"]',
             'properties': {
-                'accession': ('default:accession', get_text),
+                'accession': ('default:accession', get_text, 'as_list'),
                 'name': ('default:name', get_text),
-                'proteinname': ('default:protein/default:recommendedName/default:fullName', get_text),
+                'proteinname': ('default:protein/default:recommendedName/default:fullName | default:protein/default:alternativeName/default:fullName', get_text, 'as_list'), 
                 'genename': ('default:gene/default:name', get_text),
-                'organism': ('default:organism/default:dbReference[@type="NCBI Taxonomy"]', get_attr_factory('id'), 'as_list'),
+                'organism': ('default:organism/default:dbReference[@type="NCBI Taxonomy"]', get_taxonomy_id_from_organism, 'as_list'),  # <dbReference type="NCBI Taxonomy" id="654924"/>
                 'geneID': ('default:dbReference[@type="GeneID"]', get_attr_factory('id')),
                 'sequence': ('default:sequence', get_text),
                 'go': ('default:bReference[@type="GO"]', get_attr_factory('id'), 'as_list'),
-                'keywords': ('default:keyword', get_text, 'as_list')
+                'keywords': ('default:keyword', get_text, 'as_list'),
             }
         }
     }
@@ -317,6 +351,12 @@ UNIPROT_GRAPH_MODEL = {
 #         <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Erwinia sp. Koakin</rdfs:label>
 # </owl:Class>
 
+def get_tax_id_from_about(e: Element):
+    about = e.xpath(RDF+'about')
+    pattern = re.search(r'NCBITaxon_(\d+)', about)
+    tax_id = 'taxonomy:'+pattern.group(1) if pattern else None
+    return tax_id
+
 
 NCBITAXON_GRAPH_MODEL = {
     'XPath': 'rdf:RDF',
@@ -329,6 +369,7 @@ NCBITAXON_GRAPH_MODEL = {
             'properties': {
                 'about': ('.', get_attr_factory(RDF+'about')),
                 'owl_label': ('rdfs:label', get_text),
+                'compact_id': ('.', get_tax_id_from_about),
                 'rank': ('ncbitaxon:has_rank', get_attr_factory(RDF+'resource')),
                 'subClassOf': ('rdfs:subClassOf', get_attr_factory(RDF+'resource'), 'as_list'),
             }
