@@ -1,8 +1,14 @@
-from lxml.etree import Element, XPathEvalError
+from lxml.etree import Element, XPathEvalError, ETXPath
 from typing import Dict
 import re
 from .db import Instance
 from .utils import inner_text
+
+
+# def compile(graph_model: Dict, namespaces: Dict = namespaces):
+#     graph_model['XPath'] = XPath(graph_model['Xpath'], namespaces=namespaces)
+#     for rel in graph_model['children']:
+#         compile(graph_model['children'][rel], namespaces=namespaces)
 
 
 def cleanup_name(name):
@@ -97,7 +103,7 @@ class XMLNode:
             for relationship in graph_model:
                 xp = graph_model[relationship]['XPath']
                 sub_model = graph_model[relationship]
-                elements = element.xpath(xp, namespaces=self.namespaces)
+                elements = element.xpath(xp, namespaces=self.namespaces) 
                 add_index = len(elements) > 1
                 sub_graph = []
                 for i, e in enumerate(elements):
@@ -130,5 +136,8 @@ def build_neo_graph(xml_node: XMLNode, source: str, db: Instance):
     for rel, children in xml_node.children.items():
         for child in children:
             child_node = build_neo_graph(child, source, db)
-            db.relationship(node, child_node, rel)
+            if rel is not None:
+                db.relationship(node, child_node, rel)
     return node
+
+

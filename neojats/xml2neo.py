@@ -1,7 +1,7 @@
-from lxml.etree import parse
+from lxml.etree import parse, XMLParser
 import re
 from typing import List
-from zipfile import ZipFile
+from zipfile import ZipFile, BadZipFile
 from pathlib import Path
 from io import BytesIO
 from argparse import ArgumentParser
@@ -15,7 +15,7 @@ from .queries import (
     CREATE_FULLTEXT_INDEX_ON_NAME,
     CREATE_FULLTEXT_INDEX_ON_TITLE,
 )
-from . import DB
+from . import logger, DB
 
 
 DEBUG_MODE = False
@@ -27,11 +27,12 @@ class ArchiveLoader:
         self.path = path
         self.archives = self.path.glob(glob_pattern)
         self.check_for_duplicate = check_for_duplicate
+        self.parser = XMLParser(load_dtd=True, no_network=True, recover=True)
 
     def load_full_text(self, z: ZipFile, meca_archive, path_full_text: str):
         with z.open(path_full_text) as full_text_xml:
             print(f"parsing {meca_archive}/{path_full_text}")
-            xml = parse(full_text_xml).getroot() # root is <article>
+            xml = parse(full_text_xml, parser=self.parser).getroot() # root is <article>
             source = meca_archive.name
             xml_node = XMLNode(xml, JATS_GRAPH_MODEL)
             build_neo_graph(xml_node, source, DB)
@@ -76,14 +77,19 @@ class ArchiveLoader:
                 print(f"WARNING: {meca_archive.name} already loaded. Skipping.", end="\r")
                 skipped += 1 
             else:
-                with ZipFile(meca_archive) as z:
-                    xml_file_list = [f for f in z.namelist() if Path(f).suffix == '.xml']
-                    path_full_text = self.extract_from_manifest(z)
-                    if path_full_text not in xml_file_list:
-                        print(f"WARNING: the file {path_full_text} indicated in the manifest is not in {meca_archive}")
-                        path_full_text = self.find_alternative(xml_file_list, path_full_text)
-                        print(f"Trying {path_full_text} instead.")
-                    self.load_full_text(z, meca_archive, path_full_text)
+                try:
+                    with ZipFile(meca_archive) as z:
+                        xml_file_list = [f for f in z.namelist() if Path(f).suffix == '.xml']
+                        path_full_text = self.extract_from_manifest(z)
+                        if path_full_text not in xml_file_list:
+                            msg = f"WARNING: the file {path_full_text} indicated in the manifest is not in {meca_archive}"
+                            print(msg)
+                            logger.warning(msg)
+                            path_full_text = self.find_alternative(xml_file_list, path_full_text)
+                            print(f"Trying {path_full_text} instead.")
+                        self.load_full_text(z, meca_archive, path_full_text)
+                except BadZipFile:
+                    logger.error(f"not a zip file: {meca_archive}")
         print()
         print(f"skipped {skipped} out of {count+1}")
 
