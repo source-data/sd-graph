@@ -45,7 +45,13 @@ def by_hyp():
 @app.route('/api/v1/doi/<path:doi>', methods=['GET', 'POST'])
 def by_doi(doi: str):
     app.logger.info(f"search doi:{doi}")
-    return R(ASKNEO.by_doi(doi))
+    return R(ASKNEO.by_doi(doi=doi))
+
+
+@app.route('/api/v1/figure', methods=['GET', 'POST'])
+def fig_by_doi_idx():
+    app.logger.info(f"figure {request.args.get('position_idx')} from {request.args.get('doi')}")
+    return R(ASKNEO.fig_by_doi_idx(request))
 
 
 @app.route('/api/v1/search/', methods=['GET'])
@@ -62,7 +68,12 @@ def smartfigure(id: str):
 
 @app.route('/api/v1/summary/<panel_id>', methods=['GET', 'POST'])
 def panel_summary(panel_id: str):
-    return R(ASKNEO.panel_summary(panel_id))
+    return R(ASKNEO.panel_summary(panel_id=panel_id))
+
+
+@app.route('/api/v1/covid19', methods=['GET', 'POST'])
+def covid19():
+    return R(ASKNEO.covid19(request))
 
 
 def R(response):

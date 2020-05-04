@@ -1,6 +1,34 @@
 from neotools.db import Query
 
 
+COVID19 = Query(
+    code='''
+// COVID-19
+// Automated search for COVID-19 / SARS-CoV-2 papers
+WITH
+    "2019 Novel Coronavirus OR 2019-nCoV OR 2019nCoV OR COVID-19 OR SARS-CoV-2 OR SARS-CoV2 OR SAR-CoV2 OR SRAS-CoV-2 OR (wuhan AND coronavirus)" AS search_query
+CALL db.index.fulltext.queryNodes("abstract", search_query) YIELD node, score
+WITH node.doi AS doi, node.version AS version, node, score
+ORDER BY score DESC, version DESC
+WITH DISTINCT doi, COLLECT(node) AS versions, COLLECT(score) AS scores
+WHERE scores[0] > 0.02
+WITH doi, versions[0] AS most_recent, scores[0] AS score
+MATCH (a:Article {doi:doi, version: most_recent.version})-->(f:Fig)
+RETURN
+    a.publication_date AS pub_date,
+    a.title AS title,
+    a.abstract AS abstract,
+    a.version AS version,
+    a.doi AS doi,
+    'bioRxiv' AS journal,
+    COUNT(f) AS nb_figures,
+    score
+ORDER BY pub_date DESC, score DESC;
+    ''',
+    map={},
+    returns=['pub_date', 'title', 'abstract', 'version', 'doi', 'journal', 'nb_figures', 'score']
+)
+
 # Query queries, with the required names of the substitution variables and names of result fields
 BY_DOI = Query(
     code='''
@@ -8,21 +36,47 @@ BY_DOI = Query(
 //
 MATCH (a:Article {doi: $doi})-->(author:Contrib)
 OPTIONAL MATCH (author)-->(id:Contrib_id)
+OPTIONAL MATCH (a)-->(f:Fig)
 WITH
     a.doi AS doi,
+    a.version AS version,
+    'biorxiv' AS journal,
     a.title AS title,
     a.abstract AS abstract,
     author.surname AS surname,
     author.given_names AS given_name,
     author.position_idx AS author_rank,
     author.corresp = "yes" AS corr_author,
+    COUNT(f) AS nb_figures,
     id.text AS ORCID
-ORDER BY a.title ASC, author_rank DESC
-RETURN doi, title, abstract, COLLECT([surname, given_name, ORCID, corr_author]) AS authors
-''',
+ORDER BY version DESC, author_rank DESC
+RETURN doi, version, journal, title, abstract, COLLECT([surname, given_name, ORCID, corr_author]) AS authors, nb_figures
+
+    ''',
     map={'doi': []},
-    returns=['doi', 'title', 'abstract', 'authors']
+    returns=['doi', 'version', 'journal', 'title', 'abstract', 'authors', 'nb_figures']
 )
+
+
+FIG_BY_DOI_IDX = Query(
+    code='''
+//fig by doi and index position
+//
+MATCH (a:Article {doi: $doi})-->(f:Fig {position_idx: toInteger($position_idx)})
+RETURN
+    a.doi AS doi,
+    a.version AS version,
+    a.title AS title,
+    f.title AS fig_title,
+    f.label AS fig_label,
+    f.caption AS caption,
+    f.position_idx AS fig_idx
+ORDER BY version DESC, fig_idx ASC
+    ''',
+    map={'doi': ['doi', ''], 'position_idx': ['position_idx', '']},
+    returns=['doi', 'version', 'title', 'fig_title', 'fig_label', 'caption', 'fig_idx']
+)
+
 
 BY_HYP = Query(
     code='''
