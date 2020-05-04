@@ -13,6 +13,7 @@ services:
       - neo4j
     volumes:
       - .:/app
+      - ./log:/log
     env_file:
       - ./.env
     ports:
