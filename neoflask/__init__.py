@@ -16,8 +16,8 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 
-# Config.init_app(app)
-# app.config.from_object(Config)
+Config.init_app(app)
+app.config.from_object(Config)
 
 DB = Instance(NEO_URI, NEO_USERNAME, NEO_PASSWORD)
 
