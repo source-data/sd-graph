@@ -77,7 +77,7 @@ class SDArticle(SDNode):
             'journalName': self.journal,
             'nb_figures': self.nb_figures
         }
-        self.children = range(1, self.nb_figures+1)
+        self.children = range(self.nb_figures)
 
 
 class SDFigure(SDNode):
