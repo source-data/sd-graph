@@ -12,6 +12,8 @@ RUN apt-get update \
   && apt-get install -y gettext \
   # Dockerize dependency
   && apt-get install -y openssl wget \
+  # install git to install requirements that are only published in GitHub
+  && apt-get install -y git \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
