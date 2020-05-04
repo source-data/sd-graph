@@ -82,3 +82,22 @@ docker-compose -f production.yml up -d
 ```
 
 
+# Local non-docker
+
+For local CLI usage, make fist sure `.env` has `NEO_URI=bolt://localhost:7687`
+
+Upload meca to neo:
+
+    python -m neojats.xml2neo data/meca
+
+Launch RESTful interface:
+
+    export FLASK_APP=neoflask; export FLASK_ENV=development; export FLASK_DEBUG=true; python -m flask run
+
+Check RESTful interface is active:
+
+    python -m smartneo.eebapi -L
+
+Upload and SmartTag COVID19 preprints:
+
+    python -m smartneo.sdneo
