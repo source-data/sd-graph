@@ -1,5 +1,5 @@
 import re
-from typing import Dict, Callable
+from typing import List, Dict, Tuple, Callable
 from neo4j import GraphDatabase, Node, BoltStatementResult, BoltStatementResultSummary, Transaction
 
 
@@ -55,7 +55,7 @@ class Instance:
 
     def query(self, q: Query):
         with self._driver.session() as session:
-            results = session.write_transaction(self._run_transaction, q.code, q.params)
+            results = session.write_transaction(self._tx_funct, q.code, q.params)
             return results
 
     def query_with_tx_funct(self, tx_funct: Callable, q: Query):
@@ -83,10 +83,44 @@ class Instance:
         rel = res['r']
         return rel
 
+    def batch_of_nodes(self, label: str, batch: List[Dict], clause="CREATE"):
+        # {batch: [{name:"Alice",age:32},{name:"Bob",age:42}]}
+        records = []
+        if batch:
+            query = Query(
+                code=f'''
+                    UNWIND $batch AS row
+                    {clause} (n:{label})
+                    SET n += row
+                    RETURN n
+                    ''',
+                params={'batch': batch},
+                returns=['n']
+            )
+            records = self.query_with_tx_funct(self._tx_funct, query)
+            nodes = [r['n'] for r in records]
+        return nodes
+
+    def batch_of_relationships(self, batch: List[Tuple[Node, Node]], rel_label: str = '', clause="CREATE"):
+        records = []
+        if batch:
+            query = Query(
+                code=f'''
+                    UNWIND $batch AS row
+                    MATCH (s), (t) WHERE id(s) = row.source AND id(t) = row.target
+                    {clause} (s) -[r:{rel_label}]-> (t)
+                    RETURN r
+                    ''',
+                params={'batch': batch},
+                returns=['r']
+            )
+            records = self.query_with_tx_funct(self._tx_funct, query)
+            relationships = [r['r'] for r in records]
+        return relationships
+
     @staticmethod
     def _tx_funct_single(tx: Transaction, code: str, params: Dict = {}):
-        results: BoltStatementResult = tx.run(code)
-        records = [r for r in results] # consume results right here
+        records = Instance._tx_funct(tx, code, params)
         if len(records) > 1:
             summary: BoltStatementResultSummary = results.summary()
             print(f"WARNING: {len(records)} > 1 records returned with statement:'")
@@ -99,6 +133,7 @@ class Instance:
         return r
 
     @staticmethod
-    def _run_transaction(tx: Transaction, code: str, params: Dict):
-        result = tx.run(code, params)
-        return result
+    def _tx_funct(tx: Transaction, code: str, params: Dict = {}):
+        results: BoltStatementResult = tx.run(code, params)
+        records = [r for r in results]
+        return records
