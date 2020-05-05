@@ -1,51 +1,62 @@
-
+import time
 from .eebapi import EEBAPI
 from . import DB
 
 
+API = EEBAPI()
+
+
 def create_graph():
-    N = 0
-    skipped = {'paper': [], 'figure': [], 'panel': []}
-    eebapi = EEBAPI()
-    total = len(eebapi)
-    for doi in eebapi.doi_list:
-        print(f"Trying paper {doi}")
-        a = eebapi.article(doi)
-        if a is None:
-            print(f"paper with doi={doi} cold not be retrieved")
-            skipped['paper'].append(doi)
-        else:
-            article_node = DB.node(a)
-            N += 1
-            for fig_idx in a.children:
-                print(f"    Trying figure {fig_idx}")
-                f = eebapi.figure(doi, fig_idx)
-                if f is None:
-                    print(f"figure {fig_idx} from doi={doi} cold not be retrieved")
-                    skipped['figure'].append(f"{doi}: {fig_idx}")
-                else:
-                    figure_node = DB.node(f)
-                    N += 1
-                    DB.relationship(article_node, figure_node, "has_figure")
-                    # commenting request out until we have automateed panelization
-                    # for panel_id in f.children:
-                    #     print(f"        Trying panel {panel_id}")
-                    #     p = sdapi.panel(panel_id)
-                    for p in f.children:
-                        if p is None:
-                            print(f"panel {p.panel_id} could not be retrieved")
-                            skipped['panel'].append(p.panel_id)
-                        else:
-                            p_node = DB.node(p)
-                            N += 1
-                            DB.relationship(figure_node, p_node, 'has_panel')
-                            print(f"            Trying {len(p.children)} tags.")
-                            for tag_data in p.children:
-                                tag = eebapi.tag(tag_data)
-                                tag_node = DB.node(tag)
-                                DB.relationship(p_node, tag_node, 'has_tag')
-                                N += 1
+    skipped = {'article': [], 'figure': [], 'panel': [], 'tags': []}
+    total = len(API)
+    articles, article_nodes, articles_skipped = create_nodes(API.article, API.doi_list)
+    skipped['article'] = articles_skipped
+    N = len(articles)
+    for a, a_node in zip(articles, article_nodes):
+        print(f"trying article {a.doi}")
+        figures, figure_nodes, skipped_figures = create_nodes(API.figure, a.children, a.doi)
+        create_relationships(a_node, figure_nodes, 'has_fig')
+        skipped['figure'].append(skipped_figures)
+        N += len(figures)
+        for f, f_nodes in zip(figures, figure_nodes):
+            print(f"    trying figure {f.fig_label}")
+            panels, panel_nodes, skipped_panels = create_nodes(API.panel, f.children)
+            create_relationships(f_nodes, panel_nodes, 'has_panel')
+            skipped['panel'].append(skipped_panels)
+            N += len(panels)
+            for p, p_node in zip(panels, panel_nodes):
+                print(f"        trying panel {p.panel_label}")
+                tags, tag_nodes, skipped_tags = create_nodes(API.tag, p.children)
+                create_relationships(p_node, tag_nodes, 'has_tag')
+                skipped['tags'].append(skipped_tags)
+                N += len(tags)
     return total, skipped, N
+
+
+def create_nodes(api_method, item_list, *args):
+    items = []
+    skipped = []
+    nodes = None
+    for item in item_list:
+        a = api_method(item, *args)
+        if a is not None:
+            items.append(a)
+        else:
+            skipped.append(item)
+    time.sleep(0.1)
+    if items:
+        label = items[0].label
+        batch = [n.properties for n in items]
+        nodes = DB.batch_of_nodes(label, batch)
+    return items, nodes, skipped
+
+
+def create_relationships(source, targets, rel_label):
+    rel = None
+    if targets:
+        rel_batch = [{'source': source.id, 'target': target.id} for target in targets]
+        rel = DB.batch_of_relationships(rel_batch, rel_label)
+    return rel
 
 
 if __name__ == "__main__":

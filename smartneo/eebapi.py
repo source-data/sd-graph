@@ -127,11 +127,8 @@ class SDPanel(SDNode):
 class SDTag(SDNode):
     def __init__(self, data):
         super().__init__(data)
-        # {'category': 'assay', 'category_score': '57', 'text': 'histopathology'}, 
-        # {'type': 'tissue', 'type_score': '52', 'text': 'lungs'}
-        # {'type': 'geneprod', 'role': 'intervention', 'type_score': '39', 'role_score': '74', 'text': 'ACE2'}
         category = self.get('category', None)
-        if category is None: # SD API returns category with an empty string for entities...
+        if category is None:
             self.category = 'entity'
         elif category is None:
             self.category = ''
@@ -184,7 +181,7 @@ class EEBAPI:
             article = None
         return article
 
-    def figure(self, doi, figure_index=1):
+    def figure(self, figure_index=1, doi=''):
         params = {'doi': doi, 'position_idx': figure_index}
         url = EEB_PUBLIC_API + GET_FIGURE
         data = rest2data(url, params)
@@ -193,6 +190,10 @@ class EEBAPI:
         else:
             figure = None
         return figure
+
+    def panel(self, panel: SDPanel):
+        # placeholder until we have automated panelization going
+        return panel
 
     def tag(self, data):
         # because tags are only accessible through a figure, there is no request to the API
@@ -203,6 +204,8 @@ class EEBAPI:
             tag = None
         return tag
 
+    
+    
     def __len__(self):
         return self.N
 
@@ -231,12 +234,12 @@ if __name__ == '__main__':
         print('number of figures:', article.nb_figures)
 
     if fig and doi_arg:
-        figure = eebapi.figure(doi_arg, fig)
+        figure = eebapi.figure(fig, doi_arg)
         print("label:", figure.label)
         print("caption:", figure.caption)
-        print("tagged", figure.children)
         for panel in figure.children:
             print(f"pseudo panel {panel.panel_id}")
-            for t in panel.children['smtag'][0]['entities']:
+            print(f"formatted tagged caption:", panel.formatted_caption)
+            for t in panel.children:
                 sd_tag = SDTag(t)
                 print(sd_tag.properties)
