@@ -46,13 +46,13 @@ class XMLNode:
 
     """
 
-    def __init__(self, element: Element, graph_model: Dict, position_idx: int = None, namespaces: Dict = None):
+    def __init__(self, element: Element, graph_model: Dict, position_idx: int = 0, namespaces: Dict = None):
         # this_element_path_was = graph_model['XPath']
         # this_element_children = graph_model['children']
         # this_element_xpath_to_properties = graph_model['properties']
         self.namespaces = namespaces
         self.label = cleanup_name(element.tag).capitalize()
-        print(f"parsing {self.label} {position_idx if position_idx is not None else ''}                               ", end="\r")
+        print(f"parsing {self.label} {position_idx}                               ", end="\r")
         recipe_for_properties = graph_model.get('properties', None)
         properties = {}
         if recipe_for_properties is not None:
@@ -60,7 +60,7 @@ class XMLNode:
             properties = self.find_properties(element, recipe_for_properties)
         if graph_model:  # not a terminal leaf node
             text = element.text
-            if text: # add the text property only if there is text
+            if text:  # add the text property only if there is text
                 properties['text'] = text
         else:  # terminal leaf node
             text = inner_text(element)
@@ -69,8 +69,7 @@ class XMLNode:
         tail = element.tail
         if tail:
             properties['tail'] = tail
-        if position_idx is not None:
-            properties['position_idx'] = position_idx
+        properties['position_idx'] = position_idx
         # remove hyphens and namespace prefix
         self.properties = cleanup_properties(properties)
         self.children = self.find_children(element, graph_model.get('children', None))
@@ -103,14 +102,8 @@ class XMLNode:
             for relationship in graph_model:
                 xp = graph_model[relationship]['XPath']
                 sub_model = graph_model[relationship]
-                elements = element.xpath(xp, namespaces=self.namespaces) 
-                add_index = len(elements) > 1
-                sub_graph = []
-                for i, e in enumerate(elements):
-                    if add_index:
-                        sub_graph.append(XMLNode(e, sub_model, position_idx=i, namespaces=self.namespaces))
-                    else:
-                        sub_graph.append(XMLNode(e, sub_model, namespaces=self.namespaces))
+                elements = element.xpath(xp, namespaces=self.namespaces)
+                sub_graph = [XMLNode(e, sub_model, position_idx=i, namespaces=self.namespaces) for i, e in enumerate(elements)]
                 graph[relationship] = sub_graph
         return graph
 
@@ -139,5 +132,3 @@ def build_neo_graph(xml_node: XMLNode, source: str, db: Instance):
             if rel is not None:
                 db.relationship(node, child_node, rel)
     return node
-
-
