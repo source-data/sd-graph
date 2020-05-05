@@ -24,8 +24,8 @@ services:
   neo4j:
     image: neo4j:3.5
     volumes:
-      - local_neo4j_data:/data
-      - local_neo4j_logs:/logs
+      - ./data/neo4j-data:/data
+      - ./data/neo4j-logs:/logs
     env_file:
       - ./.env
     ports:

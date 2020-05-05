@@ -28,9 +28,9 @@ docker-compose -f local.yml up -d
 docker-compose -f local.yml run --rm flask python -m sdg.sdneo SARS-CoV-2
 cat sdg/SD-processing.cql | docker-compose -f local.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>
 docker-compose -f local.yml run --rm flask python -m neojats.xml2neo data/meca
-docker-compose -f local.yml run --rm flask
 docker-compose -f local.yml run --rm flask python -m smartneo.eebapi -L
 docker-compose -f local.yml run --rm flask python -m smartneo.sdneo
+docker-compose -f local.yml run --rm flask
 ```
 
 ## Production
