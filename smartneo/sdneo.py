@@ -18,18 +18,24 @@ def create_graph():
         create_relationships(a_node, figure_nodes, 'has_fig')
         skipped['figure'].append(skipped_figures)
         N += len(figures)
-        for f, f_nodes in zip(figures, figure_nodes):
-            print(f"    trying figure {f.fig_label}")
-            panels, panel_nodes, skipped_panels = create_nodes(API.panel, f.children)
-            create_relationships(f_nodes, panel_nodes, 'has_panel')
-            skipped['panel'].append(skipped_panels)
-            N += len(panels)
-            for p, p_node in zip(panels, panel_nodes):
-                print(f"        trying panel {p.panel_label}")
-                tags, tag_nodes, skipped_tags = create_nodes(API.tag, p.children)
-                create_relationships(p_node, tag_nodes, 'has_tag')
-                skipped['tags'].append(skipped_tags)
-                N += len(tags)
+        if not (figures and figure_nodes):
+            print(f"!!!! skipped creating any figure for {a.doi}")
+        else:
+            for f, f_nodes in zip(figures, figure_nodes):
+                print(f"    trying figure {f.fig_label}")
+                panels, panel_nodes, skipped_panels = create_nodes(API.panel, f.children)
+                create_relationships(f_nodes, panel_nodes, 'has_panel')
+                skipped['panel'].append(skipped_panels)
+                N += len(panels)
+                if not (panels and panel_nodes):
+                    print(f"!!!! kipped creating any panel for {f.fig_label} for {a.doi}")
+                else:
+                    for p, p_node in zip(panels, panel_nodes):
+                        print(f"        trying panel {p.panel_label}")
+                        tags, tag_nodes, skipped_tags = create_nodes(API.tag, p.children)
+                        create_relationships(p_node, tag_nodes, 'has_tag')
+                        skipped['tags'].append(skipped_tags)
+                        N += len(tags)
     return total, skipped, N
 
 

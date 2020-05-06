@@ -79,7 +79,7 @@ class SDArticle(SDNode):
         self.journal = self.get('journal', '')
         self.doi = self.get('doi', '')
         self.nb_figures = int(self.get('nb_figures', 0))  # remember to change this in sdg!
-        self.add_properties = ({
+        self.add_properties({
             'doi': self.doi,
             'title': self.title,
             'journalName': self.journal,
@@ -95,7 +95,7 @@ class SDFigure(SDNode):
         self.fig_label = self.get('fig_label', '')
         self.fig_title = self.get('fig_title', '')
         self.caption = self.get('caption', '')
-        self.add_properties = ({
+        self.add_properties({
             'fig_label': self.fig_label,
             'title': self.fig_title,
             'caption': self.caption,
@@ -115,7 +115,7 @@ class SDPanel(SDNode):
             self.formatted_caption = tag(fig.caption, format='xml')
         else:
             self.formatted_caption = ''
-        self.add_properties = ({
+        self.add_properties({
             "paper_doi": self.paper_doi,
             "fig_label": self.fig_label,
             "panel_id": self.panel_id,
@@ -145,7 +145,7 @@ class SDTag(SDNode):
         self.role = self.get('role', '')
         self.role_score = self.get('role_score', '')
         self.text = self.get('text', '')
-        self.add_properties = ({
+        self.add_properties({
             'category': self.category, 
             'category_score': self.category_score,
             'type': self.type, 
