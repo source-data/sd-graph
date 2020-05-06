@@ -1,6 +1,7 @@
 import requests
 import argparse
 import json
+from typing import Dict
 from smtag.predict.cartridges import CARTRIDGE
 from smtag.predict.engine import SmtagEngine
 from . import EEB_PUBLIC_API
@@ -49,16 +50,23 @@ class SDNode:
         self._data = data
         if isinstance(self._data, list):
             self._data = self._data[0]
-        self.properties = {}
+        self.properties = {'source': 'smartneo'}
         self.label = self.__class__.__name__
         self.children = {}
+
+    def add_properties(self, prop: Dict):
+        self.properties = {**self.properties, **prop}
 
     @staticmethod
     def rm_empty(list):
         return [e for e in list if e]
 
     def get(self, key, default):
-        return self._data.get(key, default)
+        # should never return None, but rather returns default value if value from self._data is None or [] or False
+        val = self._data.get(key, 'default')
+        if not val:
+            val = default
+        return val
 
     def __str__(self):
         return "; ".join([f"{k}: {v}" for k, v in  self._data.items()])
@@ -71,30 +79,27 @@ class SDArticle(SDNode):
         self.journal = self.get('journal', '')
         self.doi = self.get('doi', '')
         self.nb_figures = int(self.get('nb_figures', 0))  # remember to change this in sdg!
-        self.properties = {
+        self.add_properties = ({
             'doi': self.doi,
             'title': self.title,
             'journalName': self.journal,
             'nb_figures': self.nb_figures
-        }
+        })
         self.children = range(self.nb_figures)
 
 
 class SDFigure(SDNode):
     def __init__(self, data):
         super().__init__(data)
-        try:
-            self.paper_doi = self.get('doi', '')
-        except AttributeError:
-            import pdb; pdb.set_trace()
+        self.paper_doi = self.get('doi', '')
         self.fig_label = self.get('fig_label', '')
         self.fig_title = self.get('fig_title', '')
         self.caption = self.get('caption', '')
-        self.properties = {
+        self.add_properties = ({
             'fig_label': self.fig_label,
             'title': self.fig_title,
             'caption': self.caption,
-        }
+        })
         self.children = [SDPanel(self)]  # provisional until we fix automatic panelization in general case
 
 
@@ -110,14 +115,14 @@ class SDPanel(SDNode):
             self.formatted_caption = tag(fig.caption, format='xml')
         else:
             self.formatted_caption = ''
-        self.properties = {
+        self.add_properties = ({
             "paper_doi": self.paper_doi,
             "fig_label": self.fig_label,
             "panel_id": self.panel_id,
             "panel_label": self.panel_label,
             "caption": self.caption, 
             "formatted_caption": self.formatted_caption
-        }
+        })
         if self.caption:
             self.children = tag(self.caption, format='json')
         else:
@@ -140,7 +145,7 @@ class SDTag(SDNode):
         self.role = self.get('role', '')
         self.role_score = self.get('role_score', '')
         self.text = self.get('text', '')
-        self.properties = {
+        self.add_properties = ({
             'category': self.category, 
             'category_score': self.category_score,
             'type': self.type, 
@@ -148,7 +153,7 @@ class SDTag(SDNode):
             'role': self.role, 
             'role_score': self.role_score,
             'text': self.text,
-        }
+        })
 
 
 class ArticleList:
@@ -186,7 +191,7 @@ class EEBAPI:
         url = EEB_PUBLIC_API + GET_FIGURE
         data = rest2data(url, params)
         if data:
-            figure = SDFigure(data)  # most recent version should be first item in list
+            figure = SDFigure(data)
         else:
             figure = None
         return figure
