@@ -63,7 +63,7 @@ class SDNode:
 
     def get(self, key, default):
         # should never return None, but rather returns default value if value from self._data is None or [] or False
-        val = self._data.get(key, 'default')
+        val = self._data.get(key, default)
         if not val:
             val = default
         return val
