@@ -1,6 +1,7 @@
-import requests
 import argparse
-from . import SD_API_URL, SD_API_USERNAME, SD_API_PASSWORD
+from requests_retry import SESSION_RETRY
+from . import SD_API_URL
+
 
 GET_COLLECTION = "collection/"
 GET_LIST = "papers"
@@ -9,11 +10,12 @@ GET_FIGURE = "figure/"
 GET_PANEL = "panel/"
 
 
-def rest2data(url, usr=SD_API_USERNAME, pswd=SD_API_PASSWORD):
+def rest2data(url):
+
     data = dict()
     try:
-        response = requests.get(url, auth=(usr, pswd))
-        try: 
+        response = SESSION_RETRY.get(url, timeout=30)
+        try:
             data = response.json()
         except Exception as e:
             print("WARNING: problem with loading json object with %s" % url)
@@ -23,7 +25,7 @@ def rest2data(url, usr=SD_API_USERNAME, pswd=SD_API_PASSWORD):
         print("failed to get response from server")
         print(type(e), e)
     finally:
-        if data is not None:
+        if data:
             return data
         else:
             print("response is empty")
@@ -94,7 +96,7 @@ class SDPanel(SDNode):
         self.paper_doi = paper_info.get('doi', '')
         # we keep the figure label as well
         figure_info = data.get('figure', '')
-        self.fig_label = figure_info.get('lable', '')
+        self.fig_label = figure_info.get('label', '')
         # find this panel's id using current_panel_id
         self.panel_id = data['current_panel_id']
         # take the portion of the data returned by the REST API that concerns panels
