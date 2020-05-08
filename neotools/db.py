@@ -122,10 +122,9 @@ class Instance:
     def _tx_funct_single(tx: Transaction, code: str, params: Dict = {}):
         records = Instance._tx_funct(tx, code, params)
         if len(records) > 1:
-            summary: BoltStatementResultSummary = results.summary()
             print(f"WARNING: {len(records)} > 1 records returned with statement:'")
-            print(summary.statement)
-            print(f"with params {summary.parameters}.")
+            print(code)
+            print(f"with params {params}.")
             print("Affected records:")
             for r in records:
                 print(r)
