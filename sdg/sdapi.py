@@ -1,8 +1,10 @@
 import argparse
-from requests_retry import SESSION_RETRY
-from . import SD_API_URL
+import requests
+from .sdnode import SDNode, API
+from . import SD_API_URL, SD_API_USERNAME, SD_API_PASSWORD
 
 
+# s.headers.update({'Accept': 'application/json'})
 GET_COLLECTION = "collection/"
 GET_LIST = "papers"
 GET_ARTICLE = "paper/"
@@ -10,45 +12,27 @@ GET_FIGURE = "figure/"
 GET_PANEL = "panel/"
 
 
-def rest2data(url):
+class SDCollection(SDNode):
+    def __init__(self, data, name, id):
+        super().__init__(data)
+        self.name = name
+        self.id = id
+        children = []
+        for d in data:
+            doi = d.get('doi', None)
+            sdid = d.get('id', None)
+            title = d.get('title', '')
+            if doi:
+                children.append(doi)
+            elif sdid:
+                print(f"using sdid {sdid} instead of doi for: \n{title}.")
+                children.append(sdid)
+            else:
+                import pdb; pdb.set_trace()
+        self.children = children
 
-    data = dict()
-    try:
-        response = SESSION_RETRY.get(url, timeout=30)
-        try:
-            data = response.json()
-        except Exception as e:
-            print("WARNING: problem with loading json object with %s" % url)
-            print(type(e), e)
-            print(response.json())
-    except Exception as e:
-        print("failed to get response from server")
-        print(type(e), e)
-    finally:
-        if data:
-            return data
-        else:
-            print("response is empty")
-            return dict()
-
-
-class SDNode:
-
-    def __init__(self, data):
-        self._data = data
-        if self._data is not None:
-            self.properties = {}
-            self.label = self.__class__.__name__
-            self.children = {}
-        else:
-            self = None
-
-    @staticmethod
-    def rm_empty(list):
-        return [e for e in list if e]
-
-    def __str__(self):
-        return "; ".join([f"{k}: {v}" for k, v in  self._data.items()])
+    def __len__(self):
+        return len(self.children)
 
 
 class SDArticle(SDNode):
@@ -162,50 +146,43 @@ class SDTag(SDNode):
         }
 
 
-class ArticleList:
+class SDAPI(API):
 
-    def __init__(self, data):
-        self.doi_list = [a.get('doi', '') for a in data]
-        self.title_list = [a.get('title', '') for a in data]
-        self.title_doi_dictionary = {a['id']: {"title": a['title'], "doi": a['doi']} for a in data}
+    def __init__(self):
+        super().__init__()
+        authenticated_session = requests.Session()
+        authenticated_session.auth = (SD_API_USERNAME, SD_API_PASSWORD)
+        self.session_retry = self.requests_retry_session(session=authenticated_session)
+        self.collection_id = None
 
+    def collection(self, collection_name):
+        def get_collection_id(collection_name):
+            url = SD_API_URL + GET_COLLECTION + collection_name
+            data = self.rest2data(url)
+            collection_id = data[0]['collection_id']
+            return collection_id
 
-class SDAPI:
-
-    def __init__(self, collection_name):
-        self.collection_name = collection_name
-        self.collection_id = self.get_collection_id(self.collection_name)
-        self.doi_list = self.article_list().doi_list
-        self.N = len(self.doi_list)
-        print(f"collection {self.collection_id } contains {self.N} papers.")
-
-    def get_collection_id(self, collection_name):
-        url = SD_API_URL + GET_COLLECTION + collection_name
-        data = rest2data(url)
-        collection_id = data[0]['collection_id']
-        return collection_id
-
-    def article_list(self):
+        self.collection_id = get_collection_id(collection_name)
         url = SD_API_URL + GET_COLLECTION + self.collection_id + "/" + GET_LIST
-        data = rest2data(url)
-        article_list = ArticleList(data)
-        return article_list
+        data = self.rest2data(url)
+        collection = SDCollection(data, collection_name, self.collection_id)
+        return collection
 
     def article(self, doi):
         url = SD_API_URL + GET_COLLECTION + self.collection_id + "/" + GET_ARTICLE + doi
-        data = rest2data(url)
+        data = self.rest2data(url)
         article = SDArticle(data)
         return article
 
-    def figure(self, doi, figure_index=1):
+    def figure(self, figure_index=1, doi=''):
         url = SD_API_URL + GET_COLLECTION + self.collection_id + "/" + GET_ARTICLE + doi + "/" + GET_FIGURE + str(figure_index)
-        data = rest2data(url)
+        data = self.rest2data(url)
         figure = SDFigure(data)
         return figure
 
     def panel(self, id):
         url = SD_API_URL + GET_PANEL + id
-        data = rest2data(url)
+        data = self.rest2data(url)
         panel = SDPanel(data)
         return panel
 
@@ -215,16 +192,13 @@ class SDAPI:
         tag = SDTag(data)
         return tag
 
-    def __len__(self):
-        return self.N
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser( description="interace to the SourceData API" )
     parser.add_argument('collection', nargs="?", default="PUBLICSEARCH", help="Takes the name of a collection (try \"PUBLICSEARCH\") nd returns the list of papers")
     parser.add_argument('-L', '--listing', action="store_true", help="List of articles in the collection.") 
-    parser.add_argument('-D', '--doi', default = '', help="Takes a doi and return article information")
-    parser.add_argument('-F', '--figure', default = '', help="Takes the figure index and returns the figure legend for the figure in the paper specified with the --doi option") 
+    parser.add_argument('-D', '--doi', default='', help="Takes a doi and return article information")
+    parser.add_argument('-F', '--figure', default='', help="Takes the figure index and returns the figure legend for the figure in the paper specified with the --doi option") 
     parser.add_argument('-P', '--panel', default='', help="Takes the id of a panel and returns the tagged text of the legend")
     args = parser.parse_args()
     collection_name = args.collection
@@ -232,14 +206,13 @@ if __name__ == '__main__':
     doi = args.doi
     fig = args.figure
     panel_id = args.panel
-    sdapi = SDAPI(collection_name)
+    sdapi = SDAPI()
     if collection_name:
-        collection_id = sdapi.collection_id
-        print(f"collection {sdapi.collection_name} has id = {collection_id} and has {len(sdapi)} articles.")
+        collection = sdapi.collection(collection_name)
+        print(f"collection {collection.name} has id = {collection.id} and has {len(collection)} articles.")
 
     if listing:
-        article_list = sdapi.article_list()
-        for doi in article_list.doi_list:
+        for doi in collection.children:
             a = sdapi.article(doi)
             print(f"{a.doi}\t{a.import_id}\t{a.title}")
 
