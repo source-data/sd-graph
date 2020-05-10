@@ -133,6 +133,8 @@ class Instance:
 
     @staticmethod
     def _tx_funct(tx: Transaction, code: str, params: Dict = {}):
+        # To enable consuming results within session according to https://neo4j.com/docs/api/python-driver/current/transactions.html
+        # "Results should be fully consumed within the function and only aggregate or status values should be returned"
         results: BoltStatementResult = tx.run(code, params)
-        records = [r for r in results]
+        records = list(results)
         return records
