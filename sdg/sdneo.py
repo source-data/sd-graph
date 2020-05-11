@@ -10,27 +10,36 @@ class SDNeo:
 
     def create_graph(self, collection_name):
         collection = self.api.collection(collection_name)
-        article_nodes = self.create_articles(collection.children)
+        self.create_articles(collection.children)
         return collection
 
 
     def create_articles(self, article_list):
-        articles, article_nodes, articles_skipped = self.create_nodes(self.api.article, article_list)
+        articles, article_nodes, skipped_articles = self.create_nodes(self.api.article, article_list)
+        if skipped_articles:
+            logger.warning(f"Skipped articles: {', '.join([a.doi for a in skipped_articles])}")
         for a, a_node in zip(articles, article_nodes):
             if not a.doi:
-                import pdb; pdb.set_trace()
-            print(f"article {a.doi}")
-            figure_nodes = self.create_figures(a.children, a.doi)
-            self.create_relationships(a_node, figure_nodes, 'has_fig')
+                logger.warning(f"!!!! Article '{a.title}'' has no doi.")
+                print(f"!!!! Article '{a.title}'' has no doi.")
+            else:
+                logger.info(f"article {a.doi}")
+                print(f"article {a.doi}")
+                figure_nodes = self.create_figures(a.children, a.doi)
+                self.create_relationships(a_node, figure_nodes, 'has_fig')
         return article_nodes
 
 
     def create_figures(self, figure_list, doi):
         figures, figure_nodes, skipped_figures = self.create_nodes(self.api.figure, figure_list, doi)
+        if skipped_figures:
+            logger.warning(f"Skipped figures: {', '.join([f.fig_label for f in skipped_figures])}")
         if not (figures and figure_nodes):
+            logger.warning(f"!!!! skipped creating any figure for {doi}")
             print(f"!!!! skipped creating any figure for {doi}")
         else:
             for f, f_nodes in zip(figures, figure_nodes):
+                logger.info(f"    figure {f.fig_label}")
                 print(f"    figure {f.fig_label}")
                 panel_nodes = self.create_panels(f.children)
                 self.create_relationships(f_nodes, panel_nodes, 'has_panel')
@@ -38,10 +47,14 @@ class SDNeo:
 
     def create_panels(self, panel_list):
         panels, panel_nodes, skipped_panels = self.create_nodes(self.api.panel, panel_list)
+        if skipped_panels:
+            logger.warning(f"Skipped panels: {', '.join([p.panel_label for p in skipped_panels])}")
         if not (panels and panel_nodes):
+            logger.warning(f"!!!! skipped creating any panels.")
             print(f"!!!! skipped creating any panels.")
         else:
             for p, p_node in zip(panels, panel_nodes):
+                logger.info(f"        panel {p.panel_label}")
                 print(f"        panel {p.panel_label}")
                 tag_nodes = self.create_tags(p.children)
                 self.create_relationships(p_node, tag_nodes, 'has_tag')
