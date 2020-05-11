@@ -2,7 +2,7 @@ import re
 import os
 import argparse
 from io import open as iopen
-from lxml.etree import parse, fromstring, Element, ElementTree, tostring, XMLSyntaxError, XMLParser
+from lxml.etree import parse, fromstring, Element, ElementTree, tostring, XMLSyntaxError, XMLParser, indent
 from xml.sax.saxutils import escape, unescape
 from random import shuffle
 from math import floor
@@ -46,8 +46,9 @@ def XMLFigure(d: Dict):
     e.append(graphic_element)
     # title was not captured systematically in source data db; using first sentence as replacement
     pseudo_title = first_sentence_as_title(d['caption'])
-    title_element = XMLTitle(pseudo_title)
-    e.append(title_element)
+    if pseudo_title:
+        title_element = XMLTitle(text=pseudo_title)
+        e.append(title_element)
     return e
 
 
@@ -188,26 +189,34 @@ class Compendium:
             if doi in self.articles:
                 logger.warning(f'Attempt to process {doi} multiple times.')
             else:
-                # TODO: use graph model in reverse
-                article = XMLArticle(a)
-                figure_query = FIGURES_BY_PAPER_ID
-                figure_query.params = {'id': a_id}
-                results_figures = self.db.query(figure_query)
-                for f in results_figures:
-                    print(f"    Figure {f['fig_label']}")
-                    figure_element = XMLFigure(f)
-                    fig_id = figure_element.attrib['id']
-                    caption_element = XMLCaption()
-                    PANEL_BY_FIG_ID.params = {'id': int(fig_id)}
-                    results_panels = self.db.query(PANEL_BY_FIG_ID)
-                    for p in results_panels:
-                        print(f"        Panel {p['panel_label']}")
-                        panel_element = XMLPanel(p)
-                        if panel_element is not None:
-                            caption_element.append(panel_element)
-                    figure_element.append(caption_element)
-                    article.append(figure_element)
-                self.articles[doi] = article
+                article_element = XMLArticle(a)
+                self.fetch_figures(article_element, a_id)
+                self.articles[doi] = article_element
+
+    def fetch_figures(self, article_element, id: int):
+        figure_query = FIGURES_BY_PAPER_ID
+        figure_query.params = {'id': id}
+        results_figures = self.db.query(figure_query)
+        for f in results_figures:
+            print(f"    Figure {f['fig_label']}")
+            figure_element = XMLFigure(f)
+            fig_id = figure_element.attrib['id']
+            self.fetch_caption(figure_element, int(fig_id))
+            article_element.append(figure_element)
+
+    def fetch_caption(self, figure_element, id: int):
+        caption_element = XMLCaption()
+        self.fetch_panels(caption_element, id)
+        figure_element.append(caption_element)
+
+    def fetch_panels(self, caption_element, id: int):
+        PANEL_BY_FIG_ID.params = {'id': id}
+        results_panels = self.db.query(PANEL_BY_FIG_ID)
+        for p in results_panels:
+            print(f"        Panel {p['panel_label']}")
+            panel_element = XMLPanel(p)
+            if panel_element is not None:
+                caption_element.append(panel_element)
 
     def split_dataset(self):
         validfract = self.options['validfract']
@@ -233,7 +242,8 @@ class Compendium:
                 filename = doi + '.xml'
                 file_path = subpath / filename
                 print('writing to {}'.format(str(file_path)))
-                ElementTree(article).write(str(file_path), encoding='utf-8', xml_declaration=True, )
+                indent(article, space="    ")
+                ElementTree(article).write(str(file_path), encoding='utf-8', xml_declaration=True)
 
 
 def main():
