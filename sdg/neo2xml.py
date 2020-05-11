@@ -27,15 +27,16 @@ def XMLFigure(d: Dict):
 
     def first_sentence_as_title(xml_str: str):
         pseudo_title = ""
-        # strip caption of any HTML/XML tags
-        # from O'Reilly's Regular Expressions Cookbook
-        xml_tag_regexp = r'''</?([A-Za-z][^\s>/]*)(?:[^>"']|"[^"]*"|'[^']*')*>'''
-        fig_caption = re.sub(xml_tag_regexp, '', xml_str)
-        first_sentence = re.match(r"\W*([^\n\r]*?)[\.\r\n]", fig_caption)
-        if first_sentence:
-            pseudo_title = first_sentence.group(1)
-            pseudo_title = pseudo_title + "." # adds a dot just in case it is missing
-            pseudo_title = pseudo_title.replace("..", ".") # makes sure that title finishes with a single . 
+        if xml_str:
+            # strip caption of any HTML/XML tags
+            # from O'Reilly's Regular Expressions Cookbook
+            xml_tag_regexp = r'''</?([A-Za-z][^\s>/]*)(?:[^>"']|"[^"]*"|'[^']*')*>'''
+            fig_caption = re.sub(xml_tag_regexp, '', xml_str)
+            first_sentence = re.match(r"\W*([^\n\r]*?)[\.\r\n]", fig_caption)
+            if first_sentence:
+                pseudo_title = first_sentence.group(1)
+                pseudo_title = pseudo_title + "." # adds a dot just in case it is missing
+                pseudo_title = pseudo_title.replace("..", ".") # makes sure that title finishes with a single . 
         return pseudo_title
 
     e = Element('fig')
