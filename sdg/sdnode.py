@@ -92,6 +92,3 @@ class API:
 
     def tag(self, data):
         raise NotImplementedError
-
-    def __len__(self):
-        return self.N
