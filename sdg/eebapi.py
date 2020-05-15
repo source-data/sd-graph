@@ -1,21 +1,19 @@
-import requests
 import argparse
 import json
-from typing import Dict
+from .sdnode import SDNode, API
 from smtag.predict.cartridges import CARTRIDGE
 from smtag.predict.engine import SmtagEngine
 from . import EEB_PUBLIC_API
 
-GET_LIST = "papers"
-GET_COVID19 = "covid19"
+
+GET_COLLECTION = "collection/"
 GET_ARTICLE = "doi/"
 GET_FIGURE = "figure"
-
 
 TAGGING_ENGINE = SmtagEngine(CARTRIDGE)
 
 
-def tag(text, format):
+def tag_it(text, format):
     tags = TAGGING_ENGINE.tag(text, 'sd-tag', format)
     if format == 'json':
         tags = json.loads(tags[0])
@@ -23,53 +21,21 @@ def tag(text, format):
     return tags
 
 
-def rest2data(url, params=None):
-    data = dict()
-    try:
-        response = requests.get(url, params)
-        try:
-            data = response.json()
-        except Exception as e:
-            print(f"WARNING: problem with loading json object with {url}")
-            print(type(e), e)
-            print(response.json())
-    except Exception as e:
-        print("failed to get response from server")
-        print(type(e), e)
-    finally:
-        if data is not None:
-            return data
-        else:
-            print("response is empty")
-            return dict()
+class SDCollection(SDNode):
+    def __init__(self, data, name):
+        super().__init__(data)
+        self.name = name
+        children = []
+        for d in data:
+            doi = d.get('doi', None)
+            if doi:
+                children.append(doi)
+            else:
+                import pdb; pdb.set_trace()
+        self.children = children
 
-
-class SDNode:
-
-    def __init__(self, data):
-        self._data = data
-        if isinstance(self._data, list):
-            self._data = self._data[0]
-        self.properties = {'source': 'smartneo'}
-        self.label = self.__class__.__name__
-        self.children = {}
-
-    def add_properties(self, prop: Dict):
-        self.properties = {**self.properties, **prop}
-
-    @staticmethod
-    def rm_empty(list):
-        return [e for e in list if e]
-
-    def get(self, key, default):
-        # should never return None, but rather returns default value if value from self._data is None or [] or False
-        val = self._data.get(key, default)
-        if not val:
-            val = default
-        return val
-
-    def __str__(self):
-        return "; ".join([f"{k}: {v}" for k, v in  self._data.items()])
+    def __len__(self):
+        return len(self.children)
 
 
 class SDArticle(SDNode):
@@ -112,7 +78,7 @@ class SDPanel(SDNode):
         self.panel_id = ":".join([self.paper_doi, self.fig_label, self.panel_label])
         self.caption = fig.get('caption', '')
         if self.caption:
-            self.formatted_caption = tag(fig.caption, format='xml')
+            self.formatted_caption = tag_it(fig.caption, format='xml')
         else:
             self.formatted_caption = ''
         self.add_properties({
@@ -124,7 +90,7 @@ class SDPanel(SDNode):
             "formatted_caption": self.formatted_caption
         })
         if self.caption:
-            self.children = tag(self.caption, format='json')
+            self.children = tag_it(self.caption, format='json')
         else:
             self.children = []
 
@@ -156,40 +122,27 @@ class SDTag(SDNode):
         })
 
 
-class ArticleList:
+class EEBAPI(API):
 
-    def __init__(self, data):
-        self.doi_list = [a.get('doi', '') for a in data]
-        self.title_list = [a.get('title', '') for a in data]
-        self.title_doi_dictionary = {a['doi']: {"title": a['title'], "doi": a['doi']} for a in data}
-
-
-class EEBAPI:
-
-    def __init__(self):
-        self.doi_list = self.article_list().doi_list
-        self.N = len(self.doi_list)
-        print(f"COVID-19 has {self.N} papers.")
-
-    def article_list(self):
-        url = EEB_PUBLIC_API + GET_COVID19
-        data = rest2data(url)
-        article_list = ArticleList(data)
+    def collection(self, collection_name):
+        url = EEB_PUBLIC_API + GET_COLLECTION + collection_name
+        data = self.rest2data(url)
+        article_list = SDCollection(data, collection_name)
         return article_list
 
     def article(self, doi):
         url = EEB_PUBLIC_API + GET_ARTICLE + doi
-        data = rest2data(url)
+        data = self.rest2data(url)
         if data:
             article = SDArticle(data)  # most recent version should be first item in list
         else:
             article = None
         return article
 
-    def figure(self, figure_index=1, doi=''):
+    def figure(self, figure_index=0, doi=''):
         params = {'doi': doi, 'position_idx': figure_index}
         url = EEB_PUBLIC_API + GET_FIGURE
-        data = rest2data(url, params)
+        data = self.rest2data(url, params)
         if data:
             figure = SDFigure(data)
         else:
@@ -209,8 +162,6 @@ class EEBAPI:
             tag = None
         return tag
 
-    
-    
     def __len__(self):
         return self.N
 
@@ -224,12 +175,16 @@ if __name__ == '__main__':
     listing = args.listing
     doi_arg = args.doi
     fig = args.figure
+    collection_name = 'covid19'
     eebapi = EEBAPI()
 
+    collection = eebapi.collection(collection_name)
+    print(f"Collection {collection.name} has {len(collection)} articles.")
+
     if listing:
-        article_list = eebapi.article_list()
-        for doi in article_list.title_doi_dictionary:
-            print(f"{doi}: {article_list.title_doi_dictionary[doi]}")
+        for doi in collection.children:
+            a = eebapi.article(doi)
+            print(f"{doi}: {a.title}")
 
     if doi_arg:
         article = eebapi.article(doi_arg)
@@ -240,7 +195,7 @@ if __name__ == '__main__':
 
     if fig and doi_arg:
         figure = eebapi.figure(fig, doi_arg)
-        print("label:", figure.label)
+        print("label:", figure.fig_label)
         print("caption:", figure.caption)
         for panel in figure.children:
             print(f"pseudo panel {panel.panel_id}")

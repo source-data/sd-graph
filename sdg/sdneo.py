@@ -1,61 +1,111 @@
 import argparse
-from .sdapi import SDAPI
-from . import DB
+import time
+from . import DB, logger
 
 
-def create_graph(collection_name):
-    N = 0
-    skipped = {'paper': [], 'figure': [], 'panel': []}
-    sdapi = SDAPI(collection_name)
-    total = len(sdapi)
-    for doi in sdapi.doi_list:
-        print(f"Trying paper {doi}")
-        a = sdapi.article(doi)
-        if a is None:
-            print(f"paper with doi={doi} cold not be retrieved")
-            skipped['paper'].append(doi)
+class SDNeo:
+
+    def __init__(self, api):
+        self.api = api
+
+    def create_graph(self, collection_name):
+        collection = self.api.collection(collection_name)
+        self.create_articles(collection.children)
+        return collection
+
+
+    def create_articles(self, article_list):
+        articles, article_nodes, skipped_articles = self.create_nodes(self.api.article, article_list)
+        if skipped_articles:
+            logger.warning(f"Skipped articles: {', '.join([a.doi for a in skipped_articles])}")
+        for a, a_node in zip(articles, article_nodes):
+            if not a.doi:
+                logger.warning(f"!!!! Article '{a.title}'' has no doi.")
+                print(f"!!!! Article '{a.title}'' has no doi.")
+            else:
+                logger.info(f"article {a.doi}")
+                print(f"article {a.doi}")
+                figure_nodes = self.create_figures(a.children, a.doi)
+                self.create_relationships(a_node, figure_nodes, 'has_fig')
+        return article_nodes
+
+
+    def create_figures(self, figure_list, doi):
+        figures, figure_nodes, skipped_figures = self.create_nodes(self.api.figure, figure_list, doi)
+        if skipped_figures:
+            logger.warning(f"Skipped figures: {', '.join([f.fig_label for f in skipped_figures])}")
+        if not (figures and figure_nodes):
+            logger.warning(f"!!!! skipped creating any figure for {doi}")
+            print(f"!!!! skipped creating any figure for {doi}")
         else:
-            article_node = DB.node(a)
-            N+=1
-            for fig_id in a.children:
-                print(f"    Trying figure {fig_id}")
-                f = sdapi.figure(doi, fig_id)
-                if f is None:
-                    print(f"figure {fig_id} from doi={doi} cold not be retrieved")
-                    skipped['figure'].append(f"{doi}: {fig_id}")
-                else:
-                    figure_node = DB.node(f)
-                    N+=1
-                    DB.relationship(article_node, figure_node, "has_figure")
-                    for panel_id in f.children:
-                        print(f"        Trying panel {panel_id}")
-                        p = sdapi.panel(panel_id)
-                        if p is None:
-                            print(f"panel {panel_id} cold not be retrieved")
-                            skipped['panel'].append(panel_id)
-                        else:
-                            p_node = DB.node(p)
-                            N+=1
-                            DB.relationship(figure_node, p_node, 'has_panel')
-                            print(f"            Trying {len(p.children)} tags.")
-                            for tag_data in p.children:
-                                tag = sdapi.tag(tag_data)
-                                tag_node = DB.node(tag)
-                                DB.relationship(p_node, tag_node, 'has_tag')
-                                N+=1
-    return total, skipped, N
-    
+            for f, f_nodes in zip(figures, figure_nodes):
+                logger.info(f"    figure {f.fig_label}")
+                print(f"    figure {f.fig_label}")
+                panel_nodes = self.create_panels(f.children)
+                self.create_relationships(f_nodes, panel_nodes, 'has_panel')
+        return figure_nodes
+
+    def create_panels(self, panel_list):
+        panels, panel_nodes, skipped_panels = self.create_nodes(self.api.panel, panel_list)
+        if skipped_panels:
+            logger.warning(f"Skipped panels: {', '.join([p.panel_label for p in skipped_panels])}")
+        if not (panels and panel_nodes):
+            logger.warning(f"!!!! skipped creating any panels.")
+            print(f"!!!! skipped creating any panels.")
+        else:
+            for p, p_node in zip(panels, panel_nodes):
+                logger.info(f"        panel {p.panel_label}")
+                print(f"        panel {p.panel_label}")
+                tag_nodes = self.create_tags(p.children)
+                self.create_relationships(p_node, tag_nodes, 'has_tag')
+        return panel_nodes
+
+    def create_tags(self, tag_list):
+        tags, tag_nodes, skipped_tags = self.create_nodes(self.api.tag, tag_list)
+        return tag_nodes
+
+    @staticmethod
+    def create_nodes(api_method, item_list, *args):
+        items = []
+        skipped = []
+        nodes = None
+        for item in item_list:
+            a = api_method(item, *args)
+            if a is not None:
+                items.append(a)
+            else:
+                skipped.append(item)
+        time.sleep(0.1)
+        if items:
+            label = items[0].label
+            batch = [n.properties for n in items]
+            nodes = DB.batch_of_nodes(label, batch)
+        return items, nodes, skipped
+
+    @staticmethod
+    def create_relationships(source, targets, rel_label):
+        rel = None
+        if targets:
+            rel_batch = [{'source': source.id, 'target': target.id} for target in targets]
+            rel = DB.batch_of_relationships(rel_batch, rel_label)
+        return rel
+
+
 if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser( description="Uploads collection to neo4j datatbase" )
-    parser.add_argument('collections', nargs='+', help="Name(s) of the collection(s) to download")
+    parser = argparse.ArgumentParser(description="Uploads collections to neo4j datatbase")
+    parser.add_argument('collection', nargs="?", help="Name(s) of the collection(s) to download")
+    parser.add_argument('--api', choices=['sdapi', 'eebapi'], default='sdapi', help="Name of the REST api to use.")
     args = parser.parse_args()
-    collections = args.collections
+    collection = args.collection
+    api_name = args.api
+    if api_name == 'eebapi':
+        from .eebapi import EEBAPI
+        sdneo = SDNeo(api=EEBAPI())
+        collection = 'covid19'  # only collection available in eebapi for the moment
+    else:
+        from .sdapi import SDAPI
+        sdneo = SDNeo(api=SDAPI())
 
-    print("Importing: "+", ".join(collections))
-    for collection in collections:
-        collection = collection.strip()
-        total, skipped, N = create_graph(collection)
-        print(f"created: {N} nodes from {total} papers for collection {collection}")
-        print("skipped items:")
-        print(skipped)
+    print(f"Importing: {collection} with api={api_name}")
+    collection = sdneo.create_graph(collection_name=collection)
+    print(f"Imported {len(collection)} papers.")

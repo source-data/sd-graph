@@ -71,7 +71,7 @@ def panel_summary(panel_id: str):
     return R(ASKNEO.panel_summary(panel_id=panel_id))
 
 
-@app.route('/api/v1/covid19', methods=['GET', 'POST'])
+@app.route('/api/v1/collection/covid19', methods=['GET', 'POST'])
 def covid19():
     return R(ASKNEO.covid19(request))
 
