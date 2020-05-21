@@ -16,20 +16,20 @@ This repository includes several tools currently under development. These tools 
 To make sure you start with a clean build you can run:
 
 ```
-docker-compose -f local.yml build --force-rm --no-cache
+docker-compose build --force-rm --no-cache
 ```
 
 This can solve some issues, for example if you run `build` with a wrong config file.
 
 Normally you just need this:
 ```bash
-docker-compose -f local.yml build
-docker-compose -f local.yml up -d
-docker-compose -f local.yml run --rm flask python -m sdg.sdneo SARS-CoV-2 --api sdapi
-cat sdg/SD-processing.cql | docker-compose -f local.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>
-docker-compose -f local.yml run --rm flask python -m neojats.xml2neo data/meca
-docker-compose -f local.yml run --rm flask python -m sdg.sdneo --api eebapi
-docker-compose -f local.yml run --rm flask
+docker-compose  build
+docker-compose up -d
+docker-compose run --rm flask python -m sdg.sdneo SARS-CoV-2 --api sdapi  # import source data public data
+docker-compose run --rm flask python -m neojats.xml2neo data/meca  # import full text biorxiv preprints
+docker-compose run --rm flask python -m sdg.sdneo --api eebapi # smarttag covid-19 preprints
+cat sdg/SD-processing.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>  # generate merged graph
+docker-compose --rm flask # visit http:/localhost:8080
 ```
 
 ## Production

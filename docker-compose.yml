@@ -19,6 +19,7 @@ services:
     ports:
       # - "0.0.0.0:5000:5000"
       - "5000:5000"
+    shm_size: '8gb'
     command: /start
 
   neo4j:
