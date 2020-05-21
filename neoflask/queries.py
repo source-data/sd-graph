@@ -428,23 +428,15 @@ LIMIT 25
 BY_METHOD = Query(
     code='''
 //pre listed methods
-//UNWIND ['flow cytometry', 'electron microscopy', 'immunoprecipitation', 'confocal microscopy', 'immunohistochemistry', 'histology', 'pseudovirus cell entry'] AS query
-MATCH (q:Term {text: $query})<--(h:H_Entity {category: "assay"})-->(syn:Term)
+UNWIND ['flow cytometry', 'electron microscopy', 'immunoprecipitation', 'confocal microscopy', 'immunohistochemistry', 'histology', 'pseudovirus cell entry'] AS query
+MATCH (q:Term {text: query})<--(h:H_Entity {category: "assay"})-->(syn:Term)
 WITH q, syn
 MATCH (a:SDArticle {journalName:'biorxiv'})-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag {category: "assay"})-->(h:H_Entity)-->(syn)
 WITH DISTINCT
-   q, 
-   {doi: a.doi,
-    panel_of_interest: COLLECT(DISTINCT {
-       panel_label: p.panel_label, 
-       db_id: id(p)
-    }),
-    pub_date: a.pub_date
-   } AS paper
+   q, {doi: a.doi, panel_ids: COLLECT(DISTINCT id(p)), pub_date: a.pub_date} AS paper
 ORDER BY paper.pub_date DESC
 RETURN DISTINCT 
-   q.text AS method, COLLECT(paper) AS papers
+   q.text AS item_name, q.text AS id, COLLECT(paper) AS content_ids
     ''',
-    map={'query': ['query', '']},
-    returns=['method', 'papers']
+    returns=['item_name', 'id', 'content_ids']
 )

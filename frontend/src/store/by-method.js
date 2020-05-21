@@ -48,7 +48,7 @@ export default {
       const url = '/api/v1/by_method'
       return httpClient.get(url)
         .then((response) => {
-          const records = response.data.map(preProcessRecord)
+          const records = response.data
           commit('addRecords', records)
         })
         .finally(() => {
@@ -56,8 +56,4 @@ export default {
         })
     },
   },
-}
-
-function preProcessRecord (method) {
-  return Object.assign({}, method, { id: method.item_ids[0] })
 }
