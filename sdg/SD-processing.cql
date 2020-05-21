@@ -132,14 +132,7 @@ RETURN COUNT(hyb) AS `unique hybrid entities without ext_ids`;
 MATCH (h:H_Entity)
 WHERE 
     h.name = ""
-RETURN COUNT(h) AS `H_Entity remaining without a name`
-
-
-//report tags with no names
-MATCH (h:H_Entity)
-WHERE 
-    h.name = ""
-RETURN COUNT(h) AS `H_Entity remaining without a name`
+RETURN COUNT(h) AS `H_Entity remaining without a name`;
 
 
 //Create unique terms
@@ -158,14 +151,14 @@ MERGE (intervention)-[r:H]->(assayed)
 RETURN COUNT(r) AS `hypotheses at cond tag level`;
 
 
-//transfer publication date from jats articles to SDArticles
+//copy publication date from jats articles to SDArticles
 MATCH (jats:Article), (a:SDArticle)
 WHERE jats.doi = a.doi
 WITH DISTINCT jats.doi AS doi, jats.publication_date AS pub_date, a
 ORDER BY pub_date DESC // most recent first
 WITH DISTINCT doi, COLLECT(pub_date)[0] AS most_recent, a
 SET a.pub_date = most_recent
-RETURN COUNT(DISTINCT a)
+RETURN COUNT(DISTINCT a);
 
 //create hypotheses summaries at paper level
 
