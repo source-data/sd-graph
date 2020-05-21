@@ -21,7 +21,7 @@ from . import logger, DB
 DEBUG_MODE = False
 
 
-class ArchiveLoader:
+class MECALoader:
 
     def __init__(self, path: Path, glob_pattern='*.meca', check_for_duplicate=False):
         self.path = path
@@ -159,7 +159,7 @@ if __name__ == '__main__':
     path = args.path
     check_for_duplicate = not args.no_duplicate_check
     if path:
-        ArchiveLoader(Path(path), check_for_duplicate=check_for_duplicate).load_dir()
+        MECALoader(Path(path), check_for_duplicate=check_for_duplicate).load_dir()
         add_indices()
     else:
         self_test()

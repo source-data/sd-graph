@@ -5,7 +5,7 @@ from .queries import (
     BY_DOI, FIG_BY_DOI_IDX, BY_MOLECULE, BY_HYP, 
     BY_METHOD, SEARCH, PANEL_SUMMARY, COVID19,
 )
-
+from . import app
 # symbolic type for a json string
 json_str = NewType('json_str', str)
 

@@ -87,18 +87,30 @@ docker-compose -f production.yml up -d
 
 For local CLI usage, make fist sure `.env` has `NEO_URI=bolt://localhost:7687` and `EEB_PUBLIC_API=http://localhost:5000/api/v1/`
 
-Upload meca to neo:
+Start local neo4j
 
-    python -m neojats.xml2neo data/meca
+    neo4j start
 
-Launch RESTful interface:
+Launch neoflask interface:
 
     export FLASK_APP=neoflask; export FLASK_ENV=development; export FLASK_DEBUG=true; python -m flask run
 
-Check RESTful interface is active:
+Upload meca archives to neo:
 
-    python -m smartneo.eebapi -L
+    python -m neojats.xml2neo data/meca
+
+Upload sd collection:
+
+    python -m sdg.sdneo <collection name> --api sdapi
+
+Check RESTful interface is active and neo loaded:
+
+    python -m sdg.eebapi -L
 
 Upload and SmartTag COVID19 preprints:
 
-    python -m smartneo.sdneo
+    python -m sdg.sdneo --api eebapi
+
+Process the merged graph:
+
+    cat sdg/SD-processing.cql | cypher-shell -a bolt://localhost:7687 -u neo4j -p <NEO4J_PASSWORD>

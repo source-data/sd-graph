@@ -56,7 +56,7 @@ RETURN id, doi, version, journal, title, abstract, COLLECT([surname, given_name,
 
     ''',
     map={'doi': []},
-    returns=['id', 'doi', 'version', 'journal', 'title', 'abstract', 'authors', 'pub_date, nb_figures']
+    returns=['id', 'doi', 'version', 'journal', 'title', 'abstract', 'authors', 'pub_date', 'nb_figures']
 )
 
 
@@ -123,27 +123,6 @@ ORDER BY pub_date DESC
     returns=['doi', 'panel_ids', 'methods', 'controlled', 'measured', 'pub_date']
 )
 
-BY_METHOD = Query(
-    code='''
-//by method
-MATCH
-  (paper:SDArticle)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(h:H_Entity),
-  (p)-->(e:SDTag {category: "assay"})-->(:CondTag)-->(method:H_Entity)
-WHERE e.ext_ids <> ""
-WITH DISTINCT
-  paper.doi AS doi, 
-  method.name AS item_name, 
-  COLLECT(DISTINCT method.ext_ids) as item_ids,
-  COLLECT(DISTINCT p.panel_id) AS panel_ids
-RETURN
-  item_name,
-  item_ids,
-  COLLECT(DISTINCT {doi: doi, panel_ids: panel_ids}) AS content_ids,
-  COUNT(DISTINCT doi) AS score
-ORDER BY score DESC
-''',
-    returns=['item_name', 'item_ids', 'content_ids', 'score']
-)
 
 BY_MOLECULE = Query(
     code='''
@@ -445,11 +424,12 @@ LIMIT 25
     returns=['method', 'popularity']
 )
 
-PRELISTED_METHODS = Query(
+
+BY_METHOD = Query(
     code='''
 //pre listed methods
-UNWIND ['flow cytometry', 'electron microscopy', 'immunoprecipitation', 'confocal microscopy', 'immunohistochemistry', 'histology', 'pseudovirus cell entry'] AS query
-MATCH (q:Term {text: query})<--(h:H_Entity {category: "assay"})-->(syn:Term)
+//UNWIND ['flow cytometry', 'electron microscopy', 'immunoprecipitation', 'confocal microscopy', 'immunohistochemistry', 'histology', 'pseudovirus cell entry'] AS query
+MATCH (q:Term {text: $query})<--(h:H_Entity {category: "assay"})-->(syn:Term)
 WITH q, syn
 MATCH (a:SDArticle {journalName:'biorxiv'})-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag {category: "assay"})-->(h:H_Entity)-->(syn)
 WITH DISTINCT
@@ -459,12 +439,12 @@ WITH DISTINCT
        panel_label: p.panel_label, 
        db_id: id(p)
     }),
-    pub_date: a.pub_date,
-    found_terms: COLLECT(DISTINCT ct.text)
+    pub_date: a.pub_date
    } AS paper
 ORDER BY paper.pub_date DESC
 RETURN DISTINCT 
    q.text AS method, COLLECT(paper) AS papers
     ''',
+    map={'query': ['query', '']},
     returns=['method', 'papers']
 )
