@@ -121,14 +121,30 @@ class XMLNode:
         return self.to_str()
 
 
-def build_neo_graph(xml_node: XMLNode, source: str, db: Instance):
+class NoException(Exception):
+    """
+    A default Exception that is never caught
+    """
+    def __init__(self):
+        super().__init__()
+
+
+def build_neo_graph(xml_node: XMLNode, source: str, db: Instance, catch_exception: Exception = NoException):
     properties = xml_node.properties  # deal with types!
     properties['source'] = source
-    node = db.node(xml_node)
-    print(f"loaded {xml_node.label} as node {node.id}                                ", end="\r")
-    for rel, children in xml_node.children.items():
-        for child in children:
-            child_node = build_neo_graph(child, source, db)
-            if rel is not None:
-                db.relationship(node, child_node, rel)
+    try:
+        node = db.node(xml_node)
+    except catch_exception as e:
+        print(e)
+        print(f"Exception with {xml_node.label}")
+        node = None
+    except NoException as e:
+        raise e
+    if node is not None:
+        print(f"loaded {xml_node.label} as node {node.id}                                ", end="\r")
+        for rel, children in xml_node.children.items():
+            for child in children:
+                child_node = build_neo_graph(child, source, db, catch_exception)
+                if rel is not None:
+                    db.relationship(node, child_node, rel)
     return node
