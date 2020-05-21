@@ -13,7 +13,6 @@ class SDNeo:
         self.create_articles(collection.children)
         return collection
 
-
     def create_articles(self, article_list):
         articles, article_nodes, skipped_articles = self.create_nodes(self.api.article, article_list)
         if skipped_articles:
@@ -28,7 +27,6 @@ class SDNeo:
                 figure_nodes = self.create_figures(a.children, a.doi)
                 self.create_relationships(a_node, figure_nodes, 'has_fig')
         return article_nodes
-
 
     def create_figures(self, figure_list, doi):
         figures, figure_nodes, skipped_figures = self.create_nodes(self.api.figure, figure_list, doi)
@@ -87,7 +85,7 @@ class SDNeo:
         rel = None
         if targets:
             rel_batch = [{'source': source.id, 'target': target.id} for target in targets]
-            rel = DB.batch_of_relationships(rel_batch, rel_label)
+            rel = DB.batch_of_relationships(rel_batch, rel_label, clause='CREATE')
         return rel
 
 
