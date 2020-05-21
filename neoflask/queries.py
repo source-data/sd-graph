@@ -15,6 +15,7 @@ WHERE scores[0] > 0.02
 WITH doi, versions[0] AS most_recent, scores[0] AS score
 MATCH (a:Article {doi:doi, version: most_recent.version})-->(f:Fig)
 RETURN
+    id(a) AS id,
     a.publication_date AS pub_date,
     a.title AS title,
     a.abstract AS abstract,
@@ -26,10 +27,9 @@ RETURN
 ORDER BY pub_date DESC, score DESC;
     ''',
     map={},
-    returns=['pub_date', 'title', 'abstract', 'version', 'doi', 'journal', 'nb_figures', 'score']
+    returns=['id', 'pub_date', 'title', 'abstract', 'version', 'doi', 'journal', 'nb_figures', 'score']
 )
 
-# Query queries, with the required names of the substitution variables and names of result fields
 BY_DOI = Query(
     code='''
 //by doi
@@ -38,11 +38,13 @@ MATCH (a:Article {doi: $doi})-->(author:Contrib)
 OPTIONAL MATCH (author)-->(id:Contrib_id)
 OPTIONAL MATCH (a)-->(f:Fig)
 WITH
+    id(a) AS id,
     a.doi AS doi,
     a.version AS version,
     'biorxiv' AS journal,
     a.title AS title,
     a.abstract AS abstract,
+    a.publication_date AS pub_date,
     author.surname AS surname,
     author.given_names AS given_name,
     author.position_idx AS author_rank,
@@ -50,11 +52,11 @@ WITH
     COUNT(f) AS nb_figures,
     id.text AS ORCID
 ORDER BY version DESC, author_rank DESC
-RETURN doi, version, journal, title, abstract, COLLECT([surname, given_name, ORCID, corr_author]) AS authors, nb_figures
+RETURN id, doi, version, journal, title, abstract, COLLECT([surname, given_name, ORCID, corr_author]) AS authors, pub_date, nb_figures
 
     ''',
     map={'doi': []},
-    returns=['doi', 'version', 'journal', 'title', 'abstract', 'authors', 'nb_figures']
+    returns=['id', 'doi', 'version', 'journal', 'title', 'abstract', 'authors', 'pub_date, nb_figures']
 )
 
 
@@ -330,4 +332,139 @@ RETURN
     ''',
     map={'panel_id': []},
     returns=['fig_label', 'fig_title', 'panel_label', 'caption', 'controlled_var', 'measured_var', 'other', 'methods']
+)
+
+
+KEY_HYP = Query(
+    code='''
+MATCH
+    (a:SDArticle {journalName: "biorxiv"})-->(f:SDFigure)-->(p:SDPanel),
+    (p)-->(i:CondTag {role: "intervention"})-->(ctrl_v:H_Entity),
+    (p)-->(m:CondTag {role: "assayed"})-->(meas_v:H_Entity)
+WHERE
+    ctrl_v.name <> meas_v.name // could still be 2 entities normalized differently
+WITH DISTINCT
+    a,
+    COLLECT(DISTINCT id(p)) AS panels,
+    ctrl_v, 
+    meas_v
+WHERE size(panels) > 4
+WITH DISTINCT a, {ctrl_v: ctrl_v.name, meas_v: meas_v.name, N: size(panels), panel_ids: panels} AS hyp
+ORDER BY hyp.N DESC
+WITH a, COLLECT(hyp)[0] AS dominant
+RETURN DISTINCT , dominant
+ORDER BY a.pub_date DESC
+    ''',
+    returns=['doi', 'title', 'pub_date', 'controlled_var', 'measured_var', 'score', 'assays', 'N_assays']
+)
+
+
+RANK_SUM = Query(
+    code='''
+// rank sum
+//start with only most recent version
+MATCH (preprint:SDArticle {journalName: "biorxiv"})
+WITH preprint
+ORDER BY preprint.version DESC
+WITH DISTINCT preprint.doi AS doi, COLLECT(DISTINCT preprint)[0] AS a
+// find the number of methods used more than once
+MATCH (a)-->(f:SDFigure)-->(p:SDPanel)-->(t:CondTag)-->(h:H_Entity {category: "assay"})
+WITH DISTINCT a, h, COUNT(DISTINCT p) AS repeats
+WHERE repeats > 1
+WITH DISTINCT 
+    a, COLLECT(DISTINCT h.name) AS methods, COUNT(DISTINCT h) AS N
+ORDER BY N DESC
+WITH COLLECT(DISTINCT {title: a.title, doi: a.doi, terms: methods, freq: N}) as preprint_list
+WITH preprint_list, range(1, size(preprint_list)) AS index
+UNWIND index as i
+WITH COLLECT({rank: i, preprint: preprint_list[i]}) AS ranked_by_method
+
+MATCH (preprint:SDArticle {journalName: "biorxiv"})
+WITH preprint, ranked_by_method
+ORDER BY preprint.version DESC
+WITH DISTINCT preprint.doi AS doi, COLLECT(DISTINCT preprint)[0] AS a, ranked_by_method
+//find the number of molecular components used more than once
+MATCH (a:SDArticle)-->(f:SDFigure)-->(p:SDPanel)-->(t:CondTag)-->(h:H_Entity)
+WHERE 
+    (h.type = 'geneprod' OR h.type ='small_molecule')
+WITH DISTINCT a, h, COUNT(DISTINCT p) AS repeats, ranked_by_method
+WHERE repeats > 1
+WITH DISTINCT 
+    a, COLLECT(DISTINCT h.name) AS molecules, COUNT(DISTINCT h) AS N, ranked_by_method
+ORDER BY N DESC
+WITH COLLECT(DISTINCT {title: a.title, doi: a.doi, terms: molecules, freq: N}) as preprint_list, ranked_by_method
+WITH preprint_list, range(1, size(preprint_list)) AS index, ranked_by_method
+UNWIND index as i
+WITH COLLECT({rank: i, preprint: preprint_list[i]}) AS ranked_by_molecule, ranked_by_method
+
+WHERE (ranked_by_molecule <> []) AND (ranked_by_method <> [])
+WITH ranked_by_molecule + ranked_by_method AS ranked
+UNWIND ranked as item
+WITH DISTINCT item.preprint.title AS title, COLLECT(DISTINCT item.preprint.terms) AS keywords, COLLECT(item.rank) AS ranks, SUM(item.rank) AS rank_sum
+WHERE size(ranks)=2
+RETURN title, keywords, rank_sum, ranks
+ORDER BY rank_sum ASC
+LIMIT 10
+    ''',
+    returns=['title', 'keywords', 'rank_sum']
+)
+
+
+POPULAR_METHODS = Query(
+    code='''
+// find most popular method with synonym aggregation
+MATCH (a:SDArticle {journalName:'biorxiv'})-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag {category: "assay"})-->(h:H_Entity)
+WITH DISTINCT a, ct, h
+ORDER BY a.pub_date DESC
+WITH DISTINCT
+    COUNT(DISTINCT a) AS popularity,
+    COLLECT(DISTINCT a.doi)[..10] AS top10,
+    h
+ORDER BY popularity DESC
+MATCH (h)-->(t:Term)<--(h2:H_Entity)<--(ct:CondTag)<--(p:SDPanel)<--(f:SDFigure)<--(a:SDArticle)
+WITH DISTINCT
+    h, top10,
+    h2,
+    COUNT(DISTINCT a) AS N
+ORDER BY N DESC
+WITH DISTINCT
+    h.name AS synonym,
+    top10,
+    COLLECT(DISTINCT h2.name)[0] AS method
+UNWIND top10 AS paper
+WITH
+    synonym,
+    paper,
+    method
+RETURN
+    COLLECT(DISTINCT synonym) AS synonyms,
+    COLLECT(DISTINCT paper) AS papers,
+    method
+LIMIT 25
+    ''',
+    returns=['method', 'popularity']
+)
+
+PRELISTED_METHODS = Query(
+    code='''
+//pre listed methods
+UNWIND ['flow cytometry', 'electron microscopy', 'immunoprecipitation', 'confocal microscopy', 'immunohistochemistry', 'histology', 'pseudovirus cell entry'] AS query
+MATCH (q:Term {text: query})<--(h:H_Entity {category: "assay"})-->(syn:Term)
+WITH q, syn
+MATCH (a:SDArticle {journalName:'biorxiv'})-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag {category: "assay"})-->(h:H_Entity)-->(syn)
+WITH DISTINCT
+   q, 
+   {doi: a.doi,
+    panel_of_interest: COLLECT(DISTINCT {
+       panel_label: p.panel_label, 
+       db_id: id(p)
+    }),
+    pub_date: a.pub_date,
+    found_terms: COLLECT(DISTINCT ct.text)
+   } AS paper
+ORDER BY paper.pub_date DESC
+RETURN DISTINCT 
+   q.text AS method, COLLECT(paper) AS papers
+    ''',
+    returns=['method', 'papers']
 )
