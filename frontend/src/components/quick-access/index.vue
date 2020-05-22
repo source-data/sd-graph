@@ -6,16 +6,21 @@
           .filter-list
             QuickAccessByMethod(@change="onChangeByMethod")
         el-tab-pane(label="By Molecule") Coming soon ...
-        el-tab-pane(label="By observation and tested hypothesis") Coming soon ...
+        el-tab-pane(label="By observation and tested hypothesis")
+            .filter-list
+              QuickAccessByHyp(@change="onChangeByHyp")
+
 </template>
 
 <script>
 import QuickAccessByMethod from './by-method.vue'
+import QuickAccessByHyp from './by-hyp.vue'
 
 export default {
   name: 'app',
   components: {
     QuickAccessByMethod,
+    QuickAccessByHyp
   },
   methods: {
     onChangeByMethod (selectedItemId) {
@@ -23,6 +28,12 @@ export default {
       //
       this.$store.commit('byMethod/showRecord', { id: selectedItemId })
       this.$store.dispatch('highlights/listByCurrentMethod')
+    },
+    onChangeByHyp (selectedItemId) {
+      console.debug('onChangeByHyp',selectedItemId)
+      //
+      this.$store.commit('byHyp/showRecord', { id: selectedItemId })
+      this.$store.dispatch('highlights/listByCurrentHyp')
     },
   },
 

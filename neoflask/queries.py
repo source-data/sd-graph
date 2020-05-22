@@ -80,7 +80,18 @@ ORDER BY version DESC, fig_idx ASC
 )
 
 
-BY_HYP = Query(
+PANEL_BY_NEO_ID = Query(
+    code='''
+MATCH (p:Panel)-->(ctCondTag)-->(h:H_Entity)
+WHERE id(p) = $id
+RETURN p.caption AS caption, COLLECT(DISTINCT h) AS tags
+    ''',
+    returns=['caption', 'tags'],
+    map={'id': []}
+)
+
+
+OLDER_BY_HYP = Query(
     code='''
 //by hyp
 //Provides a content list based on observations and testded hypotheses.
@@ -314,7 +325,7 @@ RETURN
 )
 
 
-KEY_HYP = Query(
+BY_HYP = Query(
     code='''
 MATCH
     (a:SDArticle {journalName: "biorxiv"})-->(f:SDFigure)-->(p:SDPanel),
@@ -324,17 +335,21 @@ WHERE
     ctrl_v.name <> meas_v.name // could still be 2 entities normalized differently
 WITH DISTINCT
     a,
-    COLLECT(DISTINCT id(p)) AS panels,
-    ctrl_v, 
+    COLLECT(DISTINCT p) AS panels,
+    COUNT(DISTINCT p) AS N_panels,
+    ctrl_v,
     meas_v
-WHERE size(panels) > 4
-WITH DISTINCT a, {ctrl_v: ctrl_v.name, meas_v: meas_v.name, N: size(panels), panel_ids: panels} AS hyp
-ORDER BY hyp.N DESC
-WITH a, COLLECT(hyp)[0] AS dominant
-RETURN DISTINCT , dominant
+WHERE N_panels > 2
+WITH DISTINCT a, {ctrl_v: ctrl_v.name, meas_v: meas_v.name} AS hyp, [p IN panels | {id: id(p), caption: p.caption}] AS panel_captions, N_panels
+ORDER BY N_panels DESC
+WITH a, COLLECT(hyp)[0] AS dominant, COLLECT(panel_captions)[0] AS panels
 ORDER BY a.pub_date DESC
+WITH dominant, COLLECT({doi: a.doi, panels: panels}) AS papers
+WITH COLLECT([dominant, papers]) AS all_results
+UNWIND range(0, size(all_results)-1) as i
+RETURN i as id, all_results[i][0] AS hyp, all_results[i][1] AS papers
     ''',
-    returns=['doi', 'title', 'pub_date', 'controlled_var', 'measured_var', 'score', 'assays', 'N_assays']
+    returns=['id', 'hyp', 'papers']
 )
 
 
@@ -428,15 +443,15 @@ LIMIT 25
 BY_METHOD = Query(
     code='''
 //pre listed methods
-UNWIND ['flow cytometry', 'electron microscopy', 'immunoprecipitation', 'confocal microscopy', 'immunohistochemistry', 'histology', 'pseudovirus cell entry'] AS query
+UNWIND ['rt-pcr', 'western blot', 'flow cytometry', 'electron microscopy', 'immunoprecipitation', 'confocal microscopy', 'immunohistochemistry', 'histology', 'pseudovirus cell entry'] AS query
 MATCH (q:Term {text: query})<--(h:H_Entity {category: "assay"})-->(syn:Term)
 WITH q, syn
 MATCH (a:SDArticle {journalName:'biorxiv'})-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag {category: "assay"})-->(h:H_Entity)-->(syn)
 WITH DISTINCT
-   q, {doi: a.doi, panel_ids: COLLECT(DISTINCT id(p)), pub_date: a.pub_date} AS paper
+   q, {doi: a.doi, panels: COLLECT(DISTINCT {id: id(p), caption: p.caption}), pub_date: a.pub_date} AS paper
 ORDER BY paper.pub_date DESC
-RETURN DISTINCT 
-   q.text AS item_name, q.text AS id, COLLECT(paper) AS content_ids
+RETURN DISTINCT
+   q.text AS name, q.text AS id, COLLECT(paper) AS papers
     ''',
-    returns=['item_name', 'id', 'content_ids']
+    returns=['name', 'id', 'papers']
 )

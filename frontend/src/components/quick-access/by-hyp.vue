@@ -1,8 +1,8 @@
 <template lang="pug">
-  el-radio-group(@change="onSelect" v-model="selectedMethod")
-    div(v-for="method in methodList")
-      el-radio(:label="method.id")
-        | {{ method.name }}
+  el-radio-group(@change="onSelect" v-model="selectedHyp")
+    div(v-for="hyp in hypList")
+      el-radio(:label="hyp.id")
+        | ({{ hyp.hyp.ctrl_v }}) -?→ ({{ hyp.hyp.meas_v }})
       br
 </template>
 
@@ -12,15 +12,15 @@ import { mapGetters } from 'vuex'
 export default {
   data () {
     return {
-      byMethod: [],
-      selectedMethod: undefined,
+      byHyp: [],
+      selectedHyp: undefined,
     }
   },
   computed: {
-    ...mapGetters('byMethod', [
+    ...mapGetters('byHyp', [
       'records',
     ]),
-    methodList () {
+    hypList () {
       return this.records
     },
   },

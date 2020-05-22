@@ -70,6 +70,7 @@ export default {
   },
   beforeCreate () {
     this.$store.dispatch('byMethod/getAll')
+    this.$store.dispatch('byHyp/getAll')
   },
 }
 </script>

@@ -54,6 +54,11 @@ def fig_by_doi_idx():
     return R(ASKNEO.fig_by_doi_idx(request))
 
 
+@app.route('/api/v1/panel/<int:id>', methods=['GET', 'POST'])
+def panel_by_neo_id(id):
+    app.logger.info(f"panel {id}")
+    return R(ASKNEO.panel_by_neo_id(id=id))
+
 @app.route('/api/v1/search/', methods=['GET'])
 def entity():
     app.logger.info(f"search '{request.args.get('query')}'")

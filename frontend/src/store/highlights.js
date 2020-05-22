@@ -33,28 +33,16 @@ export default {
     },
   },
   actions: {
-    getAll ({ commit }) {
+    listByCurrentMethod({ commit, rootGetters }) {
       commit('setIsLoading')
-      const url = '/api/v1/by_method'
-      return httpClient.get(url)
-        .then((response) => {
-          const records = response.data.map(preProcessRecord)
-          commit('addRecords', records)
-        })
-        .finally(() => {
-          commit('setNotLoading')
-        })
-    },
-    listByCurrentMethod ({ commit, rootGetters }) {
-      commit('setIsLoading')
-      const currentMethod = rootGetters['byMethod/currentRecord']
-      const dois = currentMethod.content_ids.map(c => c.doi)
+      const current = rootGetters['byMethod/currentRecord']
+      const dois = current.papers.map(c => c.doi)
       const promises = dois.map((doi) => {
         return httpClient.get(`/api/v1/doi/${doi}`)
       })
       return Promise.all(promises).then((responses) => {
         const records = responses.reduce((acc, r) => {
-          return [preProcessRecord(r.data[0], currentMethod), ...acc]
+          return [preProcessRecord(r.data[0], current), ...acc]
         }, [])
 
         commit('addRecords', records)
@@ -63,12 +51,31 @@ export default {
         commit('setNotLoading')
       })
     },
-  },
+    listByCurrentHyp({ commit, rootGetters }) {
+        commit('setIsLoading')
+        const current = rootGetters['byHyp/currentRecord'] //how can I specify the module via a variable when calling action?
+        const dois = current.papers.map(c => c.doi)
+        const promises = dois.map((doi) => {
+          return httpClient.get(`/api/v1/doi/${doi}`)
+        })
+        return Promise.all(promises).then((responses) => {
+          const records = responses.reduce((acc, r) => {
+            return [preProcessRecord(r.data[0], current), ...acc]
+          }, [])
+  
+          commit('addRecords', records)
+          return records
+        }).finally(() => {
+          commit('setNotLoading')
+        })
+      },
+  }
 }
 
-function preProcessRecord (record, method) {
+function preProcessRecord (record, current) {
   return Object.assign({}, record, {
     id: record.doi,
-    panel_ids: method.content_ids.find(a => a.doi === record.doi).panel_ids
+    //panel_ids: method.content_ids.find(a => a.doi === record.doi).panels.map(p => p.id),
+    panels: current.papers.find(a => a.doi === record.doi).panels
   })
 }
