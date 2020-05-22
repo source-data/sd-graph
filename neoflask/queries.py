@@ -90,72 +90,96 @@ RETURN p.caption AS caption, COLLECT(DISTINCT h) AS tags
     map={'id': []}
 )
 
-
-OLDER_BY_HYP = Query(
+BY_METHOD = Query(
     code='''
-//by hyp
-//Provides a content list based on observations and testded hypotheses.
-//Returns:
-//    doi: the DOI of the relevant paper
-//    panel_ids: the panel_ids of the relevant panels
-//    methods: the name of the method
-//    controlled: the names of the controlled variables
-//    measured: the names of the measured variables
-//    jats_paper.publication_date as pub_date
-MATCH
-    (paper:SDArticle)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(h:H_Entity),
-    (p)-->(i:SDTag)-->(:CondTag)-->(var_controlled:H_Entity),
-    (p)-->(a:SDTag)-->(:CondTag)-->(var_measured:H_Entity),
-    (p)-->(e:SDTag {category: "assay"})-->(:CondTag)-->(method:H_Entity)
-WHERE
-    i.role = "intervention" AND
-    a.role = "assayed" AND
-    var_controlled.ext_ids <> var_measured.ext_ids
+//pre listed methods
+UNWIND ['rt-pcr', 'western blot', 'flow cytometry', 'electron microscopy', 'immunoprecipitation', 'confocal microscopy', 'immunohistochemistry', 'histology', 'pseudovirus cell entry'] AS query
+MATCH (q:Term {text: query})<--(h:H_Entity {category: "assay"})-->(syn:Term)
+WITH q, syn
+MATCH (a:SDArticle {journalName:'biorxiv'})-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag {category: "assay"})-->(h:H_Entity)-->(syn)
 WITH DISTINCT
-    paper.doi AS doi,
-    p.panel_id AS panel_id,
-    COLLECT(DISTINCT method.name) AS methods,
-    COLLECT(DISTINCT var_controlled.name) AS controlled,
-    COLLECT(DISTINCT var_measured.name) AS measured,
-    COUNT(DISTINCT var_controlled) AS N_1,
-    COUNT(DISTINCT var_measured) AS N_2
-WHERE (N_1 + N_2 > 1) OR (N_2 > 1)
-MATCH (jats_paper:Article)
-WHERE jats_paper.doi = doi
+   q, {doi: a.doi, panels: COLLECT(DISTINCT {id: id(p), caption: p.caption}), pub_date: a.pub_date} AS paper
+ORDER BY paper.pub_date DESC
 RETURN DISTINCT
-    doi,
-    COLLECT(DISTINCT panel_id) AS panel_ids,
-    methods,
-    controlled,
-    measured,
-    jats_paper.publication_date as pub_date
-ORDER BY pub_date DESC
-''',
-    returns=['doi', 'panel_ids', 'methods', 'controlled', 'measured', 'pub_date']
+   q.text AS name, q.text AS id, COLLECT(paper) AS papers
+    ''',
+    returns=['name', 'id', 'papers']
+)
+
+BY_METHOD_2 = Query(
+    code='''
+//pre listed methods
+UNWIND ['rt-pcr', 'western blot', 'flow cytometry', 'electron microscopy', 'immunoprecipitation', 'confocal microscopy', 'immunohistochemistry', 'histology', 'pseudovirus cell entry'] AS query
+MATCH (:Term {text: query})<--(h:H_Entity {category: "assay"})-->(syn:Term)
+WITH syn
+MATCH (a:SDArticle {journalName:'biorxiv'})-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag {category: "assay"})-->(h:H_Entity)-->(syn)
+WITH DISTINCT
+   syn.text AS name, {doi: a.doi, panels: COLLECT(DISTINCT {id: id(p), caption: p.caption}), pub_date: a.pub_date} AS paper
+ORDER BY paper.pub_date DESC
+RETURN DISTINCT
+   name, name AS id, COLLECT(paper) AS papers
+    ''',
+    returns=['name', 'id', 'papers']
+)
+
+
+BY_HYP = Query(
+    code='''
+MATCH
+    (a:SDArticle {journalName: "biorxiv"})-->(f:SDFigure)-->(p:SDPanel),
+    (p)-->(i:CondTag {role: "intervention"})-->(ctrl_v:H_Entity),
+    (p)-->(m:CondTag {role: "assayed"})-->(meas_v:H_Entity)
+WHERE
+    ctrl_v.name <> meas_v.name // could still be 2 entities normalized differently
+WITH DISTINCT
+    a,
+    COLLECT(DISTINCT p) AS panels,
+    COUNT(DISTINCT p) AS N_panels,
+    ctrl_v,
+    meas_v
+WHERE N_panels > 2
+WITH DISTINCT a, {ctrl_v: ctrl_v.name, meas_v: meas_v.name} AS hyp, [p IN panels | {id: id(p), caption: p.caption}] AS panel_captions, N_panels
+ORDER BY N_panels DESC
+WITH a, COLLECT(hyp)[0] AS dominant, COLLECT(panel_captions)[0] AS panels
+ORDER BY a.pub_date DESC
+WITH dominant, COLLECT({doi: a.doi, panels: panels}) AS papers
+WITH COLLECT([dominant, papers]) AS all_results
+UNWIND range(0, size(all_results)-1) as i
+RETURN i as id, all_results[i][0] AS hyp, all_results[i][1] AS papers
+    ''',
+    returns=['id', 'hyp', 'papers']
 )
 
 
 BY_MOLECULE = Query(
     code='''
-//by molecule
 MATCH
-  (paper:SDArticle)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(mol:H_Entity)
+  (query:H_Entity)-[:Has_text]->(mol_name:Term)
 WHERE
-  (mol.type = "gene" OR mol.type = "protein" OR mol.type = "molecule") AND
-  (ct.role = "intervention" OR ct.role = "assayed" OR ct.role = "experiment")
+  (query.type = "gene" OR query.type = "protein" OR query.type = "molecule" OR query.type = "geneprod")
+WITH query, mol_name
+MATCH
+  (paper:SDArticle {journalName: "biorxiv"})-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(mol:H_Entity)-[:Has_text]->(mol_name:Term) 
+WHERE
+  (mol.type = query.type)
+//ad roles?
 WITH DISTINCT
-  paper.doi AS doi,
-  mol.name AS item_name,
-  COLLECT(DISTINCT mol.ext_ids) AS item_ids,
-  COLLECT(DISTINCT p.panel_id) AS panel_ids
+  mol.name AS molecule,
+  COLLECT(DISTINCT mol_name.text) AS synonyms,
+  paper,
+  COLLECT(DISTINCT {id: id(p), caption: p.caption} ) AS panels,
+  COUNT(DISTINCT p) AS N_panels
+WHERE N_panels > 2
+WITH DISTINCT
+  molecule,
+  COLLECT(DISTINCT {doi: paper.doi, title:paper.title, syn: synonyms, panels: panels}) AS papers,
+  COUNT(DISTINCT paper) AS N_papers
+ORDER BY N_papers DESC
 RETURN
-  item_name,
-  item_ids,
-  COLLECT(DISTINCT {doi: doi, panel_ids: panel_ids}) AS content_ids,
-  COUNT(DISTINCT doi) AS score
-ORDER BY score DESC
+  molecule AS name, molecule as id, papers
+LIMIT 10
 ''',
-    returns=['item_name', 'item_ids', 'content_ids', 'score']
+    returns=['name', 'id', 'papers']
 )
 
 
@@ -325,32 +349,7 @@ RETURN
 )
 
 
-BY_HYP = Query(
-    code='''
-MATCH
-    (a:SDArticle {journalName: "biorxiv"})-->(f:SDFigure)-->(p:SDPanel),
-    (p)-->(i:CondTag {role: "intervention"})-->(ctrl_v:H_Entity),
-    (p)-->(m:CondTag {role: "assayed"})-->(meas_v:H_Entity)
-WHERE
-    ctrl_v.name <> meas_v.name // could still be 2 entities normalized differently
-WITH DISTINCT
-    a,
-    COLLECT(DISTINCT p) AS panels,
-    COUNT(DISTINCT p) AS N_panels,
-    ctrl_v,
-    meas_v
-WHERE N_panels > 2
-WITH DISTINCT a, {ctrl_v: ctrl_v.name, meas_v: meas_v.name} AS hyp, [p IN panels | {id: id(p), caption: p.caption}] AS panel_captions, N_panels
-ORDER BY N_panels DESC
-WITH a, COLLECT(hyp)[0] AS dominant, COLLECT(panel_captions)[0] AS panels
-ORDER BY a.pub_date DESC
-WITH dominant, COLLECT({doi: a.doi, panels: panels}) AS papers
-WITH COLLECT([dominant, papers]) AS all_results
-UNWIND range(0, size(all_results)-1) as i
-RETURN i as id, all_results[i][0] AS hyp, all_results[i][1] AS papers
-    ''',
-    returns=['id', 'hyp', 'papers']
-)
+
 
 
 RANK_SUM = Query(
@@ -440,18 +439,48 @@ LIMIT 25
 )
 
 
-BY_METHOD = Query(
+
+
+
+OLDER_BY_HYP = Query(
     code='''
-//pre listed methods
-UNWIND ['rt-pcr', 'western blot', 'flow cytometry', 'electron microscopy', 'immunoprecipitation', 'confocal microscopy', 'immunohistochemistry', 'histology', 'pseudovirus cell entry'] AS query
-MATCH (q:Term {text: query})<--(h:H_Entity {category: "assay"})-->(syn:Term)
-WITH q, syn
-MATCH (a:SDArticle {journalName:'biorxiv'})-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag {category: "assay"})-->(h:H_Entity)-->(syn)
+//by hyp
+//Provides a content list based on observations and testded hypotheses.
+//Returns:
+//    doi: the DOI of the relevant paper
+//    panel_ids: the panel_ids of the relevant panels
+//    methods: the name of the method
+//    controlled: the names of the controlled variables
+//    measured: the names of the measured variables
+//    jats_paper.publication_date as pub_date
+MATCH
+    (paper:SDArticle)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(h:H_Entity),
+    (p)-->(i:SDTag)-->(:CondTag)-->(var_controlled:H_Entity),
+    (p)-->(a:SDTag)-->(:CondTag)-->(var_measured:H_Entity),
+    (p)-->(e:SDTag {category: "assay"})-->(:CondTag)-->(method:H_Entity)
+WHERE
+    i.role = "intervention" AND
+    a.role = "assayed" AND
+    var_controlled.ext_ids <> var_measured.ext_ids
 WITH DISTINCT
-   q, {doi: a.doi, panels: COLLECT(DISTINCT {id: id(p), caption: p.caption}), pub_date: a.pub_date} AS paper
-ORDER BY paper.pub_date DESC
+    paper.doi AS doi,
+    p.panel_id AS panel_id,
+    COLLECT(DISTINCT method.name) AS methods,
+    COLLECT(DISTINCT var_controlled.name) AS controlled,
+    COLLECT(DISTINCT var_measured.name) AS measured,
+    COUNT(DISTINCT var_controlled) AS N_1,
+    COUNT(DISTINCT var_measured) AS N_2
+WHERE (N_1 + N_2 > 1) OR (N_2 > 1)
+MATCH (jats_paper:Article)
+WHERE jats_paper.doi = doi
 RETURN DISTINCT
-   q.text AS name, q.text AS id, COLLECT(paper) AS papers
-    ''',
-    returns=['name', 'id', 'papers']
+    doi,
+    COLLECT(DISTINCT panel_id) AS panel_ids,
+    methods,
+    controlled,
+    measured,
+    jats_paper.publication_date as pub_date
+ORDER BY pub_date DESC
+''',
+    returns=['doi', 'panel_ids', 'methods', 'controlled', 'measured', 'pub_date']
 )
