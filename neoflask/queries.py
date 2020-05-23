@@ -98,7 +98,7 @@ MATCH (q:Term {text: query})<--(h:H_Entity {category: "assay"})-->(syn:Term)
 WITH q, syn
 MATCH (a:SDArticle {journalName:'biorxiv'})-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag {category: "assay"})-->(h:H_Entity)-->(syn)
 WITH DISTINCT
-   q, {doi: a.doi, panels: COLLECT(DISTINCT {id: id(p), caption: p.caption}), pub_date: a.pub_date} AS paper
+   q, {doi: a.doi, info: COLLECT(DISTINCT {id: id(p), text: p.caption}), pub_date: a.pub_date} AS paper
 ORDER BY paper.pub_date DESC
 RETURN DISTINCT
    q.text AS name, q.text AS id, COLLECT(paper) AS papers
@@ -114,7 +114,7 @@ MATCH (:Term {text: query})<--(h:H_Entity {category: "assay"})-->(syn:Term)
 WITH syn
 MATCH (a:SDArticle {journalName:'biorxiv'})-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag {category: "assay"})-->(h:H_Entity)-->(syn)
 WITH DISTINCT
-   syn.text AS name, {doi: a.doi, panels: COLLECT(DISTINCT {id: id(p), caption: p.caption}), pub_date: a.pub_date} AS paper
+   syn.text AS name, {doi: a.doi, info: COLLECT(DISTINCT {id: id(p), text: p.caption}), pub_date: a.pub_date} AS paper
 ORDER BY paper.pub_date DESC
 RETURN DISTINCT
    name, name AS id, COLLECT(paper) AS papers
@@ -138,11 +138,11 @@ WITH DISTINCT
     ctrl_v,
     meas_v
 WHERE N_panels > 2
-WITH DISTINCT a, {ctrl_v: ctrl_v.name, meas_v: meas_v.name} AS hyp, [p IN panels | {id: id(p), caption: p.caption}] AS panel_captions, N_panels
+WITH DISTINCT a, {ctrl_v: ctrl_v.name, meas_v: meas_v.name} AS hyp, [p IN panels | {id: id(p), text: p.caption}] AS panel_captions, N_panels
 ORDER BY N_panels DESC
 WITH a, COLLECT(hyp)[0] AS dominant, COLLECT(panel_captions)[0] AS panels
 ORDER BY a.pub_date DESC
-WITH dominant, COLLECT({doi: a.doi, panels: panels}) AS papers
+WITH dominant, COLLECT({doi: a.doi, info: panels}) AS papers
 WITH COLLECT([dominant, papers]) AS all_results
 UNWIND range(0, size(all_results)-1) as i
 RETURN i as id, all_results[i][0] AS hyp, all_results[i][1] AS papers
@@ -168,12 +168,12 @@ WITH DISTINCT
   mol.name AS molecule,
   COLLECT(DISTINCT mol_name.text) AS synonyms,
   paper,
-  COLLECT(DISTINCT {id: id(p), caption: p.caption} ) AS panels,
+  COLLECT(DISTINCT {id: id(p), text: p.caption} ) AS panels,
   COUNT(DISTINCT p) AS N_panels
 WHERE N_panels > 2
 WITH DISTINCT
   molecule,
-  COLLECT(DISTINCT {doi: paper.doi, title:paper.title, syn: synonyms, panels: panels}) AS papers,
+  COLLECT(DISTINCT {doi: paper.doi, title:paper.title, syn: synonyms, info: panels}) AS papers,
   COUNT(DISTINCT paper) AS N_papers
 ORDER BY N_papers DESC
 RETURN
@@ -187,53 +187,96 @@ LIMIT 10
 AUTOMAGIC = Query(
     code='''
 // rank sum
+
+///////////////////////PART A: RANK BY NUMBER OF ASSAYS///////////////////////////////
+
 //start with only most recent version
 MATCH (preprint:SDArticle {journalName: "biorxiv"})
 WITH preprint
 ORDER BY preprint.version DESC
-WITH DISTINCT preprint.doi AS doi, COLLECT(DISTINCT preprint)[0] AS a
-// find the number of methods used more than once
-MATCH (a)-->(f:SDFigure)-->(p:SDPanel)-->(t:CondTag)-->(h:H_Entity {category: "assay"})
-WITH DISTINCT a, h, COUNT(DISTINCT p) AS repeats
-WHERE repeats > 1
-WITH DISTINCT 
-    a, COLLECT(DISTINCT h.name) AS methods, COUNT(DISTINCT h) AS N
-ORDER BY N DESC
-WITH COLLECT(DISTINCT {title: a.title, doi: a.doi, terms: methods, freq: N}) as preprint_list
-WITH preprint_list, range(1, size(preprint_list)) AS index
-UNWIND index as i
-WITH COLLECT({rank: i, preprint: preprint_list[i]}) AS ranked_by_method
+WITH DISTINCT preprint.doi AS doi, COLLECT(DISTINCT preprint)[0] AS a //keep only the most recent
 
+// find entities
+MATCH (a)-->(f:SDFigure)-->(p:SDPanel)-->(t:CondTag)-->(entity:H_Entity {category: "assay"})-->(name:Term)
+WITH
+  a, entity, name
+//find synonyms
+MATCH
+   (name)<--(:H_Entity {category:"assay"})-->(syn1:Term)
+OPTIONAL MATCH
+   (name)<--(s1:H_Entity {category:"assay"})-->(:Term)<--(s2:H_Entity {category:"assay"})-->(syn2:Term)
+//WHERE entity.type = s.type 
+//combine first and second order synonyms
+WITH DISTINCT a, entity, COLLECT(name) + COLLECT(syn1) + COLLECT(syn2) AS all_synonyms
+UNWIND all_synonyms AS syn_term
+// remove duplicates
+WITH DISTINCT a, entity, syn_term.text AS syn
+// impose deterministic order
+ORDER BY syn
+WITH DISTINCT a, entity, COLLECT(DISTINCT syn) AS synonyms
+ORDER BY id(entity)
+//collapse identical synonym groups
+WITH DISTINCT a, COLLECT(DISTINCT entity) AS entity_group, synonyms
+WITH DISTINCT a, COLLECT(DISTINCT entity_group) AS entity_groups, COUNT(DISTINCT entity_group) AS N_entities, COLLECT(DISTINCT synonyms) AS synonym_groups
+ORDER BY N_entities DESC
+WITH COLLECT(DISTINCT {title: a.title, doi: a.doi, info: synonym_groups, N_entities: N_entities}) as preprint_list
+WITH preprint_list, range(1, size(preprint_list)) AS ranks
+UNWIND ranks as i
+WITH COLLECT({rank: i, preprint: preprint_list[i-1]}) AS ranked_by_assay
+
+///////////////////////PART B: RANK BY NUMBER OF ENTITIES///////////////////////////////
+
+//start with only most recent version
 MATCH (preprint:SDArticle {journalName: "biorxiv"})
-WITH preprint, ranked_by_method
+WITH preprint, ranked_by_assay
 ORDER BY preprint.version DESC
-WITH DISTINCT preprint.doi AS doi, COLLECT(DISTINCT preprint)[0] AS a, ranked_by_method
-//find the number of molecular components used more than once
-MATCH (a:SDArticle)-->(f:SDFigure)-->(p:SDPanel)-->(t:CondTag)-->(h:H_Entity)
-WHERE 
-    (h.type = 'geneprod' OR h.type ='small_molecule')
-WITH DISTINCT a, h, COUNT(DISTINCT p) AS repeats, ranked_by_method
-WHERE repeats > 1
-WITH DISTINCT 
-    a, COLLECT(DISTINCT h.name) AS molecules, COUNT(DISTINCT h) AS N, ranked_by_method
-ORDER BY N DESC
-WITH COLLECT(DISTINCT {title: a.title, doi: a.doi, terms: molecules, freq: N}) as preprint_list, ranked_by_method
-WITH preprint_list, range(1, size(preprint_list)) AS index, ranked_by_method
-UNWIND index as i
-WITH COLLECT({rank: i, preprint: preprint_list[i]}) AS ranked_by_molecule, ranked_by_method
+WITH DISTINCT preprint.doi AS doi, COLLECT(DISTINCT preprint)[0] AS a, ranked_by_assay //keep only the most recent
 
-WHERE (ranked_by_molecule <> []) AND (ranked_by_method <> [])
-WITH ranked_by_molecule + ranked_by_method AS ranked
+// find entities
+MATCH (a)-->(f:SDFigure)-->(p:SDPanel)-->(t:CondTag)-->(entity:H_Entity {category: "entity"})-->(name:Term)
+WITH
+  a, entity, name, ranked_by_assay
+//find synonyms
+MATCH
+   (name)<--(s:H_Entity {category:"entity"})-->(syn1:Term)
+WHERE s.type = entity.type
+OPTIONAL MATCH
+   (name)<--(s1:H_Entity {category:"entity"})-->(:Term)<--(s2:H_Entity {category:"entity"})-->(syn2:Term)
+WHERE s1.type = entity.type AND s2.type = entity.type
+//WHERE entity.type = s.type 
+//combine first and second order synonyms
+WITH DISTINCT a, entity, COLLECT(name) + COLLECT(syn1) + COLLECT(syn2) AS all_synonyms, ranked_by_assay
+UNWIND all_synonyms AS syn_term
+// remove duplicates
+WITH DISTINCT a, entity, syn_term.text AS syn, ranked_by_assay
+// impose deterministic order
+ORDER BY syn
+WITH DISTINCT a, entity, COLLECT(DISTINCT syn) AS synonyms, ranked_by_assay
+ORDER BY id(entity)
+//collapse identical synonym groups
+WITH DISTINCT a, COLLECT(DISTINCT entity) AS entity_group, synonyms, ranked_by_assay
+WITH DISTINCT a, COLLECT(DISTINCT entity_group) AS entity_groups, COUNT(DISTINCT entity_group) AS N_entities, COLLECT(DISTINCT synonyms) AS synonym_groups, ranked_by_assay
+ORDER BY N_entities DESC
+WITH COLLECT(DISTINCT {title: a.title, doi: a.doi, info: synonym_groups, N_entities: N_entities}) as preprint_list, ranked_by_assay
+WITH preprint_list, range(1, size(preprint_list)) AS ranks, ranked_by_assay
+UNWIND ranks as i
+WITH COLLECT({rank: i, preprint: preprint_list[i-1]}) AS ranked_by_entities, ranked_by_assay
+
+
+///////////////////////PART C: RETURN BY SUM OF RANKS///////////////////////////////
+//sum of ranks
+WHERE (ranked_by_entities <> []) AND (ranked_by_assay <> [])
+WITH ranked_by_entities + ranked_by_assay AS ranked
 UNWIND ranked as item
-WITH DISTINCT item.preprint.title AS title, COLLECT(DISTINCT item.preprint.terms) AS keywords, COLLECT(item.rank) AS ranks, SUM(item.rank) AS rank_sum
+WITH DISTINCT {doi: item.preprint.doi, info: COLLECT(DISTINCT {text: item.preprint.info}), rank: SUM(item.rank)} as paper, COLLECT(item.rank) AS ranks
 WHERE size(ranks)=2
-RETURN title, keywords, rank_sum, ranks
-ORDER BY rank_sum ASC
+WITH paper, ranks
+ORDER BY paper.rank ASC
 LIMIT 10
+RETURN 'automagic list' AS name, "1" AS id, COLLECT(paper) AS papers
     ''',
-    returns=['title', 'keywords', 'rank_sum']
+    returns=['name', 'id', 'papers']
 )
-
 
 
 SEARCH = Query(

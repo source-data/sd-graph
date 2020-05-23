@@ -3,15 +3,15 @@
     el-header(height="120px")#header
       el-col(:span="4")
         p
-          img(src="./assets/EMBO_logo_RGBmonoblack_outlined.jpg" height="60px").center-img
+          img(src="./assets/EMBO_logo_RGBmonoblack_outlined.jpg" height="80px").center-img
       el-col(:span="16")
         h1(style="text-align: center") Early Evidence Base: SARS-CoV-2
         p(style="text-align: center") A structured resource of early results on the biology of SARS-CoV-2
       el-col(:span="4")
         p 
-          img(src="./assets/embopress_logo_cmyk.jpg" width="120px").center-img 
-        p 
-          img(src="./assets/sourcedata_logo_rgb.png" width="130px").center-img
+          img(src="./assets/sourcedata_logo_rgb.png" width="200px").center-img
+        //p 
+        //  img(src="./assets/embopress_logo_cmyk.jpg" width="120px").center-img
     el-main
       el-row
         el-col(:span="16" :offset="4")
@@ -51,8 +51,9 @@ export default {
     },
   },
   beforeCreate () {
-    this.$store.dispatch('byMethod/getAll')
-    this.$store.dispatch('byMol/getAll')
+    this.$store.dispatch('byAutomagic/getAll'),
+    this.$store.dispatch('byMethod/getAll'),
+    this.$store.dispatch('byMol/getAll'),
     this.$store.dispatch('byHyp/getAll')
   },
 }

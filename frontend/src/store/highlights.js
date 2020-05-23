@@ -59,6 +59,6 @@ function preProcessRecord (record, current) {
   return Object.assign({}, record, {
     id: record.doi,
     //panel_ids: method.content_ids.find(a => a.doi === record.doi).panels.map(p => p.id),
-    panels: current.papers.find(a => a.doi === record.doi).panels
+    info: current.papers.find(a => a.doi === record.doi).info
   })
 }

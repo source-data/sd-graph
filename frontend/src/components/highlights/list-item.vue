@@ -15,11 +15,11 @@
           p
         el-col(:span="12")
           p 
-            label(for="carousel") {{ panels.length }} panel(s) of interest:
+            label(for="carousel") {{ info.length }} Information of interest:
           el-carousel(indicator-position="outside" arrow="hover" :autoplay="false" height="" id="carousel")
-            el-carousel-item(v-for="panel in panels" :key="panel.id" style="text-align:left")
+            el-carousel-item(v-for="card in info" :key="card.id" style="text-align:left")
               el-card(class="box-card" shadow="always")
-                small {{ panel.caption }}
+                small {{ card.text }}
             //- a(:href="panel.url")
             //-   el-image(:src="panel.img_url" fit="contain")
             //- p
@@ -40,8 +40,8 @@ export default {
     authorList () {
       return this.article.authors.map(author => `${author[0]} ${author[1]}`).join(', ')
     },
-    panels () {
-      return this.article.panels
+    info () {
+      return this.article.info
         // .panel_ids.map((panel_id) => {
         //   return {
         //     id: panel_id,
