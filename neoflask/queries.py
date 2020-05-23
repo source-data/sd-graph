@@ -159,10 +159,11 @@ WHERE
   (query.type = "gene" OR query.type = "protein" OR query.type = "molecule" OR query.type = "geneprod")
 WITH query, mol_name
 MATCH
-  (paper:SDArticle {journalName: "biorxiv"})-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(mol:H_Entity)-[:Has_text]->(mol_name:Term) 
+  (paper:SDArticle {journalName:'biorxiv'})-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(mol:H_Entity)-[:Has_text]->(mol_name:Term) 
 WHERE
   (mol.type = query.type)
-//ad roles?
+  AND
+  (ct.role = 'intervention' OR ct.role = 'assayed' OR ct.role = 'experiment')
 WITH DISTINCT
   mol.name AS molecule,
   COLLECT(DISTINCT mol_name.text) AS synonyms,
@@ -181,6 +182,58 @@ LIMIT 10
 ''',
     returns=['name', 'id', 'papers']
 )
+
+
+AUTOMAGIC = Query(
+    code='''
+// rank sum
+//start with only most recent version
+MATCH (preprint:SDArticle {journalName: "biorxiv"})
+WITH preprint
+ORDER BY preprint.version DESC
+WITH DISTINCT preprint.doi AS doi, COLLECT(DISTINCT preprint)[0] AS a
+// find the number of methods used more than once
+MATCH (a)-->(f:SDFigure)-->(p:SDPanel)-->(t:CondTag)-->(h:H_Entity {category: "assay"})
+WITH DISTINCT a, h, COUNT(DISTINCT p) AS repeats
+WHERE repeats > 1
+WITH DISTINCT 
+    a, COLLECT(DISTINCT h.name) AS methods, COUNT(DISTINCT h) AS N
+ORDER BY N DESC
+WITH COLLECT(DISTINCT {title: a.title, doi: a.doi, terms: methods, freq: N}) as preprint_list
+WITH preprint_list, range(1, size(preprint_list)) AS index
+UNWIND index as i
+WITH COLLECT({rank: i, preprint: preprint_list[i]}) AS ranked_by_method
+
+MATCH (preprint:SDArticle {journalName: "biorxiv"})
+WITH preprint, ranked_by_method
+ORDER BY preprint.version DESC
+WITH DISTINCT preprint.doi AS doi, COLLECT(DISTINCT preprint)[0] AS a, ranked_by_method
+//find the number of molecular components used more than once
+MATCH (a:SDArticle)-->(f:SDFigure)-->(p:SDPanel)-->(t:CondTag)-->(h:H_Entity)
+WHERE 
+    (h.type = 'geneprod' OR h.type ='small_molecule')
+WITH DISTINCT a, h, COUNT(DISTINCT p) AS repeats, ranked_by_method
+WHERE repeats > 1
+WITH DISTINCT 
+    a, COLLECT(DISTINCT h.name) AS molecules, COUNT(DISTINCT h) AS N, ranked_by_method
+ORDER BY N DESC
+WITH COLLECT(DISTINCT {title: a.title, doi: a.doi, terms: molecules, freq: N}) as preprint_list, ranked_by_method
+WITH preprint_list, range(1, size(preprint_list)) AS index, ranked_by_method
+UNWIND index as i
+WITH COLLECT({rank: i, preprint: preprint_list[i]}) AS ranked_by_molecule, ranked_by_method
+
+WHERE (ranked_by_molecule <> []) AND (ranked_by_method <> [])
+WITH ranked_by_molecule + ranked_by_method AS ranked
+UNWIND ranked as item
+WITH DISTINCT item.preprint.title AS title, COLLECT(DISTINCT item.preprint.terms) AS keywords, COLLECT(item.rank) AS ranks, SUM(item.rank) AS rank_sum
+WHERE size(ranks)=2
+RETURN title, keywords, rank_sum, ranks
+ORDER BY rank_sum ASC
+LIMIT 10
+    ''',
+    returns=['title', 'keywords', 'rank_sum']
+)
+
 
 
 SEARCH = Query(
@@ -349,58 +402,6 @@ RETURN
 )
 
 
-
-
-
-RANK_SUM = Query(
-    code='''
-// rank sum
-//start with only most recent version
-MATCH (preprint:SDArticle {journalName: "biorxiv"})
-WITH preprint
-ORDER BY preprint.version DESC
-WITH DISTINCT preprint.doi AS doi, COLLECT(DISTINCT preprint)[0] AS a
-// find the number of methods used more than once
-MATCH (a)-->(f:SDFigure)-->(p:SDPanel)-->(t:CondTag)-->(h:H_Entity {category: "assay"})
-WITH DISTINCT a, h, COUNT(DISTINCT p) AS repeats
-WHERE repeats > 1
-WITH DISTINCT 
-    a, COLLECT(DISTINCT h.name) AS methods, COUNT(DISTINCT h) AS N
-ORDER BY N DESC
-WITH COLLECT(DISTINCT {title: a.title, doi: a.doi, terms: methods, freq: N}) as preprint_list
-WITH preprint_list, range(1, size(preprint_list)) AS index
-UNWIND index as i
-WITH COLLECT({rank: i, preprint: preprint_list[i]}) AS ranked_by_method
-
-MATCH (preprint:SDArticle {journalName: "biorxiv"})
-WITH preprint, ranked_by_method
-ORDER BY preprint.version DESC
-WITH DISTINCT preprint.doi AS doi, COLLECT(DISTINCT preprint)[0] AS a, ranked_by_method
-//find the number of molecular components used more than once
-MATCH (a:SDArticle)-->(f:SDFigure)-->(p:SDPanel)-->(t:CondTag)-->(h:H_Entity)
-WHERE 
-    (h.type = 'geneprod' OR h.type ='small_molecule')
-WITH DISTINCT a, h, COUNT(DISTINCT p) AS repeats, ranked_by_method
-WHERE repeats > 1
-WITH DISTINCT 
-    a, COLLECT(DISTINCT h.name) AS molecules, COUNT(DISTINCT h) AS N, ranked_by_method
-ORDER BY N DESC
-WITH COLLECT(DISTINCT {title: a.title, doi: a.doi, terms: molecules, freq: N}) as preprint_list, ranked_by_method
-WITH preprint_list, range(1, size(preprint_list)) AS index, ranked_by_method
-UNWIND index as i
-WITH COLLECT({rank: i, preprint: preprint_list[i]}) AS ranked_by_molecule, ranked_by_method
-
-WHERE (ranked_by_molecule <> []) AND (ranked_by_method <> [])
-WITH ranked_by_molecule + ranked_by_method AS ranked
-UNWIND ranked as item
-WITH DISTINCT item.preprint.title AS title, COLLECT(DISTINCT item.preprint.terms) AS keywords, COLLECT(item.rank) AS ranks, SUM(item.rank) AS rank_sum
-WHERE size(ranks)=2
-RETURN title, keywords, rank_sum, ranks
-ORDER BY rank_sum ASC
-LIMIT 10
-    ''',
-    returns=['title', 'keywords', 'rank_sum']
-)
 
 
 POPULAR_METHODS = Query(

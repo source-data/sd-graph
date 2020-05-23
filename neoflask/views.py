@@ -42,6 +42,12 @@ def by_hyp():
     return R(ASKNEO.by_hyp(request))
 
 
+@app.route('/api/v1/automagic', methods=['GET', 'POST'])
+def automagic():
+    app.logger.info(f"list by automagic score")
+    return R(ASKNEO.automagic(request))
+
+
 @app.route('/api/v1/doi/<path:doi>', methods=['GET', 'POST'])
 def by_doi(doi: str):
     app.logger.info(f"search doi:{doi}")
@@ -58,6 +64,7 @@ def fig_by_doi_idx():
 def panel_by_neo_id(id):
     app.logger.info(f"panel {id}")
     return R(ASKNEO.panel_by_neo_id(id=id))
+
 
 @app.route('/api/v1/search/', methods=['GET'])
 def entity():

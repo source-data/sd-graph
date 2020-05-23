@@ -3,21 +3,23 @@
     el-row(v-if="article")
       el-row()
         el-col(:span="24")
-            h4 {{ article.title}} 
-            a(:href="article.doi") {{ article.doi }}
+            h4 {{ article.title }} 
             small
-            p {{ authorList }}
+              a(:href="full_url(article.doi)" target="_blank") {{ article.doi }}
+            p
+              small {{ authorList }}
       el-row()
         el-col(:span="10")
-          p {{ article.abstract }}
+          small(style="line-height:1.5") {{ article.abstract }}
         el-col(:span="2")
           p
         el-col(:span="12")
           p 
-            label(for="carousel") Panels of interest:
-          el-carousel(indicator-position="outside" :autoplay="false" height="" style="border: solid 1px; border-color: #2222DD" id="carousel")
+            label(for="carousel") {{ panels.length }} panel(s) of interest:
+          el-carousel(indicator-position="outside" arrow="hover" :autoplay="false" height="" id="carousel")
             el-carousel-item(v-for="panel in panels" :key="panel.id" style="text-align:left")
-              small {{ panel.caption }}
+              el-card(class="box-card" shadow="always")
+                small {{ panel.caption }}
             //- a(:href="panel.url")
             //-   el-image(:src="panel.img_url" fit="contain")
             //- p
@@ -28,6 +30,11 @@
 export default {
   props: {
     article: Object,
+  },
+  methods: {
+      full_url (doi) {
+          return new URL(doi, "https://doi.org/")
+      }
   },
   computed: {
     authorList () {

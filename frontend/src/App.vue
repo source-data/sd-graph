@@ -1,39 +1,21 @@
 <template lang="pug">
-  //- <div id="app">
-  //-   <img src="./assets/logo.png">
-  //-     <router-link to="/home">Home</router-link> |
-  //-     <router-link to="/about">About</router-link>
-  //-   <div>
-  //-     <p>
-  //-       If Element is successfully added to this project, you'll see an
-  //-       <code v-text="'<el-button>'"></code>
-  //-       below
-  //-     </p>
-  //-     <el-button>el-button</el-button>
-  //-   </div>
-  //-   <HelloWorld msg="Welcome to Your Vue.js App"/>
-  //- </div>
-
   el-container
-    el-header#header
-      el-row
-        el-col(:span="4")
-          img(src="./assets/embo-logo.png" height="60px")
-
-        el-col(:span="16")
-          h1 Early Evidence Base: SARS-CoV-2
-          p A structured resource of early results on the biology of SARS-CoV-2
-        el-col(:span="4")
-          p powered by:
-          p
-            img(src="./assets/embo-press-logo.png" width="80px")
-          p
-            img(src="./assets/sourcedata-logo.jpg" width="80px")
-    el-divider
+    el-header(height="120px")#header
+      el-col(:span="4")
+        p
+          img(src="./assets/EMBO_logo_RGBmonoblack_outlined.jpg" height="60px").center-img
+      el-col(:span="16")
+        h1(style="text-align: center") Early Evidence Base: SARS-CoV-2
+        p(style="text-align: center") A structured resource of early results on the biology of SARS-CoV-2
+      el-col(:span="4")
+        p 
+          img(src="./assets/embo-press-logo.png" width="100px").center-img 
+        p 
+          img(src="./assets/sourcedata_logo_rgb.png" width="130px").center-img
     el-main
       el-row
         el-col(:span="16" :offset="4")
-          p This resource is dedicated to curated experimental results extracted from preprints related to the biology of the virus SARS-CoV-2. The resource is maintained by EMBO Press editors and SourceData curators and the scientific content is supervised by a board of experts in virology.
+          p This resource prioritizes preprints with experimental results related to the biology of the virus SARS-CoV-2. The resource is developed by EMBO SourceData.
           el-divider
       el-row
         el-col(:span="16" :offset="4")
@@ -76,13 +58,15 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style scoped lang="scss">
 #header {
-  h1 {
-    margin:0;
-  }
-  p {
-    margin:0;
-  }
+   border-bottom-style: solid;
+   border-bottom-width: 1px;
+}
+
+img.center-img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 </style>

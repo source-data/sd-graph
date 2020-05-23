@@ -50,6 +50,12 @@ export default {
 }
 </script>
 
+<style>
+.spaced-row {
+    padding: 2px
+}
+</style>
+
 <style scoped lang="scss">
 .filter-list {
   max-height: 10em;
@@ -57,3 +63,4 @@ export default {
   overflow: scroll;
 }
 </style>
+

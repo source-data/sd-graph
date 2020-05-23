@@ -1,6 +1,6 @@
 <template lang="pug">
   el-radio-group(@change="onSelect" v-model="selectedMethod")
-    div(v-for="method in methodList")
+    el-row(v-for="method in methodList").spaced-row
       el-radio(:label="method.id")
         | {{ method.name }}
       br
