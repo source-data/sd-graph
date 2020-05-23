@@ -9,7 +9,7 @@
         p(style="text-align: center") A structured resource of early results on the biology of SARS-CoV-2
       el-col(:span="4")
         p 
-          img(src="./assets/embo-press-logo.png" width="100px").center-img 
+          img(src="./assets/embopress_logo_cmyk.jpg" width="120px").center-img 
         p 
           img(src="./assets/sourcedata_logo_rgb.png" width="130px").center-img
     el-main

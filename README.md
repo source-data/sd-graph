@@ -114,3 +114,7 @@ Upload and SmartTag COVID19 preprints:
 Process the merged graph:
 
     cat sdg/SD-processing.cql | cypher-shell -a bolt://localhost:7687 -u neo4j -p <NEO4J_PASSWORD>
+
+Run the app
+
+    cd frontend; npm run serve

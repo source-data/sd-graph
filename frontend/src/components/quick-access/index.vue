@@ -11,7 +11,6 @@
         el-tab-pane(label="By observation and tested hypothesis")
           .filter-list
             QuickAccessByHyp(@change="onChangeByHyp")
-
 </template>
 
 <script>
