@@ -85,7 +85,11 @@ docker-compose -f production.yml up -d
 
 # Local non-docker
 
-For local CLI usage, make fist sure `.env` has `NEO_URI=bolt://localhost:7687` and `EEB_PUBLIC_API=http://localhost:5000/api/v1/`
+For local command line usage for debugging, make fist sure `.env` has `NEO_URI=bolt://localhost:7687` and `EEB_PUBLIC_API=http://localhost:5000/api/v1/`
+
+Activate environment
+
+    source .venv/bin/activate
 
 Start local neo4j
 

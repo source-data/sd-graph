@@ -15,7 +15,7 @@
           p
         el-col(:span="12")
           p 
-            label(for="carousel") {{ info.length }} Information of interest:
+            label(for="carousel") {{ info.length }} information cards:
           el-carousel(indicator-position="outside" arrow="hover" :autoplay="false" height="" id="carousel")
             el-carousel-item(v-for="card in info" :key="card.id" style="text-align:left")
               el-card(class="box-card" shadow="always")

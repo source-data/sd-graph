@@ -93,31 +93,15 @@ RETURN p.caption AS caption, COLLECT(DISTINCT h) AS tags
 BY_METHOD = Query(
     code='''
 //pre listed methods
-UNWIND ['rt-pcr', 'western blot', 'flow cytometry', 'electron microscopy', 'immunoprecipitation', 'confocal microscopy', 'immunohistochemistry', 'histology', 'pseudovirus cell entry'] AS query
-MATCH (q:Term {text: query})<--(h:H_Entity {category: "assay"})-->(syn:Term)
+UNWIND ['flow cytometry', 'electron microscope', 'immunoprecipitation', 'confocal microscopy', 'immunohistochemistry', 'histology', 'pseudovirus cell entry'] AS query
+MATCH (q:Term {text: query})<-[:Has_text]-(h:H_Entity {category: "assay"})-[:Has_text]->(syn:Term)
 WITH q, syn
-MATCH (a:SDArticle {journalName:'biorxiv'})-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag {category: "assay"})-->(h:H_Entity)-->(syn)
+MATCH (a:SDArticle {journalName:'biorxiv'})-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag {category: "assay"})-->(h:H_Entity)-[:Has_text]->(syn)
 WITH DISTINCT
    q, {doi: a.doi, info: COLLECT(DISTINCT {id: id(p), text: p.caption}), pub_date: a.pub_date} AS paper
 ORDER BY paper.pub_date DESC
 RETURN DISTINCT
    q.text AS name, q.text AS id, COLLECT(paper) AS papers
-    ''',
-    returns=['name', 'id', 'papers']
-)
-
-BY_METHOD_2 = Query(
-    code='''
-//pre listed methods
-UNWIND ['rt-pcr', 'western blot', 'flow cytometry', 'electron microscopy', 'immunoprecipitation', 'confocal microscopy', 'immunohistochemistry', 'histology', 'pseudovirus cell entry'] AS query
-MATCH (:Term {text: query})<--(h:H_Entity {category: "assay"})-->(syn:Term)
-WITH syn
-MATCH (a:SDArticle {journalName:'biorxiv'})-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag {category: "assay"})-->(h:H_Entity)-->(syn)
-WITH DISTINCT
-   syn.text AS name, {doi: a.doi, info: COLLECT(DISTINCT {id: id(p), text: p.caption}), pub_date: a.pub_date} AS paper
-ORDER BY paper.pub_date DESC
-RETURN DISTINCT
-   name, name AS id, COLLECT(paper) AS papers
     ''',
     returns=['name', 'id', 'papers']
 )
@@ -154,31 +138,42 @@ RETURN i as id, all_results[i][0] AS hyp, all_results[i][1] AS papers
 BY_MOLECULE = Query(
     code='''
 MATCH
-  (query:H_Entity)-[:Has_text]->(mol_name:Term)
-WHERE
-  (query.type = "gene" OR query.type = "protein" OR query.type = "molecule" OR query.type = "geneprod")
-WITH query, mol_name
-MATCH
-  (paper:SDArticle {journalName:'biorxiv'})-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(mol:H_Entity)-[:Has_text]->(mol_name:Term) 
-WHERE
-  (mol.type = query.type)
+  (query:H_Entity {category: "entity"})-[:Has_text]->(syn1:Term)
+WHERE 
+  query.type = "molecule" OR query.type = "small_molecule"
+  //exclude known artefacts...
   AND
-  (ct.role = 'intervention' OR ct.role = 'assayed' OR ct.role = 'experiment')
+  (NOT syn1.text = "a" OR syn1.text = "-")
+OPTIONAL MATCH
+  (query:H_Entity {category: "entity"})-[:Has_text]->(mol_name:Term)<-[:Has_text]-(secondary:H_Entity {category: "entity"})-[:Has_text]->(syn2:Term)
+WHERE 
+  (query.type = "molecule" OR query.type = "small_molecule")
+  AND
+  (secondary.type = "molecule" OR secondary.type = "small_molecule")
+WITH DISTINCT query, COLLECT(syn1) + COLLECT(syn2) AS all_synonyms
+UNWIND
+   all_synonyms AS syn_term
+WITH DISTINCT query, syn_term.text as syn
+ORDER BY syn
+WITH DISTINCT query, COLLECT(DISTINCT syn) AS synonym_sets
+WITH DISTINCT COLLECT(DISTINCT query) AS query_group, synonym_sets
+UNWIND synonym_sets AS synonym
+MATCH
+  (paper:SDArticle {journalName:'biorxiv'})-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(mol:H_Entity {category: "entity"})-[:Has_text]->(mol_name:Term {text: synonym})
+WHERE
+  mol.type = "molecule" OR mol.type = "small_molecule"
+WITH DISTINCT query_group, paper, COLLECT(DISTINCT {id: id(p), text: p.caption}) AS panels, COUNT(DISTINCT p) AS N_panels, COLLECT(DISTINCT synonym) AS synonyms_in_paper
+WHERE N_panels > 1
 WITH DISTINCT
-  mol.name AS molecule,
-  COLLECT(DISTINCT mol_name.text) AS synonyms,
-  paper,
-  COLLECT(DISTINCT {id: id(p), text: p.caption} ) AS panels,
-  COUNT(DISTINCT p) AS N_panels
-WHERE N_panels > 2
-WITH DISTINCT
-  molecule,
-  COLLECT(DISTINCT {doi: paper.doi, title:paper.title, syn: synonyms, info: panels}) AS papers,
+  query_group,
+  COLLECT(DISTINCT {doi: paper.doi, title:paper.title, syn: synonyms_in_paper, info: panels}) AS papers,
   COUNT(DISTINCT paper) AS N_papers
 ORDER BY N_papers DESC
+LIMIT 10
+WITH
+  query_group[0].name AS molecule, papers
 RETURN
   molecule AS name, molecule as id, papers
-LIMIT 10
 ''',
     returns=['name', 'id', 'papers']
 )
@@ -197,17 +192,14 @@ ORDER BY preprint.version DESC
 WITH DISTINCT preprint.doi AS doi, COLLECT(DISTINCT preprint)[0] AS a //keep only the most recent
 
 // find entities
-MATCH (a)-->(f:SDFigure)-->(p:SDPanel)-->(t:CondTag)-->(entity:H_Entity {category: "assay"})-->(name:Term)
+MATCH (a)-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity {category: "assay"})-[:Has_text]->(name:Term)
 WITH
   a, entity, name
 //find synonyms
 MATCH
-   (name)<--(:H_Entity {category:"assay"})-->(syn1:Term)
-OPTIONAL MATCH
-   (name)<--(s1:H_Entity {category:"assay"})-->(:Term)<--(s2:H_Entity {category:"assay"})-->(syn2:Term)
-//WHERE entity.type = s.type 
-//combine first and second order synonyms
-WITH DISTINCT a, entity, COLLECT(name) + COLLECT(syn1) + COLLECT(syn2) AS all_synonyms
+   (name)<-[:Has_text]-(:H_Entity {category:"assay"})-[:Has_text]->(syn1:Term)
+//combine synonyms
+WITH DISTINCT a, entity, COLLECT(name) + COLLECT(syn1) AS all_synonyms
 UNWIND all_synonyms AS syn_term
 // remove duplicates
 WITH DISTINCT a, entity, syn_term.text AS syn
@@ -233,19 +225,15 @@ ORDER BY preprint.version DESC
 WITH DISTINCT preprint.doi AS doi, COLLECT(DISTINCT preprint)[0] AS a, ranked_by_assay //keep only the most recent
 
 // find entities
-MATCH (a)-->(f:SDFigure)-->(p:SDPanel)-->(t:CondTag)-->(entity:H_Entity {category: "entity"})-->(name:Term)
+MATCH (a)-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity {category: "entity"})-[:Has_text]->(name:Term)
 WITH
   a, entity, name, ranked_by_assay
 //find synonyms
 MATCH
-   (name)<--(s:H_Entity {category:"entity"})-->(syn1:Term)
+   (name)<-[:Has_text]-(s:H_Entity {category:"entity"})-[:Has_text]->(syn1:Term)
 WHERE s.type = entity.type
-OPTIONAL MATCH
-   (name)<--(s1:H_Entity {category:"entity"})-->(:Term)<--(s2:H_Entity {category:"entity"})-->(syn2:Term)
-WHERE s1.type = entity.type AND s2.type = entity.type
-//WHERE entity.type = s.type 
-//combine first and second order synonyms
-WITH DISTINCT a, entity, COLLECT(name) + COLLECT(syn1) + COLLECT(syn2) AS all_synonyms, ranked_by_assay
+//combine synonyms
+WITH DISTINCT a, entity, COLLECT(name) + COLLECT(syn1) AS all_synonyms, ranked_by_assay
 UNWIND all_synonyms AS syn_term
 // remove duplicates
 WITH DISTINCT a, entity, syn_term.text AS syn, ranked_by_assay
@@ -281,33 +269,53 @@ RETURN 'automagic list' AS name, "1" AS id, COLLECT(paper) AS papers
 
 SEARCH = Query(
     code='''
-//search
 // Full-text search on multiple indices.
+
 //CALL db.index.fulltext.createNodeIndex("title", ["Article"], ["title"]);
 CALL db.index.fulltext.queryNodes("title", $query) YIELD node, score
-WITH node.doi AS doi, node.title as text, score, "title" as source
-RETURN doi, text, score, source
+WITH 
+  node.doi AS doi, node.title AS text, score, "title" AS source
 ORDER BY score DESC
-LIMIT toInteger($limit)
+RETURN 
+  doi, [{text: text}] AS info, score
+LIMIT 20
 
 UNION
 
 //CALL db.index.fulltext.createNodeIndex("abstract",["Article"], ["abstract"]);
 CALL db.index.fulltext.queryNodes("abstract", $query) YIELD node, score
-WITH node.doi AS doi, node.title as text, score, "abstract" as source
-RETURN doi, text, score, source
+WITH
+  node.doi AS doi, node.title as text, score, "abstract" as source
 ORDER BY score DESC
-LIMIT toInteger($limit)
+RETURN 
+  doi, [{text: text}] AS info, score
+LIMIT 20
 
 UNION
 
 //CALL db.index.fulltext.createNodeIndex("caption",["Fig"], ["caption"]);
 CALL db.index.fulltext.queryNodes("caption", $query) YIELD node, score
 MATCH (article:Article)-[:has_figure]->(node)
-WITH article.doi as doi, node.caption as text, score, "caption" AS source
-RETURN doi, text, score, source
+WITH DISTINCT
+  article.doi as doi, node.caption as text, score, "caption" AS source
 ORDER BY score DESC
-LIMIT toInteger($limit)
+RETURN 
+  doi, [{text: text}] AS info, score
+LIMIT 20
+
+//UNION
+
+//slow!
+//CALL db.index.fulltext.createNodeIndex("entity_name",["H_Entity"],["name"]);
+//CALL db.index.fulltext.queryNodes("entity_name", $query) YIELD node, score
+//MATCH (sd_article:SDArticle)-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(ct:CondTag)-[:Identified_by]->(h:H_Entity)
+//WHERE h.name = node.name AND node.name <> ""
+//WITH DISTINCT 
+//  sd_article.doi as doi, h.name as text, score, "entity" as source
+//ORDER BY score DESC
+//RETURN 
+//  doi, [{text: text}] AS info, score
+//LIMIT 20
 
 UNION
 
@@ -315,36 +323,28 @@ UNION
 CALL db.index.fulltext.queryNodes("name", $query) YIELD node, score
 MATCH (article:Article)-->(author:Contrib)
 WHERE author.surname = node.surname
-WITH DISTINCT article.doi as doi, node.surname as text, score, "author" AS source
-RETURN doi, text, score, source
+WITH DISTINCT 
+  article.doi as doi, node.surname as text, score, "author" AS source
 ORDER BY score DESC
-LIMIT toInteger($limit)
-
-UNION
-
-//CALL db.index.fulltext.createNodeIndex("entity_name",["H_Entity"],["name"]);
-CALL db.index.fulltext.queryNodes("entity_name", $query) YIELD node, score
-WHERE node.name <> ""
-MATCH (sd_article:SDArticle)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(h:H_Entity)
-WHERE h.name = node.name
-WITH DISTINCT sd_article.doi as doi, h.name as text, score, "entity" as source
-RETURN doi, text, score, source
-ORDER BY score DESC
-LIMIT toInteger($limit)
-
-UNION
-
-//CALL db.index.fulltext.createNodeIndex("synonym",["Term"],["text"]);
-CALL db.index.fulltext.queryNodes("synonym", $query) YIELD node, score
-MATCH (sd_article:SDArticle)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(h:H_Entity)-->(te:Term)
-WHERE te.text = node.text
-WITH DISTINCT sd_article.doi as doi, te.text as text, score, "synonym" as source
-RETURN doi, text, score, source
-ORDER BY score DESC
-LIMIT toInteger($limit)
+RETURN 
+  doi, [{text: text}] AS info, score
+LIMIT 20
 ''',
-    map={'query': ['query', ''], 'limit': ['limit', 10]},
-    returns=['doi', 'text', 'score', 'source']
+    map={'query': ['query', '']},
+    returns=['doi', 'info', 'score']
+)
+
+STATS = Query(
+    code='''
+        MATCH (a:Article)
+        WITH COUNT(a) AS total_preprints
+        MATCH (sda:SDArticle {source: 'sdneo'}) 
+        WITH COUNT(sda) AS AS covid19_preprints // wrong, placeholder, total_preprints
+        MATCH (n) 
+        WITH COUNT(n) AS total_nodes, total_preprints, covid19_preprints
+        RETURN total_nodes, total_preprints, covid19_preprints
+    ''',
+    returns=['total_nodes', 'total_preprints', 'covid19_preprints']
 )
 
 PANEL_SUMMARY = Query(

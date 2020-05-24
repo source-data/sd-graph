@@ -37,20 +37,23 @@ export default {
       commit('setIsLoading')
       const getter_path = [module, 'currentRecord'].join('/')
       const current = rootGetters[getter_path]
-      const dois = current.papers.map(c => c.doi)
-      const promises = dois.map((doi) => {
-        return httpClient.get(`/api/v1/doi/${doi}`)
-      })
-      return Promise.all(promises).then((responses) => {
-        const records = responses.reduce((acc, r) => {
-          return [preProcessRecord(r.data[0], current), ...acc]
-        }, [])
+      console.debug('current', current)
+      if (typeof current !== 'undefined') {
+        const dois = current.papers.map(c => c.doi)
+        const promises = dois.map((doi) => {
+          return httpClient.get(`/api/v1/doi/${doi}`)
+        })
+        return Promise.all(promises).then((responses) => {
+          const records = responses.reduce((acc, r) => {
+            return [preProcessRecord(r.data[0], current), ...acc]
+          }, [])
 
-        commit('addRecords', records)
-        return records
-      }).finally(() => {
-        commit('setNotLoading')
-      })
+          commit('addRecords', records)
+          return records
+        }).finally(() => {
+          commit('setNotLoading')
+        })
+      }
     },
   }
 }

@@ -2,14 +2,14 @@
   div
     h1 Quick Access
     el-tabs(type="border-card" @tab-click="onSelectTab")
-        el-tab-pane(label="Automagic selection")
-            QuickAccessByAutomagic
-        el-tab-pane(label="By observation and tested hypothesis").filter-list
-            QuickAccessByHyp(@change="onChangeByHyp")
         el-tab-pane(label="By Method").filter-list
             QuickAccessByMethod(@change="onChangeByMethod")
+        el-tab-pane(label="By tested hypothesis").filter-list
+            QuickAccessByHyp(@change="onChangeByHyp")
         el-tab-pane(label="By Molecule").filter-list
             QuickAccessByMol(@change="onChangeByMol")
+        el-tab-pane(label="Automagic selection")
+            QuickAccessByAutomagic
 
 </template>
 
@@ -26,17 +26,16 @@ export default {
     QuickAccessByAutomagic,
     QuickAccessByMethod,
     QuickAccessByMol,
-    QuickAccessByHyp
+    QuickAccessByHyp,
   },
   methods: {
     onSelectTab (selectedTab) {
-      console.debug('onChangeByAutomagic', selectedTab.index)
+      console.debug('onChangeByAutomagic', selectedTab)
       //
-      if (selectedTab.index==0) {
+      if (selectedTab.label=="Automagic selection") {
         this.$store.commit('byAutomagic/showRecord', { id: "1" }) // single automatic record anyway, but who knows what the future reserves
         this.$store.dispatch('highlights/listByCurrent', 'byAutomagic')
       }
-      
     },
     onChangeByMethod (selectedItemId) {
       console.debug('onChangeByMethod',selectedItemId)
@@ -60,6 +59,11 @@ export default {
 }
 </script>
 
+<style lang="scss">
+.spaced-row {
+  padding: 1px;
+}
+</style>
 
 <style scoped lang="scss">
 .filter-list {
@@ -68,4 +72,3 @@ export default {
   overflow: scroll;
 }
 </style>
-

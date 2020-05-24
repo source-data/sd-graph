@@ -16,7 +16,7 @@ import { mapGetters } from 'vuex'
 export default {
   data () {
     return {
-      byHyp: [],
+      //byHyp: [],
       selectedHyp: undefined,
     }
   },

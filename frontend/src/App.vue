@@ -3,13 +3,15 @@
     el-header(height="120px")#header
       el-col(:span="4")
         p
-          img(src="./assets/EMBO_logo_RGBmonoblack_outlined.jpg" height="80px").center-img
+          a(href="https://embo.org" target="_blank" )
+            img(src="./assets/EMBO_logo_RGBmonoblack_outlined.jpg" height="80px").center-img
       el-col(:span="16")
         h1(style="text-align: center") Early Evidence Base: SARS-CoV-2
         p(style="text-align: center") A structured resource of early results on the biology of SARS-CoV-2
       el-col(:span="4")
         p 
-          img(src="./assets/sourcedata_logo_rgb.png" width="200px").center-img
+          a(href="https://sourcedata.io" target="_blank" )
+            img(src="./assets/sourcedata_logo_rgb.png" width="200px").center-img
         //p 
         //  img(src="./assets/embopress_logo_cmyk.jpg" width="120px").center-img
     el-main
@@ -19,7 +21,7 @@
           el-divider
       el-row
         el-col(:span="16" :offset="4")
-          SearchBar
+          SearchBar(@submit="onSubmit")
       el-row
         el-col(:span="16" :offset="4")
           QuickAccess
@@ -50,11 +52,21 @@ export default {
       return new Date().getFullYear()
     },
   },
+  methods: {
+    onSubmit(query) {
+      this.$store.dispatch('fulltextSearch/search', query).then(
+        () => {
+          // this.$store.commit('fulltextSearch/showRecord', { id: 'search_results' }) // bogus id, but oh well...
+          this.$store.dispatch('highlights/listByCurrent', 'fulltextSearch')
+        }
+      )
+    }
+  },
   beforeCreate () {
-    this.$store.dispatch('byAutomagic/getAll'),
     this.$store.dispatch('byMethod/getAll'),
     this.$store.dispatch('byMol/getAll'),
-    this.$store.dispatch('byHyp/getAll')
+    this.$store.dispatch('byHyp/getAll'),
+    this.$store.dispatch('byAutomagic/getAll')
   },
 }
 </script>
@@ -71,3 +83,5 @@ img.center-img {
   margin-right: auto;
 }
 </style>
+
+

@@ -1,0 +1,70 @@
+import httpClient from '../lib/http'
+
+export default {
+  namespaced: true,
+  state: {
+    records: {},
+    currentRecordId: null,
+    loadingRecords: false,
+  },
+  getters: {
+    records (state) {
+      //return Object.values(state.records).slice().sort((a, b) => a.item_name.toLowerCase().localeCompare(b.item_name.toLowerCase()))
+      return Object.values(state.records)
+    },
+    currentRecord (state) {
+      return state.records//[state.currentRecordId]
+    }
+  },
+  mutations: {
+    /* *************************************************************************
+    * RECORDS
+    */
+   addRecords (state, records) {
+      // const recordsById = {}
+      // records.forEach((record) => {
+      //   recordsById[record.id] = record
+      // })
+      // need to sort and truncate records here
+      console.debug('records unsorted', records)
+      const sorted = Object.values(records).slice().sort((a, b) => b.score - a.score)
+      console.debug('sorted', sorted)
+      const top10 = sorted.slice(0, 10)
+      console.debug('top10', top10)
+      state.records = {papers: top10}
+    },
+    /* *************************************************************************
+    * NAVIGATION
+    */
+   setIsLoading (state) {
+      state.loadingRecords = true
+    },
+    setNotLoading (state) {
+      state.loadingRecords = false
+    },
+    // showRecord (state, { id }) {
+    //   state.currentRecordId = id
+    // },
+    closeRecordView (state) {
+      state.currentRecordId = null
+    },
+  },
+  actions: {
+    search({ commit }, query) {
+      commit('setIsLoading')
+      const url = '/api/v1/search'
+      return httpClient.get(url, {
+          params: {
+              query: query
+          }
+      })
+        .then((response) => {
+          const records = response.data
+          commit('addRecords', records)
+        })
+        .finally(() => {
+          commit('setNotLoading')
+        })
+    },
+  },
+}

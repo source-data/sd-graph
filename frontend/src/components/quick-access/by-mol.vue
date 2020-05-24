@@ -12,7 +12,7 @@ import { mapGetters } from 'vuex'
 export default {
   data () {
     return {
-      byMol: [],
+      //byMol: [],
       selectedMol: undefined,
     }
   },
@@ -26,7 +26,7 @@ export default {
   },
   methods: {
     onSelect (selectedItemId) {
-      console.debug('onSelect',selectedItemId)
+      console.debug('onSelect', selectedItemId)
       this.$emit('change', selectedItemId)
     },
   },

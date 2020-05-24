@@ -5,6 +5,7 @@ import byMethod from './by-method'
 import byMol from './by-mol'
 import byHyp from './by-hyp'
 import highlights from './highlights'
+import fulltextSearch from './fulltext-search'
 
 Vue.use(Vuex)
 
@@ -15,6 +16,7 @@ export default new Vuex.Store({
     byHyp,
     byMol,
     highlights,
+    fulltextSearch
   },
   state: {
   },
