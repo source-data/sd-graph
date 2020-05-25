@@ -6,6 +6,7 @@ export default {
     records: {},
     currentRecordId: null,
     loadingRecords: false,
+    loadComplete: false,
   },
   getters: {
     records (state) {
@@ -14,6 +15,9 @@ export default {
     },
     currentRecord (state) {
       return state.records//[state.currentRecordId]
+    },
+    isLoaded (state) {
+      return state.loadComplete
     }
   },
   mutations: {
@@ -21,10 +25,6 @@ export default {
     * RECORDS
     */
    addRecords (state, records) {
-      // const recordsById = {}
-      // records.forEach((record) => {
-      //   recordsById[record.id] = record
-      // })
       // need to sort and truncate records here
       console.debug('records unsorted', records)
       const sorted = Object.values(records).slice().sort((a, b) => b.score - a.score)
@@ -42,9 +42,9 @@ export default {
     setNotLoading (state) {
       state.loadingRecords = false
     },
-    // showRecord (state, { id }) {
-    //   state.currentRecordId = id
-    // },
+    setLoadComplete (state) {
+      state.loadComplete = true
+    },
     closeRecordView (state) {
       state.currentRecordId = null
     },
@@ -63,7 +63,8 @@ export default {
           commit('addRecords', records)
         })
         .finally(() => {
-          commit('setNotLoading')
+          commit('setNotLoading'),
+          commit('setLoadComplete')
         })
     },
   },

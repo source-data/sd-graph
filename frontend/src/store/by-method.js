@@ -6,6 +6,7 @@ export default {
     records: {},
     currentRecordId: null,
     loadingRecords: false,
+    loadComplete: false,
   },
   getters: {
     records (state) {
@@ -14,6 +15,9 @@ export default {
     },
     currentRecord (state) {
       return state.records[state.currentRecordId]
+    },
+    isLoaded (state) {
+      return state.loadComplete
     }
   },
   mutations: {
@@ -32,6 +36,9 @@ export default {
     */
    setIsLoading (state) {
       state.loadingRecords = true
+    },
+    setLoadComplete (state) {
+      state.loadComplete = true
     },
     setNotLoading (state) {
       state.loadingRecords = false
@@ -53,7 +60,8 @@ export default {
           commit('addRecords', records)
         })
         .finally(() => {
-          commit('setNotLoading')
+          commit('setNotLoading'),
+          commit('setLoadComplete')
         })
     },
   },

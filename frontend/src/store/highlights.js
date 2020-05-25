@@ -25,7 +25,7 @@ export default {
     /* *************************************************************************
     * NAVIGATION
     */
-   setIsLoading (state) {
+    setIsLoading (state) {
       state.loadingRecords = true
     },
     setNotLoading (state) {
@@ -35,10 +35,9 @@ export default {
   actions: {
     listByCurrent({ commit, rootGetters }, module) {
       commit('setIsLoading')
-      const getter_path = [module, 'currentRecord'].join('/')
-      const current = rootGetters[getter_path]
-      console.debug('current', current)
-      if (typeof current !== 'undefined') {
+      const current = rootGetters[[module, 'currentRecord'].join('/')]
+      const loadComplete = rootGetters[[module, 'isLoaded'].join('/')]
+      if (loadComplete) {
         const dois = current.papers.map(c => c.doi)
         const promises = dois.map((doi) => {
           return httpClient.get(`/api/v1/doi/${doi}`)
