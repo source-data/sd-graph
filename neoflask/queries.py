@@ -137,39 +137,73 @@ RETURN i as id, all_results[i][0] AS hyp, all_results[i][1] AS papers
 
 BY_MOLECULE = Query(
     code='''
+//Exclusion list based on SourceData normalized entities
+MATCH (syn:Term)<--(mol:H_Entity)<--(ct:CondTag)
+WHERE 
+  mol.type = "small_molecule" OR mol.type = "molecule"
+  AND 
+  mol.ext_ids <> ""
+WITH DISTINCT mol.name AS name, COLLECT(DISTINCT syn.text) AS synonyms, COLLECT(DISTINCT ct) AS cts, 1.0*COUNT(DISTINCT ct) AS N
+UNWIND cts as ct
+WITH DISTINCT name, synonyms, N, ct.role as role, 1.0*COUNT(DISTINCT ct) AS N_role
+WITH name, synonyms, role, N, N_role, 100.0*(N_role / N) AS fract
+ORDER BY N DESC, fract DESC
+WITH name, synonyms, N, COLLECT(role)[0] AS dominant_role, COLLECT(fract)[0] AS dom_fract
+WHERE 
+  (dominant_role = "normalizing" OR dominant_role = "reporter" OR dominant_role = "component")
+  AND
+  dom_fract > 75 AND N > 10.0
+WITH COLLECT(name) + synonyms AS all
+UNWIND all as terms
+WITH COLLECT(DISTINCT terms) AS exclusion_list
+//
 MATCH
   (query:H_Entity {category: "entity"})-[:Has_text]->(syn1:Term)
 WHERE 
-  query.type = "molecule" OR query.type = "small_molecule"
+  (query.type = "molecule" OR query.type = "small_molecule")
   //exclude known artefacts...
   AND
   (NOT syn1.text = "a" OR syn1.text = "-")
+  AND 
+  (NOT syn1.text IN exclusion_list)
 OPTIONAL MATCH
-  (query:H_Entity {category: "entity"})-[:Has_text]->(mol_name:Term)<-[:Has_text]-(secondary:H_Entity {category: "entity"})-[:Has_text]->(syn2:Term)
+  (query:H_Entity {category: "entity"})-[:Has_text]->(:Term)<-[:Has_text]-(secondary:H_Entity {category: "entity"})-[:Has_text]->(syn2:Term)
 WHERE 
   (query.type = "molecule" OR query.type = "small_molecule")
   AND
   (secondary.type = "molecule" OR secondary.type = "small_molecule")
-WITH DISTINCT query, COLLECT(syn1) + COLLECT(syn2) AS all_synonyms
+  AND 
+  (NOT syn2.text IN exclusion_list)
+WITH DISTINCT [query, secondary] AS queries, syn1, syn2
+UNWIND queries AS query
+WITH query, syn1, syn2
+WHERE NOT query is NULL
+WITH DISTINCT query,  [query.name] + COLLECT(syn1.text) + COLLECT(syn2.text) AS all_synonyms
 UNWIND
-   all_synonyms AS syn_term
-WITH DISTINCT query, syn_term.text as syn
+   all_synonyms AS syn
+WITH DISTINCT query, syn
 ORDER BY syn
 WITH DISTINCT query, COLLECT(DISTINCT syn) AS synonym_sets
+ORDER BY size(query.name) DESC
 WITH DISTINCT COLLECT(DISTINCT query) AS query_group, synonym_sets
 UNWIND synonym_sets AS synonym
+WITH query_group, synonym
+
 MATCH
   (paper:SDArticle {journalName:'biorxiv'})-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(mol:H_Entity {category: "entity"})-[:Has_text]->(mol_name:Term {text: synonym})
 WHERE
-  mol.type = "molecule" OR mol.type = "small_molecule"
+  (mol.type = "molecule" OR mol.type = "small_molecule")
 WITH DISTINCT query_group, paper, COLLECT(DISTINCT {id: id(p), text: p.caption}) AS panels, COUNT(DISTINCT p) AS N_panels, COLLECT(DISTINCT synonym) AS synonyms_in_paper
-WHERE N_panels > 1
+WHERE 
+  N_panels > 2
+  AND
+  datetime(paper.pub_date) > datetime('2020-04-01')
 WITH DISTINCT
   query_group,
   COLLECT(DISTINCT {doi: paper.doi, title:paper.title, syn: synonyms_in_paper, info: panels}) AS papers,
   COUNT(DISTINCT paper) AS N_papers
 ORDER BY N_papers DESC
-LIMIT 10
+LIMIT 20
 WITH
   query_group[0].name AS molecule, papers
 RETURN
