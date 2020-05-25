@@ -83,14 +83,14 @@ class Instance:
         rel = res['r']
         return rel
 
-    def batch_of_nodes(self, label: str, batch: List[Dict], clause="CREATE"):
+    def batch_of_nodes(self, label: str, batch: List[Dict]):
         # {batch: [{name:"Alice",age:32},{name:"Bob",age:42}]}
         records = []
         if batch:
             query = Query(
                 code=f'''
                     UNWIND $batch AS row
-                    {clause} (n:{label})
+                    CREATE (n:{label})
                     SET n += row
                     RETURN n
                     ''',

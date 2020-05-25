@@ -45,7 +45,8 @@ def XMLFigure(d: Dict):
     e.append(figure_label_element)
     graphic_element = XMLGraphic(d={'href': d['href']})
     e.append(graphic_element)
-    # title was not captured systematically in source data db; using first sentence as replacement
+    # title was not always captured systematically in source data db; using first sentence as replacement
+    # check if there or empty first
     pseudo_title = first_sentence_as_title(d['caption'])
     if pseudo_title:
         title_element = XMLTitle(text=pseudo_title)
@@ -243,7 +244,7 @@ class Compendium:
                 filename = doi + '.xml'
                 file_path = subpath / filename
                 print('writing to {}'.format(str(file_path)))
-                indent(article, space="    ")
+                # indent(article, space="    ")
                 ElementTree(article).write(str(file_path), encoding='utf-8', xml_declaration=True)
 
 

@@ -24,13 +24,13 @@ This can solve some issues, for example if you run `build` with a wrong config f
 
 Normally you just need this:
 ```bash
-docker-compose -f local.yml build
-docker-compose -f local.yml up -d
-docker-compose -f local.yml run --rm flask python -m sdg.sdneo SARS-CoV-2 --api sdapi
-cat sdg/SD-processing.cql | docker-compose -f local.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>
-docker-compose -f local.yml run --rm flask python -m neojats.xml2neo data/meca
-docker-compose -f local.yml run --rm flask python -m sdg.sdneo --api eebapi
-docker-compose -f local.yml run --rm flask
+docker-compose  build
+docker-compose up -d
+docker-compose run --rm flask python -m sdg.sdneo SARS-CoV-2 --api sdapi  # import source data public data
+docker-compose run --rm flask python -m neojats.xml2neo data/meca  # import full text biorxiv preprints
+docker-compose run --rm flask python -m sdg.sdneo --api eebapi # smarttag covid-19 preprints
+cat sdg/SD-processing.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>  # generate merged graph
+docker-compose --rm flask # visit http:/localhost:8080
 ```
 
 ## Production
@@ -86,20 +86,40 @@ docker-compose -f production.yml up -d
 
 # Local non-docker
 
-For local CLI usage, make fist sure `.env` has `NEO_URI=bolt://localhost:7687` and `EEB_PUBLIC_API=http://localhost:5000/api/v1/`
+For local command line usage for debugging, make fist sure `.env` has `NEO_URI=bolt://localhost:7687` and `EEB_PUBLIC_API=http://localhost:5000/api/v1/`
 
-Upload meca to neo:
+Activate environment
 
-    python -m neojats.xml2neo data/meca
+    source .venv/bin/activate
 
-Launch RESTful interface:
+Start local neo4j
+
+    neo4j start
+
+Launch neoflask interface:
 
     export FLASK_APP=neoflask; export FLASK_ENV=development; export FLASK_DEBUG=true; python -m flask run
 
-Check RESTful interface is active:
+Upload meca archives to neo:
 
-    python -m smartneo.eebapi -L
+    python -m neojats.xml2neo data/meca
+
+Upload sd collection:
+
+    python -m sdg.sdneo <collection name> --api sdapi
+
+Check RESTful interface is active and neo loaded:
+
+    python -m sdg.eebapi -L
 
 Upload and SmartTag COVID19 preprints:
 
-    python -m smartneo.sdneo
+    python -m sdg.sdneo --api eebapi
+
+Process the merged graph:
+
+    cat sdg/SD-processing.cql | cypher-shell -a bolt://localhost:7687 -u neo4j -p <NEO4J_PASSWORD>
+
+Run the app
+
+    cd frontend; npm run serve

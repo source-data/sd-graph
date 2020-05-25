@@ -1,128 +1,81 @@
 import argparse
 import requests
-from .sdnode import SDNode, API
+from .sdnode import (
+    SDNode, API,
+    BaseCollection, BaseArticle, BaseFigure, BasePanel, BaseTag
+)
 from . import SD_API_URL, SD_API_USERNAME, SD_API_PASSWORD
 
 
-# s.headers.update({'Accept': 'application/json'})
-GET_COLLECTION = "collection/"
-GET_LIST = "papers"
-GET_ARTICLE = "paper/"
-GET_FIGURE = "figure/"
-GET_PANEL = "panel/"
+class SDCollection(BaseCollection):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
 
-class SDCollection(SDNode):
-    def __init__(self, data, name, id):
-        super().__init__(data)
-        self.name = name
-        self.id = id
-        children = []
-        for d in data:
-            doi = d.get('doi', None)
-            sdid = d.get('id', None)
-            title = d.get('title', '')
-            if doi:
-                children.append(doi)
-            elif sdid:
-                print(f"using sdid {sdid} instead of doi for: \n{title}.")
-                children.append(sdid)
-            else:
-                import pdb; pdb.set_trace()
-        self.children = children
-
-    def __len__(self):
-        return len(self.children)
-
-
-class SDArticle(SDNode):
+class SDArticle(BaseArticle):
     def __init__(self, data):
         super().__init__(data)
-        self.title = self._data.get('title', '')
-        self.journal = self._data.get('journal', '')
-        self.year = self._data.get('year', '')
-        self.doi = self._data.get('doi', '')
-        self.pmid = self._data.get('pmid' '')
-        self.import_id = self._data.get('pmcid', '')
-        self.nb_figures = int(self._data.get('nbFigures', 0))
-        self.properties = {
-            'doi': self.doi,
+        self.year = self.get('year', '')
+        self.pmid = self.get('pmid', '')
+        self.import_id = self.get('pmcid', '')
+        self.nb_figures = int(self.get('nbFigures', 0)) # SD API uses this...
+        self.update_properties({
             'pmid': self.pmid,
             'import_id': self.import_id,
-            'title': self.title,
-            'journalName': self.journal,
-            'year': self.year,
-            'nb_figures': self.nb_figures
-        }
+            'year': self.year
+        })
         self.children = range(1, self.nb_figures+1)
 
 
-class SDFigure(SDNode):
+class SDFigure(BaseFigure):
     def __init__(self, data):
         super().__init__(data)
-        self.fig_label = self._data.get('label', '')
-        self.caption = self._data.get('caption', '')
-        self.href = self._data.get('href', '')
-        panels = self._data.get('panels', [])
-        self.properties = {
-            'fig_label': self.fig_label,
-            'caption': self.caption,
-            'href': self.href,
-        }
-        self.children = self.rm_empty(panels)
+        self.fig_label = self.get('label', '') # and not fig_label as in JATS
+        self.update_properties({'fig_label': self.fig_label})
 
 
-class SDPanel(SDNode):
+class SDPanel(BasePanel):
     def __init__(self, data):
+        self.panel_id = data.get('current_panel_id', '')
         # the SD API panel method includes 'reverse' info on source paper, figures, and all the other panels
-        # we keep the paper doi and figure label
+        # take the portion of the data returned by the REST API that concerns panels
+        figure = data.get('figure', '')
+        if figure:
+            panels = figure.get('panels', [])
+        else:
+            panels = []
+        # find current panel which is provided in a list and not in a dictionary :-(
+        panel_data = [p for p in panels if p['panel_id']==self.panel_id]
+        if panel_data:
+            panel_data = panel_data[0]
+        else:
+            panel_data = {}
+        # call parent constructor with relevant data
+        super().__init__(panel_data)
+        # override paper_doi using paper info
         paper_info = data.get('paper', {})
         self.paper_doi = paper_info.get('doi', '')
         # we keep the figure label as well
-        figure_info = data.get('figure', '')
+        figure_info = data.get('figure', {})
         self.fig_label = figure_info.get('label', '')
         # find this panel's id using current_panel_id
-        self.panel_id = data['current_panel_id']
-        # take the portion of the data returned by the REST API that concerns panels
-        panels = data['figure']['panels']
-        # find current panel which is provided in a list and not in a dictionary :-(
-        data = [p for p in panels if p['panel_id']==self.panel_id][0]
-        # call parent constructor with relevant data
-        super().__init__(data)
-        self.href = self._data.get('href', '')
-        self.panel_label = self._data.get('label', '')
-        self.caption = self._data.get('caption', '')
         self.formatted_caption = self._data.get('formatted_caption', '')
         coords = self._data.get('coords', {})
         self.coords = ", ".join([f"{k}={v}" for k, v in coords.items()])
-        tags = self._data.get('tags', [])
-        self.properties = {
+        self.tags = self._data.get('tags', [])
+        self.update_properties({
             "paper_doi": self.paper_doi,
             "fig_label": self.fig_label,
             "panel_id": self.panel_id,
-            "panel_label": self.panel_label,
-            "caption": self.caption, 
             "formatted_caption": self.formatted_caption, 
-            "coords": self.coords, 
-            "href": self.href
-        }
-        self.children = self.rm_empty(tags)
+            "coords": self.coords
+        })
+        self.children = self.rm_empty(self.tags)
 
 
-class SDTag(SDNode):
+class SDTag(BaseTag):
     def __init__(self, data):
         super().__init__(data)
-        self.tag_id = self._data.get('id', '')
-        category = self._data.get('category', None)
-        if category == '': # SD API returns category with an empty string for entities...
-            self.category = 'entity'
-        elif category is None:
-            self.category = ''
-        else:
-            self.category = category
-        self.type = self._data.get('type', '')
-        self.role = self._data.get('role', '')
-        self.text = self._data.get('text', '')
         self.ext_ids = "///".join(self._data.get('external_ids', []))
         self.ext_dbs = "///".join(self._data.get('external_databases', [])) 
         self.in_caption = self._data.get('in_caption', '') == "Y" 
@@ -130,12 +83,7 @@ class SDTag(SDNode):
         self.ext_tax_ids = "///".join(self._data.get('external_tax_ids', []))   
         self.ext_tax_names = "///".join(self._data.get('external_tax_names', []))
         self.ext_urls = "///".join(self._data.get('external_urls', []))
-        self.properties = {
-            'tag_id': self.tag_id,
-            'category': self.category, 
-            'type': self.type, 
-            'role': self.role, 
-            'text': self.text, 
+        self.update_properties({
             'ext_ids': self.ext_ids, 
             'ext_dbs': self.ext_dbs, 
             'in_caption': self.in_caption, 
@@ -143,10 +91,16 @@ class SDTag(SDNode):
             'ext_tax_ids': self.ext_tax_ids,
             'ext_tax_names': self.ext_tax_names, 
             'ext_urls': self.ext_urls,
-        }
+        })
 
 
 class SDAPI(API):
+
+    GET_COLLECTION = "collection/"
+    GET_LIST = "papers"
+    GET_ARTICLE = "paper/"
+    GET_FIGURE = "figure/"
+    GET_PANEL = "panel/"
 
     def __init__(self):
         super().__init__()
@@ -157,33 +111,29 @@ class SDAPI(API):
 
     def collection(self, collection_name):
         def get_collection_id(collection_name):
-            url = SD_API_URL + GET_COLLECTION + collection_name
+            url = SD_API_URL + self.GET_COLLECTION + collection_name
             data = self.rest2data(url)
             collection_id = data[0]['collection_id']
             return collection_id
 
         self.collection_id = get_collection_id(collection_name)
-        url = SD_API_URL + GET_COLLECTION + self.collection_id + "/" + GET_LIST
-        data = self.rest2data(url)
-        collection = SDCollection(data, collection_name, self.collection_id)
+        url = SD_API_URL + self.GET_COLLECTION + self.collection_id + "/" + self.GET_LIST
+        collection = self.generate_sdnode(url, SDCollection, collection_name, self.collection_id)
         return collection
 
     def article(self, doi):
-        url = SD_API_URL + GET_COLLECTION + self.collection_id + "/" + GET_ARTICLE + doi
-        data = self.rest2data(url)
-        article = SDArticle(data)
+        url = SD_API_URL + self.GET_COLLECTION + self.collection_id + "/" + self.GET_ARTICLE + doi
+        article = self.generate_sdnode(url, SDArticle)
         return article
 
     def figure(self, figure_index=1, doi=''):
-        url = SD_API_URL + GET_COLLECTION + self.collection_id + "/" + GET_ARTICLE + doi + "/" + GET_FIGURE + str(figure_index)
-        data = self.rest2data(url)
-        figure = SDFigure(data)
+        url = SD_API_URL + self.GET_COLLECTION + self.collection_id + "/" + self.GET_ARTICLE + doi + "/" + self.GET_FIGURE + str(figure_index)
+        figure = self.generate_sdnode(url, SDFigure)
         return figure
 
     def panel(self, id):
-        url = SD_API_URL + GET_PANEL + id
-        data = self.rest2data(url)
-        panel = SDPanel(data)
+        url = SD_API_URL + self.GET_PANEL + id
+        panel = self.generate_sdnode(url, SDPanel)
         return panel
 
     def tag(self, data):
@@ -226,7 +176,7 @@ if __name__ == '__main__':
         print('number of figures:', article.nb_figures)
 
     if fig and doi:
-        figure = sdapi.figure(doi, fig)
+        figure = sdapi.figure(fig, doi)
         print("label:", figure.label)
         print("caption:", figure.caption)
         print("url:", figure.href)

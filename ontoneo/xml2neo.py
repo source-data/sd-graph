@@ -4,6 +4,7 @@ from pathlib import Path
 from io import BytesIO
 from typing import Dict
 from neotools.xml2neo import XMLNode, build_neo_graph
+from neo4j.exceptions import ConstraintError
 from .model import (
     CHEBI_GRAPH_MODEL,
     GO_GRAPH_MODEL,
@@ -34,8 +35,8 @@ def load_ontology(path: Path, graph_model: Dict):
         print()
         xml_node = XMLNode(xml, graph_model, namespaces=namespaces)
         print()
-        DB.query(CONTRAINT_CLASS_UNIQUE)
-        build_neo_graph(xml_node, source, DB)
+        DB.query(CONTRAINT_CLASS_UNIQUE) # some ontologies share classes, will raise neobolt.exceptions.ConstraintError
+        build_neo_graph(xml_node, source, DB, ConstraintError)
         print()
         res = DB.query(REMOVE_DEPRECATED)
         for row in res:
@@ -126,8 +127,6 @@ def self_test():
     res = DB.query(MAKE)
     for row in res:
         print("; ".join([str(row[column]) for column in MAKE.returns]))
-
-
 
 
 if __name__ == '__main__':

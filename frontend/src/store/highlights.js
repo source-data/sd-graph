@@ -33,42 +33,35 @@ export default {
     },
   },
   actions: {
-    getAll ({ commit }) {
+    listByCurrent({ commit, rootGetters }, module) {
       commit('setIsLoading')
-      const url = '/api/v1/by_method'
-      return httpClient.get(url)
-        .then((response) => {
-          const records = response.data.map(preProcessRecord)
-          commit('addRecords', records)
+      const getter_path = [module, 'currentRecord'].join('/')
+      const current = rootGetters[getter_path]
+      console.debug('current', current)
+      if (typeof current !== 'undefined') {
+        const dois = current.papers.map(c => c.doi)
+        const promises = dois.map((doi) => {
+          return httpClient.get(`/api/v1/doi/${doi}`)
         })
-        .finally(() => {
+        return Promise.all(promises).then((responses) => {
+          const records = responses.reduce((acc, r) => {
+            return [preProcessRecord(r.data[0], current), ...acc]
+          }, [])
+
+          commit('addRecords', records)
+          return records
+        }).finally(() => {
           commit('setNotLoading')
         })
+      }
     },
-    listByCurrentMethod ({ commit, rootGetters }) {
-      commit('setIsLoading')
-      const currentMethod = rootGetters['byMethod/currentRecord']
-      const dois = currentMethod.content_ids.map(c => c.doi)
-      const promises = dois.map((doi) => {
-        return httpClient.get(`/api/v1/doi/${doi}`)
-      })
-      return Promise.all(promises).then((responses) => {
-        const records = responses.reduce((acc, r) => {
-          return [preProcessRecord(r.data[0], currentMethod), ...acc]
-        }, [])
-
-        commit('addRecords', records)
-        return records
-      }).finally(() => {
-        commit('setNotLoading')
-      })
-    },
-  },
+  }
 }
 
-function preProcessRecord (record, method) {
+function preProcessRecord (record, current) {
   return Object.assign({}, record, {
     id: record.doi,
-    panel_ids: method.content_ids.find(a => a.doi === record.doi).panel_ids
+    //panel_ids: method.content_ids.find(a => a.doi === record.doi).panels.map(p => p.id),
+    info: current.papers.find(a => a.doi === record.doi).info
   })
 }

@@ -20,3 +20,5 @@ CREATE_FULLTEXT_INDEX_ON_CAPTION = Query(
 CREATE_FULLTEXT_INDEX_ON_NAME = Query(
     code='''CALL db.index.fulltext.createNodeIndex("name", ["Contrib"], ["surname"]);'''
 )
+
+# TODO: neo4j index of doi + version

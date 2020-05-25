@@ -9,7 +9,6 @@ export default {
   },
   getters: {
     records (state) {
-      //return Object.values(state.records).slice().sort((a, b) => a.item_name.toLowerCase().localeCompare(b.item_name.toLowerCase()))
       return Object.values(state.records)
     },
     currentRecord (state) {
@@ -25,6 +24,7 @@ export default {
       records.forEach((record) => {
         recordsById[record.id] = record
       })
+      console.debug('recordsById', recordsById)
       state.records = recordsById
     },
     /* *************************************************************************
@@ -46,7 +46,7 @@ export default {
   actions: {
     getAll ({ commit }) {
       commit('setIsLoading')
-      const url = '/api/v1/by_method'
+      const url = '/api/v1/automagic'
       return httpClient.get(url)
         .then((response) => {
           const records = response.data

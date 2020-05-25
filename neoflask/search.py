@@ -2,7 +2,8 @@ import json
 from typing import Dict, NewType
 from neotools.db import Instance, Query
 from .queries import (
-    BY_DOI, FIG_BY_DOI_IDX, BY_MOLECULE, BY_HYP, 
+    BY_DOI, FIG_BY_DOI_IDX, PANEL_BY_NEO_ID,
+    BY_MOLECULE, BY_HYP, AUTOMAGIC,
     BY_METHOD, SEARCH, PANEL_SUMMARY, COVID19,
 )
 
@@ -56,8 +57,16 @@ class Engine:
         response = self.ask_neo(FIG_BY_DOI_IDX, request)
         return response
 
+    def panel_by_neo_id(self, id):
+        response = self.ask_neo(PANEL_BY_NEO_ID, id)
+        return response
+
     def by_hyp(self, request):
         response = self.ask_neo(BY_HYP, request)
+        return response
+
+    def automagic(self, request):
+        response = self.ask_neo(AUTOMAGIC, request)
         return response
 
     def panel_summary(self, panel_id):

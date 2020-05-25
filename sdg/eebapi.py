@@ -1,137 +1,113 @@
 import argparse
 import json
-from .sdnode import SDNode, API
+from lxml.etree import fromstring
+from neotools.utils import inner_text
+from .sdnode import (
+    SDNode, API,
+    BaseCollection, BaseArticle, BaseFigure, BasePanel, BaseTag
+)
 from smtag.predict.cartridges import CARTRIDGE
 from smtag.predict.engine import SmtagEngine
+from neotools.utils import cleanup
 from . import EEB_PUBLIC_API
 
-
-GET_COLLECTION = "collection/"
-GET_ARTICLE = "doi/"
-GET_FIGURE = "figure"
 
 TAGGING_ENGINE = SmtagEngine(CARTRIDGE)
 
 
-def tag_it(text, format):
-    tags = TAGGING_ENGINE.tag(text, 'sd-tag', format)
+def tag_it(text, format='xml'):
+    text = cleanup(text)
+    tags = TAGGING_ENGINE.smtag(text, 'sd-tag', format)[0] # a single example is submitted to the engine
     if format == 'json':
-        tags = json.loads(tags[0])
-        tags = tags['smtag'][0]['entities']
+        tags = json.loads(tags)
+        tags = tags['smtag']
     return tags
 
 
-class SDCollection(SDNode):
-    def __init__(self, data, name):
-        super().__init__(data)
-        self.name = name
-        children = []
-        for d in data:
-            doi = d.get('doi', None)
-            if doi:
-                children.append(doi)
-            else:
-                import pdb; pdb.set_trace()
-        self.children = children
+def xml2json(xml_str:str):
+    e = fromstring(xml_str)
+    panels = e.xpath('sd-panel')
+    j = []
+    for i, p in enumerate(panels):
+        caption = inner_text(p)
+        tags = p.xpath('sd-tag')
+        j_tags = []
+        for t in tags:
+            j_tags.append({
+                'text': t.text,
+                'category': t.get('category', ''),
+                'type': t.get('type', ''),
+                'role': t.get('role', ''),
+                'category_score': t.get('category_score', ''),
+                'type_score': t.get('type_score', ''),
+                'role_score': t.get('role_score', ''),
+            })
+        j.append({
+            'caption': caption,
+            'label': str(i),
+            'tags': j_tags
+        })
+    return j
 
-    def __len__(self):
-        return len(self.children)
+
+class SDCollection(BaseCollection):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
 
-class SDArticle(SDNode):
+class SDArticle(BaseArticle):
     def __init__(self, data):
         super().__init__(data)
-        self.title = self.get('title', '')
-        self.journal = self.get('journal', '')
-        self.doi = self.get('doi', '')
-        self.nb_figures = int(self.get('nb_figures', 0))  # remember to change this in sdg!
-        self.add_properties({
-            'doi': self.doi,
-            'title': self.title,
-            'journalName': self.journal,
-            'nb_figures': self.nb_figures
-        })
+        self.pub_date = self.get('pub_date', '')
+        self.update_properties({'pub_date': self.pub_date})
         self.children = range(self.nb_figures)
 
 
-class SDFigure(SDNode):
+class SDFigure(BaseFigure):
     def __init__(self, data):
         super().__init__(data)
-        self.paper_doi = self.get('doi', '')
-        self.fig_label = self.get('fig_label', '')
-        self.fig_title = self.get('fig_title', '')
-        self.caption = self.get('caption', '')
-        self.add_properties({
-            'fig_label': self.fig_label,
-            'title': self.fig_title,
-            'caption': self.caption,
-        })
-        self.children = [SDPanel(self)]  # provisional until we fix automatic panelization in general case
-
-
-class SDPanel(SDNode):
-    def __init__(self, fig: SDFigure):
-        super().__init__(fig._data)
-        self.paper_doi = fig.paper_doi
-        self.fig_label = fig.fig_label  # correct typo in sdg!!
-        self.panel_label = 'A' # provisional until we get automatic panelization
-        self.panel_id = ":".join([self.paper_doi, self.fig_label, self.panel_label])
-        self.caption = fig.get('caption', '')
         if self.caption:
-            self.formatted_caption = tag_it(fig.caption, format='xml')
-        else:
-            self.formatted_caption = ''
-        self.add_properties({
-            "paper_doi": self.paper_doi,
-            "fig_label": self.fig_label,
-            "panel_id": self.panel_id,
-            "panel_label": self.panel_label,
-            "caption": self.caption, 
-            "formatted_caption": self.formatted_caption
-        })
-        if self.caption:
-            self.children = tag_it(self.caption, format='json')
-        else:
-            self.children = []
+            self.formatted_caption = tag_it(self.caption, format='xml')
+            self.update_properties({'formatted_caption': self.formatted_caption})
+            panels = xml2json(self.formatted_caption)
+            self.children = panels
+        # self.children = [SDPanel(self)]  # provisional until we fix automatic panelization in general case
 
 
-class SDTag(SDNode):
+class SDPanel(BasePanel):
     def __init__(self, data):
         super().__init__(data)
-        category = self.get('category', None)
-        if category is None:
-            self.category = 'entity'
-        elif category is None:
-            self.category = ''
-        else:
-            self.category = category
+        self.tags = self.get('tags', '')
+        self.children = [SDTag(t) for t in self.tags]
+
+
+class SDTag(BaseTag):
+    def __init__(self, data):
+        super().__init__(data)
         self.category_score = self.get('category_score', '')
-        self.type = self.get('type', '')
         self.type_score = self.get('type_score', '')
-        self.role = self.get('role', '')
         self.role_score = self.get('role_score', '')
-        self.text = self.get('text', '')
-        self.add_properties({
-            'category': self.category, 
+        self.update_properties({
             'category_score': self.category_score,
-            'type': self.type, 
             'type_score': self.type_score,
-            'role': self.role, 
             'role_score': self.role_score,
-            'text': self.text,
         })
 
 
 class EEBAPI(API):
 
+    GET_COLLECTION = "collection/"
+    GET_ARTICLE = "doi/"
+    GET_FIGURE = "figure"
+
     def collection(self, collection_name):
-        url = EEB_PUBLIC_API + GET_COLLECTION + collection_name
+        url = EEB_PUBLIC_API + self.GET_COLLECTION + collection_name
         data = self.rest2data(url)
         article_list = SDCollection(data, collection_name)
         return article_list
 
     def article(self, doi):
-        url = EEB_PUBLIC_API + GET_ARTICLE + doi
+        url = EEB_PUBLIC_API + self.GET_ARTICLE + doi
         data = self.rest2data(url)
         if data:
             article = SDArticle(data)  # most recent version should be first item in list
@@ -141,7 +117,7 @@ class EEBAPI(API):
 
     def figure(self, figure_index=0, doi=''):
         params = {'doi': doi, 'position_idx': figure_index}
-        url = EEB_PUBLIC_API + GET_FIGURE
+        url = EEB_PUBLIC_API + self.GET_FIGURE
         data = self.rest2data(url, params)
         if data:
             figure = SDFigure(data)
@@ -149,21 +125,16 @@ class EEBAPI(API):
             figure = None
         return figure
 
-    def panel(self, panel: SDPanel):
-        # placeholder until we have automated panelization going
+    def panel(self, data):
+        panel = SDPanel(data)
         return panel
 
     def tag(self, data):
-        # because tags are only accessible through a figure, there is no request to the API
-        # the data is provided directly and obtained from prior request figure(doi, position_idx).children
         if data:
             tag = SDTag(data)
         else:
             tag = None
         return tag
-
-    def __len__(self):
-        return self.N
 
 
 if __name__ == '__main__':

@@ -9,7 +9,6 @@ export default {
   },
   getters: {
     records (state) {
-      //return Object.values(state.records).slice().sort((a, b) => a.item_name.toLowerCase().localeCompare(b.item_name.toLowerCase()))
       return Object.values(state.records)
     },
     currentRecord (state) {
@@ -46,7 +45,7 @@ export default {
   actions: {
     getAll ({ commit }) {
       commit('setIsLoading')
-      const url = '/api/v1/by_method'
+      const url = '/api/v1/by_molecule'
       return httpClient.get(url)
         .then((response) => {
           const records = response.data

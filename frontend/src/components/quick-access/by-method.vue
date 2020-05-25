@@ -1,8 +1,8 @@
 <template lang="pug">
-  el-radio-group(@change="onSelect" v-model="selectedMethod")
-    div(v-for="method in methodList")
-      el-radio(:label="method.id")
-        | {{ method.item_name }}
+  el-radio-group(@change="onSelect" v-model="selectedMethod" size="mini")
+      //el-row(v-for="method in methodList").spaced-row
+      el-radio-button(v-for="method in methodList" :label="method.id")
+        | {{ method.name }}
       br
 </template>
 
@@ -12,7 +12,7 @@ import { mapGetters } from 'vuex'
 export default {
   data () {
     return {
-      byMethod: [],
+      //byMethod: [],
       selectedMethod: undefined,
     }
   },

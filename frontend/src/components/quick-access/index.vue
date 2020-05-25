@@ -1,33 +1,69 @@
 <template lang="pug">
   div
     h1 Quick Access
-    el-tabs(type="border-card")
-        el-tab-pane(label="By Method")
-          .filter-list
+    el-tabs(type="border-card" @tab-click="onSelectTab")
+        el-tab-pane(label="By Method").filter-list
             QuickAccessByMethod(@change="onChangeByMethod")
-        el-tab-pane(label="By Molecule") Coming soon ...
-        el-tab-pane(label="By observation and tested hypothesis") Coming soon ...
+        el-tab-pane(label="By tested hypothesis").filter-list
+            QuickAccessByHyp(@change="onChangeByHyp")
+        el-tab-pane(label="By Molecule").filter-list
+            QuickAccessByMol(@change="onChangeByMol")
+        el-tab-pane(label="Automagic selection")
+            QuickAccessByAutomagic
+
 </template>
 
 <script>
+import QuickAccessByAutomagic from './by-automagic.vue'
 import QuickAccessByMethod from './by-method.vue'
+import QuickAccessByMol from './by-mol.vue'
+import QuickAccessByHyp from './by-hyp.vue'
+
 
 export default {
   name: 'app',
   components: {
+    QuickAccessByAutomagic,
     QuickAccessByMethod,
+    QuickAccessByMol,
+    QuickAccessByHyp,
   },
   methods: {
+    onSelectTab (selectedTab) {
+      console.debug('onChangeByAutomagic', selectedTab)
+      //
+      if (selectedTab.label=="Automagic selection") {
+        this.$store.commit('byAutomagic/showRecord', { id: "1" }) // single automatic record anyway, but who knows what the future reserves
+        this.$store.dispatch('highlights/listByCurrent', 'byAutomagic')
+      }
+    },
     onChangeByMethod (selectedItemId) {
       console.debug('onChangeByMethod',selectedItemId)
       //
       this.$store.commit('byMethod/showRecord', { id: selectedItemId })
-      this.$store.dispatch('highlights/listByCurrentMethod')
+      this.$store.dispatch('highlights/listByCurrent',  'byMethod')
+    },
+    onChangeByMol (selectedItemId) {
+      console.debug('onChangeByMol',selectedItemId)
+      //
+      this.$store.commit('byMol/showRecord', { id: selectedItemId })
+      this.$store.dispatch('highlights/listByCurrent', 'byMol')
+    },
+    onChangeByHyp (selectedItemId) {
+      console.debug('onChangeByHyp',selectedItemId)
+      //
+      this.$store.commit('byHyp/showRecord', { id: selectedItemId })
+      this.$store.dispatch('highlights/listByCurrent', "byHyp")
     },
   },
-
 }
 </script>
+
+<style lang="scss">
+.spaced-row {
+  padding: 1px;
+}
+</style>
 
 <style scoped lang="scss">
 .filter-list {

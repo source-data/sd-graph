@@ -13,7 +13,7 @@ export default {
       return Object.values(state.records)
     },
     currentRecord (state) {
-      return state.records[state.currentRecordId]
+      return state.records//[state.currentRecordId]
     }
   },
   mutations: {
@@ -21,11 +21,17 @@ export default {
     * RECORDS
     */
    addRecords (state, records) {
-      const recordsById = {}
-      records.forEach((record) => {
-        recordsById[record.id] = record
-      })
-      state.records = recordsById
+      // const recordsById = {}
+      // records.forEach((record) => {
+      //   recordsById[record.id] = record
+      // })
+      // need to sort and truncate records here
+      console.debug('records unsorted', records)
+      const sorted = Object.values(records).slice().sort((a, b) => b.score - a.score)
+      console.debug('sorted', sorted)
+      const top10 = sorted.slice(0, 10)
+      console.debug('top10', top10)
+      state.records = {papers: top10}
     },
     /* *************************************************************************
     * NAVIGATION
@@ -36,18 +42,22 @@ export default {
     setNotLoading (state) {
       state.loadingRecords = false
     },
-    showRecord (state, { id }) {
-      state.currentRecordId = id
-    },
+    // showRecord (state, { id }) {
+    //   state.currentRecordId = id
+    // },
     closeRecordView (state) {
       state.currentRecordId = null
     },
   },
   actions: {
-    getAll ({ commit }) {
+    search({ commit }, query) {
       commit('setIsLoading')
-      const url = '/api/v1/by_method'
-      return httpClient.get(url)
+      const url = '/api/v1/search'
+      return httpClient.get(url, {
+          params: {
+              query: query
+          }
+      })
         .then((response) => {
           const records = response.data
           commit('addRecords', records)
