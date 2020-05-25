@@ -12,7 +12,6 @@ import { mapGetters } from 'vuex'
 export default {
   data () {
     return {
-      //byMol: [],
       selectedMol: undefined,
     }
   },

@@ -33,7 +33,6 @@ export default {
       console.debug('onChangeByAutomagic', selectedTab)
       //
       if (selectedTab.label=="Automagic selection") {
-        this.$store.commit('byAutomagic/showRecord', { id: "1" }) // single automatic record anyway, but who knows what the future reserves
         this.$store.dispatch('highlights/listByCurrent', 'byAutomagic')
       }
     },
