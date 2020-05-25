@@ -111,21 +111,21 @@ BY_HYP = Query(
     code='''
 MATCH
     (a:SDArticle {journalName: "biorxiv"})-->(f:SDFigure)-->(p:SDPanel),
-    (p)-->(i:CondTag {role: "intervention"})-->(ctrl_v:H_Entity),
-    (p)-->(m:CondTag {role: "assayed"})-->(meas_v:H_Entity)
+    (p)-->(i:CondTag {role: "intervention"})-->(ctrl:H_Entity),
+    (p)-->(m:CondTag {role: "assayed"})-->(meas:H_Entity)
 WHERE
-    ctrl_v.name <> meas_v.name // could still be 2 entities normalized differently
+    ctrl.name <> meas.name // could still be 2 entities normalized differently
 WITH DISTINCT
-    a,
-    COLLECT(DISTINCT p) AS panels,
-    COUNT(DISTINCT p) AS N_panels,
-    ctrl_v,
-    meas_v
-WHERE N_panels > 2
-WITH DISTINCT a, {ctrl_v: ctrl_v.name, meas_v: meas_v.name} AS hyp, [p IN panels | {id: id(p), text: p.caption}] AS panel_captions, N_panels
-ORDER BY N_panels DESC
-WITH a, COLLECT(hyp)[0] AS dominant, COLLECT(panel_captions)[0] AS panels
-ORDER BY a.pub_date DESC
+    a, COLLECT(DISTINCT p) AS panels, COUNT(DISTINCT p) AS N_panels,
+    ctrl, meas
+WITH a, panels, N_panels, COLLECT(DISTINCT ctrl.name) AS ctrl_v, COLLECT(DISTINCT meas.name) AS meas_v
+WHERE N_panels > 1
+WITH a, panels, N_panels, ctrl_v, meas_v
+MATCH (a)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(assay:H_Entity {category: "assay"})
+WITH DISTINCT a, {ctrl_v: ctrl_v, meas_v: meas_v} AS hyp, [p IN panels | {id: id(p), text: p.caption}] AS panel_captions, N_panels, COUNT(DISTINCT assay) AS N_assay
+ORDER BY N_panels DESC, a.pub_date DESC
+WITH a, COLLECT(hyp)[0] AS dominant, COLLECT(panel_captions)[0] AS panels, N_assay
+WHERE N_assay > 3
 WITH dominant, COLLECT({doi: a.doi, info: panels}) AS papers
 WITH COLLECT([dominant, papers]) AS all_results
 UNWIND range(0, size(all_results)-1) as i
@@ -176,11 +176,10 @@ WHERE
   (NOT syn2.text IN exclusion_list)
 WITH DISTINCT [query, secondary] AS queries, syn1, syn2
 UNWIND queries AS query
-WITH query, syn1, syn2
+WITH DISTINCT query, syn1, syn2
 WHERE NOT query is NULL
 WITH DISTINCT query,  [query.name] + COLLECT(syn1.text) + COLLECT(syn2.text) AS all_synonyms
-UNWIND
-   all_synonyms AS syn
+UNWIND all_synonyms AS syn
 WITH DISTINCT query, syn
 ORDER BY syn
 WITH DISTINCT query, COLLECT(DISTINCT syn) AS synonym_sets
