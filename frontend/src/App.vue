@@ -21,7 +21,7 @@
           el-divider
       el-row
         el-col(:span="16" :offset="4")
-          SearchBar(@submit="onSubmit")
+          SearchBar
       el-row
         el-col(:span="16" :offset="4")
           QuickAccess
@@ -51,16 +51,6 @@ export default {
     thisYear () {
       return new Date().getFullYear()
     },
-  },
-  methods: {
-    onSubmit(query) {
-      this.$store.dispatch('fulltextSearch/search', query).then(
-        () => {
-          // this.$store.commit('fulltextSearch/showRecord', { id: 'search_results' }) // bogus id, but oh well...
-          this.$store.dispatch('highlights/listByCurrent', 'fulltextSearch')
-        }
-      )
-    }
   },
   beforeCreate () {
     this.$store.dispatch('byMethod/getAll'),
