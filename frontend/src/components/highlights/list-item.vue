@@ -4,8 +4,13 @@
       el-row()
         el-col(:span="24")
             h4 {{ article.title }} 
-            small
-              a(:href="full_url(article.doi)" target="_blank") {{ article.doi }}
+            el-row(type="flex" justify="space-between")
+              el-col(:span="4")
+                small 
+                  el-link(type="primary" :href="full_url(article.doi).href" target="_blank") {{ article.doi }} 
+              el-col(:span="6")
+                small Posted 
+                  b {{ display_date(article.pub_date) }}.
             p
               small {{ authorList }}
       el-row()
@@ -34,6 +39,14 @@ export default {
   methods: {
       full_url (doi) {
           return new URL(doi, "https://doi.org/")
+      },
+      display_date(date_str) {
+          const date = new Date(date_str)
+          const year = date.getFullYear()
+          const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+          const month = months[date.getMonth()]
+          const day = date.getDay()
+          return month + ' ' + day + ', ' + year 
       }
   },
   computed: {

@@ -149,7 +149,7 @@ WITH DISTINCT a, {ctrl_v: ctrl_v, meas_v: meas_v} AS hyp, [p IN panels | {id: id
 ORDER BY N_panels DESC, a.pub_date DESC
 WITH a, COLLECT(hyp)[0] AS dominant, COLLECT(panel_captions)[0] AS panels, N_assay
 WHERE N_assay > 3
-WITH dominant, COLLECT({doi: a.doi, info: panels}) AS papers
+WITH dominant, COLLECT({doi: a.doi, info: panels, pub_date: a.pub_date}) AS papers
 WITH COLLECT([dominant, papers]) AS all_results
 LIMIT 10
 UNWIND range(0, size(all_results)-1) as i
@@ -223,7 +223,7 @@ WHERE
   datetime(paper.pub_date) > datetime('2020-04-01')
 WITH DISTINCT
   query_group,
-  COLLECT(DISTINCT {doi: paper.doi, title:paper.title, syn: synonyms_in_paper, info: panels}) AS papers,
+  COLLECT(DISTINCT {doi: paper.doi, title:paper.title, syn: synonyms_in_paper, info: panels, pub_date: paper.pub_date}) AS papers,
   COUNT(DISTINCT paper) AS N_papers
 ORDER BY N_papers DESC
 LIMIT 20
@@ -268,7 +268,7 @@ ORDER BY id(entity)
 WITH DISTINCT a, COLLECT(DISTINCT entity) AS entity_group, synonyms
 WITH DISTINCT a, COLLECT(DISTINCT entity_group) AS entity_groups, COUNT(DISTINCT entity_group) AS N_entities, COLLECT(DISTINCT synonyms) AS synonym_groups
 ORDER BY N_entities DESC
-WITH COLLECT(DISTINCT {title: a.title, doi: a.doi, info: synonym_groups, N_entities: N_entities}) as preprint_list
+WITH COLLECT(DISTINCT {title: a.title, doi: a.doi, info: synonym_groups, pub_date: a.pub_date, N_entities: N_entities}) as preprint_list
 WITH preprint_list, range(1, size(preprint_list)) AS ranks
 UNWIND ranks as i
 WITH COLLECT({rank: i, preprint: preprint_list[i-1]}) AS ranked_by_assay
@@ -302,7 +302,7 @@ ORDER BY id(entity)
 WITH DISTINCT a, COLLECT(DISTINCT entity) AS entity_group, synonyms, ranked_by_assay
 WITH DISTINCT a, COLLECT(DISTINCT entity_group) AS entity_groups, COUNT(DISTINCT entity_group) AS N_entities, COLLECT(DISTINCT synonyms) AS synonym_groups, ranked_by_assay
 ORDER BY N_entities DESC
-WITH COLLECT(DISTINCT {title: a.title, doi: a.doi, info: synonym_groups, N_entities: N_entities}) as preprint_list, ranked_by_assay
+WITH COLLECT(DISTINCT {title: a.title, doi: a.doi, info: synonym_groups, pub_date: a.pub_date, N_entities: N_entities}) as preprint_list, ranked_by_assay
 WITH preprint_list, range(1, size(preprint_list)) AS ranks, ranked_by_assay
 UNWIND ranks as i
 WITH COLLECT({rank: i, preprint: preprint_list[i-1]}) AS ranked_by_entities, ranked_by_assay
@@ -313,7 +313,7 @@ WITH COLLECT({rank: i, preprint: preprint_list[i-1]}) AS ranked_by_entities, ran
 WHERE (ranked_by_entities <> []) AND (ranked_by_assay <> [])
 WITH ranked_by_entities + ranked_by_assay AS ranked
 UNWIND ranked as item
-WITH DISTINCT {doi: item.preprint.doi, info: COLLECT(DISTINCT {text: item.preprint.info}), rank: SUM(item.rank)} as paper, COLLECT(item.rank) AS ranks
+WITH DISTINCT {doi: item.preprint.doi, info: COLLECT(DISTINCT {text: item.preprint.info, pub_date: item.preprint.pub_date}), rank: SUM(item.rank)} as paper, COLLECT(item.rank) AS ranks
 WHERE size(ranks)=2
 WITH paper, ranks
 ORDER BY paper.rank ASC

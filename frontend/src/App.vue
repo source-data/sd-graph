@@ -17,11 +17,11 @@
     el-container
       el-aside(width="170px" style="border-right-style: solid; border-right-width: 1px")
         p
-          a(href="") About
+          el-link(type="primary" href="") About
         p
-          a(href="") For developers
+          el-link(type="primary" href="") For developers
         p
-          a(href="") Contact
+          el-link(type="primary" href="") Contact
 
       el-main
         el-row
