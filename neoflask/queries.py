@@ -34,10 +34,15 @@ BY_DOI = Query(
     code='''
 //by doi
 //
-MATCH (a:Article {doi: $doi})-->(author:Contrib)
-OPTIONAL MATCH (author)-->(id:Contrib_id)
+MATCH (preprint:Article {doi: $doi})
+WITH preprint, preprint.version AS version
+ORDER BY version DESC
+WITH COLLECT(preprint)[0] AS a
+MATCH
+   (a)-->(auth:Contrib)
+OPTIONAL MATCH (auth)-->(id:Contrib_id)
 OPTIONAL MATCH (a)-->(f:Fig)
-WITH
+WITH DISTINCT
     id(a) AS id,
     a.doi AS doi,
     a.version AS version,
@@ -45,15 +50,14 @@ WITH
     a.title AS title,
     a.abstract AS abstract,
     a.publication_date AS pub_date,
-    author.surname AS surname,
-    author.given_names AS given_name,
-    author.position_idx AS author_rank,
-    author.corresp = "yes" AS corr_author,
-    COUNT(f) AS nb_figures,
-    id.text AS ORCID
-ORDER BY version DESC, author_rank DESC
-RETURN id, doi, version, journal, title, abstract, COLLECT([surname, given_name, ORCID, corr_author]) AS authors, pub_date, nb_figures
-
+    auth,
+    id.text AS ORCID,
+    COUNT(f) AS nb_figures
+ORDER BY auth.position_idx
+RETURN DISTINCT 
+    id, doi, version, journal, title, abstract, pub_date, 
+    COLLECT(DISTINCT auth {.surname, .given_names, .position_idx, .corresp, ORCID: ORCID}) AS authors, 
+    nb_figures
     ''',
     map={'doi': []},
     returns=['id', 'doi', 'version', 'journal', 'title', 'abstract', 'authors', 'pub_date', 'nb_figures']
@@ -243,13 +247,13 @@ AUTOMAGIC = Query(
 ///////////////////////PART A: RANK BY NUMBER OF ASSAYS///////////////////////////////
 
 //start with only most recent version
-MATCH (preprint:SDArticle {journalName: "biorxiv"})
-WITH preprint
-ORDER BY preprint.version DESC
-WITH DISTINCT preprint.doi AS doi, COLLECT(DISTINCT preprint)[0] AS a //keep only the most recent
+//MATCH (preprint:SDArticle {journalName: "biorxiv"})
+//WITH preprint
+//ORDER BY preprint.version DESC
+//WITH DISTINCT preprint.doi AS doi, COLLECT(DISTINCT preprint)[0] AS a //keep only the most recent
 
 // find entities
-MATCH (a)-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity {category: "assay"})-[:Has_text]->(name:Term)
+MATCH (a:SDArticle {journalName: "biorxiv"})-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity {category: "assay"})-[:Has_text]->(name:Term)
 WITH
   a, entity, name
 //find synonyms
