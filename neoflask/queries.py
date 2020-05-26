@@ -109,16 +109,39 @@ RETURN DISTINCT
 
 BY_HYP = Query(
     code='''
+//Exclusion list based on SourceData normalized entities
+MATCH (syn:Term)<--(entity:H_Entity)<--(ct:CondTag)
+WHERE 
+  entity.ext_ids <> ""
+WITH DISTINCT entity.name AS name, COLLECT(DISTINCT syn.text) AS synonyms, COLLECT(DISTINCT ct) AS cts, 1.0*COUNT(DISTINCT ct) AS N
+UNWIND cts as ct
+WITH DISTINCT name, synonyms, N, ct.role as role, 1.0*COUNT(DISTINCT ct) AS N_role
+WITH name, synonyms, role, N, N_role, 100.0*(N_role / N) AS fract
+ORDER BY N DESC, fract DESC
+WITH name, synonyms, N, COLLECT(role)[0] AS dominant_role, COLLECT(fract)[0] AS dom_fract
+WHERE 
+  (dominant_role = "normalizing" OR dominant_role = "reporter")
+  AND
+  dom_fract > 75 AND N > 10.0
+WITH COLLECT(name) + synonyms AS all
+UNWIND all as terms
+WITH COLLECT(DISTINCT terms) AS exclusion_list
+
 MATCH
-    (a:SDArticle {journalName: "biorxiv"})-->(f:SDFigure)-->(p:SDPanel),
-    (p)-->(i:CondTag {role: "intervention"})-->(ctrl:H_Entity),
-    (p)-->(m:CondTag {role: "assayed"})-->(meas:H_Entity)
+  (a:SDArticle {journalName: "biorxiv"})-->(f:SDFigure)-->(p:SDPanel),
+    path_1=(p)-->(i:CondTag {role: "intervention"})-->(ctrl:H_Entity)-->(ctrl_term:Term),
+  path_2=(p)-->(m:CondTag {role: "assayed"})-->(meas:H_Entity)-->(meas_term:Term)
 WHERE
-    ctrl.name <> meas.name // could still be 2 entities normalized differently
+  ctrl.name <> meas.name // could still be 2 entities normalized differently
+  AND
+  NONE (n IN nodes(path_1) WHERE labels(n)=['Term'] AND (n.text IN exclusion_list))
+  AND
+  NONE (n IN nodes(path_2) WHERE labels(n)=['Term'] AND (n.text IN exclusion_list))
 WITH DISTINCT
     a, COLLECT(DISTINCT p) AS panels, COUNT(DISTINCT p) AS N_panels,
-    ctrl, meas
-WITH a, panels, N_panels, COLLECT(DISTINCT ctrl.name) AS ctrl_v, COLLECT(DISTINCT meas.name) AS meas_v
+    ctrl.name AS ctrl_name, meas.name AS meas_name
+ORDER BY ctrl_name, meas_name
+WITH a, panels, N_panels, COLLECT(DISTINCT ctrl_name) AS ctrl_v, COLLECT(DISTINCT meas_name) AS meas_v
 WHERE N_panels > 1
 WITH a, panels, N_panels, ctrl_v, meas_v
 MATCH (a)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(assay:H_Entity {category: "assay"})
@@ -128,6 +151,7 @@ WITH a, COLLECT(hyp)[0] AS dominant, COLLECT(panel_captions)[0] AS panels, N_ass
 WHERE N_assay > 3
 WITH dominant, COLLECT({doi: a.doi, info: panels}) AS papers
 WITH COLLECT([dominant, papers]) AS all_results
+LIMIT 10
 UNWIND range(0, size(all_results)-1) as i
 RETURN i as id, all_results[i][0] AS hyp, all_results[i][1] AS papers
     ''',
