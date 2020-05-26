@@ -7,6 +7,7 @@ from .sdnode import (
 from . import SD_API_URL, SD_API_USERNAME, SD_API_PASSWORD
 
 
+
 class SDCollection(BaseCollection):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -22,7 +23,8 @@ class SDArticle(BaseArticle):
         self.update_properties({
             'pmid': self.pmid,
             'import_id': self.import_id,
-            'year': self.year
+            'year': self.year,
+            'nb_figures': self.nb_figures
         })
         self.children = range(1, self.nb_figures+1)
 
