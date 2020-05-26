@@ -3,11 +3,13 @@
     el-row(v-if="article")
       el-row()
         el-col(:span="24")
-            h4 {{ article.title }} 
+            h3 {{ article.title }} 
             el-row(type="flex" justify="space-between")
               small() Posted 
-                b {{ display_date(article.pub_date) }} on 
-                |  {{ article.journal }}: 
+                b {{ display_date(article.pub_date) }}
+                |  on 
+                i {{ display_journal(article.journal) }}
+                b  doi:  
                 el-link(type="primary" :href="full_url(article.doi).href" target="_blank") http://doi.org/{{ article.doi }} 
             p
               small {{ authorList }}
@@ -17,8 +19,7 @@
         el-col(:span="2")
           p
         el-col(:span="12")
-          p 
-            label(for="carousel") {{ info.length }} information cards:
+          label(for="carousel") {{ info.length }} information cards:
           el-carousel(indicator-position="outside" arrow="hover" :autoplay="false" height="" id="carousel")
             el-carousel-item(v-for="card in info" :key="card.id" style="text-align:left")
               el-card(class="box-card" shadow="always")
@@ -45,6 +46,12 @@ export default {
           const month = months[date.getMonth()]
           const day = date.getDay()
           return month + ' ' + day + ', ' + year 
+      },
+      display_journal(key) {
+        const journal_labels = {
+          biorxiv: 'bioRxiv', medrxiv: 'medRxiv'
+        }
+        return journal_labels[key]
       }
   },
   computed: {

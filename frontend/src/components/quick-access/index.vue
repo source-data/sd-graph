@@ -3,13 +3,13 @@
     h1 Quick Access
     el-tabs(type="border-card" @tab-click="onSelectTab")
         el-tab-pane(label="By Method").filter-list
-            QuickAccessByMethod(@change="onChangeByMethod")
+          QuickAccessByMethod(@change="onChangeByMethod")
         el-tab-pane(label="By tested hypothesis").filter-list
-            QuickAccessByHyp(@change="onChangeByHyp")
+          QuickAccessByHyp(@change="onChangeByHyp")
         el-tab-pane(label="By Molecule").filter-list
-            QuickAccessByMol(@change="onChangeByMol")
+          QuickAccessByMol(@change="onChangeByMol")
         el-tab-pane(label="Automagic selection")
-            QuickAccessByAutomagic
+          QuickAccessByAutomagic
 
 </template>
 
@@ -67,7 +67,7 @@ export default {
 <style scoped lang="scss">
 .filter-list {
   max-height: 10em;
-  padding-bottom: 1em;
   overflow: scroll;
+  padding: 1em;
 }
 </style>
