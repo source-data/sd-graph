@@ -1,12 +1,11 @@
 <template lang="pug">
-  el-form(:inline="true" :model="search")
-    el-form-item(label="search preprints: ")
-      el-input(v-model="search.input"
-        placeholder="enter search terms"
-      )
-    el-form-item
-      el-button(type="primary" @click="onSubmit") Search
-      el-button(@click="cancel") Cancel
+  div
+    h1 Search
+    el-form(:inline="true" :model="search")
+      el-form-item
+        el-input(v-model="search.input" placeholder="enter search terms" clearable=true prefix-icon="el-icon-search")
+      el-form-item
+        el-button(type="primary" @click="onSubmit") Search
 </template>
 
 <script>
@@ -29,10 +28,6 @@ export default {
         }
       )
     },
-    cancel () {
-      this.search.input = ''
-    }
-
   }
 }
 </script>
