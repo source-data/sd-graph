@@ -5,12 +5,10 @@
         el-col(:span="24")
             h4 {{ article.title }} 
             el-row(type="flex" justify="space-between")
-              el-col(:span="4")
-                small 
-                  el-link(type="primary" :href="full_url(article.doi).href" target="_blank") {{ article.doi }} 
-              el-col(:span="6")
-                small Posted 
-                  b {{ display_date(article.pub_date) }}.
+              small() Posted 
+                b {{ display_date(article.pub_date) }} on 
+                |  {{ article.journal }}: 
+                el-link(type="primary" :href="full_url(article.doi).href" target="_blank") http://doi.org/{{ article.doi }} 
             p
               small {{ authorList }}
       el-row()
