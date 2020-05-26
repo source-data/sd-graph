@@ -56,7 +56,7 @@ export default {
   },
   computed: {
     authorList () {
-      return this.article.authors.map(author => `${author[0]} ${author[1]}`).join(', ')
+      return this.article.authors.map(author => `${author.surname} ${author.given_names}${(author.corresp=='yes'?'*':'')}`).join(', ')
     },
     info () {
       return this.article.info
