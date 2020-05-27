@@ -73,7 +73,7 @@ class SDNeo:
                 items.append(a)
             else:
                 skipped.append(item)
-        time.sleep(0.1)
+        # time.sleep(0.1)
         if items:
             label = items[0].label
             batch = [n.properties for n in items]

@@ -221,5 +221,5 @@ MERGE(:Resolver {name: "Disease ontology", url: "http://purl.bioontology.org/ont
 //Link H_Entity to ontologies
 
 //Full text indexing
-CALL db.index.fulltext.createNodeIndex("entity_name",["H_Entity"],["name"]);
-CALL db.index.fulltext.createNodeIndex("synonym",["Term"],["text"]);
+CALL db.index.fulltext.createNodeIndex("entity_name",["H_Entity"],["name"], {analyzer: "english"});
+CALL db.index.fulltext.createNodeIndex("synonym",["Term"],["text"], {analyzer: "english"});

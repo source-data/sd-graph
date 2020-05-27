@@ -11,7 +11,7 @@ class SDNode:
         self._data = data
         if isinstance(self._data, list) and self._data:
             self._data = self._data[0]
-        self.properties = {'source': 'sdneo'}
+        self.properties = {}
         self.label = self.__class__.__name__
         self.children = []
 
