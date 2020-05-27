@@ -72,6 +72,7 @@ class MECALoader:
 
     def load_dir(self):
         skipped = 0
+        count = 0
         for count, meca_archive in enumerate(self.archives):
             if self.check_for_duplicate and self.already_loaded(meca_archive):
                 print(f"WARNING: {meca_archive.name} already loaded. Skipping.", end="\r")
@@ -91,7 +92,10 @@ class MECALoader:
                 except BadZipFile:
                     logger.error(f"not a zip file: {meca_archive}")
         print()
-        print(f"skipped {skipped} out of {count+1}")
+        if count is not None:
+           print(f"skipped {skipped} out of {count+1}")
+        else:
+            print(f"No archives found!")
 
 
 def add_indices():
