@@ -56,7 +56,7 @@ WITH DISTINCT
 ORDER BY auth.position_idx
 RETURN DISTINCT 
     id, doi, version, journal, title, abstract, pub_date, 
-    COLLECT(DISTINCT auth {.surname, .given_names, .position_idx, .corresp, ORCID: ORCID}) AS authors, 
+    COLLECT(DISTINCT auth {.surname, .given_names, .position_idx, .corresp, orcid: ORCID}) AS authors,
     nb_figures
     ''',
     map={'doi': []},
