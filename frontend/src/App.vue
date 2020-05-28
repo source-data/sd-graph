@@ -4,16 +4,16 @@
       el-col(:span="4")
         p
           a(href="https://embo.org" target="_blank" )
-            img(src="./assets/EMBO_logo_RGBmonoblack_outlined.jpg" height="80px").center-img
+            img(src="./assets/embo-logo.gif" height="80px").center-img
       el-col(:span="16")
         h1(style="text-align: center") Early Evidence Base: SARS-CoV-2
         p(style="text-align: center") A structured resource of early results on the biology of SARS-CoV-2
       el-col(:span="4")
         p 
           a(href="https://sourcedata.io" target="_blank" )
-            img(src="./assets/sourcedata_logo_rgb.png" width="200px").center-img
+            img(src="./assets/sourcedata-logo.png" width="200px").center-img
         //p 
-        //  img(src="./assets/embopress_logo_cmyk.jpg" width="120px").center-img
+        //  img(src="./assets/embopress-logo.jpg" width="120px").center-img
     el-container
       el-aside(width="170px" style="border-right-style: solid; border-right-width: 1px")
         p
