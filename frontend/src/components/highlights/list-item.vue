@@ -10,7 +10,7 @@
                 |  on 
                 i {{ display_journal(article.journal) }}
                 b  doi:  
-                el-link(type="primary" :href="full_url(article.doi).href" target="_blank") http://doi.org/{{ article.doi }} 
+                el-link(type="primary" :href="href(article.doi)" target="_blank") http://doi.org/{{ article.doi }} 
             p
               small {{ author_list }}
       el-row()
@@ -45,9 +45,8 @@ export default {
     }
   },
   methods: {
-      debugCards(val) {console.debug("card", val)},
-      full_url (doi) {
-          return new URL(doi, "https://doi.org/")
+      href(doi) {
+          return new URL(doi, "https://doi.org/").href
       },
       display_date(date_str) {
           const date = new Date(date_str)
