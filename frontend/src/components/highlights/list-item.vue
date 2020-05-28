@@ -12,18 +12,22 @@
                 b  doi:  
                 el-link(type="primary" :href="full_url(article.doi).href" target="_blank") http://doi.org/{{ article.doi }} 
             p
-              small {{ authorList }}
+              small {{ author_list }}
       el-row()
         el-col(:span="10")
           small(style="line-height:1.5") {{ article.abstract }}
         el-col(:span="2")
           p
         el-col(:span="12")
-          label(for="carousel") {{ info.length }} information cards:
-          el-carousel(indicator-position="outside" arrow="hover" :autoplay="false" height="" id="carousel")
-            el-carousel-item(v-for="card in info" :key="card.id" style="text-align:left")
-              el-card(class="box-card" shadow="always")
-                small {{ card.text }}
+          label(for="info-cards") {{ info.length }} information cards:
+          el-collapse(id="infor-cards" v-model="activeCards")
+            el-collapse-item(v-for="card in info"  :title="'for debugging : ' + card.id", :name="card.id" @change="debugCards")
+              small {{ card.text }}
+          
+          //- el-carousel(indicator-position="outside" arrow="hover" :autoplay="false" height="" id="info-cards")
+          //-   el-carousel-item(v-for="card in info" :key="card.id" style="text-align:left")
+          //-     el-card(class="box-card" shadow="always")
+          //-       small {{ card.text }}
             //- a(:href="panel.url")
             //-   el-image(:src="panel.img_url" fit="contain")
             //- p
@@ -35,7 +39,13 @@ export default {
   props: {
     article: Object,
   },
+  data() {
+    return {
+      activeCards: [this.article.info[0].id]
+    }
+  },
   methods: {
+      debugCards(val) {console.debug("card", val)},
       full_url (doi) {
           return new URL(doi, "https://doi.org/")
       },
@@ -55,7 +65,7 @@ export default {
       }
   },
   computed: {
-    authorList () {
+    author_list () {
       return this.article.authors.map(author => `${author.surname} ${author.given_names}${(author.corresp=='yes'?'*':'')}`).join(', ')
     },
     info () {
