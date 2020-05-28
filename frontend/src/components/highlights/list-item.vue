@@ -19,7 +19,7 @@
         el-col(:span="2")
           p
         el-col(:span="12")
-          label(for="info-cards") {{ info.length }} information cards:
+          label(for="info-cards" style="font-variant: small-caps") {{ info.length }} information card{{ info.length > 1 ? 's':''}}:
           el-collapse(id="infor-cards" v-model="activeCards")
             el-collapse-item(v-for="card in info"  :title="'for debugging : ' + card.id", :name="card.id" @change="debugCards")
               small {{ card.text }}
