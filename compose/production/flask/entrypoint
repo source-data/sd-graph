@@ -14,4 +14,7 @@ check_service_status () {
 # Check for neo4j
 check_service_status tcp neo4j 7687 60s
 
+# Check for redis
+check_service_status tcp redis 6379 60s
+
 exec "$@"
