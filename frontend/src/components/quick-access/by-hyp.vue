@@ -2,11 +2,11 @@
   el-radio-group(@change="onSelect" v-model="selectedHyp")
     el-row(v-for="hyp in hypList").spaced-row
         el-radio(:label="hyp.id")
-          el-tag(size="mini" type="danger" effect="dark") {{ hyp.hyp.ctrl_v }}
+          el-tag(v-for="ctrl_var in hyp.hyp.ctrl_v" size="mini" type="danger" effect="dark") {{ ctrl_var }}
           i(class="el-icon-minus")
           i(class="el-icon-question")
           i(class="el-icon-right")
-          el-tag(size="mini" type="" effect="dark") {{ hyp.hyp.meas_v }} 
+          el-tag(v-for="meas_var in hyp.hyp.meas_v" size="mini" type="" effect="dark") {{ meas_var }} 
     br
 </template>
 
@@ -16,7 +16,6 @@ import { mapGetters } from 'vuex'
 export default {
   data () {
     return {
-      //byHyp: [],
       selectedHyp: undefined,
     }
   },

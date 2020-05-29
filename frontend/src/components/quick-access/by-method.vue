@@ -12,7 +12,6 @@ import { mapGetters } from 'vuex'
 export default {
   data () {
     return {
-      //byMethod: [],
       selectedMethod: undefined,
     }
   },

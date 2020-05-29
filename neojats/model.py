@@ -25,6 +25,14 @@ def get_inner_text(e: Element):
     return inner_text(e)
 
 
+def get_inner_text_without_sup_xref(e: Element):
+    # remove <sup><xref ref-type="bibr" rid="c1">1</xref></sup>
+    sup_xref_elements = e.xpath('.//sup/xref')
+    for sup_xref in sup_xref_elements:
+        sup_xref.getparent().remove(sup_xref)
+    return get_inner_text(e)
+
+
 def get_datetime(e: Element):
     # datetime('2015-06-24T12:50:35.556+0100')
     # <date date-type="accepted">
@@ -48,7 +56,7 @@ def get_caption(e: Element):
             tail = p.tail or ''
             caption += tail
     else:
-        caption = inner_text(e)
+        caption = get_inner_text_without_sup_xref(e)
     return caption
 
 
@@ -67,7 +75,7 @@ JATS_GRAPH_MODEL = {
         'doi': ('front/article-meta/article-id[@pub-id-type="doi"]', get_text),
         'version': ('front/article-meta/article-version', get_text),
         'title': ('front/article-meta/title-group/article-title', get_inner_text),
-        'abstract': ('front/article-meta/abstract/p', get_inner_text),
+        'abstract': ('front/article-meta/abstract/p', get_inner_text_without_sup_xref),
         'publication-date': ('front/article-meta/history/date[@date-type="accepted"]', get_datetime),
     },
     'children': {

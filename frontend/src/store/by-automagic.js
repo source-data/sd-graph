@@ -6,13 +6,17 @@ export default {
     records: {},
     currentRecordId: null,
     loadingRecords: false,
+    loadComplete: false,
   },
   getters: {
     records (state) {
       return Object.values(state.records)
     },
     currentRecord (state) {
-      return state.records[state.currentRecordId]
+      return state.records
+    },
+    isLoaded (state) {
+      return state.loadComplete
     }
   },
   mutations: {
@@ -20,24 +24,19 @@ export default {
     * RECORDS
     */
    addRecords (state, records) {
-      const recordsById = {}
-      records.forEach((record) => {
-        recordsById[record.id] = record
-      })
-      console.debug('recordsById', recordsById)
-      state.records = recordsById
+      state.records = records
     },
     /* *************************************************************************
     * NAVIGATION
     */
-   setIsLoading (state) {
+    setIsLoading (state) {
       state.loadingRecords = true
     },
     setNotLoading (state) {
       state.loadingRecords = false
     },
-    showRecord (state, { id }) {
-      state.currentRecordId = id
+    setLoadComplete (state) {
+      state.loadComplete = true
     },
     closeRecordView (state) {
       state.currentRecordId = null
@@ -49,11 +48,12 @@ export default {
       const url = '/api/v1/automagic'
       return httpClient.get(url)
         .then((response) => {
-          const records = response.data
+          const records = response.data[0]
           commit('addRecords', records)
         })
         .finally(() => {
-          commit('setNotLoading')
+          commit('setNotLoading'),
+          commit('setLoadComplete')
         })
     },
   },

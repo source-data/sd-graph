@@ -34,10 +34,15 @@ BY_DOI = Query(
     code='''
 //by doi
 //
-MATCH (a:Article {doi: $doi})-->(author:Contrib)
-OPTIONAL MATCH (author)-->(id:Contrib_id)
+MATCH (preprint:Article {doi: $doi})
+WITH preprint, preprint.version AS version
+ORDER BY version DESC
+WITH COLLECT(preprint)[0] AS a
+MATCH
+   (a)-->(auth:Contrib)
+OPTIONAL MATCH (auth)-->(id:Contrib_id)
 OPTIONAL MATCH (a)-->(f:Fig)
-WITH
+WITH DISTINCT
     id(a) AS id,
     a.doi AS doi,
     a.version AS version,
@@ -45,15 +50,14 @@ WITH
     a.title AS title,
     a.abstract AS abstract,
     a.publication_date AS pub_date,
-    author.surname AS surname,
-    author.given_names AS given_name,
-    author.position_idx AS author_rank,
-    author.corresp = "yes" AS corr_author,
-    COUNT(f) AS nb_figures,
-    id.text AS ORCID
-ORDER BY version DESC, author_rank DESC
-RETURN id, doi, version, journal, title, abstract, COLLECT([surname, given_name, ORCID, corr_author]) AS authors, pub_date, nb_figures
-
+    auth,
+    id.text AS ORCID,
+    COUNT(f) AS nb_figures
+ORDER BY auth.position_idx
+RETURN DISTINCT 
+    id, doi, version, journal, title, abstract, pub_date, 
+    COLLECT(DISTINCT auth {.surname, .given_names, .position_idx, .corresp, orcid: ORCID}) AS authors,
+    nb_figures
     ''',
     map={'doi': []},
     returns=['id', 'doi', 'version', 'journal', 'title', 'abstract', 'authors', 'pub_date', 'nb_figures']
@@ -109,25 +113,49 @@ RETURN DISTINCT
 
 BY_HYP = Query(
     code='''
+//Exclusion list based on SourceData normalized entities
+MATCH (syn:Term)<--(entity:H_Entity)<--(ct:CondTag)
+WHERE 
+  entity.ext_ids <> ""
+WITH DISTINCT entity.name AS name, COLLECT(DISTINCT syn.text) AS synonyms, COLLECT(DISTINCT ct) AS cts, 1.0*COUNT(DISTINCT ct) AS N
+UNWIND cts as ct
+WITH DISTINCT name, synonyms, N, ct.role as role, 1.0*COUNT(DISTINCT ct) AS N_role
+WITH name, synonyms, role, N, N_role, 100.0*(N_role / N) AS fract
+ORDER BY N DESC, fract DESC
+WITH name, synonyms, N, COLLECT(role)[0] AS dominant_role, COLLECT(fract)[0] AS dom_fract
+WHERE 
+  (dominant_role = "normalizing" OR dominant_role = "reporter")
+  AND
+  dom_fract > 75 AND N > 10.0
+WITH COLLECT(name) + synonyms AS all
+UNWIND all as terms
+WITH COLLECT(DISTINCT terms) AS exclusion_list
+
 MATCH
-    (a:SDArticle {journalName: "biorxiv"})-->(f:SDFigure)-->(p:SDPanel),
-    (p)-->(i:CondTag {role: "intervention"})-->(ctrl_v:H_Entity),
-    (p)-->(m:CondTag {role: "assayed"})-->(meas_v:H_Entity)
+  (a:SDArticle {journalName: "biorxiv"})-->(f:SDFigure)-->(p:SDPanel),
+    path_1=(p)-->(i:CondTag {role: "intervention"})-->(ctrl:H_Entity)-->(ctrl_term:Term),
+  path_2=(p)-->(m:CondTag {role: "assayed"})-->(meas:H_Entity)-->(meas_term:Term)
 WHERE
-    ctrl_v.name <> meas_v.name // could still be 2 entities normalized differently
+  ctrl.name <> meas.name // could still be 2 entities normalized differently
+  AND
+  NONE (n IN nodes(path_1) WHERE labels(n)=['Term'] AND (n.text IN exclusion_list))
+  AND
+  NONE (n IN nodes(path_2) WHERE labels(n)=['Term'] AND (n.text IN exclusion_list))
 WITH DISTINCT
-    a,
-    COLLECT(DISTINCT p) AS panels,
-    COUNT(DISTINCT p) AS N_panels,
-    ctrl_v,
-    meas_v
-WHERE N_panels > 2
-WITH DISTINCT a, {ctrl_v: ctrl_v.name, meas_v: meas_v.name} AS hyp, [p IN panels | {id: id(p), text: p.caption}] AS panel_captions, N_panels
-ORDER BY N_panels DESC
-WITH a, COLLECT(hyp)[0] AS dominant, COLLECT(panel_captions)[0] AS panels
-ORDER BY a.pub_date DESC
-WITH dominant, COLLECT({doi: a.doi, info: panels}) AS papers
+    a, COLLECT(DISTINCT p) AS panels, COUNT(DISTINCT p) AS N_panels,
+    ctrl.name AS ctrl_name, meas.name AS meas_name
+ORDER BY ctrl_name, meas_name
+WITH a, panels, N_panels, COLLECT(DISTINCT ctrl_name) AS ctrl_v, COLLECT(DISTINCT meas_name) AS meas_v
+WHERE N_panels > 1
+WITH a, panels, N_panels, ctrl_v, meas_v
+MATCH (a)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(assay:H_Entity {category: "assay"})
+WITH DISTINCT a, {ctrl_v: ctrl_v, meas_v: meas_v} AS hyp, [p IN panels | {id: id(p), text: p.caption}] AS panel_captions, N_panels, COUNT(DISTINCT assay) AS N_assay
+ORDER BY N_panels DESC, a.pub_date DESC
+WITH a, COLLECT(hyp)[0] AS dominant, COLLECT(panel_captions)[0] AS panels, N_assay
+WHERE N_assay > 3
+WITH dominant, COLLECT({doi: a.doi, info: panels, pub_date: a.pub_date}) AS papers
 WITH COLLECT([dominant, papers]) AS all_results
+LIMIT 10
 UNWIND range(0, size(all_results)-1) as i
 RETURN i as id, all_results[i][0] AS hyp, all_results[i][1] AS papers
     ''',
@@ -137,39 +165,72 @@ RETURN i as id, all_results[i][0] AS hyp, all_results[i][1] AS papers
 
 BY_MOLECULE = Query(
     code='''
+//Exclusion list based on SourceData normalized entities
+MATCH (syn:Term)<--(mol:H_Entity)<--(ct:CondTag)
+WHERE 
+  mol.type = "small_molecule" OR mol.type = "molecule"
+  AND 
+  mol.ext_ids <> ""
+WITH DISTINCT mol.name AS name, COLLECT(DISTINCT syn.text) AS synonyms, COLLECT(DISTINCT ct) AS cts, 1.0*COUNT(DISTINCT ct) AS N
+UNWIND cts as ct
+WITH DISTINCT name, synonyms, N, ct.role as role, 1.0*COUNT(DISTINCT ct) AS N_role
+WITH name, synonyms, role, N, N_role, 100.0*(N_role / N) AS fract
+ORDER BY N DESC, fract DESC
+WITH name, synonyms, N, COLLECT(role)[0] AS dominant_role, COLLECT(fract)[0] AS dom_fract
+WHERE 
+  (dominant_role = "normalizing" OR dominant_role = "reporter" OR dominant_role = "component")
+  AND
+  dom_fract > 75 AND N > 10.0
+WITH COLLECT(name) + synonyms AS all
+UNWIND all as terms
+WITH COLLECT(DISTINCT terms) AS exclusion_list
+//
 MATCH
   (query:H_Entity {category: "entity"})-[:Has_text]->(syn1:Term)
 WHERE 
-  query.type = "molecule" OR query.type = "small_molecule"
+  (query.type = "molecule" OR query.type = "small_molecule")
   //exclude known artefacts...
   AND
   (NOT syn1.text = "a" OR syn1.text = "-")
+  AND 
+  (NOT syn1.text IN exclusion_list)
 OPTIONAL MATCH
-  (query:H_Entity {category: "entity"})-[:Has_text]->(mol_name:Term)<-[:Has_text]-(secondary:H_Entity {category: "entity"})-[:Has_text]->(syn2:Term)
+  (query:H_Entity {category: "entity"})-[:Has_text]->(:Term)<-[:Has_text]-(secondary:H_Entity {category: "entity"})-[:Has_text]->(syn2:Term)
 WHERE 
   (query.type = "molecule" OR query.type = "small_molecule")
   AND
   (secondary.type = "molecule" OR secondary.type = "small_molecule")
-WITH DISTINCT query, COLLECT(syn1) + COLLECT(syn2) AS all_synonyms
-UNWIND
-   all_synonyms AS syn_term
-WITH DISTINCT query, syn_term.text as syn
+  AND 
+  (NOT syn2.text IN exclusion_list)
+WITH DISTINCT [query, secondary] AS queries, syn1, syn2
+UNWIND queries AS query
+WITH DISTINCT query, syn1, syn2
+WHERE NOT query is NULL
+WITH DISTINCT query,  [query.name] + COLLECT(syn1.text) + COLLECT(syn2.text) AS all_synonyms
+UNWIND all_synonyms AS syn
+WITH DISTINCT query, syn
 ORDER BY syn
 WITH DISTINCT query, COLLECT(DISTINCT syn) AS synonym_sets
+ORDER BY size(query.name) DESC
 WITH DISTINCT COLLECT(DISTINCT query) AS query_group, synonym_sets
 UNWIND synonym_sets AS synonym
+WITH query_group, synonym
+
 MATCH
   (paper:SDArticle {journalName:'biorxiv'})-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(mol:H_Entity {category: "entity"})-[:Has_text]->(mol_name:Term {text: synonym})
 WHERE
-  mol.type = "molecule" OR mol.type = "small_molecule"
+  (mol.type = "molecule" OR mol.type = "small_molecule")
 WITH DISTINCT query_group, paper, COLLECT(DISTINCT {id: id(p), text: p.caption}) AS panels, COUNT(DISTINCT p) AS N_panels, COLLECT(DISTINCT synonym) AS synonyms_in_paper
-WHERE N_panels > 1
+WHERE 
+  N_panels > 2
+  AND
+  datetime(paper.pub_date) > datetime('2020-04-01')
 WITH DISTINCT
   query_group,
-  COLLECT(DISTINCT {doi: paper.doi, title:paper.title, syn: synonyms_in_paper, info: panels}) AS papers,
+  COLLECT(DISTINCT {doi: paper.doi, title:paper.title, syn: synonyms_in_paper, info: panels, pub_date: paper.pub_date}) AS papers,
   COUNT(DISTINCT paper) AS N_papers
 ORDER BY N_papers DESC
-LIMIT 10
+LIMIT 20
 WITH
   query_group[0].name AS molecule, papers
 RETURN
@@ -186,13 +247,13 @@ AUTOMAGIC = Query(
 ///////////////////////PART A: RANK BY NUMBER OF ASSAYS///////////////////////////////
 
 //start with only most recent version
-MATCH (preprint:SDArticle {journalName: "biorxiv"})
-WITH preprint
-ORDER BY preprint.version DESC
-WITH DISTINCT preprint.doi AS doi, COLLECT(DISTINCT preprint)[0] AS a //keep only the most recent
+//MATCH (preprint:SDArticle {journalName: "biorxiv"})
+//WITH preprint
+//ORDER BY preprint.version DESC
+//WITH DISTINCT preprint.doi AS doi, COLLECT(DISTINCT preprint)[0] AS a //keep only the most recent
 
 // find entities
-MATCH (a)-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity {category: "assay"})-[:Has_text]->(name:Term)
+MATCH (a:SDArticle {journalName: "biorxiv"})-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity {category: "assay"})-[:Has_text]->(name:Term)
 WITH
   a, entity, name
 //find synonyms
@@ -211,7 +272,7 @@ ORDER BY id(entity)
 WITH DISTINCT a, COLLECT(DISTINCT entity) AS entity_group, synonyms
 WITH DISTINCT a, COLLECT(DISTINCT entity_group) AS entity_groups, COUNT(DISTINCT entity_group) AS N_entities, COLLECT(DISTINCT synonyms) AS synonym_groups
 ORDER BY N_entities DESC
-WITH COLLECT(DISTINCT {title: a.title, doi: a.doi, info: synonym_groups, N_entities: N_entities}) as preprint_list
+WITH COLLECT(DISTINCT {title: a.title, doi: a.doi, info: synonym_groups, pub_date: a.pub_date, N_entities: N_entities}) as preprint_list
 WITH preprint_list, range(1, size(preprint_list)) AS ranks
 UNWIND ranks as i
 WITH COLLECT({rank: i, preprint: preprint_list[i-1]}) AS ranked_by_assay
@@ -245,7 +306,7 @@ ORDER BY id(entity)
 WITH DISTINCT a, COLLECT(DISTINCT entity) AS entity_group, synonyms, ranked_by_assay
 WITH DISTINCT a, COLLECT(DISTINCT entity_group) AS entity_groups, COUNT(DISTINCT entity_group) AS N_entities, COLLECT(DISTINCT synonyms) AS synonym_groups, ranked_by_assay
 ORDER BY N_entities DESC
-WITH COLLECT(DISTINCT {title: a.title, doi: a.doi, info: synonym_groups, N_entities: N_entities}) as preprint_list, ranked_by_assay
+WITH COLLECT(DISTINCT {title: a.title, doi: a.doi, info: synonym_groups, pub_date: a.pub_date, N_entities: N_entities}) as preprint_list, ranked_by_assay
 WITH preprint_list, range(1, size(preprint_list)) AS ranks, ranked_by_assay
 UNWIND ranks as i
 WITH COLLECT({rank: i, preprint: preprint_list[i-1]}) AS ranked_by_entities, ranked_by_assay
@@ -256,7 +317,7 @@ WITH COLLECT({rank: i, preprint: preprint_list[i-1]}) AS ranked_by_entities, ran
 WHERE (ranked_by_entities <> []) AND (ranked_by_assay <> [])
 WITH ranked_by_entities + ranked_by_assay AS ranked
 UNWIND ranked as item
-WITH DISTINCT {doi: item.preprint.doi, info: COLLECT(DISTINCT {text: item.preprint.info}), rank: SUM(item.rank)} as paper, COLLECT(item.rank) AS ranks
+WITH DISTINCT {doi: item.preprint.doi, info: COLLECT(DISTINCT {text: item.preprint.info, pub_date: item.preprint.pub_date}), rank: SUM(item.rank)} as paper, COLLECT(item.rank) AS ranks
 WHERE size(ranks)=2
 WITH paper, ranks
 ORDER BY paper.rank ASC

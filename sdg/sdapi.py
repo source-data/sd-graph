@@ -1,7 +1,7 @@
 import argparse
 import requests
 from .sdnode import (
-    SDNode, API,
+    API,
     BaseCollection, BaseArticle, BaseFigure, BasePanel, BaseTag
 )
 from . import SD_API_URL, SD_API_USERNAME, SD_API_PASSWORD
@@ -10,6 +10,7 @@ from . import SD_API_URL, SD_API_USERNAME, SD_API_PASSWORD
 class SDCollection(BaseCollection):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.update_properties({'source': 'sdapi'})
 
 
 class SDArticle(BaseArticle):
@@ -22,7 +23,9 @@ class SDArticle(BaseArticle):
         self.update_properties({
             'pmid': self.pmid,
             'import_id': self.import_id,
-            'year': self.year
+            'year': self.year,
+            'nb_figures': self.nb_figures,
+            'source': 'sdapi',
         })
         self.children = range(1, self.nb_figures+1)
 
@@ -30,8 +33,11 @@ class SDArticle(BaseArticle):
 class SDFigure(BaseFigure):
     def __init__(self, data):
         super().__init__(data)
-        self.fig_label = self.get('label', '') # and not fig_label as in JATS
-        self.update_properties({'fig_label': self.fig_label})
+        self.fig_label = self.get('label', '')  # and not fig_label as in JATS
+        self.update_properties({
+            'fig_label': self.fig_label,
+            'source': 'sdapi',
+        })
 
 
 class SDPanel(BasePanel):
@@ -61,14 +67,15 @@ class SDPanel(BasePanel):
         # find this panel's id using current_panel_id
         self.formatted_caption = self._data.get('formatted_caption', '')
         coords = self._data.get('coords', {})
-        self.coords = ", ".join([f"{k}={v}" for k, v in coords.items()])
+        self.coords = ', '.join([f'{k}={v}' for k, v in coords.items()])
         self.tags = self._data.get('tags', [])
         self.update_properties({
-            "paper_doi": self.paper_doi,
-            "fig_label": self.fig_label,
-            "panel_id": self.panel_id,
-            "formatted_caption": self.formatted_caption, 
-            "coords": self.coords
+            'paper_doi': self.paper_doi,
+            'fig_label': self.fig_label,
+            'panel_id': self.panel_id,
+            'formatted_caption': self.formatted_caption, 
+            'coords': self.coords,
+            'source': 'sdapi',
         })
         self.children = self.rm_empty(self.tags)
 
@@ -76,31 +83,32 @@ class SDPanel(BasePanel):
 class SDTag(BaseTag):
     def __init__(self, data):
         super().__init__(data)
-        self.ext_ids = "///".join(self._data.get('external_ids', []))
-        self.ext_dbs = "///".join(self._data.get('external_databases', [])) 
-        self.in_caption = self._data.get('in_caption', '') == "Y" 
-        self.ext_names = "///".join(self._data.get('external_names', []))
-        self.ext_tax_ids = "///".join(self._data.get('external_tax_ids', []))   
-        self.ext_tax_names = "///".join(self._data.get('external_tax_names', []))
-        self.ext_urls = "///".join(self._data.get('external_urls', []))
+        self.ext_ids = '///'.join(self._data.get('external_ids', []))
+        self.ext_dbs = '///'.join(self._data.get('external_databases', []))
+        self.in_caption = self._data.get('in_caption', '') == 'Y'
+        self.ext_names = '///'.join(self._data.get('external_names', []))
+        self.ext_tax_ids = '///'.join(self._data.get('external_tax_ids', []))
+        self.ext_tax_names = '///'.join(self._data.get('external_tax_names', []))
+        self.ext_urls = '///'.join(self._data.get('external_urls', []))
         self.update_properties({
-            'ext_ids': self.ext_ids, 
-            'ext_dbs': self.ext_dbs, 
-            'in_caption': self.in_caption, 
-            'ext_names': self.ext_names, 
+            'ext_ids': self.ext_ids,
+            'ext_dbs': self.ext_dbs,
+            'in_caption': self.in_caption,
+            'ext_names': self.ext_names,
             'ext_tax_ids': self.ext_tax_ids,
-            'ext_tax_names': self.ext_tax_names, 
+            'ext_tax_names': self.ext_tax_names,
             'ext_urls': self.ext_urls,
+            'source': 'sdapi',
         })
 
 
 class SDAPI(API):
 
-    GET_COLLECTION = "collection/"
-    GET_LIST = "papers"
-    GET_ARTICLE = "paper/"
-    GET_FIGURE = "figure/"
-    GET_PANEL = "panel/"
+    GET_COLLECTION = 'collection/'
+    GET_LIST = 'papers'
+    GET_ARTICLE = 'paper/'
+    GET_FIGURE = 'figure/'
+    GET_PANEL = 'panel/'
 
     def __init__(self):
         super().__init__()
@@ -159,7 +167,7 @@ if __name__ == '__main__':
     sdapi = SDAPI()
     if collection_name:
         collection = sdapi.collection(collection_name)
-        print(f"collection {collection.name} has id = {collection.id} and has {len(collection)} articles.")
+        print(f'collection {collection.name} has id = {collection.id} and has {len(collection)} articles.')
 
     if listing:
         for doi in collection.children:
@@ -177,18 +185,18 @@ if __name__ == '__main__':
 
     if fig and doi:
         figure = sdapi.figure(fig, doi)
-        print("label:", figure.label)
-        print("caption:", figure.caption)
-        print("url:", figure.href)
-        print("panel ids:", "\t".join(figure.children))
+        print('label:', figure.label)
+        print('caption:', figure.caption)
+        print('url:', figure.href)
+        print('panel ids:', '\t'.join(figure.children))
 
     if panel_id:
         panel = sdapi.panel(panel_id)
-        print("label:", panel.label)
-        print("url:", panel.href)
-        print("caption:", panel.caption)
+        print('label:', panel.label)
+        print('url:', panel.href)
+        print('caption:', panel.caption)
         print()
-        print("formatted caption:", panel.formatted_caption)
-        print("coordinates:", panel.coords)
+        print('formatted caption:', panel.formatted_caption)
+        print('coordinates:', panel.coords)
         for tag_data in panel.children:
            print(sdapi.tag(tag_data))

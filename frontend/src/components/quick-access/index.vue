@@ -3,13 +3,13 @@
     h1 Quick Access
     el-tabs(type="border-card" @tab-click="onSelectTab")
         el-tab-pane(label="By Method").filter-list
-            QuickAccessByMethod(@change="onChangeByMethod")
+          QuickAccessByMethod(@change="onChangeByMethod")
         el-tab-pane(label="By tested hypothesis").filter-list
-            QuickAccessByHyp(@change="onChangeByHyp")
+          QuickAccessByHyp(@change="onChangeByHyp")
         el-tab-pane(label="By Molecule").filter-list
-            QuickAccessByMol(@change="onChangeByMol")
+          QuickAccessByMol(@change="onChangeByMol")
         el-tab-pane(label="Automagic selection")
-            QuickAccessByAutomagic
+          QuickAccessByAutomagic
 
 </template>
 
@@ -33,7 +33,6 @@ export default {
       console.debug('onChangeByAutomagic', selectedTab)
       //
       if (selectedTab.label=="Automagic selection") {
-        this.$store.commit('byAutomagic/showRecord', { id: "1" }) // single automatic record anyway, but who knows what the future reserves
         this.$store.dispatch('highlights/listByCurrent', 'byAutomagic')
       }
     },
@@ -68,7 +67,7 @@ export default {
 <style scoped lang="scss">
 .filter-list {
   max-height: 10em;
-  padding-bottom: 1em;
   overflow: scroll;
+  padding: 1em;
 }
 </style>

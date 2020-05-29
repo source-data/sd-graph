@@ -3,7 +3,7 @@ import json
 from lxml.etree import fromstring
 from neotools.utils import inner_text
 from .sdnode import (
-    SDNode, API,
+    API,
     BaseCollection, BaseArticle, BaseFigure, BasePanel, BaseTag
 )
 from smtag.predict.cartridges import CARTRIDGE
@@ -17,14 +17,14 @@ TAGGING_ENGINE = SmtagEngine(CARTRIDGE)
 
 def tag_it(text, format='xml'):
     text = cleanup(text)
-    tags = TAGGING_ENGINE.smtag(text, 'sd-tag', format)[0] # a single example is submitted to the engine
+    tags = TAGGING_ENGINE.smtag(text, 'sd-tag', format)[0]  # a single example is submitted to the engine
     if format == 'json':
         tags = json.loads(tags)
         tags = tags['smtag']
     return tags
 
 
-def xml2json(xml_str:str):
+def xml2json(xml_str: str):
     e = fromstring(xml_str)
     panels = e.xpath('sd-panel')
     j = []
@@ -53,13 +53,17 @@ def xml2json(xml_str:str):
 class SDCollection(BaseCollection):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.update_properties({'source': 'eebapi'})
 
 
 class SDArticle(BaseArticle):
     def __init__(self, data):
         super().__init__(data)
         self.pub_date = self.get('pub_date', '')
-        self.update_properties({'pub_date': self.pub_date})
+        self.update_properties({
+            'pub_date': self.pub_date,
+            'source': 'eebapi',
+        })
         self.children = range(self.nb_figures)
 
 
@@ -68,7 +72,10 @@ class SDFigure(BaseFigure):
         super().__init__(data)
         if self.caption:
             self.formatted_caption = tag_it(self.caption, format='xml')
-            self.update_properties({'formatted_caption': self.formatted_caption})
+            self.update_properties({
+                'formatted_caption': self.formatted_caption,
+                'source': 'eebapi',
+            })
             panels = xml2json(self.formatted_caption)
             self.children = panels
         # self.children = [SDPanel(self)]  # provisional until we fix automatic panelization in general case
@@ -77,6 +84,7 @@ class SDFigure(BaseFigure):
 class SDPanel(BasePanel):
     def __init__(self, data):
         super().__init__(data)
+        self.update_properties({'source': 'eebapi'})
         self.tags = self.get('tags', '')
         self.children = [SDTag(t) for t in self.tags]
 
@@ -91,14 +99,15 @@ class SDTag(BaseTag):
             'category_score': self.category_score,
             'type_score': self.type_score,
             'role_score': self.role_score,
+            'source': 'eebapi',
         })
 
 
 class EEBAPI(API):
 
-    GET_COLLECTION = "collection/"
-    GET_ARTICLE = "doi/"
-    GET_FIGURE = "figure"
+    GET_COLLECTION = 'collection/'
+    GET_ARTICLE = 'doi/'
+    GET_FIGURE = 'figure'
 
     def collection(self, collection_name):
         url = EEB_PUBLIC_API + self.GET_COLLECTION + collection_name
@@ -138,10 +147,10 @@ class EEBAPI(API):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="interace to the SourceData API" )
-    parser.add_argument('-L', '--listing', action="store_true", help="List of articles in the collection.") 
-    parser.add_argument('-D', '--doi', default='', help="Takes a doi and return article information")
-    parser.add_argument('-F', '--figure', default='', help="Takes the figure index and returns the figure legend for the figure in the paper specified with the --doi option") 
+    parser = argparse.ArgumentParser(description='interace to the SourceData API' )
+    parser.add_argument('-L', '--listing', action='store_true', help='List of articles in the collection.') 
+    parser.add_argument('-D', '--doi', default='', help='Takes a doi and return article information')
+    parser.add_argument('-F', '--figure', default='', help='Takes the figure index and returns the figure legend for the figure in the paper specified with the --doi option') 
     args = parser.parse_args()
     listing = args.listing
     doi_arg = args.doi
@@ -150,12 +159,12 @@ if __name__ == '__main__':
     eebapi = EEBAPI()
 
     collection = eebapi.collection(collection_name)
-    print(f"Collection {collection.name} has {len(collection)} articles.")
+    print(f'Collection {collection.name} has {len(collection)} articles.')
 
     if listing:
         for doi in collection.children:
             a = eebapi.article(doi)
-            print(f"{doi}: {a.title}")
+            print(f'{doi}: {a.title}')
 
     if doi_arg:
         article = eebapi.article(doi_arg)
@@ -166,11 +175,11 @@ if __name__ == '__main__':
 
     if fig and doi_arg:
         figure = eebapi.figure(fig, doi_arg)
-        print("label:", figure.fig_label)
-        print("caption:", figure.caption)
+        print('label:', figure.fig_label)
+        print('caption:', figure.caption)
         for panel in figure.children:
-            print(f"pseudo panel {panel.panel_id}")
-            print(f"formatted tagged caption:", panel.formatted_caption)
+            print(f'pseudo panel {panel.panel_id}')
+            print(f'formatted tagged caption:', panel.formatted_caption)
             for t in panel.children:
                 sd_tag = SDTag(t)
                 print(sd_tag.properties)
