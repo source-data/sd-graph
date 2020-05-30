@@ -1,7 +1,8 @@
 
 # sd-graph stuff
 data/
-
+rack/
+log/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

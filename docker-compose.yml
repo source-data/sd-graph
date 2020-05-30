@@ -11,6 +11,7 @@ services:
     image: neoflask_local_flask
     depends_on:
       - neo4j
+      - redis
     volumes:
       - .:/app
       - ./log:/log
@@ -46,3 +47,8 @@ services:
     ports:
       - "8080:8080"
     command: /start
+
+  redis:
+    image: redis:6
+    volumes:
+      - ./data/redis-data:/data
