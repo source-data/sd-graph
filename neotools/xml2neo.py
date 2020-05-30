@@ -65,7 +65,7 @@ class XMLNode:
         else:  # terminal leaf node
             text = inner_text(element)
             if text:
-                properties['text'] = inner_text(element)
+                properties['text'] = text
         tail = element.tail
         if tail:
             properties['tail'] = tail
