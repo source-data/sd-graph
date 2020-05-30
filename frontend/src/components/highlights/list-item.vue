@@ -22,7 +22,7 @@
           label(for="info-cards" style="font-variant: small-caps") {{ info.length }} information card{{ info.length > 1 ? 's':''}}:
           el-collapse(v-for="(card, index) in info" id="infor-cards" v-model="activeCards")
             el-collapse-item(:title="'for debugging : ' + card.id", :name="index")
-              small {{ index }}
+              small {{ card.text }}
           //- el-carousel(indicator-position="outside" arrow="hover" :autoplay="false" height="" id="info-cards")
           //-   el-carousel-item(v-for="card in info" :key="card.id" style="text-align:left")
           //-     el-card(class="box-card" shadow="always")
