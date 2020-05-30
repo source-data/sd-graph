@@ -18,6 +18,9 @@ CREATE CONSTRAINT ON (h:H_Entity) ASSERT h.combo_id IS UNIQUE;
 //CREATE CONSTRAINT ON (h:H_Entity) ASSERT (h.ext_id, h.type, h.category, h.name) IS NODE KEY; //only neo4j Enterprise!
 CREATE CONSTRAINT ON (te:Term) ASSERT te.text IS UNIQUE;
 
+//journal name to lower case
+MATCH (a:SDArticle)
+SET a.journalName = toLower(a.journalName)
 
 //trim and tolower text
 MATCH(t:SDTag)

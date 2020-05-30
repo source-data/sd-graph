@@ -97,15 +97,35 @@ RETURN p.caption AS caption, COLLECT(DISTINCT h) AS tags
 BY_METHOD = Query(
     code='''
 //pre listed methods
-UNWIND ['flow cytometry', 'electron microscope', 'immunoprecipitation', 'confocal microscopy', 'immunohistochemistry', 'histology', 'pseudovirus cell entry'] AS query
-MATCH (q:Term {text: query})<-[:Has_text]-(h:H_Entity {category: "assay"})-[:Has_text]->(syn:Term)
-WITH q, syn
-MATCH (a:SDArticle {journalName:'biorxiv'})-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag {category: "assay"})-->(h:H_Entity)-[:Has_text]->(syn)
+UNWIND [
+  {name: 'electron microscopy',   regex: '.*electron micro.*'            },
+  {name: 'flow cytometry',        regex: '.*electron micro.*'            },
+  {name: 'crystal structures',    regex: '.*(crystallo|crystal struct).*'},
+  {name: 'immunoprecipitation',   regex: '.*immunoprecip.*'              },
+  {name: 'immunoohistochemistry', regex: '.*immunohistoc.*'              },
+  {name: 'histology',             regex: '.*histol.*'                    },
+  {name: 'pseudotype entry',      regex: '.*pseudotype.*'                }
+] AS query
+MATCH (q:Term)<-[:Has_text]-(h:H_Entity {category: "assay"})
+WHERE 
+  q.text =~ query.regex
+  OR
+  h.name =~ query.regex
+WITH h, query.name AS name
+MATCH (h)-[:Has_text]->(syn1:Term)
+OPTIONAL MATCH
+   (h)-[:Has_text]->(:Term)<--(bridge:H_Entity {category: "assay"})-->(syn2:Term)
+WITH name, COLLECT (DISTINCT syn1.text) + [h.name, bridge.name]  as all_synonyms //COLLECT(syn2.text) + [bridge.name] 
+UNWIND all_synonyms AS syn
+WITH DISTINCT syn, name
+WHERE NOT syn IS NULL
+WITH syn, name
+MATCH (a:SDArticle {journalName:'biorxiv'})-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag {category: "assay"})-->(h:H_Entity)-[:Has_text]->(te:Term {text: syn})
 WITH DISTINCT
-   q, {doi: a.doi, info: COLLECT(DISTINCT {id: id(p), text: p.caption}), pub_date: a.pub_date} AS paper
+  name, {doi: a.doi, info: COLLECT(DISTINCT {id: id(p), title: f.title, text: p.caption}), pub_date: a.pub_date} AS paper
 ORDER BY paper.pub_date DESC
 RETURN DISTINCT
-   q.text AS name, q.text AS id, COLLECT(paper) AS papers
+   name AS name, name AS id, COLLECT(paper) AS papers
     ''',
     returns=['name', 'id', 'papers']
 )
@@ -272,7 +292,7 @@ ORDER BY id(entity)
 WITH DISTINCT a, COLLECT(DISTINCT entity) AS entity_group, synonyms
 WITH DISTINCT a, COLLECT(DISTINCT entity_group) AS entity_groups, COUNT(DISTINCT entity_group) AS N_entities, COLLECT(DISTINCT synonyms) AS synonym_groups
 ORDER BY N_entities DESC
-WITH COLLECT(DISTINCT {title: a.title, doi: a.doi, info: synonym_groups, pub_date: a.pub_date, N_entities: N_entities}) as preprint_list
+WITH COLLECT(DISTINCT {title: a.title, doi: a.doi, source:a.source, info: synonym_groups, pub_date: a.pub_date, N_entities: N_entities}) as preprint_list
 WITH preprint_list, range(1, size(preprint_list)) AS ranks
 UNWIND ranks as i
 WITH COLLECT({rank: i, preprint: preprint_list[i-1]}) AS ranked_by_assay
@@ -306,7 +326,7 @@ ORDER BY id(entity)
 WITH DISTINCT a, COLLECT(DISTINCT entity) AS entity_group, synonyms, ranked_by_assay
 WITH DISTINCT a, COLLECT(DISTINCT entity_group) AS entity_groups, COUNT(DISTINCT entity_group) AS N_entities, COLLECT(DISTINCT synonyms) AS synonym_groups, ranked_by_assay
 ORDER BY N_entities DESC
-WITH COLLECT(DISTINCT {title: a.title, doi: a.doi, info: synonym_groups, pub_date: a.pub_date, N_entities: N_entities}) as preprint_list, ranked_by_assay
+WITH COLLECT(DISTINCT {title: a.title, doi: a.doi, source:a.source, info: synonym_groups, pub_date: a.pub_date, N_entities: N_entities}) as preprint_list, ranked_by_assay
 WITH preprint_list, range(1, size(preprint_list)) AS ranks, ranked_by_assay
 UNWIND ranks as i
 WITH COLLECT({rank: i, preprint: preprint_list[i-1]}) AS ranked_by_entities, ranked_by_assay
