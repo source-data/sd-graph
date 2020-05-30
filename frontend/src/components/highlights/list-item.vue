@@ -20,10 +20,9 @@
           p
         el-col(:span="12")
           label(for="info-cards" style="font-variant: small-caps") {{ info.length }} information card{{ info.length > 1 ? 's':''}}:
-          el-collapse(id="infor-cards" v-model="activeCards")
-            el-collapse-item(v-for="card in info"  :title="'for debugging : ' + card.id", :name="card.id" @change="debugCards")
-              small {{ card.text }}
-          
+          el-collapse(v-for="(card, index) in info" id="infor-cards" v-model="activeCards")
+            el-collapse-item(:title="'for debugging : ' + card.id", :name="index")
+              small {{ index }}
           //- el-carousel(indicator-position="outside" arrow="hover" :autoplay="false" height="" id="info-cards")
           //-   el-carousel-item(v-for="card in info" :key="card.id" style="text-align:left")
           //-     el-card(class="box-card" shadow="always")
@@ -41,7 +40,7 @@ export default {
   },
   data() {
     return {
-      activeCards: [this.article.info[0].id]
+      activeCards: [0]
     }
   },
   methods: {
