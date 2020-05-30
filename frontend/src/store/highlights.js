@@ -43,10 +43,12 @@ export default {
           return httpClient.get(`/api/v1/doi/${doi}`)
         })
         return Promise.all(promises).then((responses) => {
-          const records = responses.reduce((acc, r) => {
+          let non_empty = responses.filter(
+            r => r.data.length > 0
+          )
+          const records = non_empty.reduce((acc, r) => {
             return [preProcessRecord(r.data[0], current), ...acc]
           }, [])
-
           commit('addRecords', records)
           return records
         }).finally(() => {
@@ -60,7 +62,6 @@ export default {
 function preProcessRecord (record, current) {
   return Object.assign({}, record, {
     id: record.doi,
-    //panel_ids: method.content_ids.find(a => a.doi === record.doi).panels.map(p => p.id),
     info: current.papers.find(a => a.doi === record.doi).info
   })
 }
