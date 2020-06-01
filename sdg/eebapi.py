@@ -1,14 +1,13 @@
 import argparse
 import json
 from lxml.etree import fromstring
-from neotools.utils import inner_text
+from neotools.utils import inner_text, cleanup
 from .sdnode import (
     API,
     BaseCollection, BaseArticle, BaseFigure, BasePanel, BaseTag
 )
 from smtag.predict.cartridges import CARTRIDGE
 from smtag.predict.engine import SmtagEngine
-from neotools.utils import cleanup
 from . import EEB_PUBLIC_API
 
 

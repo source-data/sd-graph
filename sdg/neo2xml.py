@@ -1,12 +1,8 @@
 import re
-import os
 import argparse
-from io import open as iopen
-from lxml.etree import parse, fromstring, Element, ElementTree, tostring, XMLSyntaxError, XMLParser, indent
-from xml.sax.saxutils import escape, unescape
+from lxml.etree import fromstring, Element, ElementTree, tostring, XMLSyntaxError, XMLParser
 from random import shuffle
 from math import floor
-from copy import deepcopy
 from pathlib import Path
 from typing import Dict
 from neotools.utils import inner_text
@@ -15,6 +11,7 @@ from . import DB, logger
 
 
 xml_parser = XMLParser(recover=True)
+
 
 def XMLArticle(d: Dict):
     e = Element('article')
