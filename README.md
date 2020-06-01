@@ -27,7 +27,8 @@ Normally you just need this:
 docker-compose  build
 docker-compose up -d
 docker-compose run --rm flask python -m sdg.sdneo SARS-CoV-2 --api sdapi  # import source data public data
-docker-compose run --rm flask python -m neojats.xml2neo data/meca  # import full text biorxiv preprints
+docker-compose run --rm flask python -m neotools.rxiv2neo data/meca --type meca # import full text biorxiv preprints
+docker-compose run --rm flask python -m neotools.rxiv2neo data/cord19 --type cord19 # import full text MedRxiv preprints (experimental)
 docker-compose run --rm flask python -m sdg.sdneo --api eebapi # smarttag covid-19 preprints
 cat sdg/SD-processing.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>  # generate merged graph
 # visit http:/localhost:8080
@@ -102,7 +103,7 @@ Launch neoflask interface:
 
 Upload meca archives to neo:
 
-    python -m neojats.xml2neo data/meca
+    python -m neotools.rxiv2neo data/meca --type meca
 
 Upload sd collection:
 

@@ -72,6 +72,7 @@ JATS_GRAPH_MODEL = {
     'XPath': 'article',
     'properties': {
         'article-type': ('.', get_attr_factory('article-type')),
+        'journal-title': ('.', get_attr_factory('journal-title')),
         'doi': ('front/article-meta/article-id[@pub-id-type="doi"]', get_text),
         'version': ('front/article-meta/article-version', get_text),
         'title': ('front/article-meta/title-group/article-title', get_inner_text),
@@ -100,6 +101,42 @@ JATS_GRAPH_MODEL = {
                 'caption': ('caption', get_caption),
                 'title': ('caption/title', get_inner_text),
                 'graphic': ('graphic', get_attr_factory('{http://www.w3.org/1999/xlink}href')),
+            },
+        },
+    }
+}
+
+
+CORD19_GRAPH_MODEL = {
+    'path': {
+        'type': 'article', 
+        'funct': lambda d: d['article']
+    },
+    'properties': {
+        'doi': lambda d: d['metadata']['doi'],
+        'pub_data': lambda d: d['metadata']['pub_date'],
+        'title': lambda d: d['metadata']['title'],
+        'abstract': lambda d: ' '. join([para['text'] for para in d['abstract']]),
+    },
+    'children': {
+        'has_author': {
+            'path': {
+                'type': 'authors', 
+                'funct': lambda d: d['metadata']['authors']
+            },
+            'properties': {
+                'given_names': lambda d: d['first'],
+                'surname': lambda d: d['last'],
+            },
+        },
+        'has_figure': {
+            'path': {
+                'type': 'fig', 
+                'funct': lambda d: [{key: val} for key, val in d['ref_entries'].items() if val['type'] == 'figure']
+            },
+            'properties': {
+                'label': lambda d: list(d)[0],
+                'caption': lambda d: list(d.values())[0]['text'],
             },
         },
     }
