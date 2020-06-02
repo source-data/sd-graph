@@ -20,7 +20,7 @@ CREATE CONSTRAINT ON (te:Term) ASSERT te.text IS UNIQUE;
 
 //journal name to lower case
 MATCH (a:SDArticle)
-SET a.journalName = toLower(a.journalName)
+SET a.journalName = toLower(a.journalName);
 
 //trim and tolower text
 MATCH(t:SDTag)

@@ -120,9 +120,11 @@ class CORDLoader:
         with open(full_path) as json_archive:
             print(f"parsing {json_archive.name}")
             j = json.load(json_archive)
+            # unfortunately CORD-19 documents are not self-contained
+            # part of the metadata needs to be reinserted a posteriori
             j['metadata']['doi'] = supplementary_metadata['doi']
             j['metadata']['pub_date'] = supplementary_metadata['publish_time']
-            j['metadata']['journal-title'] = supplementary_metadata['source_x]
+            j['metadata']['journal-title'] = supplementary_metadata['source_x']
             json_node = CORDNode(j, CORD19_GRAPH_MODEL)
             print(json_node)
             source = json_archive.name
