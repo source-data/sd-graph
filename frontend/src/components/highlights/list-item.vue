@@ -15,13 +15,16 @@
               small {{ author_list }}
       el-row()
         el-col(:span="10")
-          small(style="line-height:1.5") {{ article.abstract }}
+          p
+            small(style="line-height:1.5") {{ article.abstract }}
+          p 
+            small(style="font-family: monospace; font-size: 9px") [source: {{ article.source }}]
         el-col(:span="2")
           p
         el-col(:span="12")
-          label(for="info-cards" style="font-variant: small-caps") {{ info.length }} information card{{ info.length > 1 ? 's':''}}:
+          //- label(for="info-cards" style="font-variant: small-caps") {{ info.length }} information card{{ info.length > 1 ? 's':''}}:
           el-collapse(v-for="(card, index) in info" id="infor-cards" v-model="activeCards")
-            el-collapse-item(:title="'for debugging : ' + card.id", :name="index")
+            el-collapse-item(:title="card.title", :name="index")
               small {{ card.text }}
           //- el-carousel(indicator-position="outside" arrow="hover" :autoplay="false" height="" id="info-cards")
           //-   el-carousel-item(v-for="card in info" :key="card.id" style="text-align:left")
