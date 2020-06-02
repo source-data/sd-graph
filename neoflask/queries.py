@@ -46,6 +46,7 @@ WITH DISTINCT
     id(a) AS id,
     a.doi AS doi,
     a.version AS version,
+    a.source AS source, 
     'biorxiv' AS journal,
     a.title AS title,
     a.abstract AS abstract,
@@ -55,12 +56,12 @@ WITH DISTINCT
     COUNT(f) AS nb_figures
 ORDER BY auth.position_idx
 RETURN DISTINCT 
-    id, doi, version, journal, title, abstract, pub_date, 
+    id, doi, version, source, journal, title, abstract, pub_date, 
     COLLECT(DISTINCT auth {.surname, .given_names, .position_idx, .corresp, orcid: ORCID}) AS authors,
     nb_figures
     ''',
     map={'doi': []},
-    returns=['id', 'doi', 'version', 'journal', 'title', 'abstract', 'authors', 'pub_date', 'nb_figures']
+    returns=['id', 'doi', 'version', 'source', 'journal', 'title', 'abstract', 'authors', 'pub_date', 'nb_figures']
 )
 
 
@@ -102,7 +103,7 @@ UNWIND [
   {name: 'flow cytometry',        regex: '.*electron micro.*'            },
   {name: 'crystal structures',    regex: '.*(crystallo|crystal struct).*'},
   {name: 'immunoprecipitation',   regex: '.*immunoprecip.*'              },
-  {name: 'immunoohistochemistry', regex: '.*immunohistoc.*'              },
+  {name: 'immunohistochemistry', regex: '.*immunohistoc.*'              },
   {name: 'histology',             regex: '.*histol.*'                    },
   {name: 'pseudotype entry',      regex: '.*pseudotype.*'                }
 ] AS query
@@ -122,7 +123,7 @@ WHERE NOT syn IS NULL
 WITH syn, name
 MATCH (a:SDArticle {journalName:'biorxiv'})-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag {category: "assay"})-->(h:H_Entity)-[:Has_text]->(te:Term {text: syn})
 WITH DISTINCT
-  name, {doi: a.doi, info: COLLECT(DISTINCT {id: id(p), title: f.title, text: p.caption}), pub_date: a.pub_date} AS paper
+  name, {doi: a.doi, info: COLLECT(DISTINCT {id: id(p), title: f.fig_label, text: p.caption}), pub_date: a.pub_date} AS paper
 ORDER BY paper.pub_date DESC
 RETURN DISTINCT
    name AS name, name AS id, COLLECT(paper) AS papers
@@ -151,8 +152,16 @@ WITH COLLECT(name) + synonyms AS all
 UNWIND all as terms
 WITH COLLECT(DISTINCT terms) AS exclusion_list
 
+//prioritize manually curated papers
+MATCH (a:SDArticle)
+WHERE a.journalName = "biorxiv"
+WITH a, exclusion_list
+ORDER BY a.source DESC // manually curated source = 'sdapi' sorted before automatic papers where source = 'eebapi'
+WITH DISTINCT a.doi AS doi, COLLECT(a) AS same_paper, exclusion_list
+WITH same_paper[0] as a, exclusion_list
+
 MATCH
-  (a:SDArticle {journalName: "biorxiv"})-->(f:SDFigure)-->(p:SDPanel),
+  (a)-->(f:SDFigure)-->(p:SDPanel),
     path_1=(p)-->(i:CondTag {role: "intervention"})-->(ctrl:H_Entity)-->(ctrl_term:Term),
   path_2=(p)-->(m:CondTag {role: "assayed"})-->(meas:H_Entity)-->(meas_term:Term)
 WHERE
@@ -169,7 +178,7 @@ WITH a, panels, N_panels, COLLECT(DISTINCT ctrl_name) AS ctrl_v, COLLECT(DISTINC
 WHERE N_panels > 1
 WITH a, panels, N_panels, ctrl_v, meas_v
 MATCH (a)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(assay:H_Entity {category: "assay"})
-WITH DISTINCT a, {ctrl_v: ctrl_v, meas_v: meas_v} AS hyp, [p IN panels | {id: id(p), text: p.caption}] AS panel_captions, N_panels, COUNT(DISTINCT assay) AS N_assay
+WITH DISTINCT a, {ctrl_v: ctrl_v, meas_v: meas_v} AS hyp, [p IN panels | {id: id(p), label: p.label, title: f.fig_label, text: p.caption}] AS panel_captions, N_panels, COUNT(DISTINCT assay) AS N_assay
 ORDER BY N_panels DESC, a.pub_date DESC
 WITH a, COLLECT(hyp)[0] AS dominant, COLLECT(panel_captions)[0] AS panels, N_assay
 WHERE N_assay > 3
@@ -204,6 +213,7 @@ WHERE
 WITH COLLECT(name) + synonyms AS all
 UNWIND all as terms
 WITH COLLECT(DISTINCT terms) AS exclusion_list
+
 //
 MATCH
   (query:H_Entity {category: "entity"})-[:Has_text]->(syn1:Term)
@@ -237,14 +247,14 @@ UNWIND synonym_sets AS synonym
 WITH query_group, synonym
 
 MATCH
-  (paper:SDArticle {journalName:'biorxiv'})-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(mol:H_Entity {category: "entity"})-[:Has_text]->(mol_name:Term {text: synonym})
+  (paper {journalName: 'biorxiv'})-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(mol:H_Entity {category: "entity"})-[:Has_text]->(mol_name:Term {text: synonym})
 WHERE
   (mol.type = "molecule" OR mol.type = "small_molecule")
-WITH DISTINCT query_group, paper, COLLECT(DISTINCT {id: id(p), text: p.caption}) AS panels, COUNT(DISTINCT p) AS N_panels, COLLECT(DISTINCT synonym) AS synonyms_in_paper
-WHERE 
-  N_panels > 2
   AND
   datetime(paper.pub_date) > datetime('2020-04-01')
+WITH DISTINCT query_group, paper, COLLECT(DISTINCT {id: id(p), title: f.fig_label, text: p.caption}) AS panels, COUNT(DISTINCT p) AS N_panels, COLLECT(DISTINCT synonym) AS synonyms_in_paper
+WHERE 
+  N_panels > 2
 WITH DISTINCT
   query_group,
   COLLECT(DISTINCT {doi: paper.doi, title:paper.title, syn: synonyms_in_paper, info: panels, pub_date: paper.pub_date}) AS papers,
@@ -417,16 +427,20 @@ LIMIT 20
 
 STATS = Query(
     code='''
-        MATCH (a:Article)
-        WITH COUNT(a) AS total_preprints
-        MATCH (sda:SDArticle {source: 'sdneo'}) 
-        WITH COUNT(sda) AS AS covid19_preprints // wrong, placeholder, total_preprints
-        MATCH (n) 
-        WITH COUNT(n) AS total_nodes, total_preprints, covid19_preprints
-        RETURN total_nodes, total_preprints, covid19_preprints
+MATCH (a:Article)
+WITH COUNT(a) AS N_jats
+MATCH (sd:SDArticle {source: 'sdapi'}) 
+WITH COUNT(sd) AS N_sdapi, N_jats
+MATCH (eeb:SDArticle {source: 'eebapi'}) 
+WITH COUNT(eeb) AS N_eeb, N_sdapi, N_jats
+MATCH (n)
+WITH COUNT(n) AS N_nodes, N_eeb, N_sdapi, N_jats
+MATCH ()-[r]->()
+RETURN COUNT(r) AS N_rel, N_nodes, N_eeb, N_sdapi, N_jats
     ''',
-    returns=['total_nodes', 'total_preprints', 'covid19_preprints']
+    returns=['N_jats', 'N_sdapi', 'N_eeb', 'N_nodes', 'N_rel']
 )
+
 
 PANEL_SUMMARY = Query(
     code='''

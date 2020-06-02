@@ -2,7 +2,7 @@ import json
 from typing import Dict, NewType
 from neotools.db import Instance, Query
 from .queries import (
-    BY_DOI, FIG_BY_DOI_IDX, PANEL_BY_NEO_ID,
+    STATS, BY_DOI, FIG_BY_DOI_IDX, PANEL_BY_NEO_ID,
     BY_MOLECULE, BY_HYP, AUTOMAGIC,
     BY_METHOD, SEARCH, PANEL_SUMMARY, COVID19,
 )
@@ -40,6 +40,10 @@ class Engine:
         data = self.neo4j_db.query_with_tx_funct(tx_funct, query)
         j = json.dumps(data, indent=3)
         return j
+
+    def stats(self, request):
+        response = self.ask_neo(STATS, request)
+        return response
 
     def by_molecule(self, request):
         response = self.ask_neo(BY_MOLECULE, request)
