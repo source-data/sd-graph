@@ -4,6 +4,7 @@ volumes:
   production_neo4j_data: {}
   production_neo4j_logs: {}
   production_traefik: {}
+  production_redis: {}
 
 services:
   flask:
@@ -52,3 +53,8 @@ services:
       - ./.env
     # ports:
     #   - "9080:80"
+
+  redis:
+    image: redis:6
+    volumes:
+      - production_redis:/data
