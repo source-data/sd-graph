@@ -33,6 +33,22 @@ cat sdg/SD-processing.cql | docker-compose run --rm neo4j cypher-shell -a bolt:/
 # visit http:/localhost:8080
 ```
 
+## How to dump the contents of your neo4j database
+Inspired by https://serverfault.com/questions/835092/how-do-you-perform-a-dump-of-a-neo4j-database-within-a-docker-container
+
+```bash
+# Make sure you dont have your neo4j running:
+docker-compose down
+
+docker rm --force neo4j-dump # just in case
+
+# dump the contents of your database using a temporary container
+docker run --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data -it neo4j:3.5 bin/neo4j-admin dump --database=graph.db --to=data/graph.db.dump.`date +%Y-%m-%d-%H.%M.%S`
+
+# remove the container
+docker rm --force neo4j-dump
+```
+
 ## Production
 
 add something like this to your local `~/.ssh/config`
@@ -44,7 +60,7 @@ Host covid19-1 ec2-3-125-193-124.eu-central-1.compute.amazonaws.com
   IdentityFile ~/.ssh/id_rsa
 ```
 
-## First setup
+### First setup
 
 ```bash
 # ssh into prod
@@ -74,7 +90,7 @@ cat sdg/SD-processing.cql | docker-compose -f production.yml run --rm neo4j cyph
 docker-compose -f production.yml run --rm flask python -m neojats.xml2neo data/meca
 ```
 
-## Deploying
+### Deploying
 Something like this will (generally) be enough, but really depends on your changes :)
 
 ```bash
