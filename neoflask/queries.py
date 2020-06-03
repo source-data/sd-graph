@@ -42,6 +42,9 @@ MATCH
    (a)-->(auth:Contrib)
 OPTIONAL MATCH (auth)-->(id:Contrib_id)
 OPTIONAL MATCH (a)-->(f:Fig)
+OPTIONAL MATCH (a)-[r:HasReview]->(review:Review)
+OPTIONAL MATCH (a)-[:HasResponse]->(response:Response)
+OPTIONAL MATCH (a)-[:HasAnnot]->(annot:PeerReviewMaterial)
 WITH DISTINCT
     id(a) AS id,
     a.doi AS doi,
@@ -53,15 +56,16 @@ WITH DISTINCT
     a.publication_date AS pub_date,
     auth,
     id.text AS ORCID,
-    COUNT(f) AS nb_figures
+    COUNT(DISTINCT f) AS nb_figures,
+    {reviews: COLLECT(DISTINCT review {.*}), response: response {.*}, annot: annot {.*}} AS review_process
 ORDER BY auth.position_idx
 RETURN DISTINCT 
     id, doi, version, source, journal, title, abstract, pub_date, 
     COLLECT(DISTINCT auth {.surname, .given_names, .position_idx, .corresp, orcid: ORCID}) AS authors,
-    nb_figures
+    nb_figures, review_process
     ''',
     map={'doi': []},
-    returns=['id', 'doi', 'version', 'source', 'journal', 'title', 'abstract', 'authors', 'pub_date', 'nb_figures']
+    returns=['id', 'doi', 'version', 'source', 'journal', 'title', 'abstract', 'authors', 'pub_date', 'nb_figures', 'review_process']
 )
 
 
@@ -94,6 +98,19 @@ RETURN p.caption AS caption, COLLECT(DISTINCT h) AS tags
     returns=['caption', 'tags'],
     map={'id': []}
 )
+
+
+REVIEW_PROCESS_BY_DOI = Query(
+  code='''
+MATCH (a:Article {doi: $doi})-[r:HasReview]->(review:Review)
+OPTIONAL MATCH (a)-[:HasResponse]->(response:Response)
+OPTIONAL MATCH (a)-[:HasAnnot]->(annot:PeerReviewMaterial)
+RETURN a.doi as doi, {reviews: COLLECT(DISTINCT review {.*}), response: response {.*}, annot: annot {.*}} AS review_process
+  ''',
+  map={'doi': []},
+  returns=['doi', 'review_process']
+)
+
 
 BY_METHOD = Query(
     code='''

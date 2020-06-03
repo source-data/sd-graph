@@ -13,6 +13,14 @@
                 el-link(type="primary" :href="href(article.doi)" target="_blank") http://doi.org/{{ article.doi }} 
             p
               small {{ author_list }}
+            // div(v-if="article.review_process.reviews.length > 0") 
+            div(v-if="article.review_process")
+              el-collapse(v-for="review in article.review_process.reviews")
+                el-collapse-item(:title="'Reviewed by ' + review.reviewed_by + ' | Reviewer #'+review.review_idx")
+                  small {{ review.text }}
+              el-collapse(v-if="article.review_process.response")
+                el-collapse-item(title="Response to the Reviewers")
+                  small {{article.review_process.response}}
       el-row()
         el-col(:span="10")
           p
@@ -26,14 +34,6 @@
           el-collapse(v-for="(card, index) in info" id="infor-cards" v-model="activeCards")
             el-collapse-item(:title="card.title", :name="index")
               small {{ card.text }}
-          //- el-carousel(indicator-position="outside" arrow="hover" :autoplay="false" height="" id="info-cards")
-          //-   el-carousel-item(v-for="card in info" :key="card.id" style="text-align:left")
-          //-     el-card(class="box-card" shadow="always")
-          //-       small {{ card.text }}
-            //- a(:href="panel.url")
-            //-   el-image(:src="panel.img_url" fit="contain")
-            //- p
-            //-   a(:href="panel.url") Open in SmartFigure
     el-divider
 </template>
 <script>

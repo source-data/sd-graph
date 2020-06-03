@@ -3,6 +3,7 @@ from typing import Dict, NewType
 from neotools.db import Instance, Query
 from .queries import (
     STATS, BY_DOI, FIG_BY_DOI_IDX, PANEL_BY_NEO_ID,
+    REVIEW_PROCESS_BY_DOI, 
     BY_MOLECULE, BY_HYP, AUTOMAGIC,
     BY_METHOD, SEARCH, PANEL_SUMMARY, COVID19,
 )
@@ -55,6 +56,10 @@ class Engine:
 
     def by_doi(self, doi):
         response = self.ask_neo(BY_DOI, doi)
+        return response
+
+    def review_by_doi(self, doi):
+        response = self.ask_neo(REVIEW_PROCESS_BY_DOI, doi)
         return response
 
     def fig_by_doi_idx(self, request):

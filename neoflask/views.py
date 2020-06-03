@@ -56,6 +56,10 @@ def by_doi(doi: str):
     app.logger.info(f"search doi:{doi}")
     return R(ASKNEO.by_doi(doi=doi))
 
+@app.route('/api/v1/review/<path:doi>', methods=['GET', 'POST'])
+def review_by_doi(doi: str):
+    app.logger.info(f"review for doi:{doi}")
+    return R(ASKNEO.review_by_doi(doi=doi))
 
 @app.route('/api/v1/figure', methods=['GET', 'POST'])
 def fig_by_doi_idx():
