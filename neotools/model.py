@@ -72,7 +72,7 @@ JATS_GRAPH_MODEL = {
     'XPath': 'article',
     'properties': {
         'article-type': ('.', get_attr_factory('article-type')),
-        'journal-title': ('.', get_attr_factory('journal-title')),
+        'journal-title': ('front/journal-meta/journal-title-group/journal-title', get_text),
         'doi': ('front/article-meta/article-id[@pub-id-type="doi"]', get_text),
         'version': ('front/article-meta/article-version', get_text),
         'title': ('front/article-meta/title-group/article-title', get_inner_text),
