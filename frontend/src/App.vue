@@ -27,7 +27,17 @@
         el-row
           el-col(:span="16" :offset="4")
             p This resource prioritizes preprints with experimental results related to the biology of the virus SARS-CoV-2. The resource is developed by EMBO SourceData.
-            el-divider
+            p From 
+              code {{ db_stats.total_preprints }} 
+              | preprints imported, 
+              code {{ db_stats.ai_annotated }} 
+              | COVID-19 related preprints were annotated automatically and 
+              code {{ db_stats.sd_annotated }} 
+              | annotated manually. The Early Evidence Base graph contains in total 
+              code {{db_stats.total_nodes }} 
+              | nodes and 
+              code {{db_stats.total_rel}} 
+              | relationships.
         el-row
           el-col(:span="16" :offset="4")
             SearchBar
@@ -40,11 +50,12 @@
     el-footer
       el-row
         el-col(:span="16" :offset="4")
-          small EMBO 	&#169; {{thisYear}}
+          small EMBO 	&#169; {{ thisYear }}
 
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import SearchBar from './components/search-bar.vue'
 import QuickAccess from './components/quick-access/index.vue'
 import Highlights from './components/highlights/index.vue'
@@ -60,12 +71,14 @@ export default {
     thisYear () {
       return new Date().getFullYear()
     },
+    ...mapGetters(['db_stats'])
   },
   beforeCreate () {
     this.$store.dispatch('byMethod/getAll'),
     this.$store.dispatch('byMol/getAll'),
     this.$store.dispatch('byHyp/getAll'),
     this.$store.dispatch('byAutomagic/getAll')
+    this.$store.dispatch('statsFromFlask')
   },
 }
 </script>

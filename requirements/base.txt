@@ -1,4 +1,5 @@
 neo4j-driver==1.7.6
+# neo4j
 flask-cors
 Flask==1.1.2
 Flask-Caching==1.8.0
@@ -7,5 +8,7 @@ Flask-DotEnv==0.1.1
 python-dotenv==0.10.1
 lxml==4.5.0
 requests==2.23.
+pandas==1.0.3
 -e git+https://github.com/source-data/ai.git#egg=ai
 -e git+https://github.com/source-data/py-smtag.git@dev#egg=smtag
+-e git+https://github.com/embo-press/hypothepy#egg=hypothepy

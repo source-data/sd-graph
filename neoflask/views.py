@@ -1,14 +1,6 @@
-import os
-import argparse
-from flask import Flask, request, render_template, Response, flash, redirect, send_from_directory, url_for, make_response
+from flask import request, render_template, Response, redirect
 from .search import Engine
 from . import DB, app, cache
-
-from flask_cors import CORS
-# CORS(app)
-# CORS(app, resources={r"/*": {"origins": "ec2-18-185-121-134.eu-central-1.compute.amazonaws.com"}})
-# CORS(app, resources={r"/*": {"origins": "*"}})
-# CORS(app, resources={r"/*": {"origins": "sdash.laravel"}})
 
 
 ASKNEO = Engine(DB)
@@ -22,6 +14,13 @@ def root():
 @app.route('/doc')
 def doc():
     return render_template('doc.html', name='me')
+
+
+@app.route('/api/v1/stats', methods=['GET', 'POST'])
+@cache.cached()
+def stats():
+    app.logger.info(f"show db stats")
+    return R(ASKNEO.stats(request))
 
 
 @app.route('/api/v1/by_molecule', methods=['GET', 'POST'])
@@ -57,6 +56,10 @@ def by_doi(doi: str):
     app.logger.info(f"search doi:{doi}")
     return R(ASKNEO.by_doi(doi=doi))
 
+@app.route('/api/v1/review/<path:doi>', methods=['GET', 'POST'])
+def review_by_doi(doi: str):
+    app.logger.info(f"review for doi:{doi}")
+    return R(ASKNEO.review_by_doi(doi=doi))
 
 @app.route('/api/v1/figure', methods=['GET', 'POST'])
 def fig_by_doi_idx():

@@ -30,27 +30,19 @@ export default {
   },
   methods: {
     onSelectTab (selectedTab) {
-      console.debug('onChangeByAutomagic', selectedTab)
-      //
       if (selectedTab.label=="Automagic selection") {
         this.$store.dispatch('highlights/listByCurrent', 'byAutomagic')
       }
     },
     onChangeByMethod (selectedItemId) {
-      console.debug('onChangeByMethod',selectedItemId)
-      //
       this.$store.commit('byMethod/showRecord', { id: selectedItemId })
       this.$store.dispatch('highlights/listByCurrent',  'byMethod')
     },
     onChangeByMol (selectedItemId) {
-      console.debug('onChangeByMol',selectedItemId)
-      //
       this.$store.commit('byMol/showRecord', { id: selectedItemId })
       this.$store.dispatch('highlights/listByCurrent', 'byMol')
     },
     onChangeByHyp (selectedItemId) {
-      console.debug('onChangeByHyp',selectedItemId)
-      //
       this.$store.commit('byHyp/showRecord', { id: selectedItemId })
       this.$store.dispatch('highlights/listByCurrent', "byHyp")
     },

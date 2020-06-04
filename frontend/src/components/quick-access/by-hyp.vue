@@ -29,7 +29,6 @@ export default {
   },
   methods: {
     onSelect (selectedItemId) {
-      console.debug('onSelect',selectedItemId)
       this.$emit('change', selectedItemId)
     },
   },
