@@ -5,7 +5,8 @@ from .queries import LINK_REVIEWS, LINK_RESPONSES, LINK_ANNOT
 
 GROUP_IDS = {
     'NEGQVabn': 'review commons',
-    'q5X6RWJ6': 'elife'
+    'q5X6RWJ6': 'elife',
+    'jKiXiKya': 'embo press',
 }
 
 REVIEWER_REGEX = re.compile(r'^.{,300}(referee|reviewer)\W+(\d)', re.IGNORECASE | re.DOTALL)
@@ -68,7 +69,18 @@ class ReviewCommonsReviewNode(PeerReviewNode):
         self.label = 'Review'
         self.update_properties({
             'review_idx': self.reviewer_idx,
+            'highlight': self.significance_section
         })
+
+    @property
+    def significance_section(self):
+        text = self._resp['text']
+        r = re.search(r'\n\n#### Significance\n\n.*', text, re.IGNORECASE | re.DOTALL)
+        if r:
+            section = r.group(0)
+        else:
+            section = ''
+        return section
 
     @property
     def reviewer_idx(self):
