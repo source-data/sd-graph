@@ -51,6 +51,26 @@ docker run --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/data/
 docker rm --force neo4j-dump
 ```
 
+## How to load  contents into your neo4j database
+
+```bash
+# Make sure you dont have your neo4j running:
+docker-compose down
+
+docker rm --force neo4j-load # just in case
+
+# maker sure there is no database named graph.db
+# IRREVERSIBLE. ARE YOU SURE?
+rm -fr data/neo4j-data/database/graph.db
+
+# load the contents of your database using a temporary container
+docker run --name neo4j-load --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data -it neo4j:3.5 bin/neo4j-admin load --database=graph.db --from=data/<dump_filename>
+
+# remove the container
+docker rm --force neo4j-load
+```
+
+
 ## Production
 
 add something like this to your local `~/.ssh/config`
