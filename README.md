@@ -42,13 +42,8 @@ Inspired by https://serverfault.com/questions/835092/how-do-you-perform-a-dump-o
 # Make sure you dont have your neo4j running:
 docker-compose down
 
-docker rm --force neo4j-dump # just in case
-
 # dump the contents of your database using a temporary container
-docker run --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data -it neo4j:3.5 bin/neo4j-admin dump --database=graph.db --to=data/graph.db.dump.`date +%Y-%m-%d-%H.%M.%S`
-
-# remove the container
-docker rm --force neo4j-dump
+docker run --rm --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data -it neo4j:3.5 bin/neo4j-admin dump --database=graph.db --to=data/graph.db.dump.`date +%Y-%m-%d-%H.%M.%S`
 ```
 
 ## How to load  contents into your neo4j database
@@ -59,15 +54,11 @@ docker-compose down
 
 docker rm --force neo4j-load # just in case
 
-# maker sure there is no database named graph.db
-# IRREVERSIBLE. ARE YOU SURE?
-rm -fr data/neo4j-data/database/graph.db
 
 # load the contents of your database using a temporary container
-docker run --name neo4j-load --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data -it neo4j:3.5 bin/neo4j-admin load --database=graph.db --from=data/<dump_filename>
+# ARE YOU SURE? THIS WILL OVERWRITE ANY EXISTING DATABASE!
+docker run --name neo4j-load --rm --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data -it neo4j:3.5 bin/neo4j-admin load --database=graph.db --from=data/<dump_filename> --force # WILL OVERWRITE!
 
-# remove the container
-docker rm --force neo4j-load
 ```
 
 
