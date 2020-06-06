@@ -66,6 +66,7 @@ export default {
         medrxiv: 'medRxiv',
         'review commons': 'Review Commons',
         elife: 'eLife',
+        'embo press': 'EMBO Press',
       }
       return journal_labels[key]
     },

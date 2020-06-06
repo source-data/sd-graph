@@ -15,12 +15,12 @@
         //p 
         //  img(src="./assets/embopress-logo.jpg" width="120px").center-img
     el-container
-      el-aside(width="170px" style="border-right-style: solid; border-right-width: 1px")
-        p
+      el-aside(width="170px" style="border-right-style: solid; border-right-width: 1px;")
+        p(style="padding-left:10px")
           el-link(type="primary" href="") About
-        p
+        p(style="padding-left:10px")
           el-link(type="primary" href="") For developers
-        p
+        p(style="padding-left:10px")
           el-link(type="primary" href="") Contact
 
       el-main

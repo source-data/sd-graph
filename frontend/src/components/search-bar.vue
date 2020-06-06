@@ -3,7 +3,7 @@
     h1 Search
     el-form(:inline="true" :model="search")
       el-form-item
-        el-input(v-model="search.input" placeholder="enter search terms" clearable=true prefix-icon="el-icon-search")
+        el-input(v-model="search.input" placeholder="keywords, authors, doi" clearable=true prefix-icon="el-icon-search")
       el-form-item
         el-button(type="primary" @click="onSubmit") Search
 </template>
