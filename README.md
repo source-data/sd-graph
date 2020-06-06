@@ -62,8 +62,6 @@ docker run --name neo4j-load --rm --env-file .env --mount type=bind,source=$PWD/
 
 ```
 
-<<<<<<< HEAD
-=======
 ## How to restore a neo4j dump in production
 You have to `scp` your dump to ~/sd-graph/graph.dump
 
@@ -98,7 +96,6 @@ Finally launch the service again
 docker-compose -f production.yml up -d
 ```
 
->>>>>>> d549dd2e9fadef189fb1f3a6209336ae6b177a1a
 
 ## Production
 
