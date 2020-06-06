@@ -62,6 +62,43 @@ docker run --name neo4j-load --rm --env-file .env --mount type=bind,source=$PWD/
 
 ```
 
+<<<<<<< HEAD
+=======
+## How to restore a neo4j dump in production
+You have to `scp` your dump to ~/sd-graph/graph.dump
+
+```bash
+scp data/neo4j-data/graph.db.dump.2020-06-06-17.54.42 covid19-1:~/sd-graph/graph.dump
+```
+
+and then `ssh` into the server and run
+
+```bash
+# Make sure you dont have your neo4j running:
+docker-compose down
+
+docker rm --force neo4j-dump # just in case
+
+# dump the contents of your database using a temporary container
+docker run --rm \
+    --name neo4j-dump \
+    --env-file .env \
+    --mount type=bind,source=$PWD,target=/app \
+    --mount type=volume,source=sd-graph_production_neo4j_data,target=/data \
+    -it neo4j:3.5 \
+    bin/neo4j-admin load --from=/app/graph.dump --database=graph.db --force
+
+# remove the container
+docker rm --force neo4j-dump
+```
+
+Finally launch the service again
+
+```
+docker-compose -f production.yml up -d
+```
+
+>>>>>>> d549dd2e9fadef189fb1f3a6209336ae6b177a1a
 
 ## Production
 
