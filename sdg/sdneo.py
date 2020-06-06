@@ -98,7 +98,6 @@ if __name__ == "__main__":
     if api_name == 'eebapi':
         from .eebapi import EEBAPI
         sdneo = SDNeo(api=EEBAPI())
-        collection = 'covid19'  # only collection available in eebapi for the moment
     else:
         from .sdapi import SDAPI
         sdneo = SDNeo(api=SDAPI())
