@@ -150,6 +150,8 @@ if __name__ == '__main__':
     parser.add_argument('-L', '--listing', action='store_true', help='List of articles in the collection.') 
     parser.add_argument('-D', '--doi', default='', help='Takes a doi and return article information')
     parser.add_argument('-F', '--figure', default='', help='Takes the figure index and returns the figure legend for the figure in the paper specified with the --doi option') 
+    parser.add_argument('-C', '--collection', default='covid19', help='The collection that forms the base of the Early Evidence Base.') 
+
     args = parser.parse_args()
     listing = args.listing
     doi_arg = args.doi
