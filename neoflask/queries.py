@@ -22,12 +22,35 @@ RETURN
     a.version AS version,
     a.doi AS doi,
     'bioRxiv' AS journal,
-    COUNT(f) AS nb_figures,
+    COUNT(DISTINCT f) AS nb_figures,
     score
 ORDER BY pub_date DESC, score DESC;
     ''',
     map={},
     returns=['id', 'pub_date', 'title', 'abstract', 'version', 'doi', 'journal', 'nb_figures', 'score']
+)
+
+REFEREED_PREPRINTS = Query(
+  code='''
+MATCH (a:Article)
+OPTIONAL MATCH (a)-[:HasReview]->(review:Review)
+OPTIONAL MATCH (a)-[:HasResponse]->(response:Response)
+OPTIONAL MATCH (a)-[:HasAnnot]->(annot:PeerReviewMaterial)
+WITH
+  id(a) AS id,
+  a.publication_date AS pub_date,
+  a.title AS title,
+  a.abstract AS abstract,
+  a.version AS version,
+  a.doi AS doi,
+  a.journalName as journal,
+  {reviews: COLLECT(DISTINCT review {.*}), response: response {.*}, annot: annot {.*}} AS review_process
+WHERE
+  review_process.reviews <> [] OR EXISTS(review_process.annot)
+RETURN id, pub_date, title, abstract, version, doi, journal, review_process
+ORDER BY pub_date DESC
+  ''',
+  returns=['id', 'pub_date', 'title', 'abstract', 'version', 'doi', 'journal', 'nb_figures', 'review_process']
 )
 
 BY_DOI = Query(
@@ -375,40 +398,42 @@ RETURN 'automagic list' AS name, "1" AS id, COLLECT(paper) AS papers
 )
 
 
-SEARCH = Query(
+LUCENE_SEARCH = Query(
     code='''
 // Full-text search on multiple indices.
 
 //CALL db.index.fulltext.createNodeIndex("title", ["Article"], ["title"]);
-CALL db.index.fulltext.queryNodes("title", $query) YIELD node, score
-WITH 
-  node.doi AS doi, node.title AS text, score, "title" AS source
+WITH $query AS query
+CALL db.index.fulltext.queryNodes("title", query) YIELD node, score
+WITH
+  node.doi AS doi, node.title AS text, score, "title" AS source, query
 ORDER BY score DESC
 RETURN 
-  doi, [{text: text}] AS info, score
-LIMIT 20
+  doi, [{text: text}] AS info, score, source, query
 
 UNION
 
 //CALL db.index.fulltext.createNodeIndex("abstract",["Article"], ["abstract"]);
-CALL db.index.fulltext.queryNodes("abstract", $query) YIELD node, score
+WITH $query AS query
+CALL db.index.fulltext.queryNodes("abstract", query) YIELD node, score
 WITH
-  node.doi AS doi, node.title as text, score, "abstract" as source
+  node.doi AS doi, node.title as text, score, "abstract" as source, query
 ORDER BY score DESC
 RETURN 
-  doi, [{text: text}] AS info, score
+  doi, [{text: text}] AS info, score, source, query
 LIMIT 20
 
 UNION
 
 //CALL db.index.fulltext.createNodeIndex("caption",["Fig"], ["caption"]);
-CALL db.index.fulltext.queryNodes("caption", $query) YIELD node, score
+WITH $query AS query
+CALL db.index.fulltext.queryNodes("caption", query) YIELD node, score
 MATCH (article:Article)-[:has_figure]->(node)
 WITH DISTINCT
-  article.doi as doi, node.caption as text, score, "caption" AS source
+  article.doi as doi, node.caption as text, score, "caption" AS source, query
 ORDER BY score DESC
 RETURN 
-  doi, [{text: text}] AS info, score
+  doi, [{text: text}] AS info, score, source, query
 LIMIT 20
 
 //UNION
@@ -419,36 +444,49 @@ LIMIT 20
 //MATCH (sd_article:SDArticle)-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(ct:CondTag)-[:Identified_by]->(h:H_Entity)
 //WHERE h.name = node.name AND node.name <> ""
 //WITH DISTINCT 
-//  sd_article.doi as doi, h.name as text, score, "entity" as source
+//  sd_article.doi as doi, h.name as text, score, "entity" as source, query
 //ORDER BY score DESC
 //RETURN 
-//  doi, [{text: text}] AS info, score
+//  doi, [{text: text}] AS info, score, source, query
 //LIMIT 20
 
 UNION
 
 //CALL db.index.fulltext.createNodeIndex("name",["Contrib"], ["surname"]);
-CALL db.index.fulltext.queryNodes("name", $query) YIELD node, score
+WITH $query AS query
+CALL db.index.fulltext.queryNodes("name", query) YIELD node, score
 MATCH (article:Article)-->(author:Contrib)
 WHERE author.surname = node.surname
 WITH DISTINCT 
-  article.doi as doi, node.surname as text, score, "author" AS source
+  article.doi as doi, node.surname as text, score, "author" AS source, query
 ORDER BY score DESC
 RETURN 
-  doi, [{text: text}] AS info, score
+  doi, [{text: text}] AS info, score, source, query
 LIMIT 20
 ''',
     map={'query': ['query', '']},
-    returns=['doi', 'info', 'score']
+    returns=['doi', 'info', 'score', 'source', 'query']
+)
+
+SEARCH_DOI = Query(
+  code='''
+WITH $query AS query
+MATCH (article:Article)
+WHERE article.doi = query
+RETURN
+  article.doi AS doi, [{text: article.doi}] AS info, 10.0 AS score, 'doi' AS source, query
+  ''',
+  map={'query': ['query', '']},
+  returns=['doi', 'info', 'score', 'source', 'query']
 )
 
 STATS = Query(
     code='''
 MATCH (a:Article)
 WITH COUNT(a) AS N_jats
-MATCH (sd:SDArticle {source: 'sdapi'}) 
+MATCH (sd:SDArticle {source: 'sdapi'})
 WITH COUNT(sd) AS N_sdapi, N_jats
-MATCH (eeb:SDArticle {source: 'eebapi'}) 
+MATCH (eeb:SDArticle {source: 'eebapi'})
 WITH COUNT(eeb) AS N_eeb, N_sdapi, N_jats
 MATCH (n)
 WITH COUNT(n) AS N_nodes, N_eeb, N_sdapi, N_jats
@@ -555,7 +593,6 @@ RETURN
     map={'panel_id': []},
     returns=['fig_label', 'fig_title', 'panel_label', 'caption', 'controlled_var', 'measured_var', 'other', 'methods']
 )
-
 
 
 

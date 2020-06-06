@@ -75,8 +75,8 @@ def panel_by_neo_id(id):
 
 
 @app.route('/api/v1/search/', methods=['GET'])
-@cache.cached()
-def entity():
+# @cache.cached()
+def search():
     app.logger.info(f"search '{request.args.get('query')}'")
     return R(ASKNEO.search(request))
 
@@ -95,6 +95,11 @@ def panel_summary(panel_id: str):
 @app.route('/api/v1/collection/covid19', methods=['GET', 'POST'])
 def covid19():
     return R(ASKNEO.covid19(request))
+
+
+@app.route('/api/v1/collection/refereed-preprints', methods=['GET', 'POST'])
+def refereed_preprints():
+    return R(ASKNEO.refereed_preprints(request))
 
 
 def R(response):

@@ -3,15 +3,15 @@ from typing import List, Dict, Tuple, Callable
 from neo4j import GraphDatabase, Node, BoltStatementResult, BoltStatementResultSummary, Transaction
 
 
-def quote4neo(attributes):
+def quote4neo(properties):
     quotes_added = {}
-    for k, v in attributes.items():
+    for k, v in properties.items():
         if v is None:
             v = '""'
         elif isinstance(v, str):
             v = v.replace("'", r"\'")
             v = v.replace('"', r"'")
-            v = v.replace('\\', r'\\')
+            v = v.replace('\\', r'\\') # why?
             v = f'"{v}"'
         quotes_added[k] = v
     return quotes_added
