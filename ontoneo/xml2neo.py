@@ -17,7 +17,7 @@ from .model import (
     DOID_GRAPH_MODEL,
     OBI_GRAPH_MODEL,
     BAO_GRAPH_MODEL,
-) 
+)
 from .queries import MAKE, REMOVE_DEPRECATED, CONTRAINT_CLASS_UNIQUE
 from . import DB
 
