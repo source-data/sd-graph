@@ -26,11 +26,11 @@ Normally you just need this:
 ```bash
 docker-compose  build
 docker-compose up -d
-docker-compose run --rm flask python -m sdg.sdneo SARS-CoV-2 --api sdapi  # import source data public data
-docker-compose run --rm flask python -m neotools.rxiv2neo data/meca --type meca # import full text biorxiv preprints
-docker-compose run --rm flask python -m neotools.rxiv2neo data/cord19 --type cord19 # import full text MedRxiv preprints (experimental)
+docker-compose run --rm flask python -m neotools.rxiv2neo data/<path_to_meca_archves> --type meca # import full text biorxiv preprints
+docker-compose run --rm flask python -m neotools.rxiv2neo data/<path_to_cord19_archives> --type cord19 # import full text MedRxiv preprints (experimental)
 docker-compose run --rm flask python -m peerreview.neohypo # import peer reviews from hypothesis
 docker-compose run --rm flask python -m sdg.sdneo --api eebapi # smarttag covid-19 preprints
+docker-compose run --rm flask python -m sdg.sdneo <collection_name> --api sdapi  # import source data public data
 cat sdg/SD-processing.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>  # generate merged graph
 # visit http:/localhost:8080
 ```
@@ -58,6 +58,7 @@ docker rm --force neo4j-load # just in case
 # load the contents of your database using a temporary container
 # ARE YOU SURE? THIS WILL OVERWRITE ANY EXISTING DATABASE!
 docker run --name neo4j-load --rm --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data -it neo4j:3.5 bin/neo4j-admin load --database=graph.db --from=data/<dump_filename> --force # WILL OVERWRITE!
+# if there is not pre-existing graph.db, then the option --force needs to me ommitted to avoid "command failed: unable to load database: NoSuchFileException"
 
 ```
 
