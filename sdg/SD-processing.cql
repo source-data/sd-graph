@@ -1,6 +1,8 @@
 /////PROCESSING THE GRAPH//////
 
 //indices and constraints
+CREATE INDEX ON :Article(doi);
+CREAT INDEX ON :Article(version);
 CREATE INDEX ON :SDTag(text);
 CREATE INDEX ON :SDTag(ext_ids);
 CREATE INDEX ON :SDTag(type);
@@ -154,14 +156,40 @@ MERGE (intervention)-[r:H]->(assayed)
 RETURN COUNT(r) AS `hypotheses at cond tag level`;
 
 
-//copy publication date from jats articles to SDArticles
+//copy publication date and abstract from jats articles to SDArticles
 MATCH (jats:Article), (a:SDArticle)
 WHERE jats.doi = a.doi
-WITH DISTINCT jats.doi AS doi, jats.publication_date AS pub_date, a
+WITH DISTINCT 
+  jats.doi AS doi, 
+  jats.publication_date AS pub_date, 
+  jats.abstract AS abstract, 
+  a
 ORDER BY pub_date DESC // most recent first
-WITH DISTINCT doi, COLLECT(pub_date)[0] AS most_recent, a
-SET a.pub_date = most_recent
+WITH DISTINCT doi, COLLECT(pub_date)[0] AS most_recent, COLLECT(abstract)[0] AS abstr, a
+SET a += (pub_date: most_recent, abstract: abstr)
 RETURN COUNT(DISTINCT a);
+
+
+//Link to authors via Contrib nodes
+MATCH (jats:Article), (sd:SDArticle)
+WHERE jats.doi = sd.doi
+WITH DISTINCT
+  sd.doi AS doi,
+  sd,
+  jats
+ORDER BY jats.publication_date DESC
+WITH DISTINCT
+  doi,
+  sd,
+  COLLECT(jats)[0] AS most_recent
+MATCH
+  (most_recent)-[:has_author]->(au:Contrib)
+WITH DISTINCT
+  doi,
+  sd,
+  au
+MERGE (sd)-[r:has_author]->(au)
+RETURN COUNT(DISTINCT r) AS N_auth_relationships
 
 //create hypotheses summaries at paper level
 
@@ -226,3 +254,6 @@ MERGE(:Resolver {name: "Disease ontology", url: "http://purl.bioontology.org/ont
 //Full text indexing
 CALL db.index.fulltext.createNodeIndex("entity_name",["H_Entity"],["name"], {analyzer: "english"});
 CALL db.index.fulltext.createNodeIndex("synonym",["Term"],["text"], {analyzer: "english"});
+CALL db.index.fulltext.createNodeIndex("title", ["SDArticle"], ["title"], {analyzer: "english"})
+CALL db.index.fulltext.createNodeIndex("abstract", ["SDArticle"], ["abstract"], {analyzer: "english"});
+CALL db.index.fulltext.createNodeIndex("caption", ["SDPanel"], ["caption"], {analyzer: "english"});
