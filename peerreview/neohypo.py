@@ -27,7 +27,7 @@ def type_of_annotation(hypo_row):
 def doi_from_uri(uri):
     # dirty for now: strip away the version postfix from the biorixv uri
     # 'https://www.biorxiv.org/content/10.1101/733097v2'
-    doi = re.search(r'10\.1101/\d+', uri).group(0)
+    doi = re.search(r'10\.1101/[\d\.]+', uri).group(0)
     return doi
 
 
@@ -75,9 +75,9 @@ class ReviewCommonsReviewNode(PeerReviewNode):
     @property
     def significance_section(self):
         text = self._resp['text']
-        r = re.search(r'\n\n#### Significance\n\n.*', text, re.IGNORECASE | re.DOTALL)
+        r = re.search(r'\n\n#### Significance\n\n(.*)', text, re.IGNORECASE | re.DOTALL)
         if r:
-            section = r.group(0)
+            section = r.group(1)
         else:
             section = ''
         return section
@@ -129,16 +129,23 @@ class Hypothelink:
 
     def get_annot_from_hypo(self, group_id: str):
         # https://api.hypothes.is/api/search?group=NEGQVabn
-        response = self.hypo.annotations.search(group=group_id, limit=200) # NEEDS PAGINATION USING offset and total // limit
-        if response.status_code == 200:
-            response = response.json()
-            N = response['total']
-            # ADD pagination using offset
-            print(f"found {N} annotations for group {GROUP_IDS[group_id]}")
-            rows = response['rows']
-        else:
-            print(f"PROBLEM: {response.status_code}")
-            rows = None
+        rows = []
+        limit = 200
+        offset = 0
+        remaining = 1
+        while remaining > 0:
+            response = self.hypo.annotations.search(group=group_id, limit=limit, offset=offset) # NEEDS PAGINATION USING
+            if response.status_code == 200:
+                response = response.json()
+                N = response['total']  # does not change
+                remaining = N - offset
+                offset += limit
+                print(f"found {N} annotations for group {GROUP_IDS[group_id]}")
+                rows += response['rows']
+            else:
+                print(f"PROBLEM: {response.status_code}")
+                rows = None
+                remaining = 0 
         return rows
 
     def make_relationships(self):
