@@ -101,7 +101,6 @@ if __name__ == "__main__":
     else:
         from .sdapi import SDAPI
         sdneo = SDNeo(api=SDAPI())
-
     print(f"Importing: {collection} with api={api_name}")
     collection = sdneo.create_graph(collection_name=collection)
     print(f"Imported {len(collection)} papers.")
