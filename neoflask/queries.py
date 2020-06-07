@@ -72,16 +72,21 @@ WITH DISTINCT
     id(a) AS id,
     a.doi AS doi,
     a.version AS version,
-    a.source AS source, 
-    'biorxiv' AS journal,
+    a.source AS source,
+    a.journal_title AS journal,
     a.title AS title,
     a.abstract AS abstract,
     a.publication_date AS pub_date,
     auth,
     id.text AS ORCID,
     COUNT(DISTINCT f) AS nb_figures,
+    review, response, annot
+ORDER BY
+    review.review_idx ASC, 
+    auth.position_idx ASC
+WITH
+    id, doi, version, source, journal, title, abstract, pub_date, auth, ORCID, nb_figures,
     {reviews: COLLECT(DISTINCT review {.*}), response: response {.*}, annot: annot {.*}} AS review_process
-ORDER BY auth.position_idx
 RETURN DISTINCT 
     id, doi, version, source, journal, title, abstract, pub_date, 
     COLLECT(DISTINCT auth {.surname, .given_names, .position_idx, .corresp, orcid: ORCID}) AS authors,
@@ -128,6 +133,8 @@ REVIEW_PROCESS_BY_DOI = Query(
 MATCH (a:Article {doi: $doi})-[r:HasReview]->(review:Review)
 OPTIONAL MATCH (a)-[:HasResponse]->(response:Response)
 OPTIONAL MATCH (a)-[:HasAnnot]->(annot:PeerReviewMaterial)
+WITH a, review, response, annot
+ORDER BY review.review_idx ASC
 RETURN a.doi as doi, {reviews: COLLECT(DISTINCT review {.*}), response: response {.*}, annot: annot {.*}} AS review_process
   ''',
   map={'doi': []},
@@ -143,7 +150,7 @@ UNWIND [
   {name: 'flow cytometry',        regex: '.*electron micro.*'            },
   {name: 'crystal structures',    regex: '.*(crystallo|crystal struct).*'},
   {name: 'immunoprecipitation',   regex: '.*immunoprecip.*'              },
-  {name: 'immunohistochemistry', regex: '.*immunohistoc.*'              },
+  {name: 'immunohistochemistry', regex: '.*immunohistoc.*'               },
   {name: 'histology',             regex: '.*histol.*'                    },
   {name: 'pseudotype entry',      regex: '.*pseudotype.*'                }
 ] AS query
@@ -185,7 +192,7 @@ WITH name, synonyms, role, N, N_role, 100.0*(N_role / N) AS fract
 ORDER BY N DESC, fract DESC
 WITH name, synonyms, N, COLLECT(role)[0] AS dominant_role, COLLECT(fract)[0] AS dom_fract
 WHERE 
-  (dominant_role = "normalizing" OR dominant_role = "reporter")
+  (dominant_role = "normalizing" OR dominant_role = "reporter" OR dominant_role = "component")
   AND
   dom_fract > 75 AND N > 10.0
 WITH COLLECT(name) + synonyms AS all
@@ -194,7 +201,7 @@ WITH COLLECT(DISTINCT terms) AS exclusion_list
 
 //prioritize manually curated papers
 MATCH (a:SDArticle)
-WHERE a.journalName = "biorxiv"
+WHERE toLower(a.journalName) IN ["biorxiv", "medrxiv"]
 WITH a, exclusion_list
 ORDER BY a.source DESC // manually curated source = 'sdapi' sorted before automatic papers where source = 'eebapi'
 WITH DISTINCT a.doi AS doi, COLLECT(a) AS same_paper, exclusion_list
@@ -202,7 +209,7 @@ WITH same_paper[0] as a, exclusion_list
 
 MATCH
   (a)-->(f:SDFigure)-->(p:SDPanel),
-    path_1=(p)-->(i:CondTag {role: "intervention"})-->(ctrl:H_Entity)-->(ctrl_term:Term),
+  path_1=(p)-->(i:CondTag {role: "intervention"})-->(ctrl:H_Entity)-->(ctrl_term:Term),
   path_2=(p)-->(m:CondTag {role: "assayed"})-->(meas:H_Entity)-->(meas_term:Term)
 WHERE
   ctrl.name <> meas.name // could still be 2 entities normalized differently
@@ -211,16 +218,27 @@ WHERE
   AND
   NONE (n IN nodes(path_2) WHERE labels(n)=['Term'] AND (n.text IN exclusion_list))
 WITH DISTINCT
-    a, COLLECT(DISTINCT p) AS panels, COUNT(DISTINCT p) AS N_panels,
-    ctrl.name AS ctrl_name, meas.name AS meas_name
-ORDER BY ctrl_name, meas_name
+    a, f, p, 
+    ctrl.name AS ctrl_name, 
+    meas.name AS meas_name
+ORDER BY f.fig_label ASC, p.panel_label ASC
+WITH DISTINCT
+    a, 
+    COLLECT(DISTINCT p{.*, id: id(p), title: f.fig_labell}) AS panels,
+    COUNT(DISTINCT p) AS N_panels,
+    ctrl_name, meas_name
+ORDER BY ctrl_name, meas_name //deterministic order
 WITH a, panels, N_panels, COLLECT(DISTINCT ctrl_name) AS ctrl_v, COLLECT(DISTINCT meas_name) AS meas_v
 WHERE N_panels > 1
-WITH a, panels, N_panels, ctrl_v, meas_v
-MATCH (a)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(assay:H_Entity {category: "assay"})
-WITH DISTINCT a, {ctrl_v: ctrl_v, meas_v: meas_v} AS hyp, [p IN panels | {id: id(p), label: p.label, title: f.fig_label, text: p.caption}] AS panel_captions, N_panels, COUNT(DISTINCT assay) AS N_assay
+WITH 
+  a, 
+  [p IN panels | {id: p.id, label: p.panel_label, title: p.title, text: p.caption}] AS panel_captions,
+  N_panels, 
+  ctrl_v, meas_v
+MATCH (a)-->(:SDFigure)-->(:SDPanel)-->(:CondTag)-->(assay:H_Entity {category: "assay"})
+WITH DISTINCT a, panel_captions, N_panels, {ctrl_v: ctrl_v, meas_v: meas_v} AS hyp, COUNT(DISTINCT assay) AS N_assay
 ORDER BY N_panels DESC, a.pub_date DESC
-WITH a, COLLECT(hyp)[0] AS dominant, COLLECT(panel_captions)[0] AS panels, N_assay
+WITH a, COLLECT(panel_captions)[0] AS panels, COLLECT(hyp)[0] AS dominant, N_assay
 WHERE N_assay > 3
 WITH dominant, COLLECT({doi: a.doi, info: panels, pub_date: a.pub_date}) AS papers
 WITH COLLECT([dominant, papers]) AS all_results
@@ -287,11 +305,15 @@ UNWIND synonym_sets AS synonym
 WITH query_group, synonym
 
 MATCH
-  (paper {journalName: 'biorxiv'})-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(mol:H_Entity {category: "entity"})-[:Has_text]->(mol_name:Term {text: synonym})
+  (paper:SDArticle)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(mol:H_Entity {category: "entity"})-[:Has_text]->(mol_name:Term {text: synonym})
 WHERE
+  toLower(paper.journalName) IN ["biorxiv", "medrxiv"]
+  AND
   (mol.type = "molecule" OR mol.type = "small_molecule")
   AND
   datetime(paper.pub_date) > datetime('2020-04-01')
+WITH DISTINCT query_group, paper, f, p, synonym
+ORDER BY f.fig_label ASC
 WITH DISTINCT query_group, paper, COLLECT(DISTINCT {id: id(p), title: f.fig_label, text: p.caption}) AS panels, COUNT(DISTINCT p) AS N_panels, COLLECT(DISTINCT synonym) AS synonyms_in_paper
 WHERE 
   N_panels > 2
@@ -402,7 +424,7 @@ LUCENE_SEARCH = Query(
     code='''
 // Full-text search on multiple indices.
 
-//CALL db.index.fulltext.createNodeIndex("title", ["Article"], ["title"]);
+//CALL db.index.fulltext.createNodeIndex("title", ["SDArticle"], ["title"]);
 WITH $query AS query
 CALL db.index.fulltext.queryNodes("title", query) YIELD node, score
 WITH
@@ -413,7 +435,7 @@ RETURN
 
 UNION
 
-//CALL db.index.fulltext.createNodeIndex("abstract",["Article"], ["abstract"]);
+//CALL db.index.fulltext.createNodeIndex("abstract",["SDArticle"], ["abstract"]);
 WITH $query AS query
 CALL db.index.fulltext.queryNodes("abstract", query) YIELD node, score
 WITH
@@ -425,7 +447,7 @@ LIMIT 20
 
 UNION
 
-//CALL db.index.fulltext.createNodeIndex("caption",["Fig"], ["caption"]);
+//CALL db.index.fulltext.createNodeIndex("caption",["SDPanel"], ["caption"]);
 WITH $query AS query
 CALL db.index.fulltext.queryNodes("caption", query) YIELD node, score
 MATCH (article:Article)-[:has_figure]->(node)
@@ -452,11 +474,11 @@ LIMIT 20
 
 UNION
 
-//CALL db.index.fulltext.createNodeIndex("name",["Contrib"], ["surname"]);
+//CALL db.index.fulltext.createNodeIndex("name",["Contrib"], ["surname", "given_names"]);
 WITH $query AS query
 CALL db.index.fulltext.queryNodes("name", query) YIELD node, score
-MATCH (article:Article)-->(author:Contrib)
-WHERE author.surname = node.surname
+MATCH (article:SDArticle)-->(author:Contrib)
+WHERE author.surname = node.surname AND author.given_names = node.given_names
 WITH DISTINCT 
   article.doi as doi, node.surname as text, score, "author" AS source, query
 ORDER BY score DESC
@@ -484,7 +506,7 @@ STATS = Query(
     code='''
 MATCH (a:Article)
 WITH COUNT(a) AS N_jats
-MATCH (sd:SDArticle {source: 'sdapi'})
+MATCH (sd:SDPanel {source: 'sdapi'})
 WITH COUNT(sd) AS N_sdapi, N_jats
 MATCH (eeb:SDArticle {source: 'eebapi'})
 WITH COUNT(eeb) AS N_eeb, N_sdapi, N_jats
