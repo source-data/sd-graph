@@ -6,8 +6,8 @@
           a(href="https://embo.org" target="_blank" )
             img(src="./assets/embo-logo.gif" height="80px").center-img
       el-col(:span="16")
-        h1(style="text-align: center") Early Evidence Base: SARS-CoV-2
-        p(style="text-align: center") A structured resource of early results on the biology of SARS-CoV-2
+        h1(style="text-align: center") Early Evidence Base - Refereed Preprints
+        p(style="text-align: center") A structured resource of early results posted on preprints linked to peer-reviews.
       el-col(:span="4")
         p 
           a(href="https://sourcedata.io" target="_blank" )
@@ -27,17 +27,19 @@
         el-row
           el-col(:span="16" :offset="4")
             p This resource prioritizes preprints with experimental results related to the biology of the virus SARS-CoV-2. The resource is developed by EMBO SourceData.
-            p From 
-              code {{ db_stats.total_preprints }} 
-              | preprints imported, 
-              code {{ db_stats.ai_annotated }} 
-              | COVID-19 related preprints were annotated automatically and 
-              code {{ db_stats.sd_annotated }} 
-              | annotated manually. The Early Evidence Base graph contains in total 
-              code {{db_stats.total_nodes }} 
-              | nodes and 
-              code {{db_stats.total_rel}} 
-              | relationships.
+            p Database stats: 
+              ul
+                li Annotated automatically: 
+                  code {{ db_stats.ai_annotated }} 
+                  | preprints.
+                li SourceData knowledge graph: 
+                  code {{ db_stats.sd_annotated }} 
+                  | experiments.
+                li The Early Evidence Base graph contains 
+                  code {{db_stats.total_nodes }} 
+                  | nodes and 
+                  code {{db_stats.total_rel}} 
+                  | relationships.
         el-row
           el-col(:span="16" :offset="4")
             SearchBar

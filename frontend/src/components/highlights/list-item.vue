@@ -4,22 +4,38 @@
       el-row()
         el-col(:span="24")
             h3 {{ article.title }} 
-            el-row(type="flex" justify="space-between")
+            //- el-row(type="flex" justify="space-between")
+            p
               small() Posted 
                 b {{ displayDate(article.pub_date) }}
                 |  on 
                 i {{ displayJournal(article.journal) }}
+            p
+              small
                 b  doi:  
                 el-link(type="primary" :href="href(article.doi)" target="_blank") http://doi.org/{{ article.doi }} 
             p
               small {{ authorList }}
             div(v-if="article.review_process")
-              el-collapse(v-for="review in article.review_process.reviews")
-                el-collapse-item(:title="'Reviewed by ' + displayJournal(review.reviewed_by) + ' | Reviewer #'+review.review_idx")
-                  small(v-html="mdRender(review.text)")
+              el-collapse(v-for="review in article.review_process.reviews" accordion)
+                el-popover(v-if="review.highlight",
+                    placement="top",
+                    title="Summary (click tab for full review)",
+                    width="600",
+                    trigger="hover",
+                    :content="review.highlight",
+                    transition="el-fade-in-linear",
+                    :visible-arrow="false",
+                    open-delay="500"
+                  )
+                  el-collapse-item(:title="'Reviewed by ' + displayJournal(review.reviewed_by) + ' | Reviewer #'+review.review_idx", slot="reference")
+                    p(v-html="mdRender(review.text)")
               el-collapse(v-if="article.review_process.response")
                 el-collapse-item(title="Response to the Reviewers")
-                  small(v-html="mdRender(article.review_process.response.text)")
+                  p(v-html="mdRender(article.review_process.response.text)")
+              el-collapse(v-if="article.review_process.annot")
+                el-collapse-item(:title="'Reviewed by ' + displayJournal(article.review_process.annot.reviewed_by) + ' | Review Process File'")
+                  p(v-html="mdRender(article.review_process.annot.text)")
       el-row()
         el-col(:span="10")
           p
@@ -53,14 +69,16 @@ export default {
         return new URL(doi, "https://doi.org/").href
     },
     displayDate(date_str) {
+        
         const date = new Date(date_str)
         const year = date.getFullYear()
         const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
         const month = months[date.getMonth()]
-        const day = date.getDay()
+        const day = date.getDate()
         return month + ' ' + day + ', ' + year 
     },
     displayJournal(key) {
+      const low_key = key.toLowerCase()
       const journal_labels = {
         biorxiv: 'bioRxiv', 
         medrxiv: 'medRxiv',
@@ -68,7 +86,7 @@ export default {
         elife: 'eLife',
         'embo press': 'EMBO Press',
       }
-      return journal_labels[key]
+      return journal_labels[low_key]
     },
     mdRender (md_text) {
       const md = new MarkdownIt({
@@ -96,3 +114,9 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+  .peer_review {
+    color:#364497;
+  }
+</style>
