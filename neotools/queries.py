@@ -1,4 +1,3 @@
-
 from neotools.db import Query
 
 
@@ -8,17 +7,10 @@ SOURCE_BY_UUID = Query(
     returns=['n']
 )
 
-CREATE_FULLTEXT_INDEX_ON_TITLE = Query(
-    code='''CALL db.index.fulltext.createNodeIndex("title", ["Article"], ["title"]);'''
-)
-CREATE_FULLTEXT_INDEX_ON_ABSTRACT = Query(
-    code='''CALL db.index.fulltext.createNodeIndex("abstract", ["Article"], ["abstract"]);'''
-)
-CREATE_FULLTEXT_INDEX_ON_CAPTION = Query(
-    code='''CALL db.index.fulltext.createNodeIndex("caption", ["Fig"], ["caption"]);'''
-)
-CREATE_FULLTEXT_INDEX_ON_NAME = Query(
-    code='''CALL db.index.fulltext.createNodeIndex("name", ["Contrib"], ["surname"]);'''
+CREATE_INDEX_DOI = Query(
+    code='''CREATE INDEX ON :Article(doi);'''
 )
 
-# TODO: neo4j index of doi + version
+CREATE_INDEX_VERSION = Query(
+    code='''CREATE INDEX ON :Article(version);'''
+)

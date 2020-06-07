@@ -11,11 +11,10 @@ from .model import JATS_GRAPH_MODEL, CORD19_GRAPH_MODEL
 from .txt2node import XMLNode, CORDNode
 from .db import Instance
 from .queries import (
-    SOURCE_BY_UUID, 
-    CREATE_FULLTEXT_INDEX_ON_ABSTRACT,
-    CREATE_FULLTEXT_INDEX_ON_CAPTION,
-    CREATE_FULLTEXT_INDEX_ON_NAME,
-    CREATE_FULLTEXT_INDEX_ON_TITLE,
+    SOURCE_BY_UUID,
+    CREATE_INDEX_DOI,
+    CREATE_INDEX_VERSION,
+    FULL_TEXT_NAME,
 )
 from . import logger, DB
 
@@ -194,10 +193,8 @@ def build_neo_graph(xml_node: XMLNode, source: str, db: Instance, catch_exceptio
 
 def add_indices():
     try:
-        DB.query(CREATE_FULLTEXT_INDEX_ON_ABSTRACT)
-        DB.query(CREATE_FULLTEXT_INDEX_ON_CAPTION)
-        DB.query(CREATE_FULLTEXT_INDEX_ON_NAME)
-        DB.query(CREATE_FULLTEXT_INDEX_ON_TITLE)
+        DB.query(CREATE_INDEX_DOI)
+        DB.query(CREATE_INDEX_VERSION)
     except ClientError as error:
         print()
         print(error)
