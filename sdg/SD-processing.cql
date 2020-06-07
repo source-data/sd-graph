@@ -1,21 +1,6 @@
 /////PROCESSING THE GRAPH//////
 
-//indices and constraints
-CREATE INDEX ON :Article(doi);
-CREAT INDEX ON :Article(version);
-CREATE INDEX ON :SDTag(text);
-CREATE INDEX ON :SDTag(ext_ids);
-CREATE INDEX ON :SDTag(type);
-CREATE INDEX ON :SDTag(role);
-CREATE INDEX ON :SDTag(ext_names);
-CREATE INDEX ON :SDTag(norm_text);
-CREATE INDEX ON :CondTag(ext_ids);
-CREATE INDEX ON :CondTag(text);
-CREATE INDEX ON :CondTag(ext_tax_names);
-CREATE INDEX ON :H_Entity(ext_ids);
-CREATE INDEX ON :H_Entity(type);
-CREATE INDEX ON :CondTag(category);
-CREATE INDEX ON :CondTag(name);
+
 CREATE CONSTRAINT ON (h:H_Entity) ASSERT h.combo_id IS UNIQUE;
 //CREATE CONSTRAINT ON (h:H_Entity) ASSERT (h.ext_id, h.type, h.category, h.name) IS NODE KEY; //only neo4j Enterprise!
 CREATE CONSTRAINT ON (te:Term) ASSERT te.text IS UNIQUE;
@@ -26,8 +11,19 @@ SET a.journalName = toLower(a.journalName);
 
 //trim and tolower text
 MATCH(t:SDTag)
-WHERE t.text <> ""
 SET t.norm_text = toLower(trim(t.text));
+
+//add text if none there
+MATCH(t:SDTag)
+WHERE t.text = ""
+SET t.text = toLower(t.ext_names)
+RETURN COUNT(t) AS `added ext_names instead of emtpy text tag`;
+
+//remove sick tags with no name and no ext_names
+MATCH(t:SDTag)-[r]-()
+WHERE t.text = "" AND t.ext_names = ""
+DELETE r, t
+RETURN COUNT(t) AS `deleted empty tags`;
 
 //replace NULL by "" for consistency 
 MATCH(t:SDTag)
@@ -166,7 +162,7 @@ WITH DISTINCT
   a
 ORDER BY pub_date DESC // most recent first
 WITH DISTINCT doi, COLLECT(pub_date)[0] AS most_recent, COLLECT(abstract)[0] AS abstr, a
-SET a += (pub_date: most_recent, abstract: abstr)
+SET a += {pub_date: most_recent, abstract: abstr}
 RETURN COUNT(DISTINCT a);
 
 
@@ -189,7 +185,7 @@ WITH DISTINCT
   sd,
   au
 MERGE (sd)-[r:has_author]->(au)
-RETURN COUNT(DISTINCT r) AS N_auth_relationships
+RETURN COUNT(DISTINCT r) AS N_auth_relationships;
 
 //create hypotheses summaries at paper level
 
@@ -251,9 +247,3 @@ MERGE(:Resolver {name: "Disease ontology", url: "http://purl.bioontology.org/ont
 
 //Link H_Entity to ontologies
 
-//Full text indexing
-CALL db.index.fulltext.createNodeIndex("entity_name",["H_Entity"],["name"], {analyzer: "english"});
-CALL db.index.fulltext.createNodeIndex("synonym",["Term"],["text"], {analyzer: "english"});
-CALL db.index.fulltext.createNodeIndex("title", ["SDArticle"], ["title"], {analyzer: "english"})
-CALL db.index.fulltext.createNodeIndex("abstract", ["SDArticle"], ["abstract"], {analyzer: "english"});
-CALL db.index.fulltext.createNodeIndex("caption", ["SDPanel"], ["caption"], {analyzer: "english"});
