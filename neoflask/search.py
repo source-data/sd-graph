@@ -44,59 +44,59 @@ class Engine:
         data = self.neo4j_db.query_with_tx_funct(tx_funct, query)
         return data
 
-    def query2json(query: Query) -> json_str:
+    def query2json(self, query: Query) -> json_str:
         data = self.ask_neo(query)
         return json.dumps(data, indent=3)
-    
+
     def stats(self, request):
         query = copy(STATS)
         query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
-        return query2json(query)
+        return self.query2json(query)
 
     def by_molecule(self, request):
         query = copy(BY_MOLECULE)
         query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
-        return query2json(query)
+        return self.query2json(query)
 
     def by_method(self, request):
         query = copy(BY_METHOD)
         query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
-        return query2json(query)
+        return self.query2json(query)
 
     def by_doi(self, doi):
-        query = copy(BY_METHOD)
+        query = copy(BY_DOI)
         query.params = param_from_request(doi, query)  # need to know which param to extract from request depending on query.map
-        return query2json(query)
+        return self.query2json(query)
 
     def review_by_doi(self, doi):
         query = copy(REVIEW_PROCESS_BY_DOI)
         query.params = param_from_request(doi, query)  # need to know which param to extract from request depending on query.map
-        return query2json(query)
+        return self.query2json(query)
 
     def fig_by_doi_idx(self, request):
         query = copy(FIG_BY_DOI_IDX)
         query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
-        return query2json(query)
+        return self.query2json(query)
 
     def panel_by_neo_id(self, id):
         query = copy(PANEL_BY_NEO_ID)
         query.params = param_from_request(id, query)  # need to know which param to extract from request depending on query.map
-        return query2json(query)
+        return self.query2json(query)
 
     def by_hyp(self, request):
         query = copy(BY_HYP)
         query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
-        return query2json(query)
+        return self.query2json(query)
 
     def automagic(self, request):
         query = copy(AUTOMAGIC)
         query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
-        return query2json(query)
+        return self.query2json(query)
 
     def panel_summary(self, panel_id):
         query = copy(PANEL_SUMMARY)
         query.params = param_from_request(panel_id, query)  # need to know which param to extract from request depending on query.map
-        return query2json(query)
+        return self.query2json(query)
 
     def search(self, request):
         query_lucene = copy(LUCENE_SEARCH)
@@ -119,9 +119,9 @@ class Engine:
     def covid19(self, request):
         query = copy(COVID19)
         query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
-        return query2json(query)
+        return self.query2json(query)
 
     def refereed_preprints(self, request):
         query = copy(REFEREED_PREPRINTS)
         query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
-        return query2json(query)
+        return self.query2json(query)
