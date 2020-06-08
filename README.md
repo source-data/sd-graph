@@ -16,8 +16,8 @@ This repository includes several tools currently under development. These tools 
 To make sure you start with a clean build you can run:
 
 ```
-docker-compose -f local.yml build --force-rm --no-cache
-docker-compose -f local.yml down --volumes # to clean the content of the volumes
+docker-compose build --force-rm --no-cache
+docker-compose down --volumes # to clean the content of the volumes
 ```
 
 This can solve some issues, for example if you run `build` with a wrong config file.
