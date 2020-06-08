@@ -5,6 +5,7 @@ import byAutomagic from './by-automagic'
 import byMethod from './by-method'
 import byMol from './by-mol'
 import byHyp from './by-hyp'
+import byReviewingService from './by-reviewing-service'
 import highlights from './highlights'
 import fulltextSearch from './fulltext-search'
 
@@ -16,6 +17,7 @@ export default new Vuex.Store({
     byMethod,
     byHyp,
     byMol,
+    byReviewingService,
     highlights,
     fulltextSearch
   },

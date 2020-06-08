@@ -26,12 +26,20 @@
                     :content="review.highlight",
                     transition="el-fade-in-linear",
                     :visible-arrow="false",
-                    open-delay="500"
+                    :open-delay="500"
                   )
-                  el-collapse-item(:title="'Reviewed by ' + displayJournal(review.reviewed_by) + ' | Reviewer #'+review.review_idx", slot="reference")
+                  //-  div(v-html="mdRender(review.highlight)")
+                  el-collapse-item(slot="reference")
+                    p(slot="title")
+                      span.peer_review_material Reviewed by 
+                        i {{ displayJournal(review.reviewed_by) }}
+                      |  | Reviewer #
+                      | {{ review.review_idx }}
                     p(v-html="mdRender(review.text)")
               el-collapse(v-if="article.review_process.response")
-                el-collapse-item(title="Response to the Reviewers")
+                el-collapse-item
+                  p(slot="title")
+                    span.peer_review_material Response to the Reviewers
                   p(v-html="mdRender(article.review_process.response.text)")
               el-collapse(v-if="article.review_process.annot")
                 el-collapse-item(:title="'Reviewed by ' + displayJournal(article.review_process.annot.reviewed_by) + ' | Review Process File'")
@@ -116,7 +124,8 @@ export default {
 </script>
 
 <style scoped>
-  .peer_review {
+  .peer_review_material {
     color:#364497;
+    font-weight: bold;
   }
 </style>
