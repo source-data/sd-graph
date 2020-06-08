@@ -44,6 +44,13 @@ def by_hyp():
     return R(ASKNEO.by_hyp(request))
 
 
+@app.route('/api/v1/by_reviewing_service', methods=['GET', 'POST'])
+@cache.cached()
+def by_reviewing_service():
+    app.logger.info(f"list by by_reviewing_service")
+    return R(ASKNEO.by_reviewing_service(request))
+
+
 @app.route('/api/v1/automagic', methods=['GET', 'POST'])
 @cache.cached()
 def automagic():

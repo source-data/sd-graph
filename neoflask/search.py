@@ -5,7 +5,7 @@ from typing import Dict, NewType
 from neotools.db import Instance, Query
 from .queries import (
     STATS, BY_DOI, FIG_BY_DOI_IDX, PANEL_BY_NEO_ID,
-    REVIEW_PROCESS_BY_DOI, 
+    REVIEW_PROCESS_BY_DOI, BY_REVIEWING_SERVICE, 
     BY_MOLECULE, BY_HYP, AUTOMAGIC,
     BY_METHOD, PANEL_SUMMARY,
     LUCENE_SEARCH, SEARCH_DOI,
@@ -60,6 +60,11 @@ class Engine:
 
     def by_method(self, request):
         query = copy(BY_METHOD)
+        query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
+        return self.query2json(query)
+
+    def by_reviewing_service(self, request):
+        query = copy(BY_REVIEWING_SERVICE)
         query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
         return self.query2json(query)
 

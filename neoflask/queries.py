@@ -97,6 +97,35 @@ RETURN DISTINCT
 )
 
 
+BY_REVIEWING_SERVICE = Query(
+  code='''
+//MATCH (rev:Review)
+//OPTIONAL MATCH (annot:PeerReviewMaterial)
+//WITH COLLECT(DISTINCT rev.reviewed_by) + COLLECT(DISTINCT annot.reviewed_by) AS all_rev
+//UNWIND all_rev AS reviewing
+//WITH DISTINCT reviewing
+UNWIND ['review commons', 'embo press', 'elife'] AS reviewing
+MATCH (a:Article)
+OPTIONAL MATCH (a)-[r:HasReview]->(review:Review {reviewed_by: reviewing})
+OPTIONAL MATCH (a)-[:HasAnnot]->(annot:PeerReviewMaterial {reviewed_by: reviewing})
+WITH DISTINCT
+    reviewing,
+    a.doi AS doi,
+    a.publication_date AS pub_date,
+    review, annot
+WHERE 
+    EXISTS(review.text) OR EXISTS(annot.text)
+WITH reviewing, doi, pub_date, review, annot
+ORDER BY
+    pub_date DESC
+RETURN
+    reviewing AS name, 
+    reviewing AS id,
+    COLLECT(DISTINCT {doi: doi, info: {}, pub_date: pub_date}) AS papers
+  ''',
+  returns=['name', 'id', 'papers']
+)
+
 FIG_BY_DOI_IDX = Query(
     code='''
 //fig by doi and index position
@@ -450,7 +479,7 @@ UNION
 //CALL db.index.fulltext.createNodeIndex("caption",["SDPanel"], ["caption"]);
 WITH $query AS query
 CALL db.index.fulltext.queryNodes("caption", query) YIELD node, score
-MATCH (article:Article)-[:has_figure]->(node)
+MATCH (article:SDArticle)-[:has_figure]->(f:SDFigure)-[:has_panel]->(node)
 WITH DISTINCT
   article.doi as doi, node.caption as text, score, "caption" AS source, query
 ORDER BY score DESC
@@ -493,7 +522,7 @@ LIMIT 20
 SEARCH_DOI = Query(
   code='''
 WITH $query AS query
-MATCH (article:Article)
+MATCH (article:SDArticle)
 WHERE article.doi = query
 RETURN
   article.doi AS doi, [{text: article.doi}] AS info, 10.0 AS score, 'doi' AS source, query
