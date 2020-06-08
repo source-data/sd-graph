@@ -10,15 +10,15 @@ GROUP_IDS = {
 }
 
 REVIEWER_REGEX = re.compile(r'^.{,300}(referee|reviewer)\W+(\d)', re.IGNORECASE | re.DOTALL)
-RESPONSE_REGEX = re.compile(r'^.{,300}Reply to the reviewers', re.IGNORECASE | re.DOTALL)
+RESPONSE_REGEX = re.compile(r'^.{,100}This rebuttal was posted by the corresponding author to \*Review Commons\*', re.IGNORECASE | re.DOTALL)
 
 
 def type_of_annotation(hypo_row):
     text = hypo_row['text']
-    if REVIEWER_REGEX.match(text):
-        type = 'review'
-    elif RESPONSE_REGEX.match(text):
+    if RESPONSE_REGEX.match(text): # this pattern first, since 'reviewer' will appear in response as well
         type = 'response'
+    elif REVIEWER_REGEX.match(text):
+        type = 'review'
     else:
         type = 'undetermined'
     return type
