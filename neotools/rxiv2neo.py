@@ -14,7 +14,6 @@ from .queries import (
     SOURCE_BY_UUID,
     CREATE_INDEX_DOI,
     CREATE_INDEX_VERSION,
-    FULL_TEXT_NAME,
 )
 from . import logger, DB
 
