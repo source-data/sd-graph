@@ -22,6 +22,13 @@ export default new Vuex.Store({
     fulltextSearch
   },
   state: {
+    journalNameDict: {
+      biorxiv: 'bioRxiv', 
+      medrxiv: 'medRxiv',
+      'review commons': 'Review Commons',
+      elife: 'eLife',
+      'embo press': 'EMBO Press',
+    },
     stats: {
       total_preprints: undefined,
       sd_annotated: undefined,
@@ -34,6 +41,9 @@ export default new Vuex.Store({
   getters: {
     db_stats(state) {
       return state.stats
+    },
+    journalName(state) { 
+      return state.journalNameDict
     }
   },
   mutations: {

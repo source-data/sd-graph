@@ -1,6 +1,5 @@
 <template lang="pug">
   div
-    h1 Highlights
     div(v-if="loadingRecords")
       p(style="text-align: center")
         el-button(type="primary" :loading="true" round plain)
@@ -16,6 +15,19 @@ export default {
   components: {
     HighlitedListItem,
   },
+  // methods: {
+  //   displayJournal(key) {
+  //     const low_key = key.toLowerCase()
+  //     const journal_labels = {
+  //       biorxiv: 'bioRxiv', 
+  //       medrxiv: 'medRxiv',
+  //       'review commons': 'Review Commons',
+  //       elife: 'eLife',
+  //       'embo press': 'EMBO Press',
+  //     }
+  //     return journal_labels[low_key]
+  //   },
+  // },
   computed: {
     ...mapState('highlights', ['loadingRecords']),
     ...mapGetters('highlights', ['records']),

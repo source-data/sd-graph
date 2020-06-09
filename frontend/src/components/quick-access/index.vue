@@ -1,17 +1,18 @@
 <template lang="pug">
   div
     h1 Quick Access
-    el-tabs(type="border-card" @tab-click="onSelectTab")
+    el-tabs(@tab-click="onSelectTab" tab-position="top")
       el-tab-pane(label="By Reviewing Service").filter-list
         QuickAccessByReviewingService(@change="onChangeByReviewingService")
-      el-tab-pane(label="By Method").filter-list
-        QuickAccessByMethod(@change="onChangeByMethod")
+      //- el-tab-pane(label="By Method").filter-list
+      //-   QuickAccessByMethod(@change="onChangeByMethod")
       el-tab-pane(label="By tested hypothesis").filter-list
         QuickAccessByHyp(@change="onChangeByHyp")
-      el-tab-pane(label="By Molecule").filter-list
-        QuickAccessByMol(@change="onChangeByMol")
+      //- el-tab-pane(label="By Molecule").filter-list
+      //-   QuickAccessByMol(@change="onChangeByMol")
       el-tab-pane(label="Automagic selection")
         QuickAccessByAutomagic
+      el-divider
 
 </template>
 
@@ -66,8 +67,8 @@ export default {
 
 <style scoped lang="scss">
 .filter-list {
-  max-height: 10em;
-  overflow: scroll;
-  padding: 1em;
+  // max-height: 10em;
+  // overflow: scroll;
+  // padding: 1em;
 }
 </style>

@@ -10,12 +10,15 @@ export default {
     records (state) {
       return Object.values(state.records)
     },
+    journalName (state, rootState, getters, rootGetters) {
+      return rootGetters.journalName
+    }
   },
   mutations: {
     /* *************************************************************************
     * RECORDS
     */
-   addRecords (state, records) {
+    addRecords (state, records) {
       const recordsById = {}
       records.forEach((record) => {
         recordsById[record.id] = record

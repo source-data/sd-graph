@@ -269,9 +269,10 @@ WITH DISTINCT a, panel_captions, N_panels, {ctrl_v: ctrl_v, meas_v: meas_v} AS h
 ORDER BY N_panels DESC, a.pub_date DESC
 WITH a, COLLECT(panel_captions)[0] AS panels, COLLECT(hyp)[0] AS dominant, N_assay
 WHERE N_assay > 3
+WITH a, panels, dominant, N_assay
+LIMIT 20
 WITH dominant, COLLECT({doi: a.doi, info: panels, pub_date: a.pub_date}) AS papers
 WITH COLLECT([dominant, papers]) AS all_results
-LIMIT 10
 UNWIND range(0, size(all_results)-1) as i
 RETURN i as id, all_results[i][0] AS hyp, all_results[i][1] AS papers
     ''',

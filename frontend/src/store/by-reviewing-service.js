@@ -18,13 +18,13 @@ export default {
     },
     isLoaded (state) {
       return state.loadComplete
-    }
+    },
   },
   mutations: {
     /* *************************************************************************
     * RECORDS
     */
-   addRecords (state, records) {
+    addRecords (state, records) {
     const recordsById = {}
     records.forEach((record) => {
       recordsById[record.id] = record
@@ -34,7 +34,7 @@ export default {
     /* *************************************************************************
     * NAVIGATION
     */
-   setIsLoading (state) {
+    setIsLoading (state) {
       state.loadingRecords = true
     },
     setLoadComplete (state) {

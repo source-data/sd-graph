@@ -9,7 +9,7 @@
               small() Posted 
                 b {{ displayDate(article.pub_date) }}
                 |  on 
-                i {{ displayJournal(article.journal) }}
+                i {{ journalName[article.journal] }}
             p
               small
                 b  doi:  
@@ -32,7 +32,7 @@
                   el-collapse-item(slot="reference")
                     p(slot="title")
                       span.peer_review_material Reviewed by 
-                        i {{ displayJournal(review.reviewed_by) }}
+                        i {{ journalName[review.reviewed_by] }}
                       |  | Reviewer #
                       | {{ review.review_idx }}
                     p(v-html="mdRender(review.text)")
@@ -42,7 +42,11 @@
                     span.peer_review_material Response to the Reviewers
                   p(v-html="mdRender(article.review_process.response.text)")
               el-collapse(v-if="article.review_process.annot")
-                el-collapse-item(:title="'Reviewed by ' + displayJournal(article.review_process.annot.reviewed_by) + ' | Review Process File'")
+                el-collapse-item(:title="'Reviewed by ' +  + ' | Review Process File'")
+                  p(slot="title")
+                    span.peer_review_material Reviewed by 
+                      i {{ journalName[article.review_process.annot.reviewed_by] }}
+                    |  | Review Process File
                   p(v-html="mdRender(article.review_process.annot.text)")
       el-row()
         el-col(:span="10")
@@ -77,24 +81,12 @@ export default {
         return new URL(doi, "https://doi.org/").href
     },
     displayDate(date_str) {
-        
         const date = new Date(date_str)
         const year = date.getFullYear()
         const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
         const month = months[date.getMonth()]
         const day = date.getDate()
         return month + ' ' + day + ', ' + year 
-    },
-    displayJournal(key) {
-      const low_key = key.toLowerCase()
-      const journal_labels = {
-        biorxiv: 'bioRxiv', 
-        medrxiv: 'medRxiv',
-        'review commons': 'Review Commons',
-        elife: 'eLife',
-        'embo press': 'EMBO Press',
-      }
-      return journal_labels[low_key]
     },
     mdRender (md_text) {
       const md = new MarkdownIt({
@@ -103,9 +95,12 @@ export default {
           typographer: true
       })
       return md.render(md_text)
-    }
+    },
   },
   computed: {
+    journalName () {
+      return this.$store.getters.journalName
+    },
     authorList () {
       return this.article.authors.map(author => `${author.surname} ${author.given_names}${(author.corresp=='yes'?'*':'')}`).join(', ')
     },
