@@ -42,9 +42,7 @@ export default new Vuex.Store({
     db_stats(state) {
       return state.stats
     },
-    journalName(state) { 
-      return state.journalNameDict
-    }
+    journalName: (state) => (id) => { return state.journalNameDict[id] }
   },
   mutations: {
     setStats (state, stats) {

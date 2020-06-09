@@ -26,7 +26,7 @@ export default {
       this.$emit('change', selectedItemId.toLowerCase())
     },
     journalName (id) {
-      return this.$store.getters.journalName[id]
+      return this.$store.getters.journalName(id)
     }
   },
 }
