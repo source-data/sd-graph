@@ -143,6 +143,13 @@ MERGE (te:Term {text: text})
 MERGE (hyb)-[r:Has_text]->(te)
 RETURN COUNT(r) AS `unique terms`;
 
+// Compute popularity of terms
+MATCH (sd:SDArticle)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(h:H_Entity)-->(t:Term)
+WITH t, COUNT(DISTINCT p) AS freq
+SET t.freq_in_panel = freq
+RETURN COUNT (t) as `tags with popularity frequency added`
+
+
 
 //infer tested hypotheses at condensed tag level
 MATCH 
