@@ -9,7 +9,7 @@
               small() Posted 
                 b {{ displayDate(article.pub_date) }}
                 |  on 
-                i {{ journalName(article.journal) }}
+                i {{ displayJournal(article.journal) }}
             p
               small
                 b  doi:  
@@ -32,7 +32,7 @@
                   el-collapse-item(slot="reference")
                     p(slot="title")
                       span.peer_review_material Reviewed by 
-                        i {{ journalName(review.reviewed_by) }}
+                        i {{ displayJournal(review.reviewed_by) }}
                       |  | Reviewer #
                       | {{ review.review_idx }}
                     p(v-html="mdRender(review.text)")
@@ -45,7 +45,7 @@
                 el-collapse-item(:title="'Reviewed by ' +  + ' | Review Process File'")
                   p(slot="title")
                     span.peer_review_material Reviewed by 
-                      i {{ journalName(article.review_process.annot.reviewed_by) }}
+                      i {{ displayJournal(article.review_process.annot.reviewed_by) }}
                     |  | Review Process File
                   p(v-html="mdRender(article.review_process.annot.text)")
       el-row()
@@ -60,12 +60,18 @@
           //- label(for="info-cards" style="font-variant: small-caps") {{ info.length }} information card{{ info.length > 1 ? 's':''}}:
           el-collapse(v-for="(card, index) in info" id="infor-cards" v-model="activeCards")
             el-collapse-item(:title="card.title", :name="index")
-              small {{ card.text }}
+              div(v-if="card.text instanceof Array")
+                span(v-for="item in card.text")
+                   el-tag(size="medium") {{ item }}
+              div(v-if="typeof card.text === 'string'")
+                small {{ card.text }}
     el-divider
 </template>
 <script>
 
 import MarkdownIt from 'markdown-it'
+
+import { mapGetters} from 'vuex'
 
 export default {
   props: {
@@ -96,11 +102,12 @@ export default {
       })
       return md.render(md_text)
     },
-    journalName(id) {
-      return this.$store.getters.journalName(id)
+    displayJournal(id) {
+      return this.journalName(id)
     }
   },
   computed: {
+    ...mapGetters(['journalName']),
     authorList () {
       return this.article.authors.map(author => `${author.surname} ${author.given_names}${(author.corresp=='yes'?'*':'')}`).join(', ')
     },

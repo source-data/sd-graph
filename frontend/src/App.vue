@@ -45,7 +45,7 @@
               |  that  combines artificial intelligence with human curation 
               |  and expert peer-review to highlight results posted in 
               el-link(type="primary" href="https://biorxiv.org") bioRxiv
-              | preprints. 
+              |  preprints. 
             p The EEB platform is a technology experiment developed by  
               el-link(type="primary" href="https://embopress.org") EMBO Press.
               

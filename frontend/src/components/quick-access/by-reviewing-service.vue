@@ -1,6 +1,6 @@
 <template lang="pug">
   el-radio-group(@change="onSelect" v-model="selectedRev")
-    el-radio-button(v-for="rev in reviewingList" :label="journalName(rev.id)")
+    el-radio-button(v-for="rev in reviewingList" :label="displayJournal(rev.id)")
 </template>
 
 <script>
@@ -16,6 +16,7 @@ export default {
     ...mapGetters('byReviewingService', [
       'records',
     ]),
+    ...mapGetters(['journalName']),
     reviewingList () {
       return this.records
     },
@@ -25,8 +26,8 @@ export default {
       // need to transform the label value into a key
       this.$emit('change', selectedItemId.toLowerCase())
     },
-    journalName (id) {
-      return this.$store.getters.journalName(id)
+    displayJournal(id) {
+      return this.journalName(id)
     }
   },
 }
