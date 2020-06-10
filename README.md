@@ -106,6 +106,8 @@ Host eeb-1 ec2-3-125-193-124.eu-central-1.compute.amazonaws.com
 
 ### First setup
 
+We may need to take care of file limit: https://neo4j.com/developer/kb/number-of-open-files/
+
 ```bash
 # ssh into prod
 ssh eeb-1
@@ -116,18 +118,19 @@ cd sd-graph
 
 # initial config
 cp .env.example .env # and edit with your desired config; note: config for hypothes.is or sourcedata API are not needed for produtino
-mkdir -p data
-cd data
-mkdir neo4j-data
-mkdir neo4j-logs
 wget https://oc.embl.de/index.php/s/2VfdsCtNsuVrzDV/download
-cd ..
 
 # build docker
 docker-compose -f production.yml build
 
 # load the database with the dump
-docker run --rm --name neo4j-load --env-file .env --mount type=bind,source=$PWD/production_neo4j_data,target=/data -it neo4j:3.5 bin/neo4j-admin load --database=graph.db --from=production_neo4j_data/download # ADDING --force WILL OVERWRITE EXISTING DB!
+docker run --rm \
+ --name neo4j-load \
+ --env-file .env \
+ --mount type=bind,source=$PWD,target=/app \
+ --mount type=volume,source=sd-graph_production_neo4j_data,target=/data \
+ -it neo4j:3.5 \
+ bin/neo4j-admin load --from=/app/download --database=graph.db --force
 
 # start the services
 docker-compose -f production.yml up -d
