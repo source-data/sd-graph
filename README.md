@@ -98,7 +98,7 @@ docker-compose -f production.yml up -d
 add something like this to your local `~/.ssh/config`
 
 ```
-Host covid19-1 ec2-3-125-193-124.eu-central-1.compute.amazonaws.com
+Host eeb-1 ec2-3-125-193-124.eu-central-1.compute.amazonaws.com
   Hostname ec2-3-125-193-124.eu-central-1.compute.amazonaws.com
   User ec2-user
   IdentityFile ~/.ssh/id_rsa
@@ -108,31 +108,31 @@ Host covid19-1 ec2-3-125-193-124.eu-central-1.compute.amazonaws.com
 
 ```bash
 # ssh into prod
-ssh covid19-1
+ssh eeb-1
 
 # clone the project
 git clone git@github.com:source-data/sd-graph.git
 cd sd-graph
-git checkout -b jats origin/jats
 
 # initial config
-cp .env.example .env # and edit with your desired config
+cp .env.example .env # and edit with your desired config; note: config for hypothes.is or sourcedata API are not needed for produtino
 mkdir -p data
 cd data
-wget https://oc.embl.de/index.php/s/sG0cLDYQtIFFejM/download
-unzip download
-rm download
+mkdir neo4j-data
+mkdir neo4j-logs
+wget https://oc.embl.de/index.php/s/2VfdsCtNsuVrzDV/download
 cd ..
 
 # build docker
 docker-compose -f production.yml build
-docker-compose -f production.yml up -d
 
-# and populate the database
-docker-compose -f production.yml run --rm flask python -m sdg.sdneo SARS-CoV-2
-cat sdg/SD-processing.cql | docker-compose -f production.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>
-docker-compose -f production.yml run --rm flask python -m neojats.xml2neo data/meca
+# load the database with the dump
+docker run --rm --name neo4j-load --env-file .env --mount type=bind,source=$PWD/production_neo4j_data,target=/data -it neo4j:3.5 bin/neo4j-admin load --database=graph.db --from=production_neo4j_data/download # ADDING --force WILL OVERWRITE EXISTING DB!
+
+# start the services
+docker-compose -f production.yml up -d
 ```
+
 
 ### Deploying
 Something like this will (generally) be enough, but really depends on your changes :)
