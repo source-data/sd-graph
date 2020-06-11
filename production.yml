@@ -23,6 +23,10 @@ services:
 
   neo4j:
     image: neo4j:3.5
+    ulimits:
+      nofile:
+        soft: 40000
+        hard: 40000
     volumes:
       - production_neo4j_data:/data
       - production_neo4j_logs:/logs
