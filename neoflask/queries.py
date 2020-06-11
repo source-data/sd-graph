@@ -171,15 +171,17 @@ MATCH
 WITH DISTINCT paper, info, ctrl_v, meas_v
 ORDER BY
   paper.rank DESC, // rank is pub_date
-  info.rank ASC, // rank is panel label
   id(ctrl_v) ASC, // deterministic
   id(meas_v) ASC // deterministic
 WITH DISTINCT
   paper, info, 
   {ctrl_v: COLLECT(DISTINCT ctrl_v.text), meas_v: COLLECT(DISTINCT meas_v.text)} AS hyp
+ORDER BY info.rank ASC // rank is panel label
+WITH
+  paper, COLLECT(info{.*}) as info_cards, hyp
 WITH DISTINCT
   hyp,
-  COLLECT({doi: paper.doi, info: info{.*}, pub_date: paper.pub_date}) AS papers
+  COLLECT({doi: paper.doi, info: info_cards, pub_date: paper.pub_date}) AS papers
 WITH COLLECT([hyp, papers]) AS all_results
 UNWIND range(0, size(all_results)-1) as i
 RETURN i as id, all_results[i][0] AS hyp, all_results[i][1] AS papers
