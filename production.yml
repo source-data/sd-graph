@@ -36,19 +36,20 @@ services:
     #   - "7474:7474"
     #   - "7687:7687"
 
-  traefik:
-    build:
-      context: .
-      dockerfile: ./compose/production/traefik/Dockerfile
-    image: neoflask_production_traefik
-    depends_on:
-      - flask
-    volumes:
-      - production_traefik:/etc/traefik/acme
-    ports:
-      - "0.0.0.0:80:80"
-      # - "8080:8080" # debugging UI
-      - "0.0.0.0:443:443"
+  # traefik:
+  #   build:
+  #     context: .
+  #     dockerfile: ./compose/production/traefik/Dockerfile
+  #   image: neoflask_production_traefik
+  #   depends_on:
+  #     - flask
+  #   volumes:
+  #     - production_traefik:/etc/traefik/acme
+  #   ports:
+  #     - "0.0.0.0:80:80"
+  #     # - "8080:8080" # debugging UI
+  #     - "0.0.0.0:443:443"
+
   vuejs:
     build:
       context: .
