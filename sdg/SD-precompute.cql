@@ -135,7 +135,10 @@ WITH
   a, entity, name
 //find synonyms
 MATCH
-   (name)<-[:Has_text]-(bridge:H_Entity {category:"assay"})-[:Has_text]->(syn1:Term)
+   (name)<-[:Has_text]-(bridge:H_Entity {category:"assay"})
+WITH a, entity, name, bridge
+OPTIONAL MATCH
+    (bridge)-[:Has_text]->(syn1:Term)
 //combine synonyms
 WITH DISTINCT a, entity, COLLECT(name) + COLLECT(syn1) AS all_synonyms
 UNWIND all_synonyms AS syn
@@ -157,44 +160,63 @@ WITH COLLECT({rank: i, preprint: preprint_list[i-1]}) AS ranked_by_assay
 ///////////////////////PART B: RANK BY NUMBER OF ENTITIES///////////////////////////////
 
 //start with only most recent version
-MATCH (preprint:SDArticle {journalName: "biorxiv"})
-WITH preprint, ranked_by_assay
-ORDER BY preprint.version DESC
-WITH DISTINCT preprint.doi AS doi, COLLECT(DISTINCT preprint)[0] AS a, ranked_by_assay //keep only the most recent
+//MATCH (preprint:SDArticle {journalName: "biorxiv"})
+//WITH preprint, ranked_by_assay
+//ORDER BY preprint.version DESC
+//WITH DISTINCT preprint.doi AS doi, COLLECT(DISTINCT preprint)[0] AS a, ranked_by_assay //keep only the most recent
 
 // find entities
-MATCH (a)-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity {category: "entity"})-[:Has_text]->(name:Term)
-WITH
-  a, entity, name, ranked_by_assay
+MATCH (a:SDArticle {journalName: "biorxiv"})-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity {category: "entity"})-[:Has_text]->(name:Term)
+WITH DISTINCT
+  ranked_by_assay,
+  a, p, entity, name
 //find synonyms
 MATCH
-   (name)<-[:Has_text]-(s:H_Entity {category:"entity"})-[:Has_text]->(syn1:Term)
+   (name)<-[:Has_text]-(s:H_Entity {category:"entity"})
 WHERE
   (s.type = entity.type) OR
   ((s.type = "gene" OR s.type = "protein" OR s.type = "geneprod") AND (entity.type = "gene" OR entity.type = "protein" OR entity.type = "geneprod"))
+WITH
+  ranked_by_assay,
+  a, p, entity, name, s
+OPTIONAL MATCH (s)-[:Has_text]->(syn1:Term)
+WHERE syn1 <> name
 //combine synonyms
-WITH DISTINCT a, entity, COLLECT(name) + COLLECT(syn1) AS all_synonyms, ranked_by_assay
+WITH DISTINCT
+  ranked_by_assay,
+  a, entity, COUNT(DISTINCT p) AS N_panels, COLLECT(DISTINCT name) + COLLECT(DISTINCT syn1) AS all_synonyms
 UNWIND all_synonyms AS syn
 // remove duplicates
-WITH DISTINCT a, entity, syn, ranked_by_assay
+WITH DISTINCT
+  ranked_by_assay,
+  a, entity, N_panels, syn
 // use most popular synonym
 ORDER BY syn.freq_in_panel DESC
-WITH DISTINCT a, entity, COLLECT(DISTINCT syn)[0] AS most_used, ranked_by_assay
+WITH DISTINCT
+  ranked_by_assay,
+  a, entity, N_panels, COLLECT(DISTINCT syn)[0] AS most_used
 ORDER BY id(entity)
 //collapse identical synonym groups
-WITH DISTINCT a, COLLECT(DISTINCT entity.name)[0] AS representative_entity, most_used, ranked_by_assay
 WITH DISTINCT
+  ranked_by_assay,
+  a, COLLECT(DISTINCT entity.name)[0] AS representative_entity, SUM(N_panels) AS N, most_used
+WHERE N > 2
+WITH DISTINCT
+  ranked_by_assay,
   a, 
   COLLECT(DISTINCT representative_entity) AS entities, 
-  COUNT(DISTINCT representative_entity) AS N_entities,
-  ranked_by_assay
+  COUNT(DISTINCT representative_entity) AS N_entities
 ORDER BY N_entities DESC
+WITH
+  ranked_by_assay,
+  COLLECT(DISTINCT {title: a.title, doi: a.doi, source:a.source, entities: entities, pub_date: a.pub_date, N_entities: N_entities}) as preprint_list
 WITH 
-  COLLECT(DISTINCT {title: a.title, doi: a.doi, source:a.source, entities: entities, pub_date: a.pub_date, N_entities: N_entities}) as preprint_list,
-  ranked_by_assay
-WITH preprint_list, range(1, size(preprint_list)) AS ranks, ranked_by_assay
+  ranked_by_assay,
+  preprint_list, range(1, size(preprint_list)) AS ranks
 UNWIND ranks as i
-WITH COLLECT({rank: i, preprint: preprint_list[i-1]}) AS ranked_by_entities, ranked_by_assay
+WITH
+  ranked_by_assay,
+  COLLECT({rank: i, preprint: preprint_list[i-1]}) AS ranked_by_entities
 
 ///////////////////////PART C: RETURN BY SUM OF RANKS///////////////////////////////
 //sum of ranks
