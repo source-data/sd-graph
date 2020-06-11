@@ -61,5 +61,9 @@ services:
 
   redis:
     image: redis:6
+    ulimits:
+      nofile:
+        soft: 12000
+        hard: 12000
     volumes:
       - production_redis:/data
