@@ -105,8 +105,8 @@ export default {
   },
   beforeCreate () {
     this.$store.dispatch('byReviewingService/getAll'),
-    this.$store.dispatch('byMethod/getAll'),
-    this.$store.dispatch('byMol/getAll'),
+    //this.$store.dispatch('byMethod/getAll'),
+    //this.$store.dispatch('byMol/getAll'),
     this.$store.dispatch('byHyp/getAll'),
     this.$store.dispatch('byAutomagic/getAll')
     this.$store.dispatch('statsFromFlask')
