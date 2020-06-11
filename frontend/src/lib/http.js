@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const BASE_URL = process.env.NODE_ENV == "production" ? '/' : '/' //'https://localhost:5000'
+const BASE_URL = process.env.NODE_ENV == "production" ? '/' : 'http://localhost:5000'
 
 const httpClient = axios.create({
   baseURL: BASE_URL,
