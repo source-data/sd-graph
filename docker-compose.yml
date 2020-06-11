@@ -17,9 +17,9 @@ services:
       - ./log:/log
     env_file:
       - ./.env
-    # ports:
-      # - "0.0.0.0:5000:5000"
-      # - "5000:5000"
+    ports:
+      - "0.0.0.0:5000:5000"
+      - "5000:5000"
     shm_size: '16gb'
     command: /start
 
