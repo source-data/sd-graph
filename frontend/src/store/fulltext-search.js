@@ -52,7 +52,7 @@ export default {
   actions: {
     search({ commit }, query) {
       commit('setIsLoading')
-      const url = 'https://covid19.sourcedata.io/api/v1/search'
+      const url = '/api/v1/search'
       return httpClient.get(url, {
           params: {
               query: query
