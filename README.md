@@ -106,8 +106,6 @@ Host eeb-1 ec2-3-125-193-124.eu-central-1.compute.amazonaws.com
 
 ### First setup
 
-We may need to take care of file limit: https://neo4j.com/developer/kb/number-of-open-files/
-
 ```bash
 # ssh into prod
 ssh eeb-1
@@ -118,7 +116,7 @@ cd sd-graph
 
 # initial config
 cp .env.example .env # and edit with your desired config; note: config for hypothes.is or sourcedata API are not needed for produtino
-wget https://oc.embl.de/index.php/s/2VfdsCtNsuVrzDV/download
+wget https://oc.embl.de/index.php/s/zGDm4ZHHfMEfA2i/download
 
 # build docker
 docker-compose -f production.yml build
