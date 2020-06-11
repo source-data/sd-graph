@@ -32,9 +32,9 @@ services:
       - production_neo4j_logs:/logs
     env_file:
       - ./.env
-    ports:
-      - "7474:7474"
-      - "7687:7687"
+    # ports:
+    #   - "7474:7474"
+    #   - "7687:7687"
 
   traefik:
     build:
