@@ -32,6 +32,7 @@ docker-compose run --rm flask python -m peerreview.neohypo  # import peer review
 docker-compose run --rm flask python -m sdg.sdneo <collection_name> --api sdapi  # import source data public data
 docker-compose run --rm flask python -m sdg.sdneo <covid19|refereed-preprints> --api eebapi  # smarttag covid-19 preprints
 cat sdg/SD-processing.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>  # generate merged graph
+cat sdg/SD-precompute.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD> # precompute the graph used by front end
 # visit http:/localhost:8080
 ```
 
