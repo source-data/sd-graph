@@ -68,6 +68,7 @@ def review_by_doi(doi: str):
     app.logger.info(f"review for doi:{doi}")
     return R(ASKNEO.review_by_doi(doi=doi))
 
+
 @app.route('/api/v1/figure', methods=['GET', 'POST'])
 def fig_by_doi_idx():
 
