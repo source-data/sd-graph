@@ -32,7 +32,7 @@
                   el-collapse-item(slot="reference")
                     p(slot="title")
                       span.peer_review_material Reviewed by 
-                        i {{ displayJournal(review.reviewed_by) }}
+                        i {{ displayDate(review.reviewed_by) }}
                       |  | Reviewer #
                       | {{ review.review_idx }}
                     p(v-html="mdRender(review.text)")
@@ -71,7 +71,7 @@
 
 import MarkdownIt from 'markdown-it'
 
-import { mapGetters} from 'vuex'
+import { mapGetters } from 'vuex'
 
 export default {
   props: {
@@ -83,10 +83,10 @@ export default {
     }
   },
   methods: {
-    href(doi) {
-        return new URL(doi, "https://doi.org/").href
+    href (doi) {
+      return new URL(doi,"https://doi.org/").href
     },
-    displayDate(date_str) {
+    displayDate (date_str) {
         const date = new Date(date_str)
         const year = date.getFullYear()
         const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -94,7 +94,7 @@ export default {
         const day = date.getDate()
         return month + ' ' + day + ', ' + year 
     },
-    mdRender (md_text) {
+    mdRender(md_text) {
       const md = new MarkdownIt({
           html: true,
           linkify: true,
@@ -102,9 +102,9 @@ export default {
       })
       return md.render(md_text)
     },
-    displayJournal(id) {
+    displayJournal (id) {
       return this.journalName(id)
-    }
+    },
   },
   computed: {
     ...mapGetters(['journalName']),
