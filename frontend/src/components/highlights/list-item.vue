@@ -20,7 +20,7 @@
               el-collapse(v-for="review in article.review_process.reviews" accordion)
                 el-popover(v-if="review.highlight",
                     placement="top",
-                    title="Summary (click tab for full review)",
+                    title="Summary (click tab to read the full review)",
                     width="600",
                     trigger="hover",
                     :content="review.highlight",
@@ -28,11 +28,11 @@
                     :visible-arrow="false",
                     :open-delay="500"
                   )
-                  //-  div(v-html="mdRender(review.highlight)")
+                  //-  div(v-html="mdRender(review.highlight) slot="content"")
                   el-collapse-item(slot="reference")
                     p(slot="title")
                       span.peer_review_material Reviewed by 
-                        i {{ displayDate(review.reviewed_by) }}
+                        i {{ displayJournal(review.reviewed_by) }}
                       |  | Reviewer #
                       | {{ review.review_idx }}
                     p(v-html="mdRender(review.text)")
@@ -83,10 +83,10 @@ export default {
     }
   },
   methods: {
-    href (doi) {
+    href(doi) {
       return new URL(doi,"https://doi.org/").href
     },
-    displayDate (date_str) {
+    displayDate(date_str) {
         const date = new Date(date_str)
         const year = date.getFullYear()
         const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -102,7 +102,7 @@ export default {
       })
       return md.render(md_text)
     },
-    displayJournal (id) {
+    displayJournal(id) {
       return this.journalName(id)
     },
   },

@@ -8,7 +8,7 @@
               img(src="./assets/embo-logo.gif" height="80px").center-img
       el-col(:span="16")
         div.vertical-align
-          h1(style="text-align: center") Early Evidence Base - Refereed Preprints
+          h1(style="text-align: center" @click="goHome").pointer Early Evidence Base - Refereed Preprints
       el-col(:span="4")
         div.vertical-align
           p 
@@ -19,14 +19,24 @@
               img(src="./assets/embopress-logo.jpg" width="200px").center-img
     el-container
       el-aside(width="170px" style="border-right-style: solid; border-right-width: 1px; padding-top: 50px")
-        p.side_bar_links
-          el-link(href="") About
-        p.side_bar_links
-          el-link(href="") For developers
-        p.side_bar_links
-          el-link(href="") Contact
+        //- p.side_bar_links
+        //-   el-link
+        //-     router-link(to="about") About
+        //- p.side_bar_links
+        //-   el-link
+        //-     router-link(to="") For developers
+        //- p.side_bar_links
+        //-   el-link
+        //-     router-link(to="") Contact
+        //- el-divider
+        el-menu(default-active="1" @select="navigate")
+          el-menu-item(index="0") 
+            span.el-icon-s-home
+            | Home
+          el-menu-item(index="1") About
+          el-menu-item(index="2" disabled) For developers
+          el-menu-item(index="3" disabled) Contact
         el-divider
-        
         small Database stats: 
           p 
             code {{ db_stats.ai_annotated || 0 }}
@@ -39,7 +49,7 @@
             |  nodes in EBB.
 
       el-main
-        home
+        router-view
     el-footer
       el-row
         el-col(:span="16" :offset="4")
@@ -55,6 +65,27 @@ export default {
   name: 'app',
   components: {
     home,
+  },
+  methods: {
+    goHome() {
+        const home_path = "/home"
+        if (this.$route.path !== home_path) {
+          this.$router.push({path: home_path})
+        }
+    },
+    navigate(key) {
+      const paths = {
+        '0': '/home',
+        '1': '/about',
+        '2': '/dev',
+        '3': '/contact',
+      }
+      const selected_route = paths[key]
+      console.debug("path", this.$route.path)
+      if (this.$route.path !== selected_route) {
+        this.$router.push({path : selected_route})
+      }
+    }
   },
   computed: {
     thisYear () {
@@ -77,6 +108,10 @@ export default {
 #header {
    border-bottom-style: solid;
    border-bottom-width: 1px;
+}
+
+.pointer {
+   cursor: pointer;
 }
 
 img.center-img {
