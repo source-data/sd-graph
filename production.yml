@@ -17,8 +17,8 @@ services:
     env_file:
       - ./.env
     shm_size: '16gb'
-    ports:
-      - "5000:5000"
+    # ports:
+    #   - "5000:5000"
     command: /start
 
   neo4j:
