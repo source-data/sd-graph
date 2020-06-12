@@ -20,7 +20,7 @@
               el-collapse(v-for="review in article.review_process.reviews" accordion)
                 el-popover(v-if="review.highlight",
                     placement="top",
-                    title="Summary (click tab for full review)",
+                    title="Summary (click tab to read the full review)",
                     width="600",
                     trigger="hover",
                     :content="review.highlight",
@@ -28,7 +28,7 @@
                     :visible-arrow="false",
                     :open-delay="500"
                   )
-                  //-  div(v-html="mdRender(review.highlight)")
+                  //-  div(v-html="mdRender(review.highlight) slot="content"")
                   el-collapse-item(slot="reference")
                     p(slot="title")
                       span.peer_review_material Reviewed by 
@@ -71,7 +71,7 @@
 
 import MarkdownIt from 'markdown-it'
 
-import { mapGetters} from 'vuex'
+import { mapGetters } from 'vuex'
 
 export default {
   props: {
@@ -84,7 +84,7 @@ export default {
   },
   methods: {
     href(doi) {
-        return new URL(doi, "https://doi.org/").href
+      return new URL(doi,"https://doi.org/").href
     },
     displayDate(date_str) {
         const date = new Date(date_str)
@@ -94,7 +94,7 @@ export default {
         const day = date.getDate()
         return month + ' ' + day + ', ' + year 
     },
-    mdRender (md_text) {
+    mdRender(md_text) {
       const md = new MarkdownIt({
           html: true,
           linkify: true,
@@ -104,7 +104,7 @@ export default {
     },
     displayJournal(id) {
       return this.journalName(id)
-    }
+    },
   },
   computed: {
     ...mapGetters(['journalName']),

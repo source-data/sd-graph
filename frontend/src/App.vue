@@ -8,7 +8,7 @@
               img(src="./assets/embo-logo.gif" height="80px").center-img
       el-col(:span="16")
         div.vertical-align
-          h1(style="text-align: center") Early Evidence Base - Refereed Preprints
+          h1(style="text-align: center" @click="goHome").pointer Early Evidence Base - Refereed Preprints
       el-col(:span="4")
         div.vertical-align
           p 
@@ -19,14 +19,24 @@
               img(src="./assets/embopress-logo.jpg" width="200px").center-img
     el-container
       el-aside(width="170px" style="border-right-style: solid; border-right-width: 1px; padding-top: 50px")
-        p.side_bar_links
-          el-link(href="") About
-        p.side_bar_links
-          el-link(href="") For developers
-        p.side_bar_links
-          el-link(href="") Contact
+        //- p.side_bar_links
+        //-   el-link
+        //-     router-link(to="about") About
+        //- p.side_bar_links
+        //-   el-link
+        //-     router-link(to="") For developers
+        //- p.side_bar_links
+        //-   el-link
+        //-     router-link(to="") Contact
+        //- el-divider
+        el-menu(default-active="1" @select="navigate")
+          el-menu-item(index="0") 
+            span.el-icon-s-home
+            | Home
+          el-menu-item(index="1") About
+          el-menu-item(index="2" disabled) For developers
+          el-menu-item(index="3" disabled) Contact
         el-divider
-        
         small Database stats: 
           p 
             code {{ db_stats.ai_annotated || 0 }}
@@ -39,44 +49,7 @@
             |  nodes in EBB.
 
       el-main
-        el-row
-          el-col(:span="16" :offset="4")
-            p The Early Evidence Base (EEB) is an experimental platform
-              |  that  combines artificial intelligence with human curation 
-              |  and expert peer-review to highlight results posted in 
-              el-link(type="primary" href="https://biorxiv.org") bioRxiv
-              |  preprints. 
-            p The EEB platform is a technology experiment developed by  
-              el-link(type="primary" href="https://embopress.org") EMBO Press.
-              
-            p EEB builds upon the full-text content provided by bioRxiv in the form of standardized structured MECA/JATS archives.
-              |  It uses the SmartTag engine for semantic text analysis of figure legends and the 
-              el-link(type="primary"  href="https://sourcedata.io") SourceData 
-              |  knowledge graph of manually curated experiments.
-              | Taking advantage of the 
-              el-link(type="primary" href="https://www.cshl.edu/transparent-review-in-preprints/") TRiP 
-              |  and 
-              el-link(type="primary" href="https://hypothes.is/") hypothes.is 
-              |  technologies and EMBO Press 
-              el-link(type="primary" href="https://github.com/embo-press/hypothepy") hypothepy 
-              |  and 
-              el-link(type="primary" href="https://github.com/embo-press/traxiv" ) traxiv 
-              |  automatic linking, public peer reviews posted as Refereed Preprints by 
-              el-link(type="primary" href="https://reviewcommons.org/refereed-preprints") Review Commons 
-              |  as well as peer reviews linked by 
-              el-link(type="primary" href="https://embopress.org") EMBO Press
-              |  and posted by 
-              el-link(type="primary" href="https://elifesciences.org") eLife 
-              |  are directly accessible.
-        el-row
-          el-col(:span="16" :offset="4")
-            SearchBar
-        el-row
-          el-col(:span="16" :offset="4")
-            QuickAccess
-        el-row
-          el-col(:span="16" :offset="4")
-            Highlights
+        router-view
     el-footer
       el-row
         el-col(:span="16" :offset="4")
@@ -86,16 +59,33 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import SearchBar from './components/search-bar.vue'
-import QuickAccess from './components/quick-access/index.vue'
-import Highlights from './components/highlights/index.vue'
+import home from './views/Home.vue'
 
 export default {
   name: 'app',
   components: {
-    SearchBar,
-    QuickAccess,
-    Highlights,
+    home,
+  },
+  methods: {
+    goHome() {
+        const home_path = "/home"
+        if (this.$route.path !== home_path) {
+          this.$router.push({path: home_path})
+        }
+    },
+    navigate(key) {
+      const paths = {
+        '0': '/home',
+        '1': '/about',
+        '2': '/dev',
+        '3': '/contact',
+      }
+      const selected_route = paths[key]
+      console.debug("path", this.$route.path)
+      if (this.$route.path !== selected_route) {
+        this.$router.push({path : selected_route})
+      }
+    }
   },
   computed: {
     thisYear () {
@@ -118,6 +108,10 @@ export default {
 #header {
    border-bottom-style: solid;
    border-bottom-width: 1px;
+}
+
+.pointer {
+   cursor: pointer;
 }
 
 img.center-img {
