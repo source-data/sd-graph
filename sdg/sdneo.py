@@ -89,7 +89,7 @@ class SDNeo:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Uploads collections to neo4j datatbase")
+    parser = argparse.ArgumentParser(description="Uploads collections to neo4j database")
     parser.add_argument('collection', nargs="?", help="Name(s) of the collection(s) to download")
     parser.add_argument('--api', choices=['sdapi', 'eebapi'], default='sdapi', help="Name of the REST api to use.")
     args = parser.parse_args()

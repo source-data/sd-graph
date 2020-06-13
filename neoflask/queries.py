@@ -7,7 +7,8 @@ COVID19 = Query(
 // Automated search for COVID-19 / SARS-CoV-2 papers
 WITH
     "2019 Novel Coronavirus OR 2019-nCoV OR 2019nCoV OR COVID-19 OR SARS-CoV-2 OR SARS-CoV2 OR SAR-CoV2 OR SRAS-CoV-2 OR (wuhan AND coronavirus)" AS search_query
-CALL db.index.fulltext.queryNodes("abstract", search_query) YIELD node, score
+// CALL db.index.fulltext.createNodeIndex("abstract_jats", ["Article"], ["abstract"], {analyzer: "english"});
+CALL db.index.fulltext.queryNodes("abstract_jats", search_query) YIELD node, score
 WITH node.doi AS doi, node.version AS version, node, score
 ORDER BY score DESC, version DESC
 WITH DISTINCT doi, COLLECT(node) AS versions, COLLECT(score) AS scores
