@@ -42,6 +42,8 @@ RETURN COUNT(DISTINCT paper) AS `papers in the by reviewing service`;
 
 
 // BY HYP
+
+///////////////////////////////EXCLUSION LIST///////////////////////////////
 //Exclusion list based on SourceData normalized entities
 MATCH (syn:Term)<--(entity:H_Entity)<--(ct:CondTag)
 WHERE 
@@ -60,6 +62,7 @@ WITH COLLECT(name) + synonyms AS all
 UNWIND all as terms
 WITH COLLECT(DISTINCT terms) AS exclusion_list
 
+///////////////////////////////CHOOSE SD CURATED FIRST///////////////////////////////
 //prioritize manually curated papers
 MATCH (a:SDArticle)
 WHERE toLower(a.journalName) IN ["biorxiv", "medrxiv"]
@@ -68,13 +71,14 @@ ORDER BY a.source DESC // manually curated source = 'sdapi' sorted before automa
 WITH DISTINCT a.doi AS doi, COLLECT(a) AS same_paper, exclusion_list
 WITH same_paper[0] as a, exclusion_list
 
+///////////////////////////////IDENTIFY HYPOTHESES//////////////////////////////////
 // identify hypotheses as intervention - assayed pairs
 MATCH
   (a)-->(f:SDFigure)-->(p:SDPanel),
   path_1=(p)-->(i:CondTag {role: "intervention"})-->(ctrl:H_Entity)-->(ctrl_term:Term),
   path_2=(p)-->(m:CondTag {role: "assayed"})-->(meas:H_Entity)-->(meas_term:Term)
 WHERE
-  // trying to avoid trivial same - same pairs
+  // trying to avoid trivial same - same pairs (eg typical for siRNA control exp)
   ctrl.name <> meas.name // could still be 2 entities normalized differently
   AND
   // exclude terms that are in the exclusion list
@@ -90,7 +94,8 @@ ORDER BY f.fig_label ASC, p.panel_label ASC
 // aggregate panels to count how many panels have same hypothesis
 WITH DISTINCT
     a, 
-    // capture relevant info (fig_label) in the format neededed for REST and frontend
+    // capture relevant info (fig_label) in the format neededed for REST and 
+    // we need to do it now rather than later because figure-level info is still available at this stage
     COLLECT(DISTINCT {id: id(p), title: f.fig_label, text: p.caption, rank: p.panel_label}) AS panel_group,
     COUNT(DISTINCT p) AS N_panels,
     ctrl_name, meas_name
@@ -102,14 +107,17 @@ WITH a, panel_group, N_panels, COLLECT(DISTINCT ctrl_name) AS ctrl_v, COLLECT(DI
 MATCH (a)-->(:SDFigure)-->(:SDPanel)-->(:CondTag)-->(assay:H_Entity {category: "assay"})
 WITH DISTINCT a, panel_group, N_panels, {ctrl_v: ctrl_v, meas_v: meas_v} AS hyp, COUNT(DISTINCT assay) AS N_assay
 ORDER BY N_panels DESC, a.pub_date DESC
+// select the hypotheses detected in the most panels as the dominant hypothesis. Could keep the top 5 instead?
 WITH a, COLLECT(panel_group)[0] AS selected_panels, COLLECT(hyp)[0] AS dominant, N_assay
-WHERE N_assay > 3
+WHERE N_assay > 3 // move up?
 WITH a, selected_panels, dominant, N_assay
 LIMIT 20
 // assign an id to each hypothesis group
 WITH dominant, COLLECT({doi: a.doi, info: selected_panels, pub_date: a.pub_date, rank: N_assay}) AS papers
 WITH COLLECT([dominant, papers]) AS all_results
 UNWIND range(0, size(all_results)-1) as id
+
+///////////////////////////////GENERATE PRECOMPUTED VIZ GRAPH///////////////////////////////
 // unpack it all to create the viz graph
 WITH id, all_results[id][0] as hyp, all_results[id][1] as papers
 UNWIND papers as paper
@@ -129,6 +137,8 @@ MERGE (paper)-[:HasEntity]->(m)
 // diplay viz graph
 //RETURN paper, info, c, m;
 RETURN COUNT(DISTINCT paper) AS `papers in the by hypothesis set`;
+
+
 
 // AUTOMAGIC
 // find entities

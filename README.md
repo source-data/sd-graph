@@ -30,7 +30,7 @@ docker-compose run --rm flask python -m neotools.rxiv2neo data/<path_to_meca_arc
 docker-compose run --rm flask python -m neotools.rxiv2neo data/<path_to_cord19_archives> --type cord19  # import full text MedRxiv preprints (experimental)
 docker-compose run --rm flask python -m peerreview.neohypo  # import peer reviews from hypothesis
 docker-compose run --rm flask python -m sdg.sdneo <collection_name> --api sdapi  # import source data public data
-docker-compose run --rm flask python -m sdg.sdneo <covid19|refereed-preprints> --api eebapi  # smarttag covid-19 preprints
+docker-compose run --rm flask python -m sdg.sdneo <covid19|refereed-preprints> --api eebapi  # smarttag collection of preprints
 cat sdg/SD-processing.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>  # generate merged graph
 cat sdg/SD-precompute.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD> # precompute the graph used by front end
 # visit http:/localhost:8080
@@ -117,7 +117,8 @@ cd sd-graph
 
 # initial config
 cp .env.example .env # and edit with your desired config; note: config for hypothes.is or sourcedata API are not needed for produtino
-wget https://oc.embl.de/index.php/s/zGDm4ZHHfMEfA2i/download
+wget https://oc.embl.de/index.php/s/<token>/download
+
 
 # build docker
 docker-compose -f production.yml build
