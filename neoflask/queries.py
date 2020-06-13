@@ -148,15 +148,17 @@ BY_REVIEWING_SERVICE = Query(
 // Using precomputed Viz nodes
 MATCH (paper:VizPaper {query: "by_reviewing_service"})-[:HasInfo]->(info:VizInfo)
 WITH DISTINCT
-   paper, info, 
-   COLLECT(DISTINCT {title: info.title, text: info.text, rank: info.rank}) AS info_card
+   paper, info,
+   {title: info.title, text: info.text, rank: info.rank, entities: []} AS info_card
 ORDER BY
     paper.rank DESC, // rank is pub_date
     info.rank ASC // rank is figure label
+WITH DISTINCT
+    paper, COLLECT(info_card) AS info_cards
 RETURN
     paper.id AS id,
     paper.id AS name,
-    COLLECT(DISTINCT {doi: paper.doi, info: info_card, pub_date: paper.pub_date}) AS papers
+    COLLECT(DISTINCT {doi: paper.doi, info: info_cards, pub_date: paper.pub_date}) AS papers
   ''',
   returns=['name', 'id', 'papers']
 )
@@ -174,12 +176,13 @@ WITH DISTINCT paper, info, ctrl_v, meas_v, entity
 ORDER BY
   paper.rank DESC, // rank is pub_date
   id(ctrl_v) ASC, // deterministic
-  id(meas_v) ASC // deterministic
+  id(meas_v) ASC, // deterministic
+  entity.category DESC, entity.role DESC // to male viz nicer, but frontend may have to fine tune
 WITH DISTINCT
   paper, info,
   COLLECT(DISTINCT entity{.*}) AS panel_entities,
   {ctrl_v: COLLECT(DISTINCT ctrl_v.text), meas_v: COLLECT(DISTINCT meas_v.text)} AS hyp
-ORDER BY info.rank ASC // rank is panel label
+ORDER BY info.rank ASC // rank is fig label + panel label
 WITH
   paper, hyp,
   info{
@@ -211,7 +214,8 @@ ORDER BY
    paper.rank ASC //rank is rank sum score
 WITH DISTINCT
   paper.doi AS doi, paper.pub_date AS pub_date, 
-  [{title: "Experimental approaches", text: COLLECT(DISTINCT exp_assays.text)}, {title: "Biological entities", text: COLLECT(DISTINCT biol_entities.text)}] AS info
+  [{title: "Experimental approaches", text: "", entities: COLLECT(DISTINCT {text: exp_assays.text})},
+   {title: "Biological entities", text: "", entities: COLLECT(DISTINCT {text: biol_entities.text})}] AS info
 WITH {doi: doi, info: info, pub_date: pub_date} AS paper
 RETURN 'automagic list' AS name, "1" AS id, COLLECT(paper) AS papers
     ''',
