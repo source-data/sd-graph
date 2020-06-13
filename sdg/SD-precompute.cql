@@ -85,12 +85,16 @@ WHERE
   NONE (n IN nodes(path_1) WHERE labels(n)=['Term'] AND (n.text IN exclusion_list))
   AND
   NONE (n IN nodes(path_2) WHERE labels(n)=['Term'] AND (n.text IN exclusion_list))
+  AND
+  // eliminate figure and panels without a caption or label such as graphical abstracts etc
+  EXISTS(f.fig_label) AND EXISTS(p.panel_label)
+  
 // make sure figures are ordered by label
 WITH DISTINCT
-    a, f, p, 
-    ctrl.name AS ctrl_name, 
-    meas.name AS meas_name
-ORDER BY f.fig_label ASC, p.panel_label ASC
+    a, f, p, ctrl, meas
+ORDER BY 
+  f.fig_label ASC, p.panel_label ASC,
+  id(ctrl) ASC, id(meas) ASC // deterministic order to faciliate aggregation later
 // aggregate panels to count how many panels have same hypothesis
 WITH DISTINCT
     a, 
@@ -98,8 +102,9 @@ WITH DISTINCT
     // we need to do it now rather than later because figure-level info is still available at this stage
     COLLECT(DISTINCT {id: id(p), title: f.fig_label, text: p.caption, rank: p.panel_label}) AS panel_group,
     COUNT(DISTINCT p) AS N_panels,
-    ctrl_name, meas_name
-ORDER BY ctrl_name, meas_name //deterministic order
+    ctrl.name AS ctrl_name, 
+    meas.name AS meas_name
+ORDER BY ctrl_name, meas_name
 WHERE N_panels > 1 // keep only hypotheses identified in more than one experiment
 // agreggate hypothesis elements shared across the group of panels
 WITH a, panel_group, N_panels, COLLECT(DISTINCT ctrl_name) AS ctrl_v, COLLECT(DISTINCT meas_name) AS meas_v
@@ -112,6 +117,13 @@ WITH a, COLLECT(panel_group)[0] AS selected_panels, COLLECT(hyp)[0] AS dominant,
 WHERE N_assay > 3 // move up?
 WITH a, selected_panels, dominant, N_assay
 LIMIT 20
+// recover all entities associated with the selected panels for manually curated papers
+UNWIND selected_panels AS selected_panel
+MATCH (p:SDPanel)-->(ct:CondTag)
+WHERE selected_panel.id= id(p)
+WITH DISTINCT a, selected_panel, COLLECT(DISTINCT ct{.*, source: p.source}) as entities, dominant, N_assay
+// repackage entities with the respective panels for subsequent display
+WITH DISTINCT a, COLLECT(DISTINCT selected_panel{.*, entities: entities}) AS selected_panels, dominant, N_assay
 // assign an id to each hypothesis group
 WITH dominant, COLLECT({doi: a.doi, info: selected_panels, pub_date: a.pub_date, rank: N_assay}) AS papers
 WITH COLLECT([dominant, papers]) AS all_results
@@ -125,17 +137,26 @@ WITH id, hyp, paper.doi AS doi, paper.rank AS paper_rank, paper.info AS info, pa
 UNWIND info AS info_item
 WITH 
   id, hyp, doi, pub_date, paper_rank, 
-  info_item.title AS info_title, info_item.text AS info_text, info_item.rank AS info_rank
+  info_item.title AS info_title, info_item.text AS info_text, info_item.rank AS info_rank, info_item.entities as entities
 // id; will need to have constraint on id + query
 UNWIND hyp.ctrl_v AS ctrl_v
 UNWIND hyp.meas_v AS meas_v
-MERGE (paper:VizPaper {id: id, doi:doi, query: "by_hyp", pub_date: pub_date, rank: paper_rank})
-MERGE (paper)-[:HasInfo]->(info:VizInfo {title: info_title, text: info_text, rank: info_rank})
+UNWIND entities as entity // THIS IS KILLING IT IF entities == []
+MERGE (paper:VizPaper {id: id, doi:doi, query: "by_hyp", pub_date: pub_date, paper_rank: paper_rank})
+MERGE (paper)-[:HasInfo]->(info:VizInfo {title: info_title, text: info_text, panel_rank: info_rank})
 MERGE (c:VizEntity {text: ctrl_v})-[:HasPotentialEffectOn]->(m:VizEntity {text: meas_v})
 MERGE (paper)-[:HasEntity]->(c)
 MERGE (paper)-[:HasEntity]->(m)
-// diplay viz graph
-//RETURN paper, info, c, m;
+WITH paper, info, entity
+WHERE entity.source = "sdapi"
+MERGE (info)-[:HasEntity]->(e:VizEntity {text: entity.text, category: entity.category, type: entity.type, role: entity.role, ext_id: entity.ext_ids})
+//viz the graph
+WITH 'viz' AS step
+MATCH (paper:VizPaper)-->(info:VizInfo)
+OPTIONAL MATCH (paper)-->(paper_entity:VizEntity)
+OPTIONAL MATCH (info)-->(panel_entity:VizEntity)
+WITH DISTINCT paper, COLLECT([info, panel_entity, paper_entity]) AS nodes
+//RETURN paper, nodes
 RETURN COUNT(DISTINCT paper) AS `papers in the by hypothesis set`;
 
 

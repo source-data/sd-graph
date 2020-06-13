@@ -168,17 +168,26 @@ BY_HYP = Query(
 MATCH 
   (paper:VizPaper {query: "by_hyp"})-->(info:VizInfo),
   (paper)-[:HasEntity]->(ctrl_v:VizEntity)-[:HasPotentialEffectOn]->(meas_v:VizEntity)
-WITH DISTINCT paper, info, ctrl_v, meas_v
+OPTIONAL MATCH
+  (info)-[:HasEntity]->(entity:VizEntity)
+WITH DISTINCT paper, info, ctrl_v, meas_v, entity
 ORDER BY
   paper.rank DESC, // rank is pub_date
   id(ctrl_v) ASC, // deterministic
   id(meas_v) ASC // deterministic
 WITH DISTINCT
-  paper, info, 
+  paper, info,
+  COLLECT(DISTINCT entity{.*}) AS panel_entities,
   {ctrl_v: COLLECT(DISTINCT ctrl_v.text), meas_v: COLLECT(DISTINCT meas_v.text)} AS hyp
 ORDER BY info.rank ASC // rank is panel label
 WITH
-  paper, COLLECT(info{.*}) as info_cards, hyp
+  paper, hyp,
+  info{
+    .*, // title (label of the figure), text (caption of the figure), rank
+    entities: panel_entities // entity properties: text, category, type role, ext_id
+   } as extended_info
+WITH
+  paper, COLLECT(extended_info) as info_cards, hyp
 WITH DISTINCT
   hyp,
   COLLECT({doi: paper.doi, info: info_cards, pub_date: paper.pub_date}) AS papers

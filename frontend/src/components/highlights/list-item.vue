@@ -60,10 +60,13 @@
           //- label(for="info-cards" style="font-variant: small-caps") {{ info.length }} information card{{ info.length > 1 ? 's':''}}:
           el-collapse(v-for="(card, index) in info" id="infor-cards" v-model="activeCards")
             el-collapse-item(:title="card.title", :name="index")
-              div(v-if="card.text instanceof Array")
+              div(v-if="card.entities.length > 1")
+                span(v-for="entity in card.entities")
+                  el-tag(size="medium" :type="mapRole(entity.role)") {{ entity.text }}
+              div(v-else-if="card.text instanceof Array")
                 span(v-for="item in card.text")
                    el-tag(size="medium") {{ item }}
-              div(v-if="typeof card.text === 'string'")
+              div(v-else="typeof card.text === 'string'")
                 small {{ card.text }}
     el-divider
 </template>
@@ -105,6 +108,19 @@ export default {
     displayJournal(id) {
       return this.journalName(id)
     },
+    mapRole(role) {
+
+      const map = {
+        'intervention': 'danger',
+        'assayed': '',
+        'reporter': 'success',
+        'normalizing': 'info',
+        'experiment': 'danger',
+        'component': 'warning'
+      }
+      const type = role in map? map[role] : 'info'
+      return type
+    }
   },
   computed: {
     ...mapGetters(['journalName']),
