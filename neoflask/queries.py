@@ -175,7 +175,6 @@ OPTIONAL MATCH
   (info)-[:HasEntity]->(entity:VizEntity)
 WITH DISTINCT paper, info, ctrl_v, meas_v, entity
 ORDER BY
-  paper.rank DESC, // rank is pub_date
   id(ctrl_v) ASC, // deterministic
   id(meas_v) ASC, // deterministic
   entity.category DESC, entity.role DESC // to male viz nicer, but frontend may have to fine tune
@@ -183,7 +182,9 @@ WITH DISTINCT
   paper, info,
   COLLECT(DISTINCT entity{.*}) AS panel_entities,
   {ctrl_v: COLLECT(DISTINCT ctrl_v.text), meas_v: COLLECT(DISTINCT meas_v.text)} AS hyp
-ORDER BY info.rank ASC // rank is fig label + panel label
+ORDER BY
+   DATETIME(paper.rank) DESC, // rank is pub date
+   info.rank ASC // rank is fig label + panel label
 WITH
   paper, hyp,
   info{

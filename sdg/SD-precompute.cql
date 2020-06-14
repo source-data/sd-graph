@@ -12,30 +12,30 @@ RETURN "purged" as `preparation step`;
 
 // BY REVIEWING SERVICE
 
-UNWIND ['review commons', 'embo press', 'elife'] AS reviewing
+UNWIND [{name: 'review commons', rank: 0}, {name: 'embo press', rank: 1}, {name: 'elife', rank:2}] AS reviewing
 MATCH (a:Article)
-OPTIONAL MATCH (a)-[r:HasReview]->(review:Review {reviewed_by: reviewing})
-OPTIONAL MATCH (a)-[:HasAnnot]->(annot:PeerReviewMaterial {reviewed_by: reviewing})
+OPTIONAL MATCH (a)-[r:HasReview]->(review:Review {reviewed_by: reviewing.name})
+OPTIONAL MATCH (a)-[:HasAnnot]->(annot:PeerReviewMaterial {reviewed_by: reviewing.name})
 WITH DISTINCT
     reviewing, a, review, annot
 WHERE 
     EXISTS(review.text) OR EXISTS(annot.text)
-WITH reviewing, a, review, annot, a.version AS version
+WITH DISTINCT reviewing, a, review, annot, a.version AS version
 ORDER BY version DESC
 // keep only the most recent version of the article
-WITH reviewing, COLLECT(DISTINCT a)[0] AS most_recent, review, annot
+WITH DISTINCT reviewing, COLLECT(DISTINCT a)[0] AS most_recent, review, annot
 // get the figures
 MATCH (most_recent)-->(f:Fig)
 // eliminate figures without a caption such as graphical abstracts etc
-WHERE EXISTS(f.caption)
+WHERE EXISTS(f.caption) AND EXISTS(f.label)
 WITH DISTINCT
     reviewing, most_recent.doi AS doi, most_recent.publication_date AS pub_date, review, annot,
     f.label AS fig_label, f.caption AS caption, f.position_idx AS position_idx, f
 ORDER BY
-    pub_date DESC, position_idx ASC
+    reviewing.rank ASC, pub_date DESC, position_idx ASC
 WITH DISTINCT
    reviewing, doi, pub_date, fig_label, caption, position_idx
-MERGE (paper:VizPaper {id:reviewing, doi: doi, query:"by_reviewing_service", pub_date: pub_date, rank: pub_date})
+MERGE (paper:VizPaper {id: reviewing.name, doi: doi, query: "by_reviewing_service", pub_date: pub_date, rank: pub_date})
 MERGE (paper)-[:HasInfo]->(info:VizInfo {title: fig_label, text: caption, rank: position_idx})
 //RETURN paper, info;
 RETURN COUNT(DISTINCT paper) AS `papers in the by reviewing service`;
@@ -106,18 +106,21 @@ WITH DISTINCT
     ctrl.name AS ctrl_name, 
     meas.name AS meas_name
 ORDER BY ctrl_name, meas_name
-WHERE N_panels > 1 // keep only hypotheses identified in more than one experiment
+WHERE N_panels > 2 // keep only hypotheses identified in more than one experiment
 // agreggate hypothesis elements shared across the group of panels
 WITH a, panel_group, N_panels, COLLECT(DISTINCT ctrl_name) AS ctrl_v, COLLECT(DISTINCT meas_name) AS meas_v
 // crudly prioritize experimental papers with at least 3 identified assays
 MATCH (a)-->(:SDFigure)-->(:SDPanel)-->(:CondTag)-->(assay:H_Entity {category: "assay"})
 WITH DISTINCT a, panel_group, N_panels, {ctrl_v: ctrl_v, meas_v: meas_v} AS hyp, COUNT(DISTINCT assay) AS N_assay
-ORDER BY N_panels DESC, a.pub_date DESC
+// most recent first
+ORDER BY 
+  a.pub_date DESC,
+  a.source DESC, 
+  N_panels DESC
 // select the hypotheses detected in the most panels as the dominant hypothesis. Could keep the top 5 instead?
 WITH a, COLLECT(panel_group)[0] AS selected_panels, COLLECT(hyp)[0] AS dominant, N_assay
 WHERE N_assay > 3 // move up?
 WITH a, selected_panels, dominant, N_assay
-LIMIT 20
 // recover all entities associated with the selected panels for manually curated papers
 UNWIND selected_panels AS selected_panel
 MATCH (p:SDPanel)-->(ct:CondTag)
@@ -126,7 +129,10 @@ WITH DISTINCT a, selected_panel, COLLECT(DISTINCT ct{.*, source: p.source}) as e
 // repackage entities with the respective panels for subsequent display
 WITH DISTINCT a, COLLECT(DISTINCT selected_panel{.*, entities: entities}) AS selected_panels, dominant, N_assay
 // assign an id to each hypothesis group
-WITH dominant, COLLECT({doi: a.doi, info: selected_panels, pub_date: a.pub_date, rank: N_assay}) AS papers
+WITH dominant, COLLECT({doi: a.doi, info: selected_panels, pub_date: a.pub_date, rank: a.pub_date}) AS papers
+// limit to 20 hyp
+LIMIT 20
+// generate ordered id
 WITH COLLECT([dominant, papers]) AS all_results
 UNWIND range(0, size(all_results)-1) as id
 
@@ -158,7 +164,7 @@ OPTIONAL MATCH (paper)-->(paper_entity:VizEntity)
 OPTIONAL MATCH (info)-->(panel_entity:VizEntity)
 WITH DISTINCT paper, COLLECT([info, panel_entity, paper_entity]) AS nodes
 //RETURN paper, nodes
-RETURN COUNT(DISTINCT paper) AS `papers in the by hypothesis set`;
+RETURN "done" AS `papers in the by hypothesis set`;
 
 
 
@@ -267,7 +273,7 @@ WHERE size(ranks)=2
 WITH 
   doi, pub_date, entities[0] AS exp_assays, entities[1] AS bio_entities, rank_sum      
 ORDER BY rank_sum ASC
-LIMIT 10
+LIMIT 20
 // unpack
 MERGE (paper:VizPaper {id: 'automagic', doi: doi, query:'automagic', pub_date: pub_date, rank: rank_sum})
 MERGE (paper)-[:HasInfo]->(info_2:VizInfo {title: 'Experimental approaches' , text: exp_assays, rank: "0"})

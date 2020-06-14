@@ -1,5 +1,5 @@
 //indices and constraints
-
+// drop all
 DROP INDEX ON :SDArticle(doi);
 DROP INDEX ON :SDTag(text);
 DROP INDEX ON :SDTag(ext_ids);
@@ -15,6 +15,7 @@ DROP INDEX ON :H_Entity(type);
 DROP INDEX ON :CondTag(category);
 DROP INDEX ON :CondTag(name);
 
+//create
 CREATE INDEX ON :SDArticle(doi);
 CREATE INDEX ON :SDTag(text);
 CREATE INDEX ON :SDTag(ext_ids);
@@ -30,6 +31,9 @@ CREATE INDEX ON :H_Entity(type);
 CREATE INDEX ON :CondTag(category);
 CREATE INDEX ON :CondTag(name);
 
+
+//Full text indexing
+//drop all
 CALL db.index.fulltext.drop("name");
 CALL db.index.fulltext.drop("entity_name");
 CALL db.index.fulltext.drop("synonym");
@@ -38,9 +42,7 @@ CALL db.index.fulltext.drop("abstract");
 CALL db.index.fulltext.drop("abstract_jats");
 CALL db.index.fulltext.drop("caption");
 
-
-
-//Full text indexing
+// create
 CALL db.index.fulltext.createNodeIndex("name",["Contrib"], ["surname", "given_names"]);
 CALL db.index.fulltext.createNodeIndex("entity_name",["H_Entity"],["name"], {analyzer: "english"});
 CALL db.index.fulltext.createNodeIndex("synonym",["Term"],["text"], {analyzer: "english"});

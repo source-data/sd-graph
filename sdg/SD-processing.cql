@@ -147,7 +147,7 @@ RETURN COUNT(r) AS `unique terms`;
 MATCH (sd:SDArticle)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(h:H_Entity)-->(t:Term)
 WITH t, COUNT(DISTINCT p) AS freq
 SET t.freq_in_panel = freq
-RETURN COUNT (t) as `tags with popularity frequency added`
+RETURN COUNT (t) as `tags with popularity frequency added`;
 
 
 
