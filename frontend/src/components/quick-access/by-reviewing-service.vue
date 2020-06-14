@@ -1,6 +1,8 @@
 <template lang="pug">
-  el-radio-group(@change="onSelect" v-model="selectedRev")
-    el-radio-button(v-for="rev in reviewingList" :label="displayJournal(rev.id)")
+  div
+    h5 Select refereed preprints by reviewing service and access the associated reviews.
+    el-radio-group(@change="onSelect" v-model="selectedRev")
+      el-radio-button(v-for="id in reviewingList" :label="id") {{ displayJournal(id) }}
 </template>
 
 <script>
@@ -9,7 +11,7 @@ import { mapGetters } from 'vuex'
 export default {
   data () {
     return {
-      selectedRev: undefined,
+      selectedRev: 'review commons',
     }
   },
   computed: {
@@ -18,13 +20,14 @@ export default {
     ]),
     ...mapGetters(['journalName']),
     reviewingList () {
-      return this.records
+      return this.records.map(
+        (r) => {return r.id}
+      ).sort().reverse()
     },
   },
   methods: {
     onSelect (selectedItemId) {
-      // need to transform the label value into a key
-      this.$emit('change', selectedItemId.toLowerCase())
+      this.$emit('change', selectedItemId)
     },
     displayJournal(id) {
       return this.journalName(id)

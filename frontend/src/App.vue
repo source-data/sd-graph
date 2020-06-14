@@ -19,16 +19,6 @@
               img(src="./assets/embopress-logo.jpg" width="200px").center-img
     el-container
       el-aside(width="170px" style="border-right-style: solid; border-right-width: 1px; padding-top: 50px")
-        //- p.side_bar_links
-        //-   el-link
-        //-     router-link(to="about") About
-        //- p.side_bar_links
-        //-   el-link
-        //-     router-link(to="") For developers
-        //- p.side_bar_links
-        //-   el-link
-        //-     router-link(to="") Contact
-        //- el-divider
         el-menu(default-active="1" @select="navigate")
           el-menu-item(index="0") 
             span.el-icon-s-home

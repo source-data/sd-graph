@@ -3,15 +3,15 @@
     h1 Quick Access 
       el-button(v-if="loadingRecords" circle plain type="primary" :loading="true" size="mini" style="padding:2px") 
     el-tabs(@tab-click="onSelectTab" tab-position="top")
-      el-tab-pane(label="By Reviewing Service").filter-list
+      el-tab-pane(label="Refereed Preprints", name="byReviewingService").filter-list
         QuickAccessByReviewingService(@change="onChangeByReviewingService")
       //- el-tab-pane(label="By Method").filter-list
       //-   QuickAccessByMethod(@change="onChangeByMethod")
-      el-tab-pane(label="By tested hypothesis").filter-list
+      el-tab-pane(label="COVID-19 hypotheses" name="byHyp").filter-list
         QuickAccessByHyp(@change="onChangeByHyp")
       //- el-tab-pane(label="By Molecule").filter-list
       //-   QuickAccessByMol(@change="onChangeByMol")
-      el-tab-pane(label="Automagic selection")
+      el-tab-pane(label="Automagic selection" name="byAutomagic")
         QuickAccessByAutomagic
       el-divider
 
@@ -37,17 +37,15 @@ export default {
   },
   methods: {
     onSelectTab (selectedTab) {
-      if (selectedTab.label=="Automagic selection") {
-        this.$store.dispatch('highlights/listByCurrent', 'byAutomagic')
-      }
+      this.$store.dispatch('highlights/listByCurrent', selectedTab.name)
     },
     onChangeByReviewingService (selectedItemId) {
       this.$store.commit('byReviewingService/showRecord', { id: selectedItemId })
-      this.$store.dispatch('highlights/listByCurrent',  'byReviewingService')
+      this.$store.dispatch('highlights/listByCurrent', 'byReviewingService')
     },
     onChangeByMethod (selectedItemId) {
       this.$store.commit('byMethod/showRecord', { id: selectedItemId })
-      this.$store.dispatch('highlights/listByCurrent',  'byMethod')
+      this.$store.dispatch('highlights/listByCurrent', 'byMethod')
     },
     onChangeByMol (selectedItemId) {
       this.$store.commit('byMol/showRecord', { id: selectedItemId })

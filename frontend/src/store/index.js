@@ -23,10 +23,10 @@ export default new Vuex.Store({
   },
   state: {
     journalNameDict: {
-      biorxiv: 'bioRxiv', 
-      medrxiv: 'medRxiv',
+      'biorxiv': 'bioRxiv', 
+      'medrxiv': 'medRxiv',
       'review commons': 'Review Commons',
-      elife: 'eLife',
+      'elife': 'eLife',
       'embo press': 'EMBO Press',
     },
     stats: {

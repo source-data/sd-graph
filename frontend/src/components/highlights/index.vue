@@ -1,6 +1,7 @@
 <template lang="pug">
   div
-    HighlitedListItem(:article="article" v-for="article in records")
+    HighlitedListItem(:article="article" v-for="article in records") 
+      h4 Results
 </template>
 
 <script>

@@ -18,6 +18,9 @@ export default {
     /* *************************************************************************
     * RECORDS
     */
+    resetRecords (state) {
+       state.records = {}
+    },
     addRecords (state, records) {
       const recordsById = {}
       records.forEach((record) => {

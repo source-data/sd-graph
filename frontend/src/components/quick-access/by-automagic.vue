@@ -1,4 +1,4 @@
 <template lang="pug">
-  p Automatically prioritized preprints by enrichment for a multiplicity of experimental approaches. 
+  h5 Preprints are prioritized by enriching for studies with a multiplicity of experimental approaches. 
 </template>
 

@@ -2,7 +2,7 @@
   div
     el-row
       el-col(:span="16" :offset="4")
-        p The Early Evidence Base (EEB) is an experimental platform
+        p <i>Early Evidence Base</i> (EEB) is an <b>experimental platform</b>
           |  that  combines artificial intelligence with human curation 
           |  and expert peer-review to highlight results posted in 
           el-link(type="primary" href="https://biorxiv.org") bioRxiv
