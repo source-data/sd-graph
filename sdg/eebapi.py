@@ -108,11 +108,13 @@ class EEBAPI(API):
     GET_ARTICLE = 'doi/'
     GET_FIGURE = 'figure'
 
-    def collection(self, collection_name):
-        url = EEB_PUBLIC_API + self.GET_COLLECTION + collection_name
-        data = self.rest2data(url)
-        article_list = SDCollection(data, collection_name)
-        return article_list
+    def collection(self, collection_names):
+        collections = []
+        for name in collection_names:
+            url = EEB_PUBLIC_API + self.GET_COLLECTION + name
+            data = self.rest2data(url)
+            collections.append(SDCollection(data, name))
+        return collections
 
     def article(self, doi):
         url = EEB_PUBLIC_API + self.GET_ARTICLE + doi
@@ -150,22 +152,23 @@ if __name__ == '__main__':
     parser.add_argument('-L', '--listing', action='store_true', help='List of articles in the collection.') 
     parser.add_argument('-D', '--doi', default='', help='Takes a doi and return article information')
     parser.add_argument('-F', '--figure', default='', help='Takes the figure index and returns the figure legend for the figure in the paper specified with the --doi option') 
-    parser.add_argument('-C', '--collection', default='covid19', help='The collection that forms the base of the Early Evidence Base.') 
+    parser.add_argument('-C', '--collections', nargs="+", help='The collection that forms the base of the Early Evidence Base.') 
 
     args = parser.parse_args()
     listing = args.listing
     doi_arg = args.doi
     fig = args.figure
-    collection_name = 'covid19'
+    collection_names = args.collections
     eebapi = EEBAPI()
 
-    collection = eebapi.collection(collection_name)
-    print(f'Collection {collection.name} has {len(collection)} articles.')
+    collections = eebapi.collection(collection_names)
+    print(f'Collection {[c.name for c in collections]} have {[len(c) for c in collections]} articles.')
 
     if listing:
-        for doi in collection.children:
-            a = eebapi.article(doi)
-            print(f'{doi}: {a.title}')
+        for coll in collections:
+            for doi in coll.children:
+                a = eebapi.article(doi)
+                print(f'{doi}: {a.title}')
 
     if doi_arg:
         article = eebapi.article(doi_arg)

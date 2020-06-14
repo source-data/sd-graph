@@ -44,7 +44,7 @@ class BaseCollection(SDNode):
             doi = d.get('doi', '')
             sdid = d.get('id', '')
             title = d.get('title', '')
-            if doi:
+            if doi: # check if alreeady there!
                 children.append(doi)
             elif sdid:
                 logger.warning(f"using sdid {sdid} instead of doi for: \n{title}.")

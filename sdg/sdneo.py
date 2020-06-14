@@ -7,10 +7,15 @@ class SDNeo:
     def __init__(self, api):
         self.api = api
 
-    def create_graph(self, collection_name):
-        collection = self.api.collection(collection_name)
-        self.create_articles(collection.children)
-        return collection
+    def create_graph(self, collection_names):
+        collections = self.api.collection(collection_names)
+        children = set()
+        for coll in collections:
+            children.update(coll.children)
+        children = list(children)
+        logger.info(f"collections with {len(children)} children")
+        self.create_articles(children)  # children should be unique
+        return collections
 
     def create_articles(self, article_list):
         articles, article_nodes, skipped_articles = self.create_nodes(self.api.article, article_list)
@@ -90,10 +95,10 @@ class SDNeo:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Uploads collections to neo4j datatbase")
-    parser.add_argument('collection', nargs="?", help="Name(s) of the collection(s) to download")
+    parser.add_argument('collections', nargs="+", help="Name(s) of the collection(s) to download (multiple collections separated by space)")
     parser.add_argument('--api', choices=['sdapi', 'eebapi'], default='sdapi', help="Name of the REST api to use.")
     args = parser.parse_args()
-    collection = args.collection
+    collections = args.collections
     api_name = args.api
     if api_name == 'eebapi':
         from .eebapi import EEBAPI
@@ -101,6 +106,6 @@ if __name__ == "__main__":
     else:
         from .sdapi import SDAPI
         sdneo = SDNeo(api=SDAPI())
-    print(f"Importing: {collection} with api={api_name}")
-    collection = sdneo.create_graph(collection_name=collection)
-    print(f"Imported {len(collection)} papers.")
+    print(f"Importing: {', '.join(collections)} with api={api_name}")
+    graph = sdneo.create_graph(collection_names=collections)
+    print(f"Imported {len(graph)} papers.")
