@@ -1,12 +1,12 @@
 <template lang="pug">
-  el-radio-group(@change="onSelect" v-model="selectedHyp")
-    el-row(v-for="hyp in hypList").spaced-row
-        el-radio(:label="hyp.id")
-          el-tag(v-for="ctrl_var in hyp.hyp.ctrl_v" size="mini" type="danger" effect="dark") {{ ctrl_var }}
-          i(class="el-icon-minus")
-          i(class="el-icon-question")
-          i(class="el-icon-right")
-          el-tag(v-for="meas_var in hyp.hyp.meas_v" size="mini" type="" effect="dark") {{ meas_var }} 
+  el-radio-group(@change="onSelect" v-model="selectedHyp" size="mini" fill="#406482")
+    span(v-for="hyp in hypList").spaced-row
+      el-radio-button(:label="hyp.id" style="margin: 1px;")
+        el-tag(v-for="ctrl_var in hyp.hyp.ctrl_v" size="mini" type="danger" effect="dark") {{ ctrl_var }}
+        i(class="el-icon-minus")
+        i(class="el-icon-question")
+        i(class="el-icon-right")
+        el-tag(v-for="meas_var in hyp.hyp.meas_v" size="mini" type="" effect="dark") {{ meas_var }} 
     br
 </template>
 

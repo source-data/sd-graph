@@ -60,7 +60,7 @@
           //- label(for="info-cards" style="font-variant: small-caps") {{ info.length }} information card{{ info.length > 1 ? 's':''}}:
           el-collapse(v-for="(card, index) in info" id="infor-cards" v-model="activeCards")
             el-collapse-item(:title="card.title", :name="index")
-              div(v-if="card.entities.length > 1")
+              div(v-if="card.entities.length > 1" )
                 span(v-for="entity in card.entities")
                   el-tag(size="medium" :type="mapRole(entity.role)") {{ entity.text }}
               div(v-else-if="card.text instanceof Array")
@@ -82,7 +82,7 @@ export default {
   },
   data() {
     return {
-      activeCards: [0]
+      activeCards: [0,1]
     }
   },
   methods: {

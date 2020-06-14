@@ -1,6 +1,7 @@
 <template lang="pug">
   div
-    h1 Quick Access
+    h1 Quick Access 
+      el-button(v-if="loadingRecords" circle plain type="primary" :loading="true" size="mini" style="padding:2px") 
     el-tabs(@tab-click="onSelectTab" tab-position="top")
       el-tab-pane(label="By Reviewing Service").filter-list
         QuickAccessByReviewingService(@change="onChangeByReviewingService")
@@ -23,6 +24,7 @@ import QuickAccessByMethod from './by-method.vue'
 import QuickAccessByMol from './by-mol.vue'
 import QuickAccessByHyp from './by-hyp.vue'
 
+import { mapState } from 'vuex'
 
 export default {
   name: 'app',
@@ -56,6 +58,9 @@ export default {
       this.$store.dispatch('highlights/listByCurrent', "byHyp")
     },
   },
+  computed: {
+    ...mapState('highlights', ['loadingRecords'])
+  }
 }
 </script>
 
@@ -71,4 +76,5 @@ export default {
   // overflow: scroll;
   // padding: 1em;
 }
+
 </style>

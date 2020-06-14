@@ -1,5 +1,6 @@
 // PRECOMPUTE RESULTS
 
+RETURN "purging viz graph" as `preparation step`;
 // PURGE PRECOMPUTED
 MATCH (n:VizPaper)-[r]-() DELETE r;
 MATCH (n:VizInfo)-[r]-() DELETE r;
@@ -7,7 +8,7 @@ MATCH (n:VizPaper) DELETE n;
 MATCH (n:VizInfo) DELETE n;
 MATCH (n:VizEntity)-[r]-() DELETE r;
 MATCH (n:VizEntity) DELETE n;
-
+RETURN "purged" as `preparation step`;
 
 // BY REVIEWING SERVICE
 
@@ -100,7 +101,7 @@ WITH DISTINCT
     a, 
     // capture relevant info (fig_label) in the format neededed for REST and 
     // we need to do it now rather than later because figure-level info is still available at this stage
-    COLLECT(DISTINCT {id: id(p), title: f.fig_label, text: p.caption, rank: p.panel_label}) AS panel_group,
+    COLLECT(DISTINCT {id: id(p), title: f.fig_label + " (panel: " + p.panel_label + ")", text: p.caption, rank: f.fig_label + p.panel_label}) AS panel_group, // will need to generate position_idx from sdapi
     COUNT(DISTINCT p) AS N_panels,
     ctrl.name AS ctrl_name, 
     meas.name AS meas_name
@@ -142,8 +143,8 @@ WITH
 UNWIND hyp.ctrl_v AS ctrl_v
 UNWIND hyp.meas_v AS meas_v
 UNWIND entities as entity // THIS IS KILLING IT IF entities == []
-MERGE (paper:VizPaper {id: id, doi:doi, query: "by_hyp", pub_date: pub_date, paper_rank: paper_rank})
-MERGE (paper)-[:HasInfo]->(info:VizInfo {title: info_title, text: info_text, panel_rank: info_rank})
+MERGE (paper:VizPaper {id: id, doi:doi, query: "by_hyp", pub_date: pub_date, rank: paper_rank})
+MERGE (paper)-[:HasInfo]->(info:VizInfo {title: info_title, text: info_text, rank: info_rank})
 MERGE (c:VizEntity {text: ctrl_v})-[:HasPotentialEffectOn]->(m:VizEntity {text: meas_v})
 MERGE (paper)-[:HasEntity]->(c)
 MERGE (paper)-[:HasEntity]->(m)
