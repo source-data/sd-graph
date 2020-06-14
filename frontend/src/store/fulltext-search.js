@@ -26,11 +26,8 @@ export default {
     */
    addRecords (state, records) {
       // need to sort and truncate records here
-      console.debug('records unsorted', records)
       const sorted = Object.values(records).slice().sort((a, b) => b.score - a.score)
-      console.debug('sorted', sorted)
       const top10 = sorted.slice(0, 10)
-      console.debug('top10', top10)
       state.records = {papers: top10}
     },
     /* *************************************************************************

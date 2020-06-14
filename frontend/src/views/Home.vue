@@ -1,7 +1,7 @@
 <template lang="pug">
   div
     el-row
-      el-col(:span="16" :offset="4")
+      el-col(:span="20" :offset="2")
         p <i>Early Evidence Base</i> (EEB) is an <b>experimental platform</b>
           |  that  combines artificial intelligence with human curation 
           |  and expert peer-review to highlight results posted in 
@@ -30,13 +30,13 @@
           el-link(type="primary" href="https://elifesciences.org") eLife 
           |  are directly accessible.
     el-row
-      el-col(:span="16" :offset="4")
+      el-col(:span="20" :offset="2")
         SearchBar
     el-row
-      el-col(:span="16" :offset="4")
+      el-col(:span="20" :offset="2")
         QuickAccess
     el-row
-      el-col(:span="16" :offset="4")
+      el-col(:span="20" :offset="2")
         Highlights
 </template>
 

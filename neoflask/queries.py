@@ -152,7 +152,7 @@ WITH DISTINCT
    paper, info,
    {title: info.title, text: info.text, rank: info.rank, entities: []} AS info_card
 ORDER BY
-    paper.rank DESC, // rank is pub_date
+    DATETIME(paper.rank) ASC, // rank is pub_date
     info.rank ASC // rank is figure label
 WITH DISTINCT
     paper, COLLECT(info_card) AS info_cards
@@ -355,10 +355,12 @@ LUCENE_SEARCH = Query(
 WITH $query AS query
 CALL db.index.fulltext.queryNodes("title", query) YIELD node, score
 WITH
-  node.doi AS doi, node.title AS text, score, "title" AS source, query
-ORDER BY score DESC
+// weight 4x for results on title
+  node.doi AS doi, node.title AS text, 1 * score AS weighted_score, "title" AS source, query
+ORDER BY weighted_score DESC
 RETURN 
-  doi, [{text: text}] AS info, score, source, query
+// entities is obligatory field for info for compatibility with the other methods
+  doi, [{title: source + " ("+weighted_score+")", text: text, entities: []}] AS info, weighted_score, source, query
 
 UNION
 
@@ -366,10 +368,11 @@ UNION
 WITH $query AS query
 CALL db.index.fulltext.queryNodes("abstract", query) YIELD node, score
 WITH
-  node.doi AS doi, node.title as text, score, "abstract" as source, query
-ORDER BY score DESC
+// weight 2x for results on title
+  node.doi AS doi, node.title as text, 1 * score AS weighted_score, "abstract" as source, query
+ORDER BY weighted_score DESC
 RETURN 
-  doi, [{text: text}] AS info, score, source, query
+  doi, [{title: source + " ("+weighted_score+")", text: text, entities: []}] AS info, weighted_score, source, query
 LIMIT 20
 
 UNION
@@ -379,10 +382,11 @@ WITH $query AS query
 CALL db.index.fulltext.queryNodes("caption", query) YIELD node, score
 MATCH (article:SDArticle)-[:has_figure]->(f:SDFigure)-[:has_panel]->(node)
 WITH DISTINCT
-  article.doi as doi, node.caption as text, score, "caption" AS source, query
-ORDER BY score DESC
+// weight 1 for caption
+  article.doi as doi, node.caption as text, 1 * score AS weighted_score, "caption" AS source, query
+ORDER BY weighted_score DESC
 RETURN 
-  doi, [{text: text}] AS info, score, source, query
+  doi, [{title: source + " ("+weighted_score+")", text: text, entities: []}] AS info, weighted_score, source, query
 LIMIT 20
 
 //UNION
@@ -393,10 +397,10 @@ LIMIT 20
 //MATCH (sd_article:SDArticle)-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(ct:CondTag)-[:Identified_by]->(h:H_Entity)
 //WHERE h.name = node.name AND node.name <> ""
 //WITH DISTINCT 
-//  sd_article.doi as doi, h.name as text, score, "entity" as source, query
+//  sd_article.doi as doi, h.name as text, 1.0 * score AS weighted_score, "entity" as source, query
 //ORDER BY score DESC
 //RETURN 
-//  doi, [{text: text}] AS info, score, source, query
+//  doi, [{title: source + " ("+weighted_score+")", text: text, entities: []}] AS info, weighted_score, source, query
 //LIMIT 20
 
 UNION
@@ -406,11 +410,12 @@ WITH $query AS query
 CALL db.index.fulltext.queryNodes("name", query) YIELD node, score
 MATCH (article:SDArticle)-->(author:Contrib)
 WHERE author.surname = node.surname AND author.given_names = node.given_names
-WITH DISTINCT 
-  article.doi as doi, node.surname as text, score, "author" AS source, query
-ORDER BY score DESC
+WITH DISTINCT
+//weight 4x for results on authors
+  article.doi as doi, node.surname as text, 1 * score AS weighted_score, "author" AS source, query
+ORDER BY weighted_score DESC
 RETURN 
-  doi, [{text: text}] AS info, score, source, query
+  doi, [{title: source + " ("+weighted_score+")", text: text, entities: []}] AS info, weighted_score, source, query
 LIMIT 20
 ''',
     map={'query': ['query', '']},
@@ -423,7 +428,7 @@ WITH $query AS query
 MATCH (article:SDArticle)
 WHERE article.doi = query
 RETURN
-  article.doi AS doi, [{text: article.doi}] AS info, 10.0 AS score, 'doi' AS source, query
+  article.doi AS doi, [{title: 'doi match', text: article.doi, entities:[]}] AS info, 10.0 AS score, 'doi' AS source, query
   ''',
   map={'query': ['query', '']},
   returns=['doi', 'info', 'score', 'source', 'query']

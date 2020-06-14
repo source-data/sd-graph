@@ -2,14 +2,14 @@
   div
     h1 Quick Access 
       el-button(v-if="loadingRecords" circle plain type="primary" :loading="true" size="mini" style="padding:2px") 
-    el-tabs(@tab-click="onSelectTab" tab-position="top")
-      el-tab-pane(label="Refereed Preprints", name="byReviewingService").filter-list
+    el-tabs(@tab-click="onSelectTab" tab-position="top" v-model="activeTab")
+      el-tab-pane(label="Refereed Preprints" name="byReviewingService")
         QuickAccessByReviewingService(@change="onChangeByReviewingService")
-      //- el-tab-pane(label="By Method").filter-list
+      //- el-tab-pane(label="By Method")
       //-   QuickAccessByMethod(@change="onChangeByMethod")
-      el-tab-pane(label="COVID-19 hypotheses" name="byHyp").filter-list
+      el-tab-pane(label="COVID-19 hypotheses" name="byHyp")
         QuickAccessByHyp(@change="onChangeByHyp")
-      //- el-tab-pane(label="By Molecule").filter-list
+      //- el-tab-pane(label="By Molecule")
       //-   QuickAccessByMol(@change="onChangeByMol")
       el-tab-pane(label="Automagic selection" name="byAutomagic")
         QuickAccessByAutomagic
@@ -34,6 +34,11 @@ export default {
     QuickAccessByMethod,
     QuickAccessByMol,
     QuickAccessByHyp,
+  },
+  data () {
+    return {
+      activeTab: 'byReviewingService'
+    }
   },
   methods: {
     onSelectTab (selectedTab) {
@@ -68,11 +73,5 @@ export default {
 }
 </style>
 
-<style scoped lang="scss">
-.filter-list {
-  // max-height: 10em;
-  // overflow: scroll;
-  // padding: 1em;
-}
 
 </style>

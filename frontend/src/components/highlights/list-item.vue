@@ -13,30 +13,30 @@
             p
               small
                 b  doi:  
-                el-link(type="primary" :href="href(article.doi)" target="_blank") http://doi.org/{{ article.doi }} 
+                el-link(type="primary", :href="href(article.doi)", target="_blank") http://doi.org/{{ article.doi }} 
             p
               small {{ authorList }}
             div(v-if="article.review_process")
-              el-collapse(accordion)
-                div(v-for="review in article.review_process.reviews")
-                  el-popover(v-if="review.highlight",
-                      placement="top",
-                      title="Summary (click tab to read the full review)",
-                      width="600",
-                      trigger="hover",
-                      :content="review.highlight",
-                      transition="el-fade-in-linear",
-                      :visible-arrow="false",
-                      :open-delay="500"
-                    )
-                    //-  div(v-html="mdRender(review.highlight) slot="content"")
-                    el-collapse-item(slot="reference")
-                      p(slot="title")
-                        span.peer_review_material Reviewed by 
-                          i {{ displayJournal(review.reviewed_by) }}
-                        |  | Reviewer #
-                        | {{ review.review_idx }}
-                      p(v-html="mdRender(review.text)" style="max-height:350px; overflow: scroll")
+              el-collapse(v-for="review, i in article.review_process.reviews" v-model="activeCollapseItem" accordion)
+                el-popover(v-if="review.highlight"
+                    v-model="visiblePopUp[i]"
+                    placement="top"
+                    title="Summary (click tab to read the full review)"
+                    width="600"
+                    trigger="hover"
+                    :content="review.highlight"
+                    transition="el-fade-in-linear"
+                    :visible-arrow="false"
+                    :open-delay="500"
+                  )
+                  //-  div(v-html="mdRender(review.highlight) slot="content"")
+                  el-collapse-item(slot="reference" :name="i")
+                    p(slot="title")
+                      span.peer_review_material Reviewed by 
+                        i {{ displayJournal(review.reviewed_by) }}
+                      |  | Reviewer #
+                      | {{ review.review_idx }}
+                    p(v-html="mdRender(review.text)" style="max-height:350px; overflow: scroll")
               el-collapse(v-if="article.review_process.response")
                 el-collapse-item
                   p(slot="title")
@@ -49,14 +49,14 @@
                       i {{ displayJournal(article.review_process.annot.reviewed_by) }}
                     |  | Review Process File
                   p(v-html="mdRender(article.review_process.annot.text)")
-      el-row()
-        el-col(:span="10")
+      el-row(type="flex" justify="space-between")
+        el-col(:span="11")
           p
             small(style="line-height:1.5") {{ article.abstract }}
           p 
             small(style="font-family: monospace; font-size: 9px") [source: {{ article.source }}]
-        el-col(:span="2")
-          p
+        //- el-col(:span="2")
+        //-   p
         el-col(:span="12")
           //- label(for="info-cards" style="font-variant: small-caps") {{ info.length }} information card{{ info.length > 1 ? 's':''}}:
           el-collapse(v-for="(card, index) in info" id="infor-cards" v-model="activeCards")
@@ -68,7 +68,7 @@
                 span(v-for="item in card.text")
                    el-tag(size="medium") {{ item }}
               div(v-else="typeof card.text === 'string'")
-                small {{ card.text }}
+                small(style="line-height:1.3") {{ card.text }}
     el-divider
 </template>
 <script>
@@ -83,10 +83,19 @@ export default {
   },
   data() {
     return {
-      activeCards: [0,1]
+      activeCards: [0,1],
+      activeCollapseItem: null,
+      visiblePopUp: {}
     }
   },
   methods: {
+    closePopUp(i) {
+      console.debug("this.activeCollapseItem", this.activeCollapseItem)
+      console.debug("this.visiblePopUp[i]", this.visiblePopUp[i])
+      // make sure that popup does not show if the collapsible is open
+      this.visiblePopUp[i] = (this.visiblePopUp[i] && (this.visiblePopUp[i] !== this.activateCollapseItem))
+      console.debug("after: this.visiblePopUp[i]", this.visiblePopUp[i])
+    },
     href(doi) {
       return new URL(doi,"https://doi.org/").href
     },
@@ -110,7 +119,6 @@ export default {
       return this.journalName(id)
     },
     mapRole(role) {
-
       const map = {
         'intervention': 'danger',
         'assayed': '',

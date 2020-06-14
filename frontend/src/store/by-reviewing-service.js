@@ -25,10 +25,10 @@ export default {
     * RECORDS
     */
     addRecords (state, records) {
-    const recordsById = {}
-    records.forEach((record) => {
-      recordsById[record.id] = record
-    })
+      const recordsById = {}
+      records.forEach((record) => {
+        recordsById[record.id] = record
+      })
       state.records = recordsById
     },
     /* *************************************************************************
