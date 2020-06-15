@@ -18,34 +18,41 @@
               small {{ authorList }}
             div(v-if="article.review_process")
               el-collapse(v-for="review, i in article.review_process.reviews" v-model="activeCollapseItem" accordion)
-                el-popover(v-if="review.highlight"
-                    v-model="visiblePopUp[i]"
-                    placement="top"
-                    title="Summary (click tab to read the full review)"
-                    width="600"
-                    trigger="hover"
-                    :content="review.highlight"
-                    transition="el-fade-in-linear"
-                    :visible-arrow="false"
-                    :open-delay="500"
-                  )
-                  //-  div(v-html="mdRender(review.highlight) slot="content"")
-                  el-collapse-item(slot="reference" :name="i")
+                el-collapse-item(:name="i")
                     p(slot="title")
-                      span.peer_review_material Reviewed by 
-                        i {{ displayJournal(review.reviewed_by) }}
-                      |  | Reviewer #
-                      | {{ review.review_idx }}
+                      el-popover(
+                        v-model="visiblePopUp[i]"
+                        placement="top"
+                        title="Summary (click tab to read the full review)"
+                        width="600"
+                        trigger="hover"
+                        :content="review.highlight"
+                        transition="el-fade-in-linear"
+                        :visible-arrow="false"
+                        :open-delay="500"
+                      )
+                        span(slot="reference").peer_review_material
+                          i.el-icon-document-checked
+                          |   Reviewed by 
+                          i {{ displayJournal(review.reviewed_by) }}
+                          |  | Reviewer #
+                          | {{ review.review_idx }}
+                          
                     p(v-html="mdRender(review.text)" style="max-height:350px; overflow: scroll")
+
               el-collapse(v-if="article.review_process.response")
                 el-collapse-item
                   p(slot="title")
-                    span.peer_review_material Response to the Reviewers
+                    span.peer_review_material
+                      i.el-icon-notebook-2
+                      |   Response to the Reviewers
                   p(v-html="mdRender(article.review_process.response.text)")
               el-collapse(v-if="article.review_process.annot")
                 el-collapse-item(:title="'Reviewed by ' +  + ' | Review Process File'")
                   p(slot="title")
-                    span.peer_review_material Reviewed by 
+                    span.peer_review_material
+                      i.el-icon-document-checked
+                      |  Reviewed by 
                       i {{ displayJournal(article.review_process.annot.reviewed_by) }}
                     |  | Review Process File
                   p(v-html="mdRender(article.review_process.annot.text)")
