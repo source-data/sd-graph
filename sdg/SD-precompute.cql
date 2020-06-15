@@ -35,7 +35,7 @@ ORDER BY
     reviewing.rank ASC, pub_date DESC, position_idx ASC
 WITH DISTINCT
    reviewing, doi, pub_date, fig_label, caption, position_idx
-MERGE (paper:VizPaper {id: reviewing.name, doi: doi, query: "by_reviewing_service", pub_date: pub_date, rank: pub_date})
+MERGE (paper:VizPaper {id: reviewing.name, doi: doi, query: "by_reviewing_service", pub_date: toString(DATETIME(pub_date)), rank: pub_date})
 MERGE (paper)-[:HasInfo]->(info:VizInfo {title: fig_label, text: caption, rank: position_idx})
 //RETURN paper, info;
 RETURN COUNT(DISTINCT paper) AS `papers in the by reviewing service`;
@@ -149,7 +149,7 @@ WITH
 UNWIND hyp.ctrl_v AS ctrl_v
 UNWIND hyp.meas_v AS meas_v
 UNWIND entities as entity // THIS IS KILLING IT IF entities == []
-MERGE (paper:VizPaper {id: id, doi:doi, query: "by_hyp", pub_date: pub_date, rank: paper_rank})
+MERGE (paper:VizPaper {id: id, doi:doi, query: "by_hyp", pub_date: toString(DATETIME(pub_date)), rank: paper_rank})
 MERGE (paper)-[:HasInfo]->(info:VizInfo {title: info_title, text: info_text, rank: info_rank})
 MERGE (c:VizEntity {text: ctrl_v})-[:HasPotentialEffectOn]->(m:VizEntity {text: meas_v})
 MERGE (paper)-[:HasEntity]->(c)
@@ -275,7 +275,7 @@ WITH
 ORDER BY rank_sum ASC
 LIMIT 20
 // unpack
-MERGE (paper:VizPaper {id: 'automagic', doi: doi, query:'automagic', pub_date: pub_date, rank: rank_sum})
+MERGE (paper:VizPaper {id: 'automagic', doi: doi, query:'automagic', pub_date: toString(DATETIME(pub_date)), rank: rank_sum})
 MERGE (paper)-[:HasInfo]->(info_2:VizInfo {title: 'Experimental approaches' , text: exp_assays, rank: "0"})
 MERGE (paper)-[:HasInfo]->(info_1:VizInfo {title: 'Biological entities' , text: bio_entities, rank: "1"})
 WITH paper, info_1, info_2, bio_entities, exp_assays

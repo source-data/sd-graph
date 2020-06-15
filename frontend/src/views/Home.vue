@@ -34,8 +34,8 @@
         SearchBar
     el-row
       el-col(:span="20" :offset="2")
-        div(v-if="progressPercent() < 100")
-          p Initializing...   
+        div(v-if="progressStep() < 4")
+          p Initializing...  ({{ progressStep() }} / 4)
              el-button(circle plain type="primary" :loading="true" size="normal") 
         div(v-else="")
           QuickAccess
@@ -59,11 +59,8 @@ export default {
     Highlights,
   },
   methods: {
-    progressPercent () {
-      console.debug("progressPercent", this.progress)
-      const percent = 100.0 * (this.progress / 4)
-      console.debug("percent", percent)
-      return percent
+    progressStep () {
+      return this.progress
     }
   },
   computed: {
@@ -74,6 +71,7 @@ export default {
   },
   beforeCreate () {
     this.$store.commit('setInitStage', 0)
+    this.$store.dispatch('statsFromFlask').then(this.$store.commit('incrementInit'))
     this.$store.dispatch('byReviewingService/getAll').then(
       // initialize default state
       () => {
@@ -87,7 +85,6 @@ export default {
     //this.$store.dispatch('byMol/getAll'),
     this.$store.dispatch('byHyp/getAll').then(this.$store.commit('incrementInit')),
     this.$store.dispatch('byAutomagic/getAll').then(this.$store.commit('incrementInit'))
-    this.$store.dispatch('statsFromFlask').then(this.$store.commit('incrementInit'))
   },
 }
 </script>
