@@ -10,8 +10,8 @@
         p The EEB platform is a technology experiment developed by  
           el-link(type="primary" href="https://embopress.org") EMBO Press.
           
-        p EEB builds upon the full-text content provided by bioRxiv in the form of standardized structured MECA/JATS archives.
-          |  It uses the SmartTag engine for semantic text analysis of figure legends and the 
+        p EEB automatically indexes and prioritizes <i>bioRixv</i> preprints, using the full-text content provided by <i>bioRxiv</i> in the form of standardized structured MECA/JATS archives.
+          | It uses the SmartTag engine for semantic text analysis of figure legends and the 
           el-link(type="primary"  href="https://sourcedata.io") SourceData 
           |  knowledge graph of manually curated experiments.
           | Taking advantage of the 
