@@ -88,6 +88,7 @@ export default {
   data() {
     return {
       activeCards: [0,1],
+      activeCollapseItem: []
     }
   },
   methods: {
