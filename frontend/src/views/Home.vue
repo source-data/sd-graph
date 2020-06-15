@@ -34,7 +34,11 @@
         SearchBar
     el-row
       el-col(:span="20" :offset="2")
-        QuickAccess
+        div(v-if="progressPercent() < 100")
+          p Initializing...   
+             el-button(circle plain type="primary" :loading="true" size="normal") 
+        div(v-else="")
+          QuickAccess
     el-row
       el-col(:span="20" :offset="2")
         Highlights
@@ -54,25 +58,36 @@ export default {
     QuickAccess,
     Highlights,
   },
+  methods: {
+    progressPercent () {
+      console.debug("progressPercent", this.progress)
+      const percent = 100.0 * (this.progress / 4)
+      console.debug("percent", percent)
+      return percent
+    }
+  },
   computed: {
     thisYear () {
       return new Date().getFullYear()
     },
-    ...mapGetters(['db_stats'])
+    ...mapGetters(['db_stats', 'progress'])
   },
   beforeCreate () {
+    this.$store.commit('setInitStage', 0)
     this.$store.dispatch('byReviewingService/getAll').then(
       // initialize default state
       () => {
         this.$store.commit('byReviewingService/showRecord', {id: 'review commons'})
-        this.$store.dispatch('highlights/listByCurrent', 'byReviewingService')
+        this.$store.dispatch('highlights/listByCurrent', 'byReviewingService').then(
+          this.$store.commit('incrementInit')
+        )
       }
     ),
     //this.$store.dispatch('byMethod/getAll'),
     //this.$store.dispatch('byMol/getAll'),
-    this.$store.dispatch('byHyp/getAll'),
-    this.$store.dispatch('byAutomagic/getAll')
-    this.$store.dispatch('statsFromFlask')
+    this.$store.dispatch('byHyp/getAll').then(this.$store.commit('incrementInit')),
+    this.$store.dispatch('byAutomagic/getAll').then(this.$store.commit('incrementInit'))
+    this.$store.dispatch('statsFromFlask').then(this.$store.commit('incrementInit'))
   },
 }
 </script>

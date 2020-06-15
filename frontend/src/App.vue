@@ -71,7 +71,6 @@ export default {
         '3': '/contact',
       }
       const selected_route = paths[key]
-      console.debug("path", this.$route.path)
       if (this.$route.path !== selected_route) {
         this.$router.push({path : selected_route})
       }
@@ -82,14 +81,6 @@ export default {
       return new Date().getFullYear()
     },
     ...mapGetters(['db_stats'])
-  },
-  beforeCreate () {
-    this.$store.dispatch('byReviewingService/getAll'),
-    //this.$store.dispatch('byMethod/getAll'),
-    //this.$store.dispatch('byMol/getAll'),
-    this.$store.dispatch('byHyp/getAll'),
-    this.$store.dispatch('byAutomagic/getAll')
-    this.$store.dispatch('statsFromFlask')
   },
 }
 </script>

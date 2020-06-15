@@ -37,10 +37,14 @@ export default new Vuex.Store({
       total_rel: undefined
     },
     loadingRecords: false,
+    initializationStage: undefined
   },
   getters: {
     db_stats(state) {
       return state.stats
+    },
+    progress(state) {
+      return state.initializationStage
     },
     journalName: (state) => (id) => { return state.journalNameDict[id.toLowerCase()] }
   },
@@ -54,6 +58,12 @@ export default new Vuex.Store({
     setNotLoading (state) {
       state.loadingRecords = false
     },
+    setInitStage (state, i) {
+      state.initializationStage = i
+    },
+    incrementInit (state) {
+      state.initializationStage += 1
+    }
   },
   actions: {
     statsFromFlask ({ commit }) {
