@@ -61,7 +61,13 @@ export default {
     ...mapGetters(['db_stats'])
   },
   beforeCreate () {
-    this.$store.dispatch('byReviewingService/getAll'),
+    this.$store.dispatch('byReviewingService/getAll').then(
+      // initialize default state
+      () => {
+        this.$store.commit('byReviewingService/showRecord', {id: 'review commons'})
+        this.$store.dispatch('highlights/listByCurrent', 'byReviewingService')
+      }
+    ),
     //this.$store.dispatch('byMethod/getAll'),
     //this.$store.dispatch('byMol/getAll'),
     this.$store.dispatch('byHyp/getAll'),

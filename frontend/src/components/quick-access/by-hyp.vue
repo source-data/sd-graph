@@ -18,7 +18,8 @@ import { mapGetters } from 'vuex'
 export default {
   data () {
     return {
-      selectedHyp: undefined,
+      // default value
+      selectedHyp: 0,
     }
   },
   computed: {

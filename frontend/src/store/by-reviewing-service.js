@@ -4,7 +4,7 @@ export default {
   namespaced: true,
   state: {
     records: {},
-    currentRecordId: 'review commons',
+    currentRecordId: undefined,
     loadingRecords: false,
     loadComplete: false,
   },
