@@ -91,7 +91,7 @@ docker rm --force neo4j-dump
 Finally launch the service again
 
 ```
-docker-compose -f production.yml up -d
+docker-compose -f production.yml up -d --remove-orphans
 ```
 
 
@@ -134,7 +134,7 @@ docker run --rm \
  bin/neo4j-admin load --from=/app/download --database=graph.db --force
 
 # start the services
-docker-compose -f production.yml up -d
+docker-compose -f production.yml up -d --remove-orphans
 ```
 
 
@@ -144,7 +144,7 @@ Something like this will (generally) be enough, but really depends on your chang
 ```bash
 git pull
 docker-compose -f production.yml build
-docker-compose -f production.yml up -d
+docker-compose -f production.yml up -d --remove-orphans
 ```
 
 
