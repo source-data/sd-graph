@@ -35,7 +35,7 @@
     el-row
       el-col(:span="20" :offset="2")
         div(v-if="progressStep() < 4")
-          p Initializing...  ({{ progressStep() }} / 4)
+          p Initializing...  ({{ progressStep() }} / 4)  
              el-button(circle plain type="primary" :loading="true" size="normal") 
         div(v-else="")
           QuickAccess
@@ -76,10 +76,10 @@ export default {
       // initialize default state
       () => {
         this.$store.commit('byReviewingService/showRecord', {id: 'review commons'})
-        this.$store.dispatch('highlights/listByCurrent', 'byReviewingService').then(
-          this.$store.commit('incrementInit')
-        )
+        this.$store.dispatch('highlights/listByCurrent', 'byReviewingService')
       }
+    ).then(
+          this.$store.commit('incrementInit')
     ),
     //this.$store.dispatch('byMethod/getAll'),
     //this.$store.dispatch('byMol/getAll'),
