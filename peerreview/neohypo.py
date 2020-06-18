@@ -115,6 +115,7 @@ class Hypothelink:
                 peer_review_node.update_properties({'reviewed_by': GROUP_IDS[group_id]})
                 peer_review_neo = self.neo4j.node(peer_review_node, clause="MERGE")
                 print(f"loaded {peer_review_node.label} for {peer_review_node.properties['related_article_doi']}")
+                # check if article node missing and add temporary one with source='hypothesis id'
         self.make_relationships()
 
     @staticmethod
