@@ -23,9 +23,8 @@
 
           p The platform combines the following technologies:
             ul
-              li The standardized MECA/JATS archive provided by 
-                el-link(href="https://biorxiv.org") bioRxiv 
-                | including are used for indexing. EEB does not intend to reproduce the full content of the preprints which are best accessed from the bioRixv site.
+              li The standardized MECA/JATS archive provided by <i>bioRxiv</i> are parsed and converted into a graph before loading and indexing into a <el-link href="https://neo4j.com">neo4j</el-link> graph database.
+                el-link(href="https://biorxiv.org") bioRxiv are parsed and converted  into a neo4j graph database. EEB does not intend to reproduce the full content of the preprints which are best accessed from the bioRixv site.
               li The reviews produced by <el-link href="https://reviewcommons.org"><i>Review Commons</i></el-link>, <el-link href="https://elifesciences.org/"><i>eLife</i></el-link> 
                 | and <el-link href="https://embopress.org"><i>EMBO Press</i></el-link> that are posted on bioRxiv are integrated into EEB. 
                 | We use the <el-link href="https://github.com/embo-press/hypothepy">hypothepy</el-link> python binding to the <el-link href="https://hypothes.is/">hypothes.is</el-link> API 
