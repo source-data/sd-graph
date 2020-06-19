@@ -19,8 +19,8 @@
             div(v-if="article.review_process")
               el-collapse(v-for="review in article.review_process.reviews" v-model="activeCollapseItem" accordion)
                 el-collapse-item
-                    p(slot="title")
-                      el-popover(
+                  p(slot="title")
+                      el-popover(v-if="review.highlight" 
                         placement="top"
                         title="Summary (click tab to read the full review)"
                         width="600"
@@ -36,7 +36,13 @@
                           i {{ displayJournal(review.reviewed_by) }}
                           |  | Reviewer #
                           | {{ review.review_idx }}
-                    p(v-html="mdRender(review.text)" style="max-height:350px; overflow: scroll")
+                      span(v-else).peer_review_material
+                        i.el-icon-document-checked
+                        |   Reviewed by 
+                        i {{ displayJournal(review.reviewed_by) }}
+                        |  | Reviewer #
+                        | {{ review.review_idx }}
+                  p(v-html="mdRender(review.text)" style="max-height:350px; overflow: scroll")
               el-collapse(v-if="article.review_process.response")
                 el-collapse-item
                   p(slot="title")
