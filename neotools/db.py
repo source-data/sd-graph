@@ -65,19 +65,47 @@ class Instance:
             results = session.write_transaction(tx_funct, q.code, q.params)
             return results
 
+    def exists(self, q: Query) -> bool:
+        def tx_funct(tx, code, params):
+            results = tx.run(code, params)
+            found_one = results.single() is not None
+            summary = results.summary()
+            notifications = summary.notifications
+            if notifications:
+                print(f"WARNING: {notifications} when checking for existance.")
+                print(summary.statement)
+                print(summary.parameters)
+            return found_one
+        found_it = self.query_with_tx_funct(tx_funct, q)
+        return found_it
+
     def node(self, n: Node, clause="MERGE"):
+        # avoid direct code injection via clause
+        if clause == 'MERGE':
+            cl = 'MERGE'
+        elif clause == 'CREATE':
+            cl = 'CREATE'
+        else:
+            clause = None
         label = n.label
         properties_str = to_string(n.properties)
         q = Query(
-            code=f"{clause} (n: {label} {{ {properties_str} }}) RETURN n;"
+            code=f"{cl} (n: {label} {{ {properties_str} }}) RETURN n;"
         )
         res = self.query_with_tx_funct(self._tx_funct_single, q)
         node = res['n']
         return node
 
     def relationship(self, a, b, r: str, clause="MERGE"):
+        # avoid direct code injection
+        if clause == 'MERGE':
+            cl = 'MERGE'
+        elif clause == 'CREATE':
+            cl = 'CREATE'
+        else:
+            clause = None
         q = Query(
-            code=f"MATCH (a), (b) WHERE id(a)={a.id} AND id(b)={b.id} {clause} (a)-[r:{r}]->(b) RETURN r;"
+            code=f"MATCH (a), (b) WHERE id(a)={a.id} AND id(b)={b.id} {cl} (a)-[r:{r}]->(b) RETURN r;"
         )
         res = self.query_with_tx_funct(self._tx_funct_single, q)
         rel = res['r']

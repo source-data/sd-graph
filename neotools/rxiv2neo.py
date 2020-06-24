@@ -8,7 +8,7 @@ from pathlib import Path
 from argparse import ArgumentParser
 from neo4j.exceptions import ClientError
 from .model import JATS_GRAPH_MODEL, CORD19_GRAPH_MODEL
-from .txt2node import XMLNode, CORDNode
+from .txt2node import XMLNode, JSONNode
 from .db import Instance
 from .queries import (
     SOURCE_BY_UUID,
@@ -123,7 +123,7 @@ class CORDLoader:
             j['metadata']['doi'] = supplementary_metadata['doi']
             j['metadata']['pub_date'] = supplementary_metadata['publish_time']
             j['metadata']['journal-title'] = supplementary_metadata['source_x']
-            json_node = CORDNode(j, CORD19_GRAPH_MODEL)
+            json_node = JSONNode(j, CORD19_GRAPH_MODEL)
             print(json_node)
             source = json_archive.name
             build_neo_graph(json_node, source, DB)
@@ -169,20 +169,20 @@ class NoException(Exception):
         super().__init__()
 
 
-def build_neo_graph(xml_node: XMLNode, source: str, db: Instance, catch_exception: Exception = NoException):
-    properties = xml_node.properties  # deal with types!
+def build_neo_graph(py_node, source: str, db: Instance, catch_exception: Exception = NoException):
+    properties = py_node.properties  # deal with types!
     properties['source'] = source
     try:
-        node = db.node(xml_node)
+        node = db.node(py_node)
     except catch_exception as e:
         print(e)
-        print(f"Exception with {xml_node.label}")
+        print(f"Exception with {py_node.label}")
         node = None
     except NoException as e:
         raise e
     if node is not None:
-        print(f"loaded {xml_node.label} as node {node.id}                                ", end="\r")
-        for rel, children in xml_node.children.items():
+        print(f"loaded {py_node.label} as node {node.id}                                ", end="\r")
+        for rel, children in py_node.children.items():
             for child in children:
                 child_node = build_neo_graph(child, source, db, catch_exception)
                 if rel is not None:

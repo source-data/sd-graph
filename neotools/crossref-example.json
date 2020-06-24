@@ -1,0 +1,749 @@
+{
+    "institution": {
+        "name": "bioRxiv", 
+        "place": ["-"], 
+        "acronym": ["-"]
+    }, 
+    "indexed": {
+        "date-parts": [[2020, 5, 9]], 
+        "date-time": "2020-05-09T05:10:49Z", 
+        "timestamp": 1589001049133
+    },
+    "posted": {
+        "date-parts": [[2020, 2, 13]]
+   }, 
+    "group-title": "Genomics", 
+    "reference-count": 95, 
+    "publisher": "Cold Spring Harbor Laboratory", 
+    "content-domain": {
+        "domain": [], 
+        "crossmark-restriction": False
+    }, 
+    "accepted": {
+        "date-parts": [[2020, 5, 5]]
+    }, 
+    "abstract": "...",
+    "DOI": "10.1101/2020.02.12.944629",
+    "type": "posted-content", 
+    "created": {
+        "date-parts": [[2020, 2, 14]], 
+        "date-time": "2020-02-14T05:35:26Z", 
+        "timestamp": 1581658526000
+    }, 
+    "source": "Crossref", 
+    "is-referenced-by-count": 0, 
+    "title": "Retrocopying expands the functional repertoire of APOBEC3 antiviral proteins in primates", 
+    "prefix": "10.1101", 
+    "author": [
+        {
+            "ORCID": "http://orcid.org/0000-0001-9284-1744", 
+            "authenticated-orcid": False, 
+            "given": "Lei", 
+            "family": "Yang", 
+            "sequence": "first", "affiliation": []
+        },
+        {
+            "given": "Michael", "family": "Emerman", "sequence": "additional", "affiliation": []
+        }, 
+        {
+            "given": "Harmit S.", "family": "Malik", "sequence": "additional", "affiliation": []
+        }, 
+        {
+            "ORCID": "http://orcid.org/0000-0003-0950-2253", "authenticated-orcid": False, "suffix": "Jr.", "given": "Richard N.", "family": "McLaughlin", "sequence": "additional", "affiliation": []
+        }
+    ], 
+    "member": "246", 
+    "reference": [
+        {"key": "2020050808162359000_2020.02.12.944629v2.1", "DOI": "10.3389/fmicb.2012.00275", "doi-asserted-by": "publisher"}
+    ],
+    "container-title": [], 
+    "original-title": [], 
+    "link": [
+        {
+            "URL": "https://syndication.highwire.org/content/doi/10.1101/2020.02.12.944629", 
+            "content-type": "unspecified", 
+            "content-version": "vor", 
+            "intended-application": "similarity-checking"
+        }
+    ], 
+    "deposited": {
+        "date-parts": [[2020, 5, 8]], 
+        "date-time": "2020-05-08T15:16:34Z", 
+        "timestamp": 1588950994000
+    }, 
+    "score": 1.0, 
+    "subtitle": [], 
+    "short-title": [], 
+    "issued": {
+        "date-parts": [[2020, 2, 13]]
+    }, 
+    "references-count": 95, 
+    "URL": "http://dx.doi.org/10.1101/2020.02.12.944629", 
+    "relation": {"cites": []}, 
+    "subtype": "preprint"
+}
+
+
+{
+    "indexed": {
+        "date-parts": [
+            [
+                2020,
+                6,
+                18
+            ]
+        ],
+        "date-time": "2020-06-18T15:40:52Z",
+        "timestamp": 1592494852714
+    },
+    "reference-count": 80,
+    "publisher": "EMBO",
+    "license": [
+        {
+            "URL": "http://onlinelibrary.wiley.com/termsAndConditions#vor",
+            "start": {
+                "date-parts": [
+                    [
+                        2020,
+                        6,
+                        18
+                    ]
+                ],
+                "date-time": "2020-06-18T00:00:00Z",
+                "timestamp": 1592438400000
+            },
+            "delay-in-days": 0,
+            "content-version": "vor"
+        },
+        {
+            "URL": "http://doi.wiley.com/10.1002/tdm_license_1.1",
+            "start": {
+                "date-parts": [
+                    [
+                        2020,
+                        6,
+                        18
+                    ]
+                ],
+                "date-time": "2020-06-18T00:00:00Z",
+                "timestamp": 1592438400000
+            },
+            "delay-in-days": 0,
+            "content-version": "tdm"
+        }
+    ],
+    "funder": [
+        {
+            "DOI": "10.13039/501100002790",
+            "name": "Canadian Network for Research and Innovation in Machining Technology, Natural Sciences and Engineering Research Council of Canada",
+            "doi-asserted-by": "publisher",
+            "award": [
+                "CFI\u2010JELF; NSERC\u2010Discovery; NSERC CREATE PRoTECT"
+            ]
+        }
+    ],
+    "content-domain": {
+        "domain": [],
+        "crossmark-restriction": false
+    },
+    "DOI": "10.15252/embj.2020104915",
+    "type": "article-journal",
+    "created": {
+        "date-parts": [
+            [
+                2020,
+                6,
+                18
+            ]
+        ],
+        "date-time": "2020-06-18T15:06:00Z",
+        "timestamp": 1592492760000
+    },
+    "source": "Crossref",
+    "is-referenced-by-count": 0,
+    "title": "Plant E3 ligases\n            SNIPER\n            1 and\n            SNIPER\n            2 broadly regulate the homeostasis of sensor\n            NLR\n            immune receptors",
+    "prefix": "10.15252",
+    "author": [
+        {
+            "ORCID": "http://orcid.org/0000-0001-6687-1675",
+            "authenticated-orcid": false,
+            "given": "Zhongshou",
+            "family": "Wu",
+            "sequence": "first",
+            "affiliation": [
+                {
+                    "name": "Michael Smith Laboratories University of British Columbia Vancouver BC Canada"
+                },
+                {
+                    "name": "Department of Botany University of British Columbia Vancouver BC Canada"
+                }
+            ]
+        },
+        {
+            "given": "Meixuezi",
+            "family": "Tong",
+            "sequence": "additional",
+            "affiliation": [
+                {
+                    "name": "Michael Smith Laboratories University of British Columbia Vancouver BC Canada"
+                },
+                {
+                    "name": "Department of Botany University of British Columbia Vancouver BC Canada"
+                }
+            ]
+        },
+        {
+            "given": "Lei",
+            "family": "Tian",
+            "sequence": "additional",
+            "affiliation": [
+                {
+                    "name": "Michael Smith Laboratories University of British Columbia Vancouver BC Canada"
+                },
+                {
+                    "name": "Department of Botany University of British Columbia Vancouver BC Canada"
+                }
+            ]
+        },
+        {
+            "given": "Chipan",
+            "family": "Zhu",
+            "sequence": "additional",
+            "affiliation": [
+                {
+                    "name": "Michael Smith Laboratories University of British Columbia Vancouver BC Canada"
+                },
+                {
+                    "name": "Department of Botany University of British Columbia Vancouver BC Canada"
+                }
+            ]
+        },
+        {
+            "given": "Xueru",
+            "family": "Liu",
+            "sequence": "additional",
+            "affiliation": [
+                {
+                    "name": "Michael Smith Laboratories University of British Columbia Vancouver BC Canada"
+                },
+                {
+                    "name": "Department of Botany University of British Columbia Vancouver BC Canada"
+                }
+            ]
+        },
+        {
+            "ORCID": "http://orcid.org/0000-0002-3480-5478",
+            "authenticated-orcid": false,
+            "given": "Yuelin",
+            "family": "Zhang",
+            "sequence": "additional",
+            "affiliation": [
+                {
+                    "name": "Department of Botany University of British Columbia Vancouver BC Canada"
+                }
+            ]
+        },
+        {
+            "ORCID": "http://orcid.org/0000-0002-6354-2021",
+            "authenticated-orcid": false,
+            "given": "Xin",
+            "family": "Li",
+            "sequence": "additional",
+            "affiliation": [
+                {
+                    "name": "Michael Smith Laboratories University of British Columbia Vancouver BC Canada"
+                },
+                {
+                    "name": "Department of Botany University of British Columbia Vancouver BC Canada"
+                }
+            ]
+        }
+    ],
+    "member": "79",
+    "published-online": {
+        "date-parts": [
+            [
+                2020,
+                6,
+                18
+            ]
+        ]
+    },
+    "reference": [
+        {
+            "key": "e_1_2_8_2_1",
+            "DOI": "10.1073/pnas.95.17.10306",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_3_1",
+            "DOI": "10.1105/tpc.114.134262",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_4_1",
+            "DOI": "10.1016/S0092-8674(03)00036-9",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_5_1",
+            "DOI": "10.1111/nph.12760",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_6_1",
+            "DOI": "10.3389/fpls.2011.00071",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_7_1",
+            "DOI": "10.1046/j.0960-7412.2001.01229.x",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_8_1",
+            "DOI": "10.1073/pnas.1113726108",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_9_1",
+            "DOI": "10.1073/pnas.95.26.15849",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_10_1",
+            "DOI": "10.1021/acs.jproteome.5b00146",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_11_1",
+            "DOI": "10.1111/j.1365-313X.2006.02806.x",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_12_1",
+            "DOI": "10.1371/journal.pbio.0050068",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_13_1",
+            "DOI": "10.1111/nph.15659",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_14_1",
+            "first-page": "1183",
+            "article-title": "Transcriptome analysis of brassica rapa near\u2010isogenic lines carrying clubroot\u2010resistant and \u2010susceptible alleles in response to Plasmodiophora brassicae during early infection",
+            "volume": "6",
+            "author": "Chen J",
+            "year": "2015",
+            "journal-title": "Front Plant Sci"
+        },
+        {
+            "key": "e_1_2_8_15_1",
+            "DOI": "10.1073/pnas.1105685108",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_16_1",
+            "DOI": "10.1046/j.1365-313x.1998.00343.x",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_17_1",
+            "DOI": "10.1094/MPMI-03-11-0050",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_18_1",
+            "DOI": "10.1038/nri.2016.77",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_19_1",
+            "DOI": "10.1111/nph.14302",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_20_1",
+            "DOI": "10.1073/pnas.1230660100",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_21_1",
+            "DOI": "10.1111/nph.13821",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_22_1",
+            "DOI": "10.1038/s41477-018-0216-8",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_23_1",
+            "DOI": "10.1073/pnas.96.6.3292",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_24_1",
+            "DOI": "10.7554/eLife.44558",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_25_1",
+            "DOI": "10.1093/emboj/20.19.5400",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_26_1",
+            "DOI": "10.1104/pp.18.00185",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_27_1",
+            "DOI": "10.1046/j.1365-313X.1999.00600.x",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_28_1",
+            "DOI": "10.1111/j.1365-313X.2011.04799.x",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_29_1",
+            "DOI": "10.1126/science.7638602",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_30_1",
+            "DOI": "10.1111/tpj.13603",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_31_1",
+            "DOI": "10.1104/pp.110.157610",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_32_1",
+            "DOI": "10.1111/tpj.12573",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_33_1",
+            "DOI": "10.1111/tpj.13965",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_34_1",
+            "DOI": "10.1016/j.chom.2015.08.011",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_35_1",
+            "DOI": "10.1038/nature05286",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_36_1",
+            "DOI": "10.1126/science.aaf6395",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_37_1",
+            "DOI": "10.1016/j.pbi.2019.03.013",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_38_1",
+            "DOI": "10.1016/j.plantsci.2018.03.010",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_39_1",
+            "DOI": "10.1016/S0092-8674(02)00743-2",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_40_1",
+            "DOI": "10.1126/science.aad3436",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_41_1",
+            "DOI": "10.1073/pnas.1713574114",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_42_1",
+            "DOI": "10.1104/pp.18.01582",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_43_1",
+            "DOI": "10.1038/ncomms9630",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_44_1",
+            "DOI": "10.1094/MPMI-12-16-0255-CR",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_45_1",
+            "DOI": "10.1104/pp.18.00331",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_46_1",
+            "DOI": "10.1094/MPMI.2001.14.10.1131",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_47_1",
+            "DOI": "10.1371/journal.ppat.1001111",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_48_1",
+            "DOI": "10.4161/psb.20703",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_49_1",
+            "DOI": "10.1016/j.coi.2015.01.014",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_50_1",
+            "DOI": "10.1111/nph.15534",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_51_1",
+            "DOI": "10.1111/nph.14472",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_52_1",
+            "DOI": "10.1104/pp.112.199430",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_53_1",
+            "DOI": "10.1126/science.1204903",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_54_1",
+            "DOI": "10.2174/138920206779315728",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_55_1",
+            "DOI": "10.1094/MPMI-01-10-0022",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_56_1",
+            "DOI": "10.1016/j.cub.2005.04.053",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_57_1",
+            "DOI": "10.1073/pnas.1814856115",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_58_1",
+            "DOI": "10.1126/science.aaw1720",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_59_1",
+            "DOI": "10.1016/j.jplph.2007.06.013",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_60_1",
+            "DOI": "10.1371/journal.pgen.1003465",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_61_1",
+            "DOI": "10.1101/gad.1187804",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_62_1",
+            "DOI": "10.1105/tpc.110.077537",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_63_1",
+            "DOI": "10.1101/sqb.2012.77.014860",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_64_1",
+            "DOI": "10.1038/ncomms10159",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_65_1",
+            "DOI": "10.1111/nph.14678",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_66_1",
+            "DOI": "10.1038/nrm2688",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_67_1",
+            "DOI": "10.1016/j.chom.2013.11.006",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_68_1",
+            "DOI": "10.1111/tpj.12232",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_69_1",
+            "DOI": "10.1186/s13059-015-0715-0",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_70_1",
+            "doi-asserted-by": "crossref",
+            "first-page": "2504",
+            "DOI": "10.1104/pp.16.01520",
+            "article-title": "An E3 ligase affects the NLR receptor stability and immunity to powdery mildew",
+            "volume": "172",
+            "author": "Wang T",
+            "year": "2016",
+            "journal-title": "Plant Physiol"
+        },
+        {
+            "key": "e_1_2_8_71_1",
+            "DOI": "10.1016/j.cub.2007.10.042",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_72_1",
+            "DOI": "10.7554/eLife.23684",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_73_1",
+            "DOI": "10.1111/nph.15665",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_74_1",
+            "DOI": "10.1093/mp/ssu097",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_75_1",
+            "DOI": "10.1073/pnas.1211757110",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_76_1",
+            "DOI": "10.1105/tpc.015842",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_77_1",
+            "DOI": "10.1105/tpc.110.074120",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_78_1",
+            "DOI": "10.1016/j.chom.2012.01.015",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_79_1",
+            "DOI": "10.1038/s41467-019-11202-z",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_80_1",
+            "DOI": "10.1111/tpj.12127",
+            "doi-asserted-by": "publisher"
+        },
+        {
+            "key": "e_1_2_8_81_1",
+            "DOI": "10.1073/pnas.1712251115",
+            "doi-asserted-by": "publisher"
+        }
+    ],
+    "container-title": "The EMBO Journal",
+    "original-title": [],
+    "language": "en",
+    "link": [
+        {
+            "URL": "https://onlinelibrary.wiley.com/doi/pdf/10.15252/embj.2020104915",
+            "content-type": "application/pdf",
+            "content-version": "vor",
+            "intended-application": "text-mining"
+        },
+        {
+            "URL": "https://onlinelibrary.wiley.com/doi/full-xml/10.15252/embj.2020104915",
+            "content-type": "application/xml",
+            "content-version": "vor",
+            "intended-application": "text-mining"
+        },
+        {
+            "URL": "https://onlinelibrary.wiley.com/doi/pdf/10.15252/embj.2020104915",
+            "content-type": "unspecified",
+            "content-version": "vor",
+            "intended-application": "similarity-checking"
+        }
+    ],
+    "deposited": {
+        "date-parts": [
+            [
+                2020,
+                6,
+                18
+            ]
+        ],
+        "date-time": "2020-06-18T15:06:03Z",
+        "timestamp": 1592492763000
+    },
+    "score": 1.0,
+    "subtitle": [],
+    "short-title": [],
+    "issued": {
+        "date-parts": [
+            [
+                2020,
+                6,
+                18
+            ]
+        ]
+    },
+    "references-count": 80,
+    "alternative-id": [
+        "10.15252/embj.2020104915"
+    ],
+    "URL": "http://dx.doi.org/10.15252/embj.2020104915",
+    "relation": {
+        "cites": []
+    },
+    "ISSN": [
+        "0261-4189",
+        "1460-2075"
+    ],
+    "subject": [
+        "General Biochemistry, Genetics and Molecular Biology",
+        "General Immunology and Microbiology",
+        "General Neuroscience",
+        "Molecular Biology"
+    ],
+    "container-title-short": "EMBO J"
+}

@@ -1,5 +1,6 @@
 from lxml.etree import Element
 from neotools.utils import inner_text
+from datetime import date
 
 
 # need a function factory to determin which attribute to get the value from
@@ -114,7 +115,7 @@ CORD19_GRAPH_MODEL = {
     },
     'properties': {
         'doi': lambda d: d['metadata']['doi'],
-        'pub_data': lambda d: d['metadata']['pub_date'],
+        'pub_date': lambda d: d['metadata']['pub_date'],
         'title': lambda d: d['metadata']['title'],
         'abstract': lambda d: ' '. join([para['text'] for para in d['abstract']]),
     },
@@ -131,7 +132,7 @@ CORD19_GRAPH_MODEL = {
         },
         'has_figure': {
             'path': {
-                'type': 'fig', 
+                'type': 'fig',
                 'funct': lambda d: [{key: val} for key, val in d['ref_entries'].items() if val['type'] == 'figure']
             },
             'properties': {
@@ -139,5 +140,74 @@ CORD19_GRAPH_MODEL = {
                 'caption': lambda d: list(d.values())[0]['text'],
             },
         },
+    }
+}
+
+
+BIORXIV_API_GRAPH_MODEL = {
+    'path': {
+        'type': 'article',
+        'funct': lambda d: d['article']
+    },
+    'properties': {
+        'article-type': lambda d: 'preliminary',
+        'doi': lambda d: d['doi'],
+        'journal-title': lambda d: 'bioRxiv',
+        'publication-date': lambda d: d['date'],
+        'title': lambda d: d['title'],
+        'abstract': lambda d: d['abstract'],
+        'version': lambda d: d['version']
+    },
+    'children': {
+        'has_author': {
+            'path': {
+                'type': 'author', 
+                'funct': lambda d: d['authors'].split(';')
+            },
+            'properties': {
+                'given_names': lambda text: text.split(',')[1].strip(),
+                'surname': lambda text: text.split(',')[0],
+            },
+        }
+    }
+}
+
+
+CROSSREF_PREPRINT_API_GRAPH_MODEL = {
+    'path': {
+        'type': 'article',
+        'funct': lambda d: d['article']
+    },
+    'properties': {
+        'article-type': lambda d: d['subtype'],
+        'doi': lambda d: d['DOI'],
+        'journal-title': lambda d: d['institution']['name'],  # for obscure reasons; journal would be d['container-title']
+        'publication-date': lambda d: date(*d['posted']['date-parts'][0]).isoformat(),  # journal: d['ublished-online']['date-parts']
+        'title': lambda d: d['title'],
+        'abstract': lambda d: d['abstract'],  # contains jats namespaced formatting tags
+    },
+    'children': {
+        'has_author': {
+            'path': {
+                'type': 'author',
+                'funct': lambda d: d['author']
+            },
+            'properties': {
+                'given_names': lambda d: d.get('given', ''),
+                'surname': lambda d: d.get('family', ''),
+                'collab': lambda d: d.get('name', ''),  # consortium
+            },
+            'children': {
+                'has_orcid': {
+                    'path': {
+                        'type': 'contrib-id',
+                        'funct': lambda d: [d.get('ORCID')] if d.get('ORCID', False) else [],
+                    },
+                    'properties': {
+                        'text': lambda text: text
+                    }
+                }
+            }
+        }
     }
 }
