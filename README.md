@@ -32,6 +32,7 @@ docker-compose run --rm flask python -m neotools.rxiv2neo data/<path_to_cord19_a
 docker-compose run --rm flask python -m peerreview.neohypo  # import peer reviews from hypothesis
 docker-compose run --rm flask python -m sdg.sdneo <collection_name> --api sdapi  # import source data public data
 docker-compose run --rm flask python -m sdg.sdneo <covid19|refereed-preprints> --api eebapi  # smarttag collection of preprints
+cat sdg/SD-indices.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>  # generate merged graph
 cat sdg/SD-processing.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>  # generate merged graph
 cat sdg/SD-precompute.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD> # precompute the graph used by front end
 # visit http:/localhost:8080
@@ -91,7 +92,7 @@ docker rm --force neo4j-dump
 Finally launch the service again
 
 ```
-docker-compose -f production.yml up -d
+docker-compose -f production.yml up -d --remove-orphans
 ```
 
 
@@ -134,7 +135,7 @@ docker run --rm \
  bin/neo4j-admin load --from=/app/download --database=graph.db --force
 
 # start the services
-docker-compose -f production.yml up -d
+docker-compose -f production.yml up -d --remove-orphans
 ```
 
 
@@ -144,7 +145,7 @@ Something like this will (generally) be enough, but really depends on your chang
 ```bash
 git pull
 docker-compose -f production.yml build
-docker-compose -f production.yml up -d
+docker-compose -f production.yml up -d --remove-orphans
 ```
 
 

@@ -12,6 +12,7 @@ GROUP_IDS = {
     'NEGQVabn': 'review commons',
     'q5X6RWJ6': 'elife',
     'jKiXiKya': 'embo press',
+    '9Nn8DMax': 'peerage of science',
 }
 
 REVIEWER_REGEX = re.compile(r'^.{,300}(referee|reviewer)\W+(\d)', re.IGNORECASE | re.DOTALL)

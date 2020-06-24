@@ -90,8 +90,8 @@ WITH
     id, doi, version, source, journal, title, abstract, pub_date, auth, ORCID, nb_figures,
     {reviews: COLLECT(DISTINCT review {.*}), response: response {.*}, annot: annot {.*}} AS review_process
 RETURN DISTINCT 
-    id, doi, version, source, journal, title, abstract, pub_date,
-    COLLECT(DISTINCT auth{.surname, .given_names, .collab, .position_idx, .corresp, orcid: ORCID}) AS authors,
+    id, doi, version, source, journal, title, abstract, toString(DATETIME(pub_date)) AS pub_date, //standardization of date time format, necessary for Safari
+    COLLECT(DISTINCT auth {.surname, .given_names, .position_idx, .corresp, orcid: ORCID}) AS authors,
     nb_figures, review_process
     ''',
     map={'doi': []},

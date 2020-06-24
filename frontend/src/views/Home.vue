@@ -10,8 +10,8 @@
         p The EEB platform is a technology experiment developed by  
           el-link(type="primary" href="https://embopress.org") EMBO Press.
           
-        p EEB builds upon the full-text content provided by bioRxiv in the form of standardized structured MECA/JATS archives.
-          |  It uses the SmartTag engine for semantic text analysis of figure legends and the 
+        p EEB automatically indexes and prioritizes <i>bioRixv</i> preprints by parsing the full-text MECA/JATS archives provided by <i>bioRxiv</i>.
+          | It uses the SmartTag engine for semantic text analysis of figure legends and the 
           el-link(type="primary"  href="https://sourcedata.io") SourceData 
           |  knowledge graph of manually curated experiments.
           | Taking advantage of the 
@@ -34,7 +34,11 @@
         SearchBar
     el-row
       el-col(:span="20" :offset="2")
-        QuickAccess
+        div(v-if="progressStep() < 4")
+          p Initializing...  ({{ progressStep() }} / 4)  
+             el-button(circle plain type="primary" :loading="true" size="normal") 
+        div(v-else="")
+          QuickAccess
     el-row
       el-col(:span="20" :offset="2")
         Highlights
@@ -54,19 +58,33 @@ export default {
     QuickAccess,
     Highlights,
   },
+  methods: {
+    progressStep () {
+      return this.progress
+    }
+  },
   computed: {
     thisYear () {
       return new Date().getFullYear()
     },
-    ...mapGetters(['db_stats'])
+    ...mapGetters(['db_stats', 'progress'])
   },
   beforeCreate () {
-    this.$store.dispatch('byReviewingService/getAll'),
+    this.$store.commit('setInitStage', 0)
+    this.$store.dispatch('statsFromFlask').then(this.$store.commit('incrementInit'))
+    this.$store.dispatch('byReviewingService/getAll').then(
+      // initialize default state
+      () => {
+        this.$store.commit('byReviewingService/showRecord', {id: 'review commons'})
+        this.$store.dispatch('highlights/listByCurrent', 'byReviewingService').then(
+          this.$store.commit('incrementInit')
+        )
+      }
+    ),
     //this.$store.dispatch('byMethod/getAll'),
     //this.$store.dispatch('byMol/getAll'),
-    this.$store.dispatch('byHyp/getAll'),
-    this.$store.dispatch('byAutomagic/getAll')
-    this.$store.dispatch('statsFromFlask')
+    this.$store.dispatch('byHyp/getAll').then(this.$store.commit('incrementInit')),
+    this.$store.dispatch('byAutomagic/getAll').then(this.$store.commit('incrementInit'))
   },
 }
 </script>
