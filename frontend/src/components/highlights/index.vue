@@ -4,23 +4,24 @@
       el-col
         h1 Results
       el-col
-        small Sort by: 
-        el-radio-group(v-model="sortBy" size="mini" @change="sortRecords")
-          el-radio-button(label="pub_date")
-            | publication date
-          el-radio-button(label="posting_date")
-            | reviewing date
-        el-switch(
-          style="margin-left:10px"
-          v-model="sortDirection"
-          @change="sortRecords"
-          active-icon-class="el-icon-sort-up"
-          active-value="asc"
-          active-color="#409EFF"
-          inactive-icon-class="el-icon-sort-down"
-          inactive-value="desc"
-          inactive-color="#409EFF"
-        )
+        p(v-if="selectedTab==='byReviewingService'")
+          small Sort by: 
+          el-radio-group(v-model="sortBy" size="mini" @change="sortRecords")
+            el-radio-button(label="pub_date")
+              | publication date
+            el-radio-button(label="posting_date")
+              | reviewing date
+          el-switch(
+            style="margin-left:10px"
+            v-model="sortDirection"
+            @change="sortRecords"
+            active-icon-class="el-icon-sort-up"
+            active-value="asc"
+            active-color="#409EFF"
+            inactive-icon-class="el-icon-sort-down"
+            inactive-value="desc"
+            inactive-color="#409EFF"
+          )
     HighlitedListItem(:article="article" v-for="article in records")
 </template>
 
@@ -41,6 +42,7 @@ export default {
   },
   methods: {
     sortRecords() {
+      console.debug("selectedTag", this.selectedTab)
       this.$store.commit('highlights/sortRecords', {
         sortBy: this.sortBy,
         direction: this.sortDirection,
@@ -48,7 +50,7 @@ export default {
     },
   },
   computed: {
-    ...mapGetters('highlights', ['records']),
+    ...mapGetters('highlights', ['records', 'selectedTab']),
   },
 }
 </script>

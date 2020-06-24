@@ -5,6 +5,7 @@ export default {
   state: {
     records: {},
     loadingRecords: false,
+    selectedTab: undefined,
   },
   getters: {
     records (state) {
@@ -12,9 +13,15 @@ export default {
     },
     journalName (state, rootState, getters, rootGetters) {
       return rootGetters.journalName
-    }
+    },
+    selectedTab (state) {
+      return state.selectedTab
+    },
   },
   mutations: {
+    updateSelectedTab (state, selectedTab) {
+      state.selectedTab = selectedTab
+    },
     /* *************************************************************************
     * RECORDS
     */

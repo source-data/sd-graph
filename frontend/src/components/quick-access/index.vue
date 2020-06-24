@@ -41,8 +41,9 @@ export default {
     }
   },
   methods: {
-    onSelectTab (selectedTab) {
-      this.$store.dispatch('highlights/listByCurrent', selectedTab.name)
+    onSelectTab () {
+      this.$store.commit('highlights/updateSelectedTab', this.activeTab)
+      this.$store.dispatch('highlights/listByCurrent', this.activeTab)
     },
     onChangeByReviewingService (selectedItemId) {
       this.$store.commit('byReviewingService/showRecord', { id: selectedItemId })

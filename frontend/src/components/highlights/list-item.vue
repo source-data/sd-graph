@@ -36,14 +36,15 @@
                           i {{ displayJournal(review.reviewed_by) }}
                           |  | Reviewer #
                           | {{ review.review_idx }}
+                          | ({{ displayDate(review.posting_date) }})
                       span(v-else).peer_review_material
                         i.el-icon-document-checked
                         |   Reviewed by 
                         i {{ displayJournal(review.reviewed_by) }}
-                      |  | Reviewer #
-                      | {{ review.review_idx }}
-                      | ({{ displayDate(review.posting_date) }})
-                    p(v-html="mdRender(review.text)" style="max-height:350px; overflow: scroll")
+                        |  | Reviewer #
+                        | {{ review.review_idx }}
+                        | ({{ displayDate(review.posting_date) }})
+                  p(v-html="mdRender(review.text)" style="max-height:350px; overflow: scroll")
               el-collapse(v-if="article.review_process.response")
                 el-collapse-item
                   p(slot="title")
@@ -52,13 +53,14 @@
                       |   Response to the Reviewers
                   p(v-html="mdRender(article.review_process.response.text)")
               el-collapse(v-if="article.review_process.annot")
-                el-collapse-item(:title="'Reviewed by ' +  + ' | Review Process File'")
+                el-collapse-item
                   p(slot="title")
                     span.peer_review_material
                       i.el-icon-document-checked
                       |  Reviewed by 
                       i {{ displayJournal(article.review_process.annot.reviewed_by) }}
-                    |  | Review Process File
+                      |  | Review Process File
+                      | ({{ displayDate(article.review_process.annot.posting_date) }})
                   p(v-html="mdRender(article.review_process.annot.text)")
       el-row(type="flex" justify="space-between")
         el-col(:span="11")
