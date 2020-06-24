@@ -2,6 +2,11 @@ import re
 from typing import Dict, List
 from . import HYPO, DB
 from .queries import LINK_REVIEWS, LINK_RESPONSES, LINK_ANNOT
+from sdg.sdnode import API
+from neotools.txt2node import JSONNode
+from neotools.rxiv2neo import build_neo_graph
+from neotools.model import BIORXIV_API_GRAPH_MODEL, CROSSREF_PREPRINT_API_GRAPH_MODEL
+from neotools.db import Query
 
 GROUP_IDS = {
     'NEGQVabn': 'review commons',
@@ -15,7 +20,7 @@ RESPONSE_REGEX = re.compile(r'^.{,100}This rebuttal was posted by the correspond
 
 def type_of_annotation(hypo_row):
     text = hypo_row['text']
-    if RESPONSE_REGEX.match(text): # this pattern first, since 'reviewer' will appear in response as well
+    if RESPONSE_REGEX.match(text):  # this pattern first, since 'reviewer' will appear in response as well
         type = 'response'
     elif REVIEWER_REGEX.match(text):
         type = 'review'
@@ -101,11 +106,37 @@ class ReviewCommonsResponseNode(PeerReviewNode):
         self.label = 'Response'
 
 
+class BioRxiv(API):
+    def __init__(self):
+        super().__init__()
+
+    def details(self, doi: str) -> Dict:
+        url = f'https://api.biorxiv.org/detail/{doi}'
+        response = self.rest2data(url)
+        if response['messages'][0]['status'] == 'ok':
+            response = response['collection'][0]
+        else:
+            response = {} 
+        return response
+
+
+class CrossRef(API):
+    def __init__(self):
+        super().__init__()
+
+    def details(self, doi: str) -> Dict:
+        url = f'https://doi.org/{doi}'
+        response = self.rest2data(url)
+        return response
+
+
 class Hypothelink:
 
     def __init__(self, db, hypo):
-        self.neo4j = db
+        self.db = db
         self.hypo = hypo
+        self.biorxiv = BioRxiv()
+        self.crossref = CrossRef()
 
     def run(self, group_ids):
         for group_id in group_ids:
@@ -113,9 +144,10 @@ class Hypothelink:
             for i, row in enumerate(hypo_rows):
                 peer_review_node = self.hypo2node(row)
                 peer_review_node.update_properties({'reviewed_by': GROUP_IDS[group_id]})
-                peer_review_neo = self.neo4j.node(peer_review_node, clause="MERGE")
+                peer_review_neo = self.db.node(peer_review_node, clause="MERGE")
                 print(f"loaded {peer_review_node.label} for {peer_review_node.properties['related_article_doi']}")
-                # check if article node missing and add temporary one with source='hypothesis id'
+                # check if article node missing and add temporary one with source='biorxiv_crossref'
+                self.add_prelim_article(peer_review_node)
         self.make_relationships()
 
     @staticmethod
@@ -135,7 +167,7 @@ class Hypothelink:
         offset = 0
         remaining = 1
         while remaining > 0:
-            response = self.hypo.annotations.search(group=group_id, limit=limit, offset=offset) # NEEDS PAGINATION USING
+            response = self.hypo.annotations.search(group=group_id, limit=limit, offset=offset)
             if response.status_code == 200:
                 response = response.json()
                 N = response['total']  # does not change
@@ -146,18 +178,34 @@ class Hypothelink:
             else:
                 print(f"PROBLEM: {response.status_code}")
                 rows = None
-                remaining = 0 
+                remaining = 0
         return rows
 
+    def add_prelim_article(self, peer_review_node: PeerReviewNode):
+        # exists?
+        doi = peer_review_node.related_doi
+        q = Query(code='''MATCH (a:Article {doi: $doi}) RETURN a''', returns=['a'], params={'doi': doi})
+        if not self.db.exists(q):
+            # fetch metadata from bioRxiv and CrossRef
+            data_biorxiv = self.biorxiv.details(doi)
+            data = self.crossref.details(doi)
+            if data and data_biorxiv:
+                data['abstract'] = data_biorxiv['abstract']  # abstract in bioarxiv is plain text while CrossRef has jats namespaced formatting tags
+                prelim = JSONNode(data, CROSSREF_PREPRINT_API_GRAPH_MODEL)
+                prelim.properties['version'] = data_biorxiv['version']
+                # add nodes to database
+                build_neo_graph(prelim, 'biorxiv_crossref', self.db)
+            else:
+                print(f"problem with doi={doi}")
+
     def make_relationships(self):
-        N_rev = self.neo4j.query(LINK_REVIEWS)
-        N_resp = self.neo4j.query(LINK_RESPONSES)
-        N_annot = self.neo4j.query(LINK_ANNOT)
+        N_rev = self.db.query(LINK_REVIEWS)
+        N_resp = self.db.query(LINK_RESPONSES)
+        N_annot = self.db.query(LINK_ANNOT)
         print(f"{N_rev}, {N_resp}, {N_annot}")
 
 
 def main():
-
     Hypothelink(DB, HYPO).run(GROUP_IDS)
 
 
