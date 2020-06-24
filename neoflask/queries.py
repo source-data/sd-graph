@@ -77,20 +77,21 @@ WITH DISTINCT
     a.journal_title AS journal,
     a.title AS title,
     a.abstract AS abstract,
-    a.publication_date AS pub_date,
+    toString(DATETIME(a.publication_date)) AS pub_date,
     auth,
     id.text AS ORCID,
     COUNT(DISTINCT f) AS nb_figures,
     review, response, annot
+WITH id, doi, version, source, journal, title, abstract, pub_date, auth, ORCID, nb_figures, review, response, annot
 ORDER BY
-    review.review_idx ASC, 
+    review.review_idx ASC,
     auth.position_idx ASC
 WITH
     id, doi, version, source, journal, title, abstract, pub_date, auth, ORCID, nb_figures,
     {reviews: COLLECT(DISTINCT review {.*}), response: response {.*}, annot: annot {.*}} AS review_process
 RETURN DISTINCT 
-    id, doi, version, source, journal, title, abstract, pub_date, 
-    COLLECT(DISTINCT auth {.surname, .given_names, .position_idx, .corresp, orcid: ORCID}) AS authors,
+    id, doi, version, source, journal, title, abstract, pub_date,
+    COLLECT(DISTINCT auth{.surname, .given_names, .collab, .position_idx, .corresp, orcid: ORCID}) AS authors,
     nb_figures, review_process
     ''',
     map={'doi': []},
@@ -143,11 +144,11 @@ RETURN a.doi as doi, {reviews: COLLECT(DISTINCT review {.*}), response: response
 )
 
 
-
 BY_REVIEWING_SERVICE = Query(
   code='''
 // Using precomputed Viz nodes
-MATCH (paper:VizPaper {query: "by_reviewing_service"})-[:HasInfo]->(info:VizInfo)
+MATCH (paper:VizPaper {query: "by_reviewing_service"})
+OPTIONAL MATCH (paper)-[:HasInfo]->(info:VizInfo)
 WITH DISTINCT
    paper, info,
    {title: info.title, text: info.text, rank: info.rank, entities: []} AS info_card
