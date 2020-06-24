@@ -68,7 +68,7 @@ class BaseArticle(SDNode):
             'doi': self.doi,
             'title': self.title,
             'journalName': self.journal,
-            'nb_figures': self.nb_figures
+            'nb_figures': self.nb_figures,
         })
         self.children = range(self.nb_figures)
 
@@ -80,7 +80,7 @@ class BaseFigure(SDNode):
         self.fig_label = self.get('fig_label', '')
         self.fig_title = self.get('fig_title', '')
         self.caption = self.get('caption', '')
-        self.href = self._data.get('href', '') # href_graphics?
+        self.href = self._data.get('href', '')  # href_graphics?
         self.panels = self._data.get('panels', [])
         self.update_properties({
             'fig_title': self.fig_title,
@@ -128,6 +128,7 @@ class API:
 
     def __init__(self):
         self.session_retry = self.requests_retry_session()
+        self.session_retry.headers.update({"Accept": "application/json"})
 
     @staticmethod
     def requests_retry_session(
