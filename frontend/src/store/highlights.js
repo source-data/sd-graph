@@ -21,6 +21,34 @@ export default {
     resetRecords (state) {
        state.records = {}
     },
+    sortRecords (state, { sortBy, direction }) {
+      // sort records based on the property prop
+      // default direction is ascending unless specified as 'desc'
+      // computable sort metric defined by applying funct to the sorting property
+      // note Date('2020-01-01') < Date('2020-01-02')
+      const most_recent = (d1, d2) => {
+        if (d1 > d2) {return d1}
+        else {return d2}
+      }
+      const sortMethod = {
+        pub_date: (r) => new Date(r.pub_date),
+        posting_date: (r) => {
+          return r.review_process.reviews
+          .map(review => new Date(review.posting_date))
+          .reduce(most_recent, new Date('2000-01-01'))
+        }
+      }
+      const sort_metric = sortMethod[sortBy]
+      const sign = direction === 'desc' ? -1 : 1
+      const sortedRecords = Object.values(state.records).slice().sort(
+          (a, b) => sign * (sort_metric(a) - sort_metric(b))
+        )
+      const recordsById = {}
+      sortedRecords.forEach((record) => {
+          recordsById[record.id] = record
+        })
+      state.records = recordsById
+    },
     addRecords (state, records) {
       const recordsById = {}
       records.forEach((record) => {

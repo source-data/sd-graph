@@ -36,6 +36,7 @@
                         i {{ displayJournal(review.reviewed_by) }}
                       |  | Reviewer #
                       | {{ review.review_idx }}
+                      | ({{ displayDate(review.posting_date) }})
                     p(v-html="mdRender(review.text)" style="max-height:350px; overflow: scroll")
               el-collapse(v-if="article.review_process.response")
                 el-collapse-item
@@ -55,8 +56,6 @@
             small(style="line-height:1.5") {{ article.abstract }}
           p 
             small(style="font-family: monospace; font-size: 9px") [source: {{ article.source }}]
-        //- el-col(:span="2")
-        //-   p
         el-col(:span="12")
           //- label(for="info-cards" style="font-variant: small-caps") {{ info.length }} information card{{ info.length > 1 ? 's':''}}:
           el-collapse(v-for="(card, index) in info" id="infor-cards" v-model="activeCards")
@@ -134,7 +133,7 @@ export default {
   computed: {
     ...mapGetters(['journalName']),
     authorList () {
-      return this.article.authors.map(author => `${author.surname} ${author.given_names}${(author.corresp=='yes'?'*':'')}`).join(', ')
+      return this.article.authors.map(author => `${author.surname?author.surname+' ':''}${author.given_names?author.given_names:''}${author.collab?author.collab:''}${(author.corresp=='yes'?'*':'')}`).join(', ')
     },
     info () {
       return this.article.info

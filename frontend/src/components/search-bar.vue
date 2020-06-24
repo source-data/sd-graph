@@ -21,7 +21,6 @@ export default {
   },
   methods: {
     onSubmit()  {
-      console.debug('search', this.search.input),
       this.$store.dispatch('fulltextSearch/search', this.search.input).then(
         () => {
           this.$store.dispatch('highlights/listByCurrent', 'fulltextSearch')
