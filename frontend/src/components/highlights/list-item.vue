@@ -77,7 +77,7 @@
                     span(v-for="entity in card.entities") 
                       el-tag(size="medium" :type="mapRole(entity.role)") {{ entity.text }}
                   p(v-if="card.id")
-                    el-link(target="_blank" type="primary" :href="`https://search.sourcedata.io/panel/${card.id}`") 
+                    a(target="_blank" :href="`https://search.sourcedata.io/panel/${card.id}`") 
                       img(:src="`https://api.sourcedata.io/file.php?panel_id=${card.id}`").fig-img
                     br
                     el-link(target="_blank" type="primary" :href="`https://search.sourcedata.io/panel/${card.id}`") 
