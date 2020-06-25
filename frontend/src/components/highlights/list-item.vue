@@ -73,8 +73,15 @@
           el-collapse(v-for="(card, index) in info" id="infor-cards" v-model="activeCards")
             el-collapse-item(:title="card.title", :name="index")
               div(v-if="card.entities.length > 1" )
-                span(v-for="entity in card.entities")
-                  el-tag(size="medium" :type="mapRole(entity.role)") {{ entity.text }}
+                  p
+                    span(v-for="entity in card.entities") 
+                      el-tag(size="medium" :type="mapRole(entity.role)") {{ entity.text }}
+                  p(v-if="card.id")
+                    el-link(target="_blank" type="primary" :href="`https://search.sourcedata.io/panel/${card.id}`") 
+                      img(:src="`https://api.sourcedata.io/file.php?panel_id=${card.id}`").fig-img
+                    br
+                    el-link(target="_blank" type="primary" :href="`https://search.sourcedata.io/panel/${card.id}`") 
+                      | open Smartfigures 
               div(v-else-if="card.text instanceof Array")
                 span(v-for="item in card.text")
                    el-tag(size="medium") {{ item }}
@@ -158,5 +165,9 @@ export default {
   .peer_review_material {
     color:#364497;
     font-weight: bold;
+  }
+  .fig-img {
+    max-width: 300px;
+    max-height: 300px;
   }
 </style>

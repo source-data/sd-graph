@@ -36,7 +36,7 @@ ORDER BY
 WITH DISTINCT
    reviewing, doi, pub_date, fig_label, caption, position_idx
 MERGE (paper:VizPaper {id: reviewing.name, doi: doi, query: "by_reviewing_service", pub_date: pub_date, rank: pub_date})
-CREATE (paper)-[:HasInfo]->(info:VizInfo {title: fig_label, text: caption, rank: position_idx})
+CREATE (paper)-[:HasInfo]->(info:VizInfo {title: fig_label, text: caption, rank: position_idx}) // CREATE could becom problematic and cause duplicates
 //RETURN paper, info;
 RETURN COUNT(DISTINCT paper) AS `papers in the by reviewing service`;
 
@@ -101,7 +101,7 @@ WITH DISTINCT
     a, 
     // capture relevant info (fig_label) in the format neededed for REST and 
     // we need to do it now rather than later because figure-level info is still available at this stage
-    COLLECT(DISTINCT {id: id(p), title: f.fig_label + " (panel: " + p.panel_label + ")", text: p.caption, rank: f.fig_label + p.panel_label}) AS panel_group, // will need to generate position_idx from sdapi
+    COLLECT(DISTINCT {id: id(p), title: f.fig_label + " (panel: " + p.panel_label + ")", text: p.caption, rank: f.fig_label + p.panel_label, panel_id: p.panel_id}) AS panel_group, // will need to generate position_idx from sdapi
     COUNT(DISTINCT p) AS N_panels,
     ctrl.name AS ctrl_name, 
     meas.name AS meas_name
@@ -113,9 +113,9 @@ WITH a, panel_group, N_panels, COLLECT(DISTINCT ctrl_name) AS ctrl_v, COLLECT(DI
 MATCH (a)-->(:SDFigure)-->(:SDPanel)-->(:CondTag)-->(assay:H_Entity {category: "assay"})
 WITH DISTINCT a, panel_group, N_panels, {ctrl_v: ctrl_v, meas_v: meas_v} AS hyp, COUNT(DISTINCT assay) AS N_assay
 // most recent first
-ORDER BY 
+ORDER BY
+  a.source DESC,
   a.pub_date DESC,
-  a.source DESC, 
   N_panels DESC
 // select the hypotheses detected in the most panels as the dominant hypothesis. Could keep the top 5 instead?
 WITH a, COLLECT(panel_group)[0] AS selected_panels, COLLECT(hyp)[0] AS dominant, N_assay
@@ -144,13 +144,14 @@ WITH id, hyp, paper.doi AS doi, paper.rank AS paper_rank, paper.info AS info, pa
 UNWIND info AS info_item
 WITH 
   id, hyp, doi, pub_date, paper_rank, 
-  info_item.title AS info_title, info_item.text AS info_text, info_item.rank AS info_rank, info_item.entities as entities
+  info_item.title AS info_title, info_item.text AS info_text, info_item.rank AS info_rank, info_item.entities as entities, info_item.panel_id AS info_id
 // id; will need to have constraint on id + query
 UNWIND hyp.ctrl_v AS ctrl_v
 UNWIND hyp.meas_v AS meas_v
 UNWIND entities as entity // THIS IS KILLING IT IF entities == []
 MERGE (paper:VizPaper {id: id, doi:doi, query: "by_hyp", pub_date: toString(DATETIME(pub_date)), rank: paper_rank})
-MERGE (paper)-[:HasInfo]->(info:VizInfo {title: info_title, text: info_text, rank: info_rank})
+MERGE (info:VizInfo {title: info_title, text: info_text, rank: info_rank, id: info_id}) // avoid probelms with NULL and MERGE
+MERGE (paper)-[:HasInfo]->(info)
 MERGE (c:VizEntity {text: ctrl_v})-[:HasPotentialEffectOn]->(m:VizEntity {text: meas_v})
 MERGE (paper)-[:HasEntity]->(c)
 MERGE (paper)-[:HasEntity]->(m)
@@ -164,7 +165,7 @@ OPTIONAL MATCH (paper)-->(paper_entity:VizEntity)
 OPTIONAL MATCH (info)-->(panel_entity:VizEntity)
 WITH DISTINCT paper, COLLECT([info, panel_entity, paper_entity]) AS nodes
 //RETURN paper, nodes
-RETURN "done" AS `papers in the by hypothesis set`;
+RETURN DISTINCT "done" AS `papers in the by hypothesis set`;
 
 
 

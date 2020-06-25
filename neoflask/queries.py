@@ -189,7 +189,7 @@ ORDER BY
 WITH
   paper, hyp,
   info{
-    .*, // title (label of the figure), text (caption of the figure), rank
+    .*, // title (label of the figure), text (caption of the figure), rank, id 
     entities: panel_entities // entity properties: text, category, type role, ext_id
    } as extended_info
 WITH

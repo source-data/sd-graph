@@ -56,6 +56,16 @@ WHERE
 SET t.role = ""
 RETURN COUNT(t) AS `role NULL into ""`;
 
+MATCH(f:Fig)
+WHERE NOT EXISTS(f.position_idx)
+SET  f.position_idx = ""
+RETURN COUNT(f) AS `NULL fig position_idx set to ""`;
+
+MATCH(p:SDPanel)
+WHERE p.panel_id IS NULL
+SET p.panel_id = ""
+RETURN COUNT(p) AS `NULL panel_id set to ""`;
+
 
 //A: condense tags with same ext id and role
 MATCH (p:SDPanel)-->(t:SDTag)
