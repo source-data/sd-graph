@@ -8,7 +8,7 @@
               img(src="./assets/embo-logo.gif" height="80px").center-img
       el-col(:span="16")
         div.vertical-align
-          h1(style="text-align: center" @click="goHome").pointer Early Evidence Base - Refereed Preprints
+          h1(style="text-align: center" @click="goHome").pointer Early Evidence Base
       el-col(:span="4")
         div.vertical-align
           p 
