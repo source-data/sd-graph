@@ -81,7 +81,7 @@
                       img(:src="`https://api.sourcedata.io/file.php?panel_id=${card.id}`").fig-img
                     br
                     el-link(target="_blank" type="primary" :href="`https://search.sourcedata.io/panel/${card.id}`") 
-                      | open Smartfigures 
+                      | open as SmartFigures 
               div(v-else-if="card.text instanceof Array")
                 span(v-for="item in card.text")
                    el-tag(size="medium") {{ item }}
