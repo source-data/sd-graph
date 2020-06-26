@@ -23,12 +23,16 @@ export default {
     /* *************************************************************************
     * RECORDS
     */
-   addRecords (state, records) {
+    addRecords (state, records) {
       const recordsById = {}
       records.forEach((record) => {
         recordsById[record.id] = record
       })
       state.records = recordsById
+    },
+    initCurrentRecord (state) {
+        const firstRecord = Object.values(state.records)[0]
+        state.currentRecordId = firstRecord.id
     },
     /* *************************************************************************
     * NAVIGATION
@@ -57,6 +61,7 @@ export default {
         .then((response) => {
           const records = response.data
           commit('addRecords', records)
+          commit('initCurrentRecord')
         })
         .finally(() => {
           commit('setNotLoading'),

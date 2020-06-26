@@ -37,7 +37,7 @@ export default new Vuex.Store({
       total_rel: undefined
     },
     loadingRecords: false,
-    initializationStage: undefined
+    initializationStage: 0
   },
   getters: {
     db_stats(state) {
@@ -57,9 +57,6 @@ export default new Vuex.Store({
     },
     setNotLoading (state) {
       state.loadingRecords = false
-    },
-    setInitStage (state, i) {
-      state.initializationStage = i
     },
     incrementInit (state) {
       state.initializationStage += 1

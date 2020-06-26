@@ -35,7 +35,7 @@
     el-row
       el-col(:span="20" :offset="2")
         div(v-if="progressStep() < 4")
-          p Initializing...  ({{ progressStep() }} / 4)  
+          p Initializing... ({{this.progress}} / 4)
              el-button(circle plain type="primary" :loading="true" size="normal") 
         div(v-else="")
           QuickAccess
@@ -68,23 +68,6 @@ export default {
       return new Date().getFullYear()
     },
     ...mapGetters(['db_stats', 'progress'])
-  },
-  beforeCreate () {
-    this.$store.commit('setInitStage', 0)
-    this.$store.dispatch('statsFromFlask').then(this.$store.commit('incrementInit'))
-    this.$store.dispatch('byReviewingService/getAll').then(
-      // initialize default state
-      () => {
-        this.$store.commit('byReviewingService/showRecord', {id: 'review commons'})
-        this.$store.dispatch('highlights/listByCurrent', 'byReviewingService').then(
-          this.$store.commit('incrementInit')
-        )
-      }
-    ),
-    //this.$store.dispatch('byMethod/getAll'),
-    //this.$store.dispatch('byMol/getAll'),
-    this.$store.dispatch('byHyp/getAll').then(this.$store.commit('incrementInit')),
-    this.$store.dispatch('byAutomagic/getAll').then(this.$store.commit('incrementInit'))
   },
 }
 </script>

@@ -70,9 +70,9 @@ export default {
         '2': '/dev',
         '3': '/contact',
       }
-      const selected_route = paths[key]
-      if (this.$route.path !== selected_route) {
-        this.$router.push({path : selected_route})
+      const selected_path = paths[key]
+      if (this.$route.path !== selected_path) {
+        this.$router.push({path : selected_path})
       }
     }
   },
@@ -81,6 +81,23 @@ export default {
       return new Date().getFullYear()
     },
     ...mapGetters(['db_stats'])
+  },
+  beforeCreate () {
+    this.$store.dispatch('statsFromFlask').then(
+      () => this.$store.commit('incrementInit'))
+    this.$store.dispatch('byReviewingService/getAll').then(
+      () => {
+        this.$store.dispatch('highlights/listByCurrent', 'byReviewingService')
+      }
+    ).then(
+          () => this.$store.commit('incrementInit')
+    ),
+    this.$store.dispatch('byHyp/getAll').then(
+      () => this.$store.commit('incrementInit')
+    ),
+    this.$store.dispatch('byAutomagic/getAll').then(
+      () => this.$store.commit('incrementInit')
+    )
   },
 }
 </script>
