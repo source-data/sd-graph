@@ -1,12 +1,11 @@
 import re
 from typing import Dict, List
 from . import HYPO, DB
-from .queries import LINK_REVIEWS, LINK_RESPONSES, LINK_ANNOT
+from .queries import MATCH_DOI, LINK_REVIEWS, LINK_RESPONSES, LINK_ANNOT
 from sdg.sdnode import API
 from neotools.txt2node import JSONNode
 from neotools.rxiv2neo import build_neo_graph
 from neotools.model import CROSSREF_PREPRINT_API_GRAPH_MODEL
-from neotools.db import Query
 
 GROUP_IDS = {
     'NEGQVabn': 'review commons',
@@ -185,7 +184,7 @@ class Hypothelink:
     def add_prelim_article(self, peer_review_node: PeerReviewNode):
         # exists?
         doi = peer_review_node.related_doi
-        q = Query(code='''MATCH (a:Article {doi: $doi}) RETURN a''', returns=['a'], params={'doi': doi})
+        q = MATCH_DOI(params={'doi': doi})
         if not self.db.exists(q):
             # fetch metadata from bioRxiv and CrossRef
             data_biorxiv = self.biorxiv.details(doi)

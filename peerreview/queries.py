@@ -1,6 +1,12 @@
 from neotools.db import Query
 
 
+class MATCH_DOI(Query):
+
+    code = '''MATCH (a:Article {doi: $doi}) RETURN DISTINCT a'''
+    returns = ['a']
+
+
 class LINK_REVIEWS(Query):
 
     code = '''

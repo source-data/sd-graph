@@ -57,8 +57,6 @@ class Query:
         self._params = p
 
 
-
-
 class Instance:
 
     def __init__(self, uri, user, password):
@@ -102,10 +100,10 @@ class Instance:
         else:
             clause = None
         label = n.label
-        properties_str = to_string(n.properties)
-        q = Query(
-            code=f"{cl} (n: {label} {{ {properties_str} }}) RETURN n;"
-        )
+        properties_str = to_string(n.properties)  # CHANGE THIS into params={**properties}
+        q = Query()
+        q.code = f"{cl} (n: {label} {{ {properties_str} }}) RETURN n;"
+        q.returns = ['n']
         res = self.query_with_tx_funct(self._tx_funct_single, q)
         node = res['n']
         return node
@@ -118,9 +116,9 @@ class Instance:
             cl = 'CREATE'
         else:
             clause = None
-        q = Query(
-            code=f"MATCH (a), (b) WHERE id(a)={a.id} AND id(b)={b.id} {cl} (a)-[r:{r}]->(b) RETURN r;"
-        )
+        q = Query()
+        q.code = f"MATCH (a), (b) WHERE id(a)={a.id} AND id(b)={b.id} {cl} (a)-[r:{r}]->(b) RETURN r;"
+        q.returns = ['r']
         res = self.query_with_tx_funct(self._tx_funct_single, q)
         rel = res['r']
         return rel
@@ -129,33 +127,31 @@ class Instance:
         # {batch: [{name:"Alice",age:32},{name:"Bob",age:42}]}
         records = []
         if batch:
-            query = Query(
-                code=f'''
+            q = Query()
+            q.code = f'''
                     UNWIND $batch AS row
                     CREATE (n:{label})
                     SET n += row
                     RETURN n
-                    ''',
-                params={'batch': batch},
-                returns=['n']
-            )
-            records = self.query_with_tx_funct(self._tx_funct, query)
+                    '''
+            q.returns = ['n']
+            q.params = {'batch': batch}
+            records = self.query_with_tx_funct(self._tx_funct, q)
             nodes = [r['n'] for r in records]
         return nodes
 
     def batch_of_relationships(self, batch: List[Tuple[Node, Node]], rel_label: str = '', clause="CREATE"):
         records = []
         if batch:
-            query = Query(
-                code=f'''
+            q = Query()
+            q.code = f'''
                     UNWIND $batch AS row
                     MATCH (s), (t) WHERE id(s) = row.source AND id(t) = row.target
                     {clause} (s) -[r:{rel_label}]-> (t)
                     RETURN r
-                    ''',
-                params={'batch': batch},
-                returns=['r']
-            )
+                    '''
+            q.returns = ['r']
+            q.params = {'batch': batch}
             records = self.query_with_tx_funct(self._tx_funct, query)
             relationships = [r['r'] for r in records]
         return relationships

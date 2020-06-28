@@ -12,7 +12,7 @@ RETURN "purged" as `preparation step`;
 
 // BY REVIEWING SERVICE
 
-UNWIND [{name: 'review commons', rank: 0}, {name: 'embo press', rank: 1}, {name: 'elife', rank:2}] AS reviewing
+UNWIND [{name: 'review commons', rank: 0}, {name: 'peerage of science', rank: 1}, {name: 'embo press', rank: 2}, {name: 'elife', rank:3}] AS reviewing
 MATCH (a:Article)
 OPTIONAL MATCH (a)-[r:HasReview]->(review:Review {reviewed_by: reviewing.name})
 OPTIONAL MATCH (a)-[:HasAnnot]->(annot:PeerReviewMaterial {reviewed_by: reviewing.name})

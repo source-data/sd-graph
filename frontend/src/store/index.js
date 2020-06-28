@@ -28,6 +28,7 @@ export default new Vuex.Store({
       'review commons': 'Review Commons',
       'elife': 'eLife',
       'embo press': 'EMBO Press',
+      'peerage of science': 'Peerage of Science',
     },
     stats: {
       total_preprints: undefined,
