@@ -29,7 +29,7 @@ docker-compose up -d
 cat neotools/purge_prelim.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p  # remove prelim articles obtained from CrossRef and biorxiv api
 docker-compose run --rm flask python -m neotools.rxiv2neo data/<path_to_meca_archves> --type meca  # import full text biorxiv preprints
 docker-compose run --rm flask python -m neotools.rxiv2neo data/<path_to_cord19_archives> --type cord19  # import full text MedRxiv preprints (experimental)
-docker-compose run --rm flask python -m peerreview.neohypo  # import peer reviews from hypothesis
+docker-compose run --rm flask python -m peerreview.neohypo  # import peer reviews from hypothesis and updates publication status
 docker-compose run --rm flask python -m sdg.sdneo <collection_name> --api sdapi  # import source data public data
 docker-compose run --rm flask python -m sdg.sdneo <covid19|refereed-preprints> --api eebapi  # smarttag collection of preprints
 cat sdg/SD-indices.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>  # define indices

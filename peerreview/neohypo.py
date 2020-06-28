@@ -1,7 +1,10 @@
 import re
 from typing import Dict, List
 from . import HYPO, DB
-from .queries import MATCH_DOI, LINK_REVIEWS, LINK_RESPONSES, LINK_ANNOT
+from .queries import (
+    NotYetPublished, UpdatePublicationStatus,
+    MATCH_DOI, LINK_REVIEWS, LINK_RESPONSES, LINK_ANNOT
+)
 from sdg.sdnode import API
 from neotools.txt2node import JSONNode
 from neotools.rxiv2neo import build_neo_graph
@@ -205,8 +208,45 @@ class Hypothelink:
         print(f"{N_rev}, {N_resp}, {N_annot}")
 
 
+class PublicationUpdate:
+
+    def __init__(self, db):
+        self.db = db
+        self.biorxiv = BioRxiv()
+        self.crossref = CrossRef()
+
+    def get_not_published(self):
+        results = self.db.query(NotYetPublished())
+        dois = [r['doi'] for r in results]
+        return dois
+
+    def check_publication_status(self, preprint_doi):
+        published_doi = self.biorxiv.details(preprint_doi).get('published', None)
+        return published_doi
+
+    def update_status(self, preprint_doi, published_doi):
+        cross_ref_metadata = self.crossref.details(published_doi)
+        params = {
+            'preprint_doi': preprint_doi,
+            'published_doi': published_doi,
+            'published_journal_title': cross_ref_metadata.get('container-title', ''),
+        }
+        update_published_status = UpdatePublicationStatus(params=params)
+        self.db.query(update_published_status)
+        return cross_ref_metadata.get('container-title', '')
+
+    def run(self):
+        not_yet_published = self.get_not_published()
+        for preprint_doi in not_yet_published:
+            published_doi = self.check_publication_status(preprint_doi)
+            if (published_doi is not None) and (published_doi != "NA"):
+                journal = self.update_status(preprint_doi, published_doi)
+                print(f"preprint {preprint_doi} has been published as {published_doi} in {journal}")
+
+
 def main():
     Hypothelink(DB, HYPO).run(GROUP_IDS)
+    PublicationUpdate(DB).run()
 
 
 if __name__ == "__main__":

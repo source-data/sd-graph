@@ -1,6 +1,6 @@
 import re
 from typing import List, Dict, Tuple, Callable
-from neo4j import GraphDatabase, Node, BoltStatementResult, BoltStatementResultSummary, Transaction
+from neo4j import GraphDatabase, Transaction
 
 
 def quote4neo(properties):
@@ -91,7 +91,7 @@ class Instance:
         found_it = self.query_with_tx_funct(tx_funct, q)
         return found_it
 
-    def node(self, n: Node, clause="MERGE"):
+    def node(self, n, clause="MERGE"):
         # avoid direct code injection via clause
         if clause == 'MERGE':
             cl = 'MERGE'
@@ -140,7 +140,7 @@ class Instance:
             nodes = [r['n'] for r in records]
         return nodes
 
-    def batch_of_relationships(self, batch: List[Tuple[Node, Node]], rel_label: str = '', clause="CREATE"):
+    def batch_of_relationships(self, batch: List[Tuple], rel_label: str = '', clause="CREATE"):
         records = []
         if batch:
             q = Query()
@@ -173,6 +173,6 @@ class Instance:
     def _tx_funct(tx: Transaction, code: str, params: Dict = {}):
         # To enable consuming results within session according to https://neo4j.com/docs/api/python-driver/current/transactions.html
         # "Results should be fully consumed within the function and only aggregate or status values should be returned"
-        results: BoltStatementResult = tx.run(code, params)
+        results = tx.run(code, params)
         records = list(results)
         return records

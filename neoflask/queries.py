@@ -77,28 +77,30 @@ WITH DISTINCT
     a.doi AS doi,
     a.version AS version,
     a.source AS source,
-    a.journal_title AS journal,
+    a.journal_title AS journal, // this is the preprint server
     a.title AS title,
     a.abstract AS abstract,
-    toString(DATETIME(a.publication_date)) AS pub_date,
+    a.journal_doi AS journal_doi,
+    a.published_journal_title AS published_journal_title, // this is the journal of final publication
+    toString(DATETIME(a.publication_date)) AS pub_date, // pub date as preprint!
     auth,
     id.text AS ORCID,
     COUNT(DISTINCT f) AS nb_figures,
     review, response, annot
-WITH id, doi, version, source, journal, title, abstract, pub_date, auth, ORCID, nb_figures, review, response, annot
+WITH id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title, auth, ORCID, nb_figures, review, response, annot
 ORDER BY
     review.review_idx ASC,
     auth.position_idx ASC
 WITH
-    id, doi, version, source, journal, title, abstract, pub_date, auth, ORCID, nb_figures,
+    id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title, auth, ORCID, nb_figures,
     {reviews: COLLECT(DISTINCT review {.*}), response: response {.*}, annot: annot {.*}} AS review_process
 RETURN DISTINCT 
     id, doi, version, source, journal, title, abstract, toString(DATETIME(pub_date)) AS pub_date, //standardization of date time format, necessary for Safari
-    COLLECT(DISTINCT auth {.surname, .given_names, .position_idx, .corresp, orcid: ORCID}) AS authors,
+    journal_doi, published_journal_title, COLLECT(DISTINCT auth {.surname, .given_names, .position_idx, .corresp, orcid: ORCID}) AS authors,
     nb_figures, review_process
     '''
     map = {'doi': []}
-    returns = ['id', 'doi', 'version', 'source', 'journal', 'title', 'abstract', 'authors', 'pub_date', 'nb_figures', 'review_process']
+    returns = ['id', 'doi', 'version', 'source', 'journal', 'title', 'abstract', 'authors', 'pub_date', 'journal_doi', 'published_journal_title', 'nb_figures', 'review_process']
 
 
 class FIG_BY_DOI_IDX(Query):

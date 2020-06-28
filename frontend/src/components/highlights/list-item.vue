@@ -13,7 +13,7 @@
             p
               small
                 b  doi:  
-                el-link(type="primary", :href="href(article.doi)", target="_blank") http://doi.org/{{ article.doi }} 
+                el-link(type="primary" :href="href(article.doi)" target="_blank") https://doi.org/{{ article.doi }} 
             p
               small {{ authorList }}
             div(v-if="article.review_process")
@@ -62,6 +62,14 @@
                       |  | Review Process File
                       | ({{ displayDate(article.review_process.annot.posting_date) }})
                   p(v-html="mdRender(article.review_process.annot.text)")
+            p(v-if="article.journal_doi")
+              small
+                span.peer_review_material
+                  i.el-icon-finished
+                  b  Published in: 
+                  i {{ article.published_journal_title }} 
+                b doi: 
+                el-link(type="primary" :href="href(article.journal_doi)" target="_blank") https://doi.org/{{ article.journal_doi }}
       el-row(type="flex" justify="space-between")
         el-col(:span="11")
           p
