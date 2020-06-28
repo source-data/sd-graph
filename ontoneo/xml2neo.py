@@ -36,13 +36,13 @@ def load_ontology(path: Path, graph_model: Dict):
         print()
         xml_node = XMLNode(xml, graph_model, namespaces=namespaces)
         print()
-        DB.query(CONTRAINT_CLASS_UNIQUE) # some ontologies share classes, will raise neobolt.exceptions.ConstraintError
+        DB.query(CONTRAINT_CLASS_UNIQUE()) # some ontologies share classes, will raise neobolt.exceptions.ConstraintError
         build_neo_graph(xml_node, source, DB, ConstraintError)
         print()
-        res = DB.query(REMOVE_DEPRECATED)
+        res = DB.query(REMOVE_DEPRECATED())
         for row in res:
             print("REMOVE_DEPRECATED: ", "; ".join([str(row[column]) for column in REMOVE_DEPRECATED.returns]))
-        res = DB.query(MAKE)
+        res = DB.query(MAKE())
         for row in res:
             print("MAKE: ", "; ".join([str(row[column]) for column in MAKE.returns]))
 
@@ -121,11 +121,11 @@ def self_test():
     del namespaces[None]
     graph = XMLNode(xml_element, DOID_GRAPH_MODEL, namespaces=namespaces)
     print(graph)
-    res = DB.query(CONTRAINT_CLASS_UNIQUE)
+    res = DB.query(CONTRAINT_CLASS_UNIQUE())
     build_neo_graph(graph, 'test', DB)
     print()
-    res = DB.query(REMOVE_DEPRECATED)
-    res = DB.query(MAKE)
+    res = DB.query(REMOVE_DEPRECATED())
+    res = DB.query(MAKE())
     for row in res:
         print("; ".join([str(row[column]) for column in MAKE.returns]))
 

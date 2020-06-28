@@ -24,25 +24,39 @@ def to_string(properties):
 
 
 class Query:
-    def __init__(self, code: str = '', map: Dict = {}, params: Dict = {}, returns: Dict = {}):
-        """
-        A simplistic abstraction of a query. 
 
-        Args:
+    code = ''
+    map = {}
+    returns = {}
+
+    def __init__(self, params: Dict = {}):
+        """
+        A simplistic class for a query. 
+
+        Class attributes:
             code (str): the string of the query
             map (Dict(str, List[str, str])): the mapping between the variable in the query (key) and a list with the name of the request parameter and its default value
-            params (Dict): the value of each parameters to be forwarded in the database transaction
             returns (List): the keys to use when retrieving the results
+
+        Args:
+            params (Dict): the value of each parameters to be forwarded in the database transaction
         """
-        self.code = code
-        self.map = map  # rename this into param_map args_map and reserve params to the actual value
         self.params = params
-        self.returns = returns
         substitution_variables = re.findall(r"\$(\w+)", self.code)
         # check that parameters needed appear in the code
         for p in self.map:
             assert p in substitution_variables, f"variable '${p}' missing in from the query code \"{self.code}\""
         # checking for returns is more annoying: parse cypher between RETURN and next expected Cypher clause
+
+    @property
+    def params(self):
+        return self._params
+
+    @params.setter
+    def params(self, p: Dict):
+        self._params = p
+
+
 
 
 class Instance:

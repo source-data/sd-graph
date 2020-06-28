@@ -48,8 +48,7 @@ class MECALoader:
                 print(summary.statement)
                 print(summary.parameters)
             return found_one
-        query = SOURCE_BY_UUID
-        query.params = {'source': meca_archive.name}
+        query = SOURCE_BY_UUID(params={'source': meca_archive.name})
         found_it = DB.query_with_tx_funct(tx_funct, query)
         return found_it
 
@@ -192,8 +191,8 @@ def build_neo_graph(py_node, source: str, db: Instance, catch_exception: Excepti
 
 def add_indices():
     try:
-        DB.query(CREATE_INDEX_DOI)
-        DB.query(CREATE_INDEX_VERSION)
+        DB.query(CREATE_INDEX_DOI())
+        DB.query(CREATE_INDEX_VERSION())
     except ClientError as error:
         print()
         print(error)

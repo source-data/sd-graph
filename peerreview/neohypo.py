@@ -5,7 +5,7 @@ from .queries import LINK_REVIEWS, LINK_RESPONSES, LINK_ANNOT
 from sdg.sdnode import API
 from neotools.txt2node import JSONNode
 from neotools.rxiv2neo import build_neo_graph
-from neotools.model import BIORXIV_API_GRAPH_MODEL, CROSSREF_PREPRINT_API_GRAPH_MODEL
+from neotools.model import CROSSREF_PREPRINT_API_GRAPH_MODEL
 from neotools.db import Query
 
 GROUP_IDS = {
@@ -200,9 +200,9 @@ class Hypothelink:
                 print(f"problem with doi={doi}")
 
     def make_relationships(self):
-        N_rev = self.db.query(LINK_REVIEWS)
-        N_resp = self.db.query(LINK_RESPONSES)
-        N_annot = self.db.query(LINK_ANNOT)
+        N_rev = self.db.query(LINK_REVIEWS())
+        N_resp = self.db.query(LINK_RESPONSES())
+        N_annot = self.db.query(LINK_ANNOT())
         print(f"{N_rev}, {N_resp}, {N_annot}")
 
 

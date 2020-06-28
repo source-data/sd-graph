@@ -178,7 +178,7 @@ class Compendium:
         self.fetch_articles()
 
     def fetch_articles(self):
-        results_articles = self.db.query(ALL_ARTICLES)
+        results_articles = self.db.query(ALL_ARTICLES())
         for a in results_articles:
             print(f"Article {a['doi']}")
             a_id = a['id']
@@ -193,8 +193,7 @@ class Compendium:
                 self.articles[doi] = article_element
 
     def fetch_figures(self, article_element, id: int):
-        figure_query = FIGURES_BY_PAPER_ID
-        figure_query.params = {'id': id}
+        figure_query = FIGURES_BY_PAPER_ID(params={'id': id})
         results_figures = self.db.query(figure_query)
         for f in results_figures:
             print(f"    Figure {f['fig_label']}")
@@ -209,8 +208,7 @@ class Compendium:
         figure_element.append(caption_element)
 
     def fetch_panels(self, caption_element, id: int):
-        PANEL_BY_FIG_ID.params = {'id': id}
-        results_panels = self.db.query(PANEL_BY_FIG_ID)
+        results_panels = self.db.query(PANEL_BY_FIG_ID(params={'id': id}))
         for p in results_panels:
             print(f"        Panel {p['panel_label']}")
             panel_element = XMLPanel(p)
