@@ -65,6 +65,7 @@
             p(v-if="article.journal_doi")
               small
                 span.peer_review_material
+                  //- i(class="fas el-icon-fa-award")
                   i.el-icon-finished
                   b  Published in: 
                   i {{ article.published_journal_title }} 

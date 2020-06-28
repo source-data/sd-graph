@@ -8,7 +8,7 @@
           small Sort by: 
           el-radio-group(v-model="sortBy" size="mini" @change="sortRecords")
             el-radio-button(label="pub_date")
-              | publication date
+              | preprint date
             el-radio-button(label="posting_date")
               | reviewing date
           el-switch(
