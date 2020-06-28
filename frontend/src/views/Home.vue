@@ -35,7 +35,7 @@
     el-row
       el-col(:span="20" :offset="2")
         div(v-if="progressStep() < 4")
-          p Initializing... ({{this.progress}} / 4)
+          p Initializing... ({{this.progress}} / 4)  
              el-button(circle plain type="primary" :loading="true" size="normal") 
         div(v-else="")
           QuickAccess
