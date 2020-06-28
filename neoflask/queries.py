@@ -1,8 +1,9 @@
 from neotools.db import Query
 
 
-COVID19 = Query(
-    code='''
+class COVID19(Query):
+
+    code = '''
 // COVID-19
 // Automated search for COVID-19 / SARS-CoV-2 papers
 WITH
@@ -26,13 +27,14 @@ RETURN
     COUNT(DISTINCT f) AS nb_figures,
     score
 ORDER BY pub_date DESC, score DESC;
-    ''',
-    map={},
-    returns=['id', 'pub_date', 'title', 'abstract', 'version', 'doi', 'journal', 'nb_figures', 'score']
-)
+    '''
+    map = {}
+    returns = ['id', 'pub_date', 'title', 'abstract', 'version', 'doi', 'journal', 'nb_figures', 'score']
 
-REFEREED_PREPRINTS = Query(
-  code='''
+
+class REFEREED_PREPRINTS(Query):
+
+    code = '''
 MATCH (a:Article)
 OPTIONAL MATCH (a)-[:HasReview]->(review:Review)
 OPTIONAL MATCH (a)-[:HasResponse]->(response:Response)
@@ -50,12 +52,13 @@ WHERE
   review_process.reviews <> [] OR EXISTS(review_process.annot)
 RETURN id, pub_date, title, abstract, version, doi, journal, review_process
 ORDER BY pub_date DESC
-  ''',
-  returns=['id', 'pub_date', 'title', 'abstract', 'version', 'doi', 'journal', 'nb_figures', 'review_process']
-)
+    '''
+    returns = ['id', 'pub_date', 'title', 'abstract', 'version', 'doi', 'journal', 'nb_figures', 'review_process']
 
-BY_DOI = Query(
-    code='''
+
+class BY_DOI(Query):
+
+    code = '''
 //by doi
 //
 MATCH (preprint:Article {doi: $doi})
@@ -93,14 +96,14 @@ RETURN DISTINCT
     id, doi, version, source, journal, title, abstract, toString(DATETIME(pub_date)) AS pub_date, //standardization of date time format, necessary for Safari
     COLLECT(DISTINCT auth {.surname, .given_names, .position_idx, .corresp, orcid: ORCID}) AS authors,
     nb_figures, review_process
-    ''',
-    map={'doi': []},
-    returns=['id', 'doi', 'version', 'source', 'journal', 'title', 'abstract', 'authors', 'pub_date', 'nb_figures', 'review_process']
-)
+    '''
+    map = {'doi': []}
+    returns = ['id', 'doi', 'version', 'source', 'journal', 'title', 'abstract', 'authors', 'pub_date', 'nb_figures', 'review_process']
 
 
-FIG_BY_DOI_IDX = Query(
-    code='''
+class FIG_BY_DOI_IDX(Query):
+
+    code = '''
 //fig by doi and index position
 //
 MATCH (a:Article {doi: $doi})-->(f:Fig {position_idx: toInteger($position_idx)})
@@ -113,39 +116,39 @@ RETURN
     f.caption AS caption,
     f.position_idx AS fig_idx
 ORDER BY version DESC, fig_idx ASC
-    ''',
-    map={'doi': ['doi', ''], 'position_idx': ['position_idx', '']},
-    returns=['doi', 'version', 'title', 'fig_title', 'fig_label', 'caption', 'fig_idx']
-)
+    '''
+    map = {'doi': ['doi', ''], 'position_idx': ['position_idx', '']},
+    returns = ['doi', 'version', 'title', 'fig_title', 'fig_label', 'caption', 'fig_idx']
 
 
-PANEL_BY_NEO_ID = Query(
-    code='''
+class PANEL_BY_NEO_ID(Query):
+
+    code = '''
 MATCH (p:Panel)-->(ctCondTag)-->(h:H_Entity)
 WHERE id(p) = $id
 RETURN p.caption AS caption, COLLECT(DISTINCT h) AS tags
-    ''',
-    returns=['caption', 'tags'],
-    map={'id': []}
-)
+    '''
+    returns = ['caption', 'tags']
+    map = {'id': []}
 
 
-REVIEW_PROCESS_BY_DOI = Query(
-  code='''
+class REVIEW_PROCESS_BY_DOI(Query):
+
+    code = '''
 MATCH (a:Article {doi: $doi})-[r:HasReview]->(review:Review)
 OPTIONAL MATCH (a)-[:HasResponse]->(response:Response)
 OPTIONAL MATCH (a)-[:HasAnnot]->(annot:PeerReviewMaterial)
 WITH a, review, response, annot
 ORDER BY review.review_idx ASC
 RETURN a.doi as doi, {reviews: COLLECT(DISTINCT review {.*}), response: response {.*}, annot: annot {.*}} AS review_process
-  ''',
-  map={'doi': []},
-  returns=['doi', 'review_process']
-)
+  '''
+    map = {'doi': []}
+    returns = ['doi', 'review_process']
 
 
-BY_REVIEWING_SERVICE = Query(
-  code='''
+class BY_REVIEWING_SERVICE(Query):
+
+    code = '''
 // Using precomputed Viz nodes
 MATCH (paper:VizPaper {query: "by_reviewing_service"})
 OPTIONAL MATCH (paper)-[:HasInfo]->(info:VizInfo)
@@ -161,13 +164,13 @@ RETURN
     paper.id AS id,
     paper.id AS name,
     COLLECT(DISTINCT {doi: paper.doi, info: info_cards, pub_date: paper.pub_date}) AS papers
-  ''',
-  returns=['name', 'id', 'papers']
-)
+  '''
+    returns = ['name', 'id', 'papers']
 
 
-BY_HYP = Query(
-    code='''
+class BY_HYP(Query):
+
+    code = '''
 // Using precomputed Viz nodes
 MATCH 
   (paper:VizPaper {query: "by_hyp"})-->(info:VizInfo),
@@ -200,13 +203,13 @@ WITH DISTINCT
 WITH COLLECT([hyp, papers]) AS all_results
 UNWIND range(0, size(all_results)-1) as i
 RETURN i as id, all_results[i][0] AS hyp, all_results[i][1] AS papers
-    ''',
-    returns=['id', 'hyp', 'papers']
-)
+    '''
+    returns = ['id', 'hyp', 'papers']
 
 
-AUTOMAGIC = Query(
-    code='''
+class AUTOMAGIC(Query):
+
+    code = '''
 // using precomputed Viz nodes
 MATCH
   (paper:VizPaper {query: "automagic"}),
@@ -221,13 +224,12 @@ WITH DISTINCT
    {title: "Biological entities", text: "", entities: COLLECT(DISTINCT {text: biol_entities.text})}] AS info
 WITH {doi: doi, info: info, pub_date: pub_date} AS paper
 RETURN 'automagic list' AS name, "1" AS id, COLLECT(paper) AS papers
-    ''',
-    returns=['name', 'id', 'papers']
-)
+    '''
+    returns = ['name', 'id', 'papers']
 
 
-BY_METHOD = Query(
-    code='''
+class BY_METHOD(Query):
+    code = '''
 //pre listed methods
 UNWIND [
   {name: 'electron microscopy',   regex: '.*electron micro.*'            },
@@ -258,16 +260,12 @@ WITH DISTINCT
 ORDER BY paper.pub_date DESC
 RETURN DISTINCT
    name AS name, name AS id, COLLECT(paper) AS papers
-    ''',
-    returns=['name', 'id', 'papers']
-)
+    '''
+    returns = ['name', 'id', 'papers']
 
 
-
-
-
-BY_MOLECULE = Query(
-    code='''
+class BY_MOLECULE(Query):
+    code = '''
 //Exclusion list based on SourceData normalized entities
 MATCH (syn:Term)<--(mol:H_Entity)<--(ct:CondTag)
 WHERE 
@@ -343,13 +341,12 @@ WITH
   query_group[0].name AS molecule, papers
 RETURN
   molecule AS name, molecule as id, papers
-''',
-    returns=['name', 'id', 'papers']
-)
+'''
+    returns = ['name', 'id', 'papers']
 
 
-LUCENE_SEARCH = Query(
-    code='''
+class LUCENE_SEARCH(Query):
+    code = '''
 // Full-text search on multiple indices.
 
 //CALL db.index.fulltext.createNodeIndex("title", ["SDArticle"], ["title"]);
@@ -418,25 +415,25 @@ ORDER BY weighted_score DESC
 RETURN 
   doi, [{title: source + " ("+weighted_score+")", text: text, entities: []}] AS info, weighted_score, source, query
 LIMIT 20
-''',
-    map={'query': ['query', '']},
-    returns=['doi', 'info', 'score', 'source', 'query']
-)
+'''
+    map = {'query': ['query', '']},
+    returns = ['doi', 'info', 'score', 'source', 'query']
 
-SEARCH_DOI = Query(
-  code='''
+
+class SEARCH_DOI(Query):
+  code = '''
 WITH $query AS query
 MATCH (article:SDArticle)
 WHERE article.doi = query
 RETURN
   article.doi AS doi, [{title: 'doi match', text: article.doi, entities:[]}] AS info, 10.0 AS score, 'doi' AS source, query
   ''',
-  map={'query': ['query', '']},
-  returns=['doi', 'info', 'score', 'source', 'query']
-)
+  map = {'query': ['query', '']},
+  returns = ['doi', 'info', 'score', 'source', 'query']
 
-STATS = Query(
-    code='''
+
+class STATS(Query):
+    code = '''
 MATCH (a:Article)
 WITH COUNT(a) AS N_jats
 MATCH (sd:SDPanel {source: 'sdapi'})
@@ -447,13 +444,12 @@ MATCH (n)
 WITH COUNT(n) AS N_nodes, N_eeb, N_sdapi, N_jats
 MATCH ()-[r]->()
 RETURN COUNT(r) AS N_rel, N_nodes, N_eeb, N_sdapi, N_jats
-    ''',
-    returns=['N_jats', 'N_sdapi', 'N_eeb', 'N_nodes', 'N_rel']
-)
+    '''
+    returns = ['N_jats', 'N_sdapi', 'N_eeb', 'N_nodes', 'N_rel']
 
 
-PANEL_SUMMARY = Query(
-    code='''
+class PANEL_SUMMARY(Query):
+    code = '''
 // panel summary
 // Thi query provides a simplified summary of a panel.
 // Entities are listed in a simplified way for display.
@@ -544,15 +540,13 @@ RETURN
     [e IN assays WHERE e['category']='assay' | {primary_label: e.text, secondary_label: "", href: e.href}] AS methods,
     [e IN other_entities WHERE (e['type']='component' OR e['category']='disease') | {primary_label: e.text, secondary_label: e.ext_tax_names, href: e.href}] AS other,
     fig_label, fig_title, panel_label, caption
-    ''',
-    map={'panel_id': []},
-    returns=['fig_label', 'fig_title', 'panel_label', 'caption', 'controlled_var', 'measured_var', 'other', 'methods']
-)
+    '''
+    map = {'panel_id': []},
+    returns = ['fig_label', 'fig_title', 'panel_label', 'caption', 'controlled_var', 'measured_var', 'other', 'methods']
 
 
-
-POPULAR_METHODS = Query(
-    code='''
+class POPULAR_METHODS(Query):
+    code = '''
 // find most popular method with synonym aggregation
 MATCH (a:SDArticle {journalName:'biorxiv'})-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag {category: "assay"})-->(h:H_Entity)
 WITH DISTINCT a, ct, h
@@ -582,53 +576,5 @@ RETURN
     COLLECT(DISTINCT paper) AS papers,
     method
 LIMIT 25
-    ''',
-    returns=['method', 'popularity']
-)
-
-
-
-
-
-OLDER_BY_HYP = Query(
-    code='''
-//by hyp
-//Provides a content list based on observations and testded hypotheses.
-//Returns:
-//    doi: the DOI of the relevant paper
-//    panel_ids: the panel_ids of the relevant panels
-//    methods: the name of the method
-//    controlled: the names of the controlled variables
-//    measured: the names of the measured variables
-//    jats_paper.publication_date as pub_date
-MATCH
-    (paper:SDArticle)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(h:H_Entity),
-    (p)-->(i:SDTag)-->(:CondTag)-->(var_controlled:H_Entity),
-    (p)-->(a:SDTag)-->(:CondTag)-->(var_measured:H_Entity),
-    (p)-->(e:SDTag {category: "assay"})-->(:CondTag)-->(method:H_Entity)
-WHERE
-    i.role = "intervention" AND
-    a.role = "assayed" AND
-    var_controlled.ext_ids <> var_measured.ext_ids
-WITH DISTINCT
-    paper.doi AS doi,
-    p.panel_id AS panel_id,
-    COLLECT(DISTINCT method.name) AS methods,
-    COLLECT(DISTINCT var_controlled.name) AS controlled,
-    COLLECT(DISTINCT var_measured.name) AS measured,
-    COUNT(DISTINCT var_controlled) AS N_1,
-    COUNT(DISTINCT var_measured) AS N_2
-WHERE (N_1 + N_2 > 1) OR (N_2 > 1)
-MATCH (jats_paper:Article)
-WHERE jats_paper.doi = doi
-RETURN DISTINCT
-    doi,
-    COLLECT(DISTINCT panel_id) AS panel_ids,
-    methods,
-    controlled,
-    measured,
-    jats_paper.publication_date as pub_date
-ORDER BY pub_date DESC
-''',
-    returns=['doi', 'panel_ids', 'methods', 'controlled', 'measured', 'pub_date']
-)
+    '''
+    returns = ['method', 'popularity']

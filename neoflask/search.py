@@ -49,62 +49,62 @@ class Engine:
         return json.dumps(data, indent=3)
 
     def stats(self, request):
-        query = copy(STATS)
+        query = STATS()
         query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
         return self.query2json(query)
 
     def by_molecule(self, request):
-        query = copy(BY_MOLECULE)
+        query = BY_MOLECULE()
         query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
         return self.query2json(query)
 
     def by_method(self, request):
-        query = copy(BY_METHOD)
+        query = BY_METHOD()
         query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
         return self.query2json(query)
 
     def by_reviewing_service(self, request):
-        query = copy(BY_REVIEWING_SERVICE)
+        query = BY_REVIEWING_SERVICE()
         query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
         return self.query2json(query)
 
     def by_doi(self, doi):
-        query = copy(BY_DOI)
+        query = BY_DOI()
         query.params = param_from_request(doi, query)  # need to know which param to extract from request depending on query.map
         return self.query2json(query)
 
     def review_by_doi(self, doi):
-        query = copy(REVIEW_PROCESS_BY_DOI)
+        query = REVIEW_PROCESS_BY_DOI()
         query.params = param_from_request(doi, query)  # need to know which param to extract from request depending on query.map
         return self.query2json(query)
 
     def fig_by_doi_idx(self, request):
-        query = copy(FIG_BY_DOI_IDX)
+        query = FIG_BY_DOI_IDX()
         query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
         return self.query2json(query)
 
     def panel_by_neo_id(self, id):
-        query = copy(PANEL_BY_NEO_ID)
+        query = PANEL_BY_NEO_ID()
         query.params = param_from_request(id, query)  # need to know which param to extract from request depending on query.map
         return self.query2json(query)
 
     def by_hyp(self, request):
-        query = copy(BY_HYP)
+        query = BY_HYP()
         query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
         return self.query2json(query)
 
     def automagic(self, request):
-        query = copy(AUTOMAGIC)
+        query = AUTOMAGIC()
         query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
         return self.query2json(query)
 
     def panel_summary(self, panel_id):
-        query = copy(PANEL_SUMMARY)
+        query = PANEL_SUMMARY()
         query.params = param_from_request(panel_id, query)  # need to know which param to extract from request depending on query.map
         return self.query2json(query)
 
     def search(self, request):
-        query_lucene = copy(LUCENE_SEARCH)
+        query_lucene = LUCENE_SEARCH()
         query_lucene.params = param_from_request(request, query_lucene)  # need to know which param to extract from request depending on query.map
         # escape lucene special characters in params['query']
         text = query_lucene.params['query'] # NOTE: this makes it mandatory for the cypher SEARCH query to use the '$query' param. Not great, but that how it is.
@@ -112,7 +112,7 @@ class Engine:
         query_lucene.params['query'] = quoted
         response_lucene = self.ask_neo(query_lucene)
 
-        query_doi = copy(SEARCH_DOI)
+        query_doi = SEARCH_DOI()
         query_doi.params = param_from_request(request, query_doi)  # need to know which param to extract from request depending on query.map
         found_doi = self.ask_neo(query_doi)
         if found_doi:
@@ -122,11 +122,11 @@ class Engine:
         return json.dumps(response, indent=3)
 
     def covid19(self, request):
-        query = copy(COVID19)
+        query = COVID19()
         query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
         return self.query2json(query)
 
     def refereed_preprints(self, request):
-        query = copy(REFEREED_PREPRINTS)
+        query = REFEREED_PREPRINTS()
         query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
         return self.query2json(query)
