@@ -119,7 +119,7 @@ RETURN
     f.position_idx AS fig_idx
 ORDER BY version DESC, fig_idx ASC
     '''
-    map = {'doi': ['doi', ''], 'position_idx': ['position_idx', '']},
+    map = {'doi': ['doi', ''], 'position_idx': ['position_idx', '']}
     returns = ['doi', 'version', 'title', 'fig_title', 'fig_label', 'caption', 'fig_idx']
 
 
@@ -418,7 +418,7 @@ RETURN
   doi, [{title: source + " ("+weighted_score+")", text: text, entities: []}] AS info, weighted_score, source, query
 LIMIT 20
 '''
-    map = {'query': ['query', '']},
+    map = {'query': ['query', '']}
     returns = ['doi', 'info', 'score', 'source', 'query']
 
 
@@ -429,8 +429,8 @@ MATCH (article:SDArticle)
 WHERE article.doi = query
 RETURN
   article.doi AS doi, [{title: 'doi match', text: article.doi, entities:[]}] AS info, 10.0 AS score, 'doi' AS source, query
-  ''',
-  map = {'query': ['query', '']},
+  '''
+  map = {'query': ['query', '']}
   returns = ['doi', 'info', 'score', 'source', 'query']
 
 
