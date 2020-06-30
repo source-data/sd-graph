@@ -97,7 +97,8 @@ export default {
     ),
     this.$store.dispatch('byAutomagic/getAll').then(
       () => this.$store.commit('incrementInit')
-    )
+    ),
+    this.$store.commit('highlights/updateSelectedTab', 'byReviewingService')
   },
 }
 </script>
