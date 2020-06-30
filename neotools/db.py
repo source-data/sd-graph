@@ -84,7 +84,7 @@ class Instance:
             summary = results.summary()
             notifications = summary.notifications
             if notifications:
-                print(f"WARNING: {notifications} when checking for existance.")
+                print(f"WARNING: {notifications} when checking for existence.")
                 print(summary.statement)
                 print(summary.parameters)
             return found_one
