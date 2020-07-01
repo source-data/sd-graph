@@ -1,24 +1,17 @@
 <template lang="pug">
   el-container
-    el-header(height="200px")#header
-      el-col(:span="4")
-        div.vertical-align
-          p
-            a(href="https://embo.org" target="_blank" )
-              img(src="./assets/embo-logo.gif" height="80px").center-img
-      el-col(:span="16")
-        div.vertical-align
-          h1(style="text-align: center" @click="goHome").pointer Early Evidence Base
-      el-col(:span="4")
-        div.vertical-align
-          p 
-            a(href="https://sourcedata.io" target="_blank" )
-              img(src="./assets/sourcedata-logo.png" width="200px").center-img
-          p
+    el-header(height="400px").banner_img
+            a(href="https://embo.org" target="_blank")
+              img(src="./assets/EEB_E_LOGO.png" height="90px" style="margin-top:180px; float: left; transform: translate(0, -50%)")
             a(href="https://embopress.org")
-              img(src="./assets/embopress-logo.jpg" width="200px").center-img
+              img(src="./assets/EEB_EP_LOGO.png" width="120px" style="margin-top:16px; margin-left:30px; float:right; transform: translate(0, -50%) ")
+            a(href="https://sourcedata.io" target="_blank")
+              img(src="./assets/EEB_SD_LOGO.png" width="120px" style="margin-top:16px; float:right; transform: translate(0, -50%) ")
+            p(style="position: absolute; top: 155px; left: 700px; min-width: 400px; font-size:24px")
+              | Accessing early scientific findings
+            h1(@click="goHome" style="position: absolute; top:290px; left:700px; transform: translate(0, -50%); min-width: 380px").title.pointer Early Evidence Base
     el-container
-      el-aside(width="170px" style="border-right-style: solid; border-right-width: 1px; padding-top: 50px")
+      el-aside(width="180px" style="border-right-style: solid; border-right-width: 1px; padding-top: 50px")
         el-menu(default-active="1" @select="navigate")
           el-menu-item(index="0") 
             span.el-icon-s-home
@@ -27,17 +20,17 @@
           el-menu-item(index="2" disabled) For developers
           el-menu-item(index="3" disabled) Contact
         el-divider
-        small Database stats: 
-          p 
-            code {{ db_stats.ai_annotated || 0 }}
-            |  preprints automatically annotated. 
-          p 
-            code {{ db_stats.sd_annotated || 0 }}
-            |  experiments in the SourceData knowledge graph
-          p 
-            code {{db_stats.total_nodes || 0 }}
-            |  nodes in EBB.
-
+        div(style="padding:10px")
+          small Database stats: 
+            p 
+              code {{ db_stats.ai_annotated || 0 }}
+              |  preprints automatically annotated. 
+            p 
+              code {{ db_stats.sd_annotated || 0 }}
+              |  experiments in the SourceData knowledge graph
+            p 
+              code {{db_stats.total_nodes || 0 }}
+              |  nodes in EBB.
       el-main
         router-view
     el-footer
@@ -105,8 +98,19 @@ export default {
 
 <style scoped lang="scss">
 #header {
-   border-bottom-style: solid;
-   border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-width: 1px;
+}
+
+.title {
+  font-size: 36px;
+  font-style: normal !important;
+  font-family: 'Open Sans', Arial, sans-serif;
+}
+
+.banner_img {
+  background-image: url("./assets/EEB_HP_Banner.jpg");
+  background-size:cover;
 }
 
 .pointer {
