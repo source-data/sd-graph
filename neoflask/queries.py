@@ -65,8 +65,10 @@ MATCH (preprint:Article {doi: $doi})
 WITH preprint, preprint.version AS version
 ORDER BY version DESC
 WITH COLLECT(preprint)[0] AS a
-MATCH
+OPTIONAL MATCH
    (a)-->(auth:Contrib)
+OPTIONAL MATCH
+   (a)-->(auth:Author)
 OPTIONAL MATCH (auth)-->(id:Contrib_id)
 OPTIONAL MATCH (a)-->(f:Fig)
 OPTIONAL MATCH (a)-[r:HasReview]->(review:Review)

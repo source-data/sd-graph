@@ -9,6 +9,8 @@ python-dotenv==0.10.1
 lxml==4.5.0
 requests==2.23.
 pandas==1.0.3
+tweepy==3.8.0
+
 -e git+https://github.com/source-data/ai.git#egg=ai
 -e git+https://github.com/source-data/py-smtag.git@dev#egg=smtag
 -e git+https://github.com/embo-press/hypothepy#egg=hypothepy

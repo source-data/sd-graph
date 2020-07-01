@@ -189,7 +189,7 @@ CROSSREF_PREPRINT_API_GRAPH_MODEL = {
     'children': {
         'has_author': {
             'path': {
-                'type': 'author',
+                'type': 'author',  # COULD/SHOULD BE Contrib
                 'funct': lambda d: d['author']
             },
             'properties': {
