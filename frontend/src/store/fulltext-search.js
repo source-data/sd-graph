@@ -49,13 +49,9 @@ export default {
   actions: {
     search({ commit }, query) {
       commit('setIsLoading')
-      const url = '/api/v1/search/'
+      const url = '/api/v1/search/' + query
       // return httpClient.post(url, {query: query}) 
-      return httpClient.get(url, {
-          params: {
-              query: query
-          }
-      })
+      return httpClient.get(url)
         .then((response) => {
           const records = response.data
           commit('addRecords', records)

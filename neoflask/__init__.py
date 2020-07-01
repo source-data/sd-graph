@@ -14,7 +14,7 @@ NEO_PASSWORD = os.getenv("NEO_PASSWORD")
 print(__name__)
 app = Flask(__name__)
 
-CORS(app) #, resources={r"/*": {"origins": "*"}})
+CORS(app) # , resources={r"/*": {"origins": "*"}})
 
 
 Config.init_app(app)
@@ -22,10 +22,10 @@ app.config.from_object(Config)
 cache = Cache(config={
     'CACHE_DEFAULT_TIMEOUT': 365 * 24 * 60 * 60,
     'CACHE_KEY_PREFIX': __name__,
-    # 'CACHE_TYPE': 'simple',
     'CACHE_TYPE': 'redis',
     'CACHE_REDIS_HOST': 'redis',
     'CACHE_REDIS_PORT': '6379',
+    # 'CACHE_THRESHOLD': 1000,
     # 'CACHE_REDIS_PASSWORD': '',
     # 'CACHE_REDIS_DB': '',
     # 'CACHE_ARGS': '',

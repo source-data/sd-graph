@@ -153,6 +153,7 @@ class BY_REVIEWING_SERVICE(Query):
     code = '''
 // Using precomputed Viz nodes
 MATCH (paper:VizPaper {query: "by_reviewing_service"})
+WHERE DATETIME(paper.pub_date) > DATETIME($limit_date)
 OPTIONAL MATCH (paper)-[:HasInfo]->(info:VizInfo)
 WITH DISTINCT
    paper, info,
@@ -167,6 +168,7 @@ RETURN
     paper.id AS name,
     COLLECT(DISTINCT {doi: paper.doi, info: info_cards, pub_date: paper.pub_date}) AS papers
   '''
+    map = {'limit_date': []}
     returns = ['name', 'id', 'papers']
 
 
@@ -177,6 +179,7 @@ class BY_HYP(Query):
 MATCH 
   (paper:VizPaper {query: "by_hyp"})-->(info:VizInfo),
   (paper)-[:HasEntity]->(ctrl_v:VizEntity)-[:HasPotentialEffectOn]->(meas_v:VizEntity)
+WHERE DATETIME(paper.pub_date) > DATETIME($limit_date)
 OPTIONAL MATCH
   (info)-[:HasEntity]->(entity:VizEntity)
 WITH DISTINCT paper, info, ctrl_v, meas_v, entity
@@ -206,6 +209,7 @@ WITH COLLECT([hyp, papers]) AS all_results
 UNWIND range(0, size(all_results)-1) as i
 RETURN i as id, all_results[i][0] AS hyp, all_results[i][1] AS papers
     '''
+    map = {'limit_date': []}
     returns = ['id', 'hyp', 'papers']
 
 
@@ -217,6 +221,7 @@ MATCH
   (paper:VizPaper {query: "automagic"}),
   (paper)-[:HasInfo]->(:VizInfo {title: 'Experimental approaches'})-[:HasEntity]->(exp_assays:VizEntity),
   (paper)-[:HasInfo]->(:VizInfo {title: 'Biological entities'})-[:HasEntity]->(biol_entities:VizEntity)
+WHERE DATETIME(paper.pub_date) > DATETIME($limit_date)
 WITH DISTINCT paper, exp_assays, biol_entities
 ORDER BY
    paper.rank ASC //rank is rank sum score
@@ -227,6 +232,7 @@ WITH DISTINCT
 WITH {doi: doi, info: info, pub_date: pub_date} AS paper
 RETURN 'automagic list' AS name, "1" AS id, COLLECT(paper) AS papers
     '''
+    map = {'limit_date': []}
     returns = ['name', 'id', 'papers']
 
 
@@ -418,7 +424,7 @@ RETURN
   doi, [{title: source + " ("+weighted_score+")", text: text, entities: []}] AS info, weighted_score, source, query
 LIMIT 20
 '''
-    map = {'query': ['query', '']}
+    map = {'query': []}
     returns = ['doi', 'info', 'score', 'source', 'query']
 
 
@@ -430,7 +436,7 @@ WHERE article.doi = query
 RETURN
   article.doi AS doi, [{title: 'doi match', text: article.doi, entities:[]}] AS info, 10.0 AS score, 'doi' AS source, query
   '''
-  map = {'query': ['query', '']}
+  map = {'query': []}
   returns = ['doi', 'info', 'score', 'source', 'query']
 
 

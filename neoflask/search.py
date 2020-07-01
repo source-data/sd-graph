@@ -53,19 +53,19 @@ class Engine:
         query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
         return self.query2json(query)
 
-    def by_molecule(self, request):
-        query = BY_MOLECULE()
-        query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
-        return self.query2json(query)
+    # def by_molecule(self, request):
+    #     query = BY_MOLECULE()
+    #     query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
+    #     return self.query2json(query)
 
     def by_method(self, request):
         query = BY_METHOD()
         query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
         return self.query2json(query)
 
-    def by_reviewing_service(self, request):
+    def by_reviewing_service(self, limit_date):
         query = BY_REVIEWING_SERVICE()
-        query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
+        query.params = param_from_request(limit_date, query)  # need to know which param to extract from request depending on query.map
         return self.query2json(query)
 
     def by_doi(self, doi):
@@ -88,14 +88,14 @@ class Engine:
         query.params = param_from_request(id, query)  # need to know which param to extract from request depending on query.map
         return self.query2json(query)
 
-    def by_hyp(self, request):
+    def by_hyp(self, limit_date):
         query = BY_HYP()
-        query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
+        query.params = param_from_request(limit_date, query)  # need to know which param to extract from request depending on query.map
         return self.query2json(query)
 
-    def automagic(self, request):
+    def automagic(self, limit_date):
         query = AUTOMAGIC()
-        query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
+        query.params = param_from_request(limit_date, query)  # need to know which param to extract from request depending on query.map
         return self.query2json(query)
 
     def panel_summary(self, panel_id):
@@ -103,9 +103,9 @@ class Engine:
         query.params = param_from_request(panel_id, query)  # need to know which param to extract from request depending on query.map
         return self.query2json(query)
 
-    def search(self, request):
+    def search(self, query):
         query_lucene = LUCENE_SEARCH()
-        query_lucene.params = param_from_request(request, query_lucene)  # need to know which param to extract from request depending on query.map
+        query_lucene.params = param_from_request(query, query_lucene)  # need to know which param to extract from request depending on query.map
         # escape lucene special characters in params['query']
         text = query_lucene.params['query'] # NOTE: this makes it mandatory for the cypher SEARCH query to use the '$query' param. Not great, but that how it is.
         quoted = re.sub(r'([\+\-!\(\)\{\}\[\]\^\"~\*\?\:\\/&\|])', r'"\1"', text)
@@ -113,7 +113,7 @@ class Engine:
         response_lucene = self.ask_neo(query_lucene)
 
         query_doi = SEARCH_DOI()
-        query_doi.params = param_from_request(request, query_doi)  # need to know which param to extract from request depending on query.map
+        query_doi.params = param_from_request(query, query_doi)  # need to know which param to extract from request depending on query.map
         found_doi = self.ask_neo(query_doi)
         if found_doi:
             response = found_doi
