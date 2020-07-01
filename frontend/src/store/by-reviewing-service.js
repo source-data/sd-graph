@@ -53,7 +53,7 @@ export default {
   actions: {
     getAll ({ commit }) {
       commit('setIsLoading')
-      const url = '/api/v1/by_reviewing_service'
+      const url = '/api/v1/by_reviewing_service/'
       return httpClient.get(url)
         .then((response) => {
           const records = response.data

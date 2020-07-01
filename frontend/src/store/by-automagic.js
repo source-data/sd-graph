@@ -45,7 +45,7 @@ export default {
   actions: {
     getAll ({ commit }) {
       commit('setIsLoading')
-      const url = '/api/v1/automagic'
+      const url = '/api/v1/automagic/'
       return httpClient.get(url)
         .then((response) => {
           const records = response.data[0]
