@@ -56,7 +56,7 @@ export default {
   actions: {
     getAll ({ commit }) {
       commit('setIsLoading')
-      const url = '/api/v1/by_hyp'
+      const url = '/api/v1/by_hyp/'
       return httpClient.get(url)
         .then((response) => {
           const records = response.data
