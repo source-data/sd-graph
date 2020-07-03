@@ -6,7 +6,31 @@ from .queries import TWEET_BY_DOI, ADD_TWITTER_STATUS
 from . import DB, TWITTER, EEB_PUBLIC_API, logger
 
 
-class RefereedPreprintContent:
+class Content:
+
+    template: Template = None
+ 
+   def __init__(self, result):
+        # ['preprint_doi', 'title', 'preprint_date', 'published_doi', 'published_journal_title', 'review_by', 'annot_by']
+        self.text = ''
+        self.result = result
+        self.title = self.result['title']
+        self.preprint_doi = self.result['doi']
+        self.text = ''
+        self.substitutions = {}
+        self.update_substitutions({
+            'title': self.title,
+            'preprint_doi': self.preprint_doi
+        })
+
+    def update_substitutions(self, d: Dict):
+        self.substitutions = {**self.substitutions, **d}
+
+    def __str__(self):
+        return self.text
+
+
+class RefereedPreprintContent(Content):
 
     template = Template('''#RefereedPreprint $title, preprint doi: https://doi.org/$preprint_doi $reviewed_by_twitter_handle''')
     handles = {
@@ -17,11 +41,7 @@ class RefereedPreprintContent:
     }
 
     def __init__(self, result):
-        # ['preprint_doi', 'title', 'preprint_date', 'published_doi', 'published_journal_title', 'review_by', 'annot_by']
-        self.text = ''
-        self.result = result
-        self.title = self.result['title']
-        self.preprint_doi = self.result['doi']
+        super().__init__(result)
         # self.published_doi = self.result.get('journal_doi', '')
         # self.published_journal_title = self.result.get('published_journal_title', '')
         if self.result['review_process']['reviews']:
@@ -29,14 +49,28 @@ class RefereedPreprintContent:
         elif self.result['review_process']['annot']:
             self.reviewed_by_twitter_handle = self.handles[self.result['review_process']['annot']['reviewed_by']]
         self.substitution = {
-            'title': self.title,
-            'preprint_doi': self.preprint_doi,
             'reviewed_by_twitter_handle': self.reviewed_by_twitter_handle,
         }
         self.text = self.template.substitute(self.substitution)
 
-    def __str__(self):
-        return self.text
+class ByHypContent(Content):
+
+    template = Template('$title, preprint doi: https://doi.org/$preprint_doi')
+
+    def __init__(self, result):
+
+        self.result['']['']:
+        self.update_substitution = {
+        }
+        self.text = self.template.substitute(self.substitution)
+
+class AutomagicSelectionContent(Content):
+
+    template = Template('Autoselection: $title, preprint doi: https://doi.org/$preprint_doi')
+
+    def __init__(self, result):
+        super().__init__(result)
+        self.text = self.template.substitute(self.substitution)
 
 
 class EEB_API(API):
@@ -120,8 +154,11 @@ def main():
     parser.add_argument('--limit-date', help='Limit the post for preprint posted after the limit date') # TODO: pub_limit_date vs review_limit_date
     args = parser.parse_args()
     limit_date = args.limit_date
-    t = Twitterer(DB, TWITTER, EEB_API().get_refereed_preprints, RefereedPreprintContent)
-    t.run(limit_date=limit_date)
+    t1 = Twitterer(DB, TWITTER, EEB_API().get_refereed_preprints, RefereedPreprintContent)
+    t1.run(limit_date=limit_date)
+    t2 = Twitterer(DB, TWITTER, EEB_API().get_by_hyp, ByHypContent)
+    t2.run(limit_date=limit_date)
+
 
 if __name__ == '__main__':
     main()
