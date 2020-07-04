@@ -1,19 +1,23 @@
 <template lang="pug">
   el-container
-    el-header(height="400px").banner_img
-      a(href="https://embo.org" target="_blank")
-        img(src="./assets/EEB_E_LOGO.png" height="90px" style="margin-top:180px; float: left; transform: translate(0, -50%)")
-      a(href="https://embopress.org")
-        img(src="./assets/EEB_EP_LOGO.png" width="120px" style="margin-top:16px; margin-left:30px; float:right; transform: translate(0, -50%) ")
-      a(href="https://sourcedata.io" target="_blank")
-        img(src="./assets/EEB_SD_LOGO.png" width="120px" style="margin-top:16px; float:right; transform: translate(0, -50%) ")
-      p(style="position: absolute; top: 120px; left: 840px; min-width: 400px; font-size:24px")
-        | Accessing early <br/>scientific findings
-      h1(@click="goHome" style="position: absolute; top:290px; left:700px; transform: translate(0, -50%); min-width: 380px").title.pointer Early Evidence Base
+    .org-credits
+      .org-credits--left
+        a(href="https://embo.org" target="_blank")
+          img(src="./assets/EEB_E_LOGO.png" class="banner-logo banner-logo--embo")
+      .org-credits--right
+        a(href="https://embopress.org")
+          img(src="./assets/EEB_EP_LOGO.png" class="banner-logo banner-logo--press")
+        a(href="https://sourcedata.io" target="_blank")
+          img(src="./assets/EEB_SD_LOGO.png" class="banner-logo banner-logo--sourcedata")
+    header.banner-area
+      img(src="./assets/EEB_HP_Banner.svg").banner-image
+      .banner-title-wrapper
+        h1(@click="goHome").title.pointer.banner-title Early Evidence Base
+        h3.banner-subtitle Accessing early scientific findings
     el-container
       el-aside(width="180px" style="border-right-style: solid; border-right-width: 1px; padding-top: 50px")
         el-menu(default-active="1" @select="navigate")
-          el-menu-item(index="0") 
+          el-menu-item(index="0")
             span.el-icon-s-home
             | Home
           el-menu-item(index="1") About
@@ -21,14 +25,14 @@
           el-menu-item(index="3" disabled) Contact
         el-divider
         div(style="padding:10px")
-          small Database stats: 
-            p 
+          small Database stats:
+            p
               code {{ db_stats.ai_annotated || 0 }}
-              |  preprints automatically annotated. 
-            p 
+              |  preprints automatically annotated.
+            p
               code {{ db_stats.sd_annotated || 0 }}
               |  experiments in the SourceData knowledge graph
-            p 
+            p
               code {{db_stats.total_nodes || 0 }}
               |  nodes in EBB.
       el-main
@@ -96,20 +100,169 @@ export default {
 }
 </script>
 
+<style lang="scss">
+html, body {
+  padding:0;
+  margin:0;
+}
+
+</style>
+
 <style scoped lang="scss">
 #header {
   border-bottom-style: solid;
   border-bottom-width: 1px;
 }
 
-.title {
-  font-size: 36px;
-  font-style: normal !important;
-  font-family: 'Open Sans', Arial, sans-serif;
+.banner-image {
+  display:none;
 }
 
+@media screen and (min-width:680px) {
+  .banner-image {
+    display:block;
+    width:100%;
+  }
+}
+
+.banner-area {
+  position:relative;
+  display:block;
+  background-image: url("./assets/EEB_HP_Banner.svg");
+  background-size:cover;
+}
+
+@media screen and (min-width:680px) {
+  .banner-area {
+    position:relative;
+    display:flex;
+    align-items:center;
+    background-image:none;
+  }
+}
+
+
+.banner-title-wrapper {
+  padding: 2rem 2rem;
+  background-color: rgba(255,255,255,0.75);
+}
+
+@media screen and (min-width:680px) {
+  .banner-title-wrapper {
+    position: absolute;
+    // top:2rem;
+    left:180px;
+    padding: 2rem 2rem;
+    background-color: rgba(255,255,255,0.75);
+  }
+}
+
+@media screen and (min-width:1080px) {
+  .banner-title-wrapper {
+      left: 180px;
+  }
+}
+
+@media screen and (min-width:1160px) {
+  .banner-title-wrapper {
+    padding: 4rem 2rem;
+  }
+}
+
+@media screen and (min-width:1800px) {
+  .banner-title-wrapper {
+    padding: 6rem 3rem;
+  }
+}
+
+.banner-title {
+  color:#0a5769;
+  font-size: 2.5rem;
+  line-height:1;
+
+  margin:0 0 1rem 0;
+}
+
+.banner-subtitle {
+  color:#217b90;
+  font-size: 1.5rem;
+  line-height:1;
+
+  margin:0 0 0 0;
+}
+
+@media screen and (min-width:1080px) {
+  .banner-title {
+    font-size: 5rem;
+
+  }
+
+  .banner-subtitle {
+    font-size: 2rem;
+
+  }
+}
+
+@media screen and (min-width:1690px) {
+  .banner-title {
+    font-size: 6rem;
+  }
+
+  .banner-subtitle {
+    font-size:3rem;
+  }
+}
+
+
+.org-credits {
+  display:flex;
+  justify-content: space-between;
+  padding: 1rem;
+  background: #f5f5f5
+}
+
+.org-credits--left, .org-credits--right {
+  display:flex;
+  align-items: center;
+}
+
+.org-credits--right .banner-logo {
+  margin-left:2rem;
+}
+
+
+.org-credits--right {
+  flex-direction:column;
+  justify-content: center;
+}
+.banner-logo--press,
+.banner-logo--sourcedata {
+  max-height:30px
+}
+
+
+@media screen and (min-width:680px) {
+
+.org-credits--right {
+  flex-direction:row;
+  justify-content: flex-end;
+}
+.banner-logo--press,
+.banner-logo--sourcedata {
+  max-height:none;
+}
+
+}
+
+
+// .title {
+//   font-size: 36px;
+//   font-style: normal !important;
+//   font-family: 'Open Sans', Arial, sans-serif;
+// }
+
 .banner_img {
-  background-image: url("./assets/EEB_HP_Banner.jpg");
+  background-image: url("./assets/EEB_HP_Banner.svg");
   background-size:cover;
 }
 
@@ -125,7 +278,7 @@ img.center-img {
 
 .vertical-align {
   margin-top: 80px;
-  transform: translate(0, -50%) 
+  transform: translate(0, -50%)
 }
 
 .side_bar_links {
