@@ -31,9 +31,6 @@
           |  are directly accessible.
     el-row
       el-col(:span="20" :offset="2")
-        SearchBar
-    el-row
-      el-col(:span="20" :offset="2")
         div(v-if="progressStep() < 4")
           p Initializing... ({{this.progress}} / 4)  
              el-button(circle plain type="primary" :loading="true" size="normal") 
@@ -47,14 +44,12 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import SearchBar from '../components/search-bar.vue'
 import QuickAccess from '../components/quick-access/index.vue'
 import Highlights from '../components/highlights/index.vue'
 
 export default {
   name: 'home',
   components: {
-    SearchBar,
     QuickAccess,
     Highlights,
   },

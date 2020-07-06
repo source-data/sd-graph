@@ -42,7 +42,6 @@ export default {
   },
   methods: {
     sortRecords() {
-      console.debug("selectedTag", this.selectedTab)
       this.$store.commit('highlights/sortRecords', {
         sortBy: this.sortBy,
         direction: this.sortDirection,

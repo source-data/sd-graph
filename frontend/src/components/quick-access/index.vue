@@ -14,7 +14,10 @@
       el-tab-pane(label="Automagic selection" name="byAutomagic")
         QuickAccessByAutomagic
       el-divider
-
+      el-tab-pane(name="fulltextSearch")
+        span(slot="label") General search 
+          i(class="el-icon-search")
+        QuickAccessSearchBar(@submit="onSubmitSearch")
 </template>
 
 <script>
@@ -23,6 +26,7 @@ import QuickAccessByAutomagic from './by-automagic.vue'
 import QuickAccessByMethod from './by-method.vue'
 import QuickAccessByMol from './by-mol.vue'
 import QuickAccessByHyp from './by-hyp.vue'
+import QuickAccessSearchBar from './search-bar.vue'
 
 import { mapState } from 'vuex'
 
@@ -34,6 +38,7 @@ export default {
     QuickAccessByMethod,
     QuickAccessByMol,
     QuickAccessByHyp,
+    QuickAccessSearchBar,
   },
   data () {
     return {
@@ -44,6 +49,11 @@ export default {
     onSelectTab () {
       this.$store.commit('highlights/updateSelectedTab', this.activeTab)
       this.$store.dispatch('highlights/listByCurrent', this.activeTab)
+    },
+    onSubmitSearch(term) {
+      this.$store.dispatch('fulltextSearch/search', term).then(
+        () => {this.$store.dispatch('highlights/listByCurrent', 'fulltextSearch')}
+      )
     },
     onChangeByReviewingService (selectedItemId) {
       this.$store.commit('byReviewingService/showRecord', { id: selectedItemId })

@@ -3,10 +3,10 @@ import httpClient from '../lib/http'
 export default {
   namespaced: true,
   state: {
-    records: {},
+    records: [],
     currentRecordId: null,
     loadingRecords: false,
-    loadComplete: false,
+    loadComplete: true,
   },
   getters: {
     records (state) {
@@ -14,7 +14,7 @@ export default {
       return Object.values(state.records)
     },
     currentRecord (state) {
-      return state.records//[state.currentRecordId]
+      return state.records
     },
     isLoaded (state) {
       return state.loadComplete
@@ -24,7 +24,7 @@ export default {
     /* *************************************************************************
     * RECORDS
     */
-   addRecords (state, records) {
+    addRecords (state, records) {
       // need to sort and truncate records here
       const sorted = Object.values(records).slice().sort((a, b) => b.score - a.score)
       const top10 = sorted.slice(0, 10)
@@ -33,7 +33,7 @@ export default {
     /* *************************************************************************
     * NAVIGATION
     */
-   setIsLoading (state) {
+    setIsLoading (state) {
       state.loadingRecords = true
     },
     setNotLoading (state) {

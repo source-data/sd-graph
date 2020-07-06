@@ -15,17 +15,12 @@ export default {
     return {
       search: {
         input: '',
-        somethignelse: ''
       } 
     }
   },
   methods: {
     onSubmit()  {
-      this.$store.dispatch('fulltextSearch/search', this.search.input).then(
-        () => {
-          this.$store.dispatch('highlights/listByCurrent', 'fulltextSearch')
-        }
-      )
+      this.$emit('submit', this.search.input)
     },
   }
 }

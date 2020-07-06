@@ -67,7 +67,7 @@ export default {
     * NAVIGATION
     */
     setIsLoading (state) {
-      state.loadingRecords = true
+      state.loadingRecords = false
     },
     setNotLoading (state) {
       state.loadingRecords = false
@@ -78,23 +78,32 @@ export default {
       commit('setIsLoading')
       const current = rootGetters[[module, 'currentRecord'].join('/')]
       const loadComplete = rootGetters[[module, 'isLoaded'].join('/')]
+      console.debug("current", current)
       if (loadComplete) {
-        const dois = current.papers.map(c => c.doi)
-        const promises = dois.map((doi) => {
-          return httpClient.get(`/api/v1/doi/${doi}`)
-        })
-        return Promise.all(promises).then((responses) => {
-          let non_empty = responses.filter(
-            r => r.data.length > 0
-          )
-          const records = non_empty.reduce((acc, r) => {
-            return [preProcessRecord(r.data[0], current), ...acc]
-          }, [])
-          commit('addRecords', records)
-          return records
-        }).finally(() => {
+        if ('papers' in current) {
+          const dois = current.papers.map(c => c.doi)
+          console.debug('im hihlights dois', dois)
+          const promises = dois.map((doi) => {
+            return httpClient.get(`/api/v1/doi/${doi}`)
+          })
+          return Promise.all(promises).then((responses) => {
+            let non_empty = responses.filter(
+              r => r.data.length > 0
+            )
+            const records = non_empty.reduce((acc, r) => {
+              return [preProcessRecord(r.data[0], current), ...acc]
+            }, [])
+            console.debug('records in highlights js', records)
+            commit('addRecords', records)
+            return records
+          }).finally(() => {
+            commit('setNotLoading')
+          })
+        } else {
           commit('setNotLoading')
-        })
+          commit('addRecords', [])
+          return {}
+        }
       }
     },
   }

@@ -77,7 +77,7 @@
             small(style="line-height:1.5") {{ article.abstract }}
           p 
             small(style="font-family: monospace; font-size: 9px") [source: {{ article.source }}]
-        el-col(:span="12")
+        el-col(:span="12").scroll
           //- label(for="info-cards" style="font-variant: small-caps") {{ info.length }} information card{{ info.length > 1 ? 's':''}}:
           el-collapse(v-for="(card, index) in info" id="infor-cards" v-model="activeCards")
             el-collapse-item(:title="card.title", :name="index")
@@ -93,7 +93,7 @@
                       | open as SmartFigures 
               div(v-else-if="card.text instanceof Array")
                 span(v-for="item in card.text")
-                   el-tag(size="medium") {{ item }}
+                  el-tag(size="medium") {{ item }}
               div(v-else="typeof card.text === 'string'")
                 small(style="line-height:1.3") {{ card.text }}
     el-divider
@@ -171,6 +171,10 @@ export default {
 </script>
 
 <style scoped>
+  .scroll {
+    max-height: 500px;
+    overflow: auto;
+  }
   .peer_review_material {
     color:#364497;
     font-weight: bold;
