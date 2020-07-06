@@ -4,32 +4,48 @@ from neotools.db import Query
 class COVID19(Query):
 
     code = '''
-// COVID-19
-// Automated search for COVID-19 / SARS-CoV-2 papers
 WITH
-    "2019 Novel Coronavirus OR 2019-nCoV OR 2019nCoV OR COVID-19 OR SARS-CoV-2 OR SARS-CoV2 OR SAR-CoV2 OR SRAS-CoV-2 OR (wuhan AND coronavirus)" AS search_query
+    "2019-nCoV OR 2019nCoV OR COVID-19 OR SARS-CoV-2 OR SARS-CoV2 OR SAR-CoV2 OR SRAS-CoV-2" AS search_query
 // CALL db.index.fulltext.createNodeIndex("abstract_jats", ["Article"], ["abstract"], {analyzer: "english"});
-CALL db.index.fulltext.queryNodes("abstract_jats", search_query) YIELD node, score
+CALL db.index.fulltext.queryNodes("title_jats", search_query) YIELD node, score
 WITH node.doi AS doi, node.version AS version, node, score
 ORDER BY score DESC, version DESC
 WITH DISTINCT doi, COLLECT(node) AS versions, COLLECT(score) AS scores
 WHERE scores[0] > 0.02
 WITH doi, versions[0] AS most_recent, scores[0] AS score
 MATCH (a:Article {doi:doi, version: most_recent.version})-->(f:Fig)
+WITH COLLECT(DISTINCT doi) AS from_title
+
+WITH
+    "2019-nCoV OR 2019nCoV OR COVID-19 OR SARS-CoV-2 OR SARS-CoV2 OR SAR-CoV2 OR SRAS-CoV-2" AS search_query,
+    from_title
+    CALL db.index.fulltext.queryNodes("abstract_jats", search_query) YIELD node, score
+WITH node.doi AS doi, node.version AS version, node, score,
+ from_title
+ORDER BY score DESC, version DESC
+WITH DISTINCT doi, COLLECT(node) AS versions, COLLECT(score) AS scores,
+  from_title
+WHERE scores[0] > 0.01
+WITH doi, versions[0] AS most_recent, scores[0] AS score,
+  from_title
+MATCH (a:Article {doi:doi, version: most_recent.version})-->(f:Fig)
+WITH COLLECT(DISTINCT a{.*, score: score}) AS from_abstract, from_title
+UNWIND from_abstract AS a
+WITH a
+WHERE a.doi IN from_title
 RETURN
-    id(a) AS id,
+    a.doi AS id,
     a.publication_date AS pub_date,
     a.title AS title,
     a.abstract AS abstract,
     a.version AS version,
     a.doi AS doi,
-    'bioRxiv' AS journal,
-    COUNT(DISTINCT f) AS nb_figures,
-    score
-ORDER BY pub_date DESC, score DESC;
+    a.journal_title AS journal,
+    a.score AS score
+ORDER BY DATETIME(pub_date) DESC, score DESC
     '''
     map = {}
-    returns = ['id', 'pub_date', 'title', 'abstract', 'version', 'doi', 'journal', 'nb_figures', 'score']
+    returns = ['id', 'pub_date', 'title', 'abstract', 'version', 'doi', 'journal', 'score']
 
 
 class REFEREED_PREPRINTS(Query):
@@ -362,6 +378,8 @@ class LUCENE_SEARCH(Query):
 //CALL db.index.fulltext.createNodeIndex("title", ["SDArticle"], ["title"]);
 WITH $query AS query
 CALL db.index.fulltext.queryNodes("title", query) YIELD node, score
+WITH node, score, query
+WHERE node.journalName = "biorxiv"
 WITH
 // weight 4x for results on title
   node.doi AS doi, node.title AS text, 1 * score AS weighted_score, "title" AS source, query
@@ -375,6 +393,8 @@ UNION
 //CALL db.index.fulltext.createNodeIndex("abstract",["SDArticle"], ["abstract"]);
 WITH $query AS query
 CALL db.index.fulltext.queryNodes("abstract", query) YIELD node, score
+WITH node, score, query
+WHERE node.journalName = "biorxiv"
 WITH
 // weight 2x for results on title
   node.doi AS doi, node.title as text, 1 * score AS weighted_score, "abstract" as source, query
@@ -388,7 +408,7 @@ UNION
 //CALL db.index.fulltext.createNodeIndex("caption",["SDPanel"], ["caption"]);
 WITH $query AS query
 CALL db.index.fulltext.queryNodes("caption", query) YIELD node, score
-MATCH (article:SDArticle)-[:has_figure]->(f:SDFigure)-[:has_panel]->(node)
+MATCH (article:SDArticle {journalName: "biorxiv"})-[:has_figure]->(f:SDFigure)-[:has_panel]->(node)
 WITH DISTINCT
 // weight 1 for caption
   article.doi as doi, node.caption as text, 1 * score AS weighted_score, "caption" AS source, query
@@ -416,7 +436,7 @@ UNION
 //CALL db.index.fulltext.createNodeIndex("name",["Contrib"], ["surname", "given_names"]);
 WITH $query AS query
 CALL db.index.fulltext.queryNodes("name", query) YIELD node, score
-MATCH (article:SDArticle)-->(author:Contrib)
+MATCH (article:SDArticle {journalName: "biorxiv"})-->(author:Contrib)
 WHERE author.surname = node.surname AND author.given_names = node.given_names
 WITH DISTINCT
 //weight 4x for results on authors

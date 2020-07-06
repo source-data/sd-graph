@@ -76,11 +76,10 @@ def review_by_doi(doi: str):
     return R(ASKNEO.review_by_doi(doi=doi))
 
 
-# @app.route('/api/v1/figure', methods=['GET', 'POST'])
-# def fig_by_doi_idx():
-# @cache.memoize()
-#     app.logger.info(f"figure {request.args.get('position_idx')} from {request.args.get('doi')}")
-#     return R(ASKNEO.fig_by_doi_idx(request))
+@app.route('/api/v1/figure', methods=['GET', 'POST'])
+def fig_by_doi_idx():
+    app.logger.info(f"figure {request.args.get('position_idx')} from {request.args.get('doi')}")
+    return R(ASKNEO.fig_by_doi_idx(request))
 
 
 # @app.route('/api/v1/panel/<int:id>', methods=['GET', 'POST'])

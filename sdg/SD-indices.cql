@@ -40,6 +40,7 @@ CALL db.index.fulltext.drop("synonym");
 CALL db.index.fulltext.drop("title");
 CALL db.index.fulltext.drop("abstract");
 CALL db.index.fulltext.drop("abstract_jats");
+CALL db.index.fulltext.drop("title_jats");
 CALL db.index.fulltext.drop("caption");
 
 // create
@@ -49,5 +50,6 @@ CALL db.index.fulltext.createNodeIndex("synonym",["Term"],["text"], {analyzer: "
 CALL db.index.fulltext.createNodeIndex("title", ["SDArticle"], ["title"], {analyzer: "english"});
 CALL db.index.fulltext.createNodeIndex("abstract", ["SDArticle"], ["abstract"], {analyzer: "english"});
 // second index on abstract used to search JATS/MECA and create COVID-19 collection
-CALL db.index.fulltext.createNodeIndex("abstract_jats", ["Article"], ["abstract"], {analyzer: "english"});
+CALL db.index.fulltext.createNodeIndex("abstract_jats", ["Article"], ["abstract"], {analyzer: "simple"});
+CALL db.index.fulltext.createNodeIndex("title_jats", ["Article"], ["title"], {analyzer: "simple"});
 CALL db.index.fulltext.createNodeIndex("caption", ["SDPanel"], ["caption"], {analyzer: "english"});

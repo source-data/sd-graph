@@ -152,7 +152,7 @@ class Instance:
                     '''
             q.returns = ['r']
             q.params = {'batch': batch}
-            records = self.query_with_tx_funct(self._tx_funct, query)
+            records = self.query_with_tx_funct(self._tx_funct, q)
             relationships = [r['r'] for r in records]
         return relationships
 

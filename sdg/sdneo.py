@@ -4,7 +4,8 @@ from . import DB, logger
 
 class SDNeo:
 
-    def __init__(self, api):
+    def __init__(self, api, db):
+        self.db = db
         self.api = api
 
     def create_graph(self, collection_names):
@@ -66,8 +67,7 @@ class SDNeo:
         tags, tag_nodes, skipped_tags = self.create_nodes(self.api.tag, tag_list)
         return tag_nodes
 
-    @staticmethod
-    def create_nodes(api_method, item_list, *args):
+    def create_nodes(self, api_method, item_list, *args):
         items = []
         skipped = []
         nodes = None
@@ -81,15 +81,14 @@ class SDNeo:
         if items:
             label = items[0].label
             batch = [n.properties for n in items]
-            nodes = DB.batch_of_nodes(label, batch)
+            nodes = self.db.batch_of_nodes(label, batch)
         return items, nodes, skipped
 
-    @staticmethod
-    def create_relationships(source, targets, rel_label):
+    def create_relationships(self, source, targets, rel_label):
         rel = None
         if targets:
             rel_batch = [{'source': source.id, 'target': target.id} for target in targets]
-            rel = DB.batch_of_relationships(rel_batch, rel_label, clause='CREATE')
+            rel = self.db.batch_of_relationships(rel_batch, rel_label, clause='CREATE')
         return rel
 
 
@@ -102,10 +101,10 @@ if __name__ == "__main__":
     api_name = args.api
     if api_name == 'eebapi':
         from .eebapi import EEBAPI
-        sdneo = SDNeo(api=EEBAPI())
+        sdneo = SDNeo(api=EEBAPI(), db=DB)
     else:
         from .sdapi import SDAPI
-        sdneo = SDNeo(api=SDAPI())
+        sdneo = SDNeo(api=SDAPI(), db=DB)
     print(f"Importing: {', '.join(collections)} with api={api_name}")
     graph = sdneo.create_graph(collection_names=collections)
     print(f"Imported {len(graph)} papers.")
