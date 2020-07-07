@@ -1,6 +1,6 @@
 <template lang="pug">
   div
-    h1 Search
+    h5 Search titles, abstracts, figure legends, authors or dois.
     el-form(:inline="true" :model="search")
       el-form-item
         el-input(v-model="search.input" placeholder="keywords, authors, doi" clearable=true prefix-icon="el-icon-search")

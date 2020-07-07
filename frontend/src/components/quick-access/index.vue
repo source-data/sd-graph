@@ -13,11 +13,11 @@
       //-   QuickAccessByMol(@change="onChangeByMol")
       el-tab-pane(label="Automagic selection" name="byAutomagic")
         QuickAccessByAutomagic
-      el-divider
       el-tab-pane(name="fulltextSearch")
         span(slot="label") General search 
           i(class="el-icon-search")
         QuickAccessSearchBar(@submit="onSubmitSearch")
+      el-divider
 </template>
 
 <script>
