@@ -1,5 +1,6 @@
 import os
 import logging
+import sys
 from pathlib import Path
 from dotenv import load_dotenv
 from neotools.db import Instance
@@ -18,6 +19,10 @@ ch.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 ch.setFormatter(formatter)
 logger.addHandler(ch)
+
+consoleHandler = logging.StreamHandler(sys.stdout)
+consoleHandler.setFormatter(formatter)
+logger.addHandler(consoleHandler)
 
 load_dotenv()
 NEO_URI = os.getenv('NEO_URI')
