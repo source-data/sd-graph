@@ -28,15 +28,17 @@ class Query:
     code = ''
     map = {}
     returns = {}
+    _params = {}
 
     def __init__(self, params: Dict = {}):
         """
         A simplistic class for a query. 
 
-        Class attributes:
+        Attributes:
             code (str): the string of the query
             map (Dict(str, List[str, str])): the mapping between the variable in the query (key) and a list with the name of the request parameter and its default value
             returns (List): the keys to use when retrieving the results
+            params (Dict): the value of each parameters to be forwarded in the database transaction
 
         Args:
             params (Dict): the value of each parameters to be forwarded in the database transaction

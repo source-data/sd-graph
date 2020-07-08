@@ -3,14 +3,15 @@ import tweepy
 from string import Template
 from sdg.sdnode import API
 from .queries import TWEET_BY_DOI, ADD_TWITTER_STATUS
+from typing import Dict
 from . import DB, TWITTER, EEB_PUBLIC_API, logger
 
 
 class Content:
 
     template: Template = None
- 
-   def __init__(self, result):
+
+    def __init__(self, result):
         # ['preprint_doi', 'title', 'preprint_date', 'published_doi', 'published_journal_title', 'review_by', 'annot_by']
         self.text = ''
         self.result = result
@@ -26,13 +27,16 @@ class Content:
     def update_substitutions(self, d: Dict):
         self.substitutions = {**self.substitutions, **d}
 
+    def update_text(self):
+        self.text = self.template.substitute(self.substitutions)
+
     def __str__(self):
         return self.text
 
 
 class RefereedPreprintContent(Content):
 
-    template = Template('''#RefereedPreprint $title, preprint doi: https://doi.org/$preprint_doi $reviewed_by_twitter_handle''')
+    template = Template('''#RefereedPreprint by $reviewed_by_twitter_handle \n$title \nPreprint doi: https://doi.org/$preprint_doi''')
     handles = {
         'review commons': '@ReviewCommons',
         'elife': '@eLife',
@@ -48,10 +52,11 @@ class RefereedPreprintContent(Content):
             self.reviewed_by_twitter_handle = self.handles[self.result['review_process']['reviews'][0]['reviewed_by']]
         elif self.result['review_process']['annot']:
             self.reviewed_by_twitter_handle = self.handles[self.result['review_process']['annot']['reviewed_by']]
-        self.substitution = {
+        self.update_substitutions({
             'reviewed_by_twitter_handle': self.reviewed_by_twitter_handle,
-        }
-        self.text = self.template.substitute(self.substitution)
+        })
+        self.update_text()
+
 
 class ByHypContent(Content):
 
@@ -59,10 +64,11 @@ class ByHypContent(Content):
 
     def __init__(self, result):
 
-        self.result['']['']:
-        self.update_substitution = {
-        }
+        self.result['']['']
+        self.update_substitutions({
+        })
         self.text = self.template.substitute(self.substitution)
+
 
 class AutomagicSelectionContent(Content):
 
@@ -133,7 +139,7 @@ class Twitterer:
                             params={
                                 'related_preprint_doi': content.preprint_doi,
                                 'text': status.text,
-                                'id': status.id_str,
+                                'twitter_id': status.id_str,
                                 'created_at': status.created_at.isoformat(),
                                 'hashtags': '///'.join([h['text'] for h in status.entities['hashtags']]),
                             }
@@ -156,8 +162,8 @@ def main():
     limit_date = args.limit_date
     t1 = Twitterer(DB, TWITTER, EEB_API().get_refereed_preprints, RefereedPreprintContent)
     t1.run(limit_date=limit_date)
-    t2 = Twitterer(DB, TWITTER, EEB_API().get_by_hyp, ByHypContent)
-    t2.run(limit_date=limit_date)
+    # t2 = Twitterer(DB, TWITTER, EEB_API().get_by_hyp, ByHypContent)
+    # t2.run(limit_date=limit_date)
 
 
 if __name__ == '__main__':
