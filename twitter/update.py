@@ -1,6 +1,7 @@
 import argparse
 import tweepy
 from string import Template
+import time
 from sdg.sdnode import API
 from .queries import TWEET_BY_DOI, ADD_TWITTER_STATUS
 from typing import Dict
@@ -38,10 +39,10 @@ class RefereedPreprintContent(Content):
 
     template = Template('''#RefereedPreprint by $reviewed_by_twitter_handle \n$title \nPreprint doi: https://doi.org/$preprint_doi''')
     handles = {
-        'review commons': '@ReviewCommons',
-        'elife': '@eLife',
-        'peerage of scienec': '@peeragescience',
-        'embo press': '@embopress',
+        'review commons': 'Review Commons',
+        'elife': 'eLife',
+        'peerage of science': 'Peerage of Science',
+        'embo press': 'EMBO Press',
     }
 
     def __init__(self, result):
@@ -133,6 +134,7 @@ class Twitterer:
             # update the status with this content
             try:
                 status = self.twitter.update_status(str(content))
+                time.sleep(24.0)  # max 150 post + 150 delete  per hour: 3600 sec / 150 = 24sec !!
                 # keep a copy of the status in the database
                 if status:
                     q = ADD_TWITTER_STATUS(
@@ -146,9 +148,8 @@ class Twitterer:
                         )
                     self.db.query(q)
                     logger.info(f"posted: {status.id_str}")
-            except tweepy.error.TweepError as e:
-                print(e)
-                logger.error(str(e))
+            except tweepy.error.TweepError as err:
+                logger.error(f"problem with doi {content.preprint_doi}: {err.reason}")
 
     def run(self, limit_date: str):
         dois = self.to_be_tweeted(limit_date)
@@ -162,8 +163,6 @@ def main():
     limit_date = args.limit_date
     t1 = Twitterer(DB, TWITTER, EEB_API().get_refereed_preprints, RefereedPreprintContent)
     t1.run(limit_date=limit_date)
-    # t2 = Twitterer(DB, TWITTER, EEB_API().get_by_hyp, ByHypContent)
-    # t2.run(limit_date=limit_date)
 
 
 if __name__ == '__main__':

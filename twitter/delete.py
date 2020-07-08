@@ -1,5 +1,6 @@
 from typing import List
 import argparse
+import time
 from tweepy.error import TweepError
 from .queries import DELETE_TWEET, ALL_TWEETS, TWEET_BY_ID
 from . import DB, TWITTER, logger
@@ -20,11 +21,12 @@ class Twideleter:
         if self.db.exists(TWEET_BY_ID(params={'twitter_id': twitter_id})):
             try:
                 self.twitter.destroy_status(twitter_id)
+                time.sleep(24.0)  # max 150 post + 150 delete per hour: 3600 sec / 150 = 24sec !!
             except TweepError as e:
-                logger.error(f"twitter_id={twitter_id}: {e}")
-            q = DELETE_TWEET(params={'twitter_id': twitter_id})
-            db_response = self.db.query(q)
-            logger.info(f"deleted twitter status: {twitter_id}")
+                logger.error(f"problem with twitter_id {twitter_id}: {e}")
+                q = DELETE_TWEET(params={'twitter_id': twitter_id})
+                db_response = self.db.query(q)
+                logger.info(f"deleted twitter status: {twitter_id}")
         else:
             logger.error(f"twitter status: {twitter_id} is not in the database and was NOT deleted on Twitter!")
 
