@@ -84,7 +84,14 @@ export default {
       () => this.$store.commit('incrementInit'))
     this.$store.dispatch('byReviewingService/getAll').then(
       () => {
-        this.$store.dispatch('highlights/listByCurrent', 'byReviewingService')
+        this.$store.dispatch('highlights/listByCurrent', 'byReviewingService').then(
+          () => {
+            this.$store.commit('highlights/sortRecords', {
+              sortBy: 'posting_date',
+              direction: 'desc',
+            })
+          }
+        )
       }
     ).then(
           () => this.$store.commit('incrementInit')
