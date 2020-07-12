@@ -23,7 +23,7 @@ class SDArticle(BaseArticle):
         self.update_properties({
             'pmid': self.pmid,
             'import_id': self.import_id,
-            'year': self.year,
+            'year': self.year,  # unfortunately SD has no pub_date properties
             'nb_figures': self.nb_figures,
             'source': 'sdapi',
         })

@@ -25,7 +25,7 @@ ORDER BY version DESC
 // keep only the most recent version of the article
 WITH DISTINCT reviewing, COLLECT(DISTINCT a)[0] AS most_recent, review, annot
 // get the figures
-OPTIONAL MATCH (most_recent)-->(f:Fig) //WARNING THIS WILL FAIL FOR PRELIM ENTRIES! NEED TO BE OPTIONAL MATCH
+MATCH (most_recent)-->(f:Fig) // even prelim entries from source: "biorxiv_crossref" have empty figures instead of NULL
 // eliminate figures without a caption such as graphical abstracts etc
 WHERE EXISTS(f.caption) AND EXISTS(f.label)
 WITH DISTINCT
@@ -36,7 +36,7 @@ ORDER BY
 WITH DISTINCT
    reviewing, doi, pub_date, fig_label, caption, position_idx
 MERGE (paper:VizPaper {id: reviewing.name, doi: doi, query: "by_reviewing_service", pub_date: pub_date, rank: pub_date})
-CREATE (paper)-[:HasInfo]->(info:VizInfo {title: fig_label, text: caption, rank: position_idx}) // CREATE could becom problematic and cause duplicates
+MERGE (paper)-[:HasInfo]->(info:VizInfo {title: fig_label, text: caption, rank: position_idx}) // MERGE cannot be used if properties are NULL; this happens for prelim entries where no figs available yet; but CREATE could becom problematic and cause duplicates
 //RETURN paper, info;
 RETURN COUNT(DISTINCT paper) AS `papers in the by reviewing service`;
 

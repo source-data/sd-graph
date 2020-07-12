@@ -468,7 +468,7 @@ MATCH (a:Article)
 WITH COUNT(a) AS N_jats
 MATCH (sd:SDPanel {source: 'sdapi'})
 WITH COUNT(sd) AS N_sdapi, N_jats
-MATCH (eeb:SDArticle {source: 'eebapi'})
+OPTIONAL MATCH (eeb:SDArticle {source: 'eebapi'})
 WITH COUNT(eeb) AS N_eeb, N_sdapi, N_jats
 MATCH (n)
 WITH COUNT(n) AS N_nodes, N_eeb, N_sdapi, N_jats

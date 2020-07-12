@@ -10,7 +10,7 @@ class MATCH_DOI(Query):
 class NotYetPublished(Query):
     code = '''
 MATCH (a:Article)
-WHERE NOT EXISTS(a.published)
+WHERE NOT EXISTS(a.journal_doi)
 RETURN DISTINCT a.doi AS doi
     '''
     returns = ['doi']
@@ -19,8 +19,7 @@ RETURN DISTINCT a.doi AS doi
 class UpdatePublicationStatus(Query):
     code = '''
 MATCH (a:Article {doi: $preprint_doi})
-SET a.journal_doi = $published_doi
-SET a.published_journal_title = $published_journal_title
+SET a.journal_doi = $published_doi, a.published_journal_title = $published_journal_title
 RETURN a
     '''
     map = {'preprint_doi': [], 'published_doi': [], 'published_journal_title': []}

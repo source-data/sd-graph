@@ -1,4 +1,6 @@
 import argparse
+from typing import List
+from .queries import SDARTICLE_LOADING_STATUS, DELETE_TREE, SET_STATUS
 from . import DB, logger
 
 
@@ -18,8 +20,24 @@ class SDNeo:
         self.create_articles(children)  # children should be unique
         return collections
 
-    def create_articles(self, article_list):
-        articles, article_nodes, skipped_articles = self.create_nodes(self.api.article, article_list)
+    def create_articles(self, doi_list: List[str]):
+        def filter_existing_complete_articles(doi_list: List[str]):
+            filtered_list = []
+            for doi in doi_list:
+                results = self.db.query(SDARTICLE_LOADING_STATUS(params={'doi': doi}))  # 'complete' | 'partial' | 'absent'
+                if results:
+                    if results[0]['status'] == 'partial':
+                        self.db.query(DELETE_TREE(params={'doi': doi}))
+                        print(f"deleted tree for {doi}")
+                        filtered_list.append(doi)
+                else:
+                    filtered_list.append(doi)
+            return filtered_list
+
+        filtered_doi_list = filter_existing_complete_articles(doi_list)
+        articles, article_nodes, skipped_articles = self.create_nodes(self.api.article, filtered_doi_list)
+        for a in articles:
+            self.db.query(SET_STATUS(params={'doi': a.doi, 'status': 'partial'}))
         if skipped_articles:
             logger.warning(f"Skipped articles: {', '.join([a.doi for a in skipped_articles])}")
         for a, a_node in zip(articles, article_nodes):
@@ -31,6 +49,7 @@ class SDNeo:
                 print(f"article {a.doi}")
                 figure_nodes = self.create_figures(a.children, a.doi)
                 self.create_relationships(a_node, figure_nodes, 'has_fig')
+                self.db.query(SET_STATUS(params={'doi': a.doi, 'status': 'complete'}))
         return article_nodes
 
     def create_figures(self, figure_list, doi):
@@ -70,14 +89,13 @@ class SDNeo:
     def create_nodes(self, api_method, item_list, *args):
         items = []
         skipped = []
-        nodes = None
+        nodes = []
         for item in item_list:
             a = api_method(item, *args)
             if a is not None:
                 items.append(a)
             else:
                 skipped.append(item)
-        # time.sleep(0.1)
         if items:
             label = items[0].label
             batch = [n.properties for n in items]

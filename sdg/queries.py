@@ -39,3 +39,46 @@ ORDER BY panel_label ASC
     '''
     map = {'id': []}
     returns = ['caption', 'formatted_caption', 'panel_label', 'panel_id', 'href', 'tags']
+
+
+class SDARTICLE_LOADING_STATUS(Query):
+
+    code = '''
+MATCH (a:SDArticle {doi: $doi})
+RETURN a.status as status
+    '''
+    map = {'doi': []}
+    returns = ['status']
+
+
+class DELETE_TREE(Query):
+    code = '''
+MATCH (a:SDArticle {doi: $doi})-[r1]->(f:SDFigure)-[r2]->(p:SDPanel)-[r3]->(t:SDTag)
+WITH a, f, p, t, r1, r2, r3
+DELETE r3
+WITH a, f, p, t, r1, r2
+DELETE t
+WITH a, f, p, r1, r2
+DELETE r2
+WITH a, f, p, r1
+DELETE p
+WITH a, f, r1
+DELETE r1
+WITH a, f
+DELETE f
+WITH a
+DELETE a
+RETURN COUNT(DISTINCT a) AS article_deleted
+    '''
+    map = {'doi': []}
+    returns = ['article_deleted']
+
+
+class SET_STATUS(Query):
+    code = '''
+    MATCH (a:SDArticle {doi: $doi})
+    SET a.status = $status
+    RETURN a
+    '''
+    map = {'doi': [], 'status': []}
+    returns = ['a']

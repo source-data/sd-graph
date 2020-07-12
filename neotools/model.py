@@ -206,8 +206,20 @@ CROSSREF_PREPRINT_API_GRAPH_MODEL = {
                     'properties': {
                         'text': lambda text: text
                     }
-                }
-            }
+                },
+            },
+        },
+        'has_figure': {
+            'path': {
+                'type': 'fig',
+                'funct': lambda d: [{'label': 'not available', 'caption': 'not available', 'title': 'not available', 'graphic': ''}]
+            },
+            'properties': {
+                'label': lambda d: d.get('label', ''),
+                'caption': lambda d: d.get('caption', ''),
+                'title': lambda d: d.get('title', ''),
+                'graphic': lambda d: d.get('graphic', ''),
+            },
         }
     }
 }

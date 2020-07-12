@@ -22,16 +22,16 @@ docker-compose down --volumes # to clean the content of the volumes
 
 This can solve some issues, for example if you run `build` with a wrong config file.
 
-Normally you just need this:
+Normally you need this:
 ```bash
 docker-compose  build
 docker-compose up -d
-cat neotools/purge_prelim.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p  # remove prelim articles obtained from CrossRef and biorxiv api
+cat neotools/purge_prelim.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p  # remove prelim articles obtained from the CrossRef and bioRxiv APIs
 docker-compose run --rm flask python -m neotools.rxiv2neo data/<path_to_meca_archives> --type meca  # import full text biorxiv preprints
 docker-compose run --rm flask python -m neotools.rxiv2neo data/<path_to_cord19_archives> --type cord19  # import full text MedRxiv preprints (experimental)
 docker-compose run --rm flask python -m peerreview.neohypo  # import peer reviews from hypothesis and updates publication status
 docker-compose run --rm flask python -m sdg.sdneo <collection_name> --api sdapi  # import source data public data
-docker-compose run --rm flask python -m sdg.sdneo <covid19|refereed-preprints> --api eebapi  # smarttag collection of preprints
+docker-compose run --rm flask python -m sdg.sdneo covid19 --api eebapi  # smarttag collection of preprints
 cat sdg/SD-indices.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>  # define indices
 cat sdg/SD-processing.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>  # generate merged graph
 cat sdg/SD-precompute.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD> # precompute the graph used by front end

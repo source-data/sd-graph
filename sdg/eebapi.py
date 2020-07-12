@@ -58,9 +58,7 @@ class SDCollection(BaseCollection):
 class SDArticle(BaseArticle):
     def __init__(self, data):
         super().__init__(data)
-        self.pub_date = self.get('pub_date', '')
         self.update_properties({
-            'pub_date': self.pub_date,
             'source': 'eebapi',
         })
         self.children = range(self.nb_figures)

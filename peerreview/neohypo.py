@@ -1,5 +1,6 @@
 import re
-from typing import Dict, List
+from typing import Dict
+from neotools.utils import progress
 from . import HYPO, DB
 from .queries import (
     NotYetPublished, UpdatePublicationStatus,
@@ -144,7 +145,7 @@ class Hypothelink:
     def run(self, group_ids):
         for group_id in group_ids:
             hypo_rows = self.get_annot_from_hypo(group_id)
-            for i, row in enumerate(hypo_rows):
+            for row in hypo_rows:
                 peer_review_node = self.hypo2node(row)
                 peer_review_node.update_properties({'reviewed_by': GROUP_IDS[group_id]})
                 peer_review_neo = self.db.node(peer_review_node, clause="MERGE")
@@ -193,7 +194,7 @@ class Hypothelink:
             data_biorxiv = self.biorxiv.details(doi)
             data = self.crossref.details(doi)
             if data and data_biorxiv:
-                data['abstract'] = data_biorxiv['abstract']  # abstract in bioarxiv is plain text while CrossRef has jats namespaced formatting tags
+                data['abstract'] = data_biorxiv['abstract']  # abstract in bioRxiv is plain text while CrossRef has jats namespaced formatting tags
                 prelim = JSONNode(data, CROSSREF_PREPRINT_API_GRAPH_MODEL)
                 prelim.properties['version'] = data_biorxiv['version']
                 # add nodes to database
@@ -226,22 +227,26 @@ class PublicationUpdate:
 
     def update_status(self, preprint_doi, published_doi):
         cross_ref_metadata = self.crossref.details(published_doi)
+        published_journal_title = cross_ref_metadata.get('container-title', '')
         params = {
             'preprint_doi': preprint_doi,
             'published_doi': published_doi,
-            'published_journal_title': cross_ref_metadata.get('container-title', ''),
+            'published_journal_title': published_journal_title,
         }
         update_published_status = UpdatePublicationStatus(params=params)
         self.db.query(update_published_status)
-        return cross_ref_metadata.get('container-title', '')
+        return published_journal_title
 
     def run(self):
         not_yet_published = self.get_not_published()
-        for preprint_doi in not_yet_published:
+        msg = ''
+        N = len(not_yet_published)
+        for i, preprint_doi in enumerate(not_yet_published):
             published_doi = self.check_publication_status(preprint_doi)
             if (published_doi is not None) and (published_doi != "NA"):
                 journal = self.update_status(preprint_doi, published_doi)
-                print(f"preprint {preprint_doi} has been published as {published_doi} in {journal}")
+                msg = f"{preprint_doi} --> {published_doi} in {journal}                    "
+            progress(i, N, msg)
 
 
 def main():

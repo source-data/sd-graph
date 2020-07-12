@@ -5,6 +5,28 @@ CREATE CONSTRAINT ON (h:H_Entity) ASSERT h.combo_id IS UNIQUE;
 //CREATE CONSTRAINT ON (h:H_Entity) ASSERT (h.ext_id, h.type, h.category, h.name) IS NODE KEY; //only neo4j Enterprise!
 CREATE CONSTRAINT ON (te:Term) ASSERT te.text IS UNIQUE;
 
+// purge processed nodes
+// prelimin solution before proper combined keys are implemented that will allow using MERGE instead of CREATE cond Tags
+
+MATCH (ct:CondTag)-[r]-()
+WITH ct, r
+DELETE r
+WITH ct
+DELETE ct
+RETURN COUNT(DISTINCT ct) AS `deleted CondTag`;
+
+MATCH (h:H_Entity)-[r]-()
+WITH h, r
+DELETE r
+WITH h
+DELETE h
+RETURN COUNT(DISTINCT h) AS `deleted H_Entity`;
+
+MATCH (t:Term)
+DELETE t
+RETURN COUNT(DISTINCT t) AS `deleted Term`;
+
+
 //journal name to lower case
 MATCH (a:SDArticle)
 SET a.journalName = toLower(a.journalName);
@@ -203,6 +225,7 @@ WITH DISTINCT
   au
 MERGE (sd)-[r:has_author]->(au)
 RETURN COUNT(DISTINCT r) AS N_auth_relationships;
+
 
 //create hypotheses summaries at paper level
 

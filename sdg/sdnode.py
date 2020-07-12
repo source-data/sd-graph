@@ -64,11 +64,13 @@ class BaseArticle(SDNode):
         self.journal = self.get('journal', '')
         self.doi = self.get('doi', '')
         self.nb_figures = int(self.get('nb_figures', 0))
+        self.pub_date = self.get('pub_date', '1900-01-01')
         self.update_properties({
             'doi': self.doi,
             'title': self.title,
             'journalName': self.journal,
             'nb_figures': self.nb_figures,
+            'pub_date': self.pub_date,
         })
         self.children = range(self.nb_figures)
 
