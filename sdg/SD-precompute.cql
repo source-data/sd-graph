@@ -28,15 +28,28 @@ WITH DISTINCT reviewing, COLLECT(DISTINCT a)[0] AS most_recent, review, annot
 MATCH (most_recent)-->(f:Fig) // even prelim entries from source: "biorxiv_crossref" have empty figures instead of NULL
 // eliminate figures without a caption such as graphical abstracts etc
 WHERE EXISTS(f.caption) AND EXISTS(f.label)
+//identify the most recent peer review date from review or from peer review material
 WITH DISTINCT
-    reviewing, most_recent.doi AS doi, most_recent.publication_date AS pub_date, review, annot,
-    f.label AS fig_label, f.caption AS caption, f.position_idx AS position_idx, f
+    reviewing, most_recent, f,
+    COLLECT(DISTINCT DATETIME(review.posting_date)) + COLLECT(DISTINCT DATETIME(annot.posting_date)) AS peer_review_dates
+UNWIND peer_review_dates AS peer_review_date
+// remove duplicate and sort to hvae most recent peer review date first
+WITH DISTINCT
+    reviewing, most_recent, f, peer_review_date
+ORDER BY peer_review_date DESC
+// keep most recent peer review date
+WITH DISTINCT
+    reviewing, most_recent, f, COLLECT(DISTINCT peer_review_date)[0] AS review_date
+// retrieve now the actual peer reviews
+OPTIONAL MATCH (most_recent)-[r:HasReview]->(review:Review {reviewed_by: reviewing.name})
+OPTIONAL MATCH (most_recent)-[:HasAnnot]->(annot:PeerReviewMaterial {reviewed_by: reviewing.name})
+WITH DISTINCT
+    reviewing, review_date, most_recent.doi AS doi, most_recent.publication_date AS pub_date, 
+    f.label AS fig_label, f.caption AS caption, f.position_idx AS position_idx
 ORDER BY
     reviewing.rank ASC, pub_date DESC, position_idx ASC
-WITH DISTINCT
-   reviewing, doi, pub_date, fig_label, caption, position_idx
-MERGE (paper:VizPaper {id: reviewing.name, doi: doi, query: "by_reviewing_service", pub_date: pub_date, rank: pub_date})
-MERGE (paper)-[:HasInfo]->(info:VizInfo {title: fig_label, text: caption, rank: position_idx}) // MERGE cannot be used if properties are NULL; this happens for prelim entries where no figs available yet; but CREATE could becom problematic and cause duplicates
+MERGE (paper:VizPaper {id: reviewing.name, doi: doi, query: "by_reviewing_service", pub_date: pub_date, peer_review_date: review_date, rank: pub_date})
+MERGE (paper)-[:HasInfo]->(info:VizInfo {title: fig_label, text: caption, rank: position_idx}) // MERGE cannot be used if properties are NULL; this is why prelim entries are linked to empty figs
 //RETURN paper, info;
 RETURN COUNT(DISTINCT paper) AS `papers in the by reviewing service`;
 

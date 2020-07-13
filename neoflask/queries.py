@@ -171,7 +171,7 @@ class BY_REVIEWING_SERVICE(Query):
     code = '''
 // Using precomputed Viz nodes
 MATCH (paper:VizPaper {query: "by_reviewing_service"})
-WHERE DATETIME(paper.pub_date) > DATETIME($limit_date)
+WHERE DATETIME(paper.peer_review_date) > DATETIME($limit_date)
 OPTIONAL MATCH (paper)-[:HasInfo]->(info:VizInfo)
 WITH DISTINCT
    paper, info,
@@ -184,7 +184,7 @@ WITH DISTINCT
 RETURN
     paper.id AS id,
     paper.id AS name,
-    COLLECT(DISTINCT {doi: paper.doi, info: info_cards, pub_date: paper.pub_date}) AS papers
+    COLLECT(DISTINCT {doi: paper.doi, info: info_cards, pub_date: paper.pub_date, peer_review_date: toString(paper.peer_review_date)}) AS papers
   '''
     map = {'limit_date': []}
     returns = ['name', 'id', 'papers']
