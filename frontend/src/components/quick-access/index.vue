@@ -3,19 +3,29 @@
     h1 Quick Access 
       el-button(v-if="loadingRecords" circle plain type="primary" :loading="true" size="mini" style="padding:2px") 
     el-tabs(@tab-click="onSelectTab" tab-position="top" v-model="activeTab")
-      el-tab-pane(label="Refereed Preprints" name="byReviewingService")
+      el-tab-pane(name="byReviewingService")
+        span(slot="label") 
+          i(class="el-icon-reading")
+          |  Refereed Preprints
         QuickAccessByReviewingService(@change="onChangeByReviewingService")
       //- el-tab-pane(label="By Method")
       //-   QuickAccessByMethod(@change="onChangeByMethod")
-      el-tab-pane(label="COVID-19 hypotheses" name="byHyp")
+      el-tab-pane(name="byHyp")
+        span(slot="label")
+          i(class="fas el-icon-fa-flask")
+          |  COVID-19 hypotheses
         QuickAccessByHyp(@change="onChangeByHyp")
       //- el-tab-pane(label="By Molecule")
       //-   QuickAccessByMol(@change="onChangeByMol")
-      el-tab-pane(label="Automagic selection" name="byAutomagic")
+      el-tab-pane(name="byAutomagic")
+        span(slot="label")
+          i(class="el-icon-magic-stick")
+          |  Automagic selection
         QuickAccessByAutomagic
       el-tab-pane(name="fulltextSearch")
-        span(slot="label") General search 
+        span(slot="label")
           i(class="el-icon-search")
+          |  General search 
         QuickAccessSearchBar(@submit="onSubmitSearch")
       el-divider
 </template>
