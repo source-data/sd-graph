@@ -67,7 +67,7 @@ export default {
     * NAVIGATION
     */
     setIsLoading (state) {
-      state.loadingRecords = false
+      state.loadingRecords = true
     },
     setNotLoading (state) {
       state.loadingRecords = false

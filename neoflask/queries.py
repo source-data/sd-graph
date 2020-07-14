@@ -386,7 +386,7 @@ WITH
 ORDER BY weighted_score DESC
 RETURN 
 // entities is obligatory field for info for compatibility with the other methods
-  doi, [{title: source + " ("+weighted_score+")", text: text, entities: []}] AS info, weighted_score, source, query
+  doi, [{title: "'" + $query + "' found in " + source, text: text, entities: []}] AS info, weighted_score, source, query
 
 UNION
 
@@ -396,11 +396,11 @@ CALL db.index.fulltext.queryNodes("abstract", query) YIELD node, score
 WITH node, score, query
 WHERE node.journalName = "biorxiv"
 WITH
-// weight 2x for results on title
+// weight 2x for results on abstract
   node.doi AS doi, node.title as text, 1 * score AS weighted_score, "abstract" as source, query
 ORDER BY weighted_score DESC
 RETURN 
-  doi, [{title: source + " ("+weighted_score+")", text: text, entities: []}] AS info, weighted_score, source, query
+  doi, [{title: "'" + $query + "' found in " + source, text: text, entities: []}] AS info, weighted_score, source, query
 LIMIT 20
 
 UNION
@@ -414,7 +414,7 @@ WITH DISTINCT
   article.doi as doi, node.caption as text, 1 * score AS weighted_score, "caption" AS source, query
 ORDER BY weighted_score DESC
 RETURN 
-  doi, [{title: source + " ("+weighted_score+")", text: text, entities: []}] AS info, weighted_score, source, query
+  doi, [{title: "'" + $query + "' found in " + source, text: text, entities: []}] AS info, weighted_score, source, query
 LIMIT 20
 
 //UNION
@@ -428,7 +428,7 @@ LIMIT 20
 //  sd_article.doi as doi, h.name as text, 1.0 * score AS weighted_score, "entity" as source, query
 //ORDER BY score DESC
 //RETURN 
-//  doi, [{title: source + " ("+weighted_score+")", text: text, entities: []}] AS info, weighted_score, source, query
+//  doi, [{title: "'" + $query + "' found in " + source, text: text, entities: []}] AS info, weighted_score, source, query
 //LIMIT 20
 
 UNION
@@ -440,10 +440,10 @@ MATCH (article:SDArticle {journalName: "biorxiv"})-->(author:Contrib)
 WHERE author.surname = node.surname AND author.given_names = node.given_names
 WITH DISTINCT
 //weight 4x for results on authors
-  article.doi as doi, node.surname as text, 1 * score AS weighted_score, "author" AS source, query
+  article.doi as doi, node.surname as text, 1 * score AS weighted_score, "author list" AS source, query
 ORDER BY weighted_score DESC
 RETURN 
-  doi, [{title: source + " ("+weighted_score+")", text: text, entities: []}] AS info, weighted_score, source, query
+  doi, [{title: $query + " found in " + source, text: text, entities: []}] AS info, weighted_score, source, query
 LIMIT 20
 '''
     map = {'query': []}
