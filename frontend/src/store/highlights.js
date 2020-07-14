@@ -6,6 +6,8 @@ export default {
     records: {},
     loadingRecords: false,
     selectedTab: undefined,
+    sortBy: 'posting_date',
+    sortDirection: 'desc',
   },
   getters: {
     records (state) {
@@ -17,6 +19,12 @@ export default {
     selectedTab (state) {
       return state.selectedTab
     },
+    getSortBy (state) {
+      return state.sortBy
+    },
+    getSortDirection (state) {
+      return state.sortDirection
+    }
   },
   mutations: {
     updateSelectedTab (state, selectedTab) {
@@ -28,7 +36,13 @@ export default {
     resetRecords (state) {
        state.records = {}
     },
-    sortRecords (state, { sortBy, direction }) {
+    setSortBy (state, { value }) {
+      state.sortBy = value
+    },
+    setSortDirection (state, { value }) {
+      state.sortDirection = value
+    },
+    sortRecords (state) {
       // sort records based on the property prop
       // default direction is ascending unless specified as 'desc'
       // computable sort metric defined by applying funct to the sorting property
@@ -45,8 +59,8 @@ export default {
           .reduce(most_recent, new Date('2000-01-01'))
         }
       }
-      const sort_metric = sortMethod[sortBy]
-      const sign = direction === 'desc' ? -1 : 1
+      const sort_metric = sortMethod[state.sortBy]
+      const sign = state.sortDirection == 'desc' ? -1 : 1
       const sortedRecords = Object.values(state.records).slice().sort(
           (a, b) => sign * (sort_metric(a) - sort_metric(b))
         )
@@ -78,11 +92,9 @@ export default {
       commit('setIsLoading')
       const current = rootGetters[[module, 'currentRecord'].join('/')]
       const loadComplete = rootGetters[[module, 'isLoaded'].join('/')]
-      console.debug("current", current)
       if (loadComplete) {
         if ('papers' in current) {
           const dois = current.papers.map(c => c.doi)
-          console.debug('im hihlights dois', dois)
           const promises = dois.map((doi) => {
             return httpClient.get(`/api/v1/doi/${doi}`)
           })
@@ -93,10 +105,10 @@ export default {
             const records = non_empty.reduce((acc, r) => {
               return [preProcessRecord(r.data[0], current), ...acc]
             }, [])
-            console.debug('records in highlights js', records)
             commit('addRecords', records)
             return records
           }).finally(() => {
+            commit('sortRecords')
             commit('setNotLoading')
           })
         } else {

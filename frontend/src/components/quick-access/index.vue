@@ -20,12 +20,12 @@
       el-tab-pane(name="byAutomagic")
         span(slot="label")
           i(class="el-icon-magic-stick")
-          |  Automagic selection
+          |  Automagic COVID-19 selection
         QuickAccessByAutomagic
       el-tab-pane(name="fulltextSearch")
         span(slot="label")
           i(class="el-icon-search")
-          |  General search 
+          |  Search COVID-19 preprints
         QuickAccessSearchBar(@submit="onSubmitSearch")
       el-divider
 </template>

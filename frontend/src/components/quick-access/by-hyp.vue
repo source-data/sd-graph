@@ -9,7 +9,6 @@
           i(class="el-icon-question")
           i(class="el-icon-right")
           el-tag(v-for="meas_var in hyp.hyp.meas_v" size="mini" type="" effect="dark") {{ meas_var }} 
-      br
 </template>
 
 <script>

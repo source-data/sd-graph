@@ -22,7 +22,10 @@
             inactive-value="desc"
             inactive-color="#409EFF"
           )
-    HighlitedListItem(:article="article" v-for="article in records")
+    div(v-if="records.length > 0")
+        HighlitedListItem(:article="article" v-for="article in records")
+    div(v-else)
+        p No results
 </template>
 
 <script>
@@ -42,10 +45,9 @@ export default {
   },
   methods: {
     sortRecords() {
-      this.$store.commit('highlights/sortRecords', {
-        sortBy: this.sortBy,
-        direction: this.sortDirection,
-      })
+      this.$store.commit('highlights/setSortBy', {value: this.sortBy})
+      this.$store.commit('highlights/setSortDirection', {value: this.sortDirection})
+      this.$store.commit('highlights/sortRecords')
     },
   },
   computed: {

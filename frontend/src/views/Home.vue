@@ -8,13 +8,13 @@
           el-link(type="primary" href="https://biorxiv.org") bioRxiv
           |  preprints. 
         p The EEB platform is a technology experiment developed by  
-          el-link(type="primary" href="https://embopress.org") EMBO Press.
+          el-link(type="primary" href="https://embopress.org") EMBO Press. 
           
-        p EEB e users browsing preprints in several ways
+        p EEB helps user to browse preprints in several ways
         ul
-          li Expert reviews linked to preprpints provide in-depth analyses of the reported evidence.
+          li Expert reviews linked to preprints provide in-depth analyses of the reported evidence.
           li Hypotheses related to the biology of SARS-CoV-2/COVID-19 are highlighted and linked to the reespective studies.
-          li A selection of recent preprints are  highlighted based on the variety of experimental approaches used and the number of biological topics investigated.
+          li A selection of recent SARS-CoV-2 preprints are  highlighted based on the variety of experimental approaches used and the number of biological topics investigated.
     el-row
       el-col(:span="20" :offset="2")
         div(v-if="progressStep() < 4")
