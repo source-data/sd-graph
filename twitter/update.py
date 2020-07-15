@@ -8,6 +8,10 @@ from typing import Dict
 from . import DB, TWITTER, EEB_PUBLIC_API, logger
 
 
+TWITTER_MAX_LENGTH = 280
+DEBUG = True
+
+
 class Content:
 
     template: Template = None
@@ -29,7 +33,13 @@ class Content:
         self.substitutions = {**self.substitutions, **d}
 
     def update_text(self):
-        self.text = self.template.substitute(self.substitutions)
+        text = self.template.substitute(self.substitutions)
+        L = len(text)
+        if L > TWITTER_MAX_LENGTH:
+            diff = L - TWITTER_MAX_LENGTH + 3
+            self.substitutions['title'] = self.substitutions['title'][:-diff] + '...'
+            text = self.template.substitute(self.substitutions)
+        self.text = text
 
     def __str__(self):
         return self.text
@@ -38,7 +48,7 @@ class Content:
 class RefereedPreprintContent(Content):
 
     template = Template('''#RefereedPreprint by $reviewed_by_twitter_handle \n$title \nPreprint doi: https://doi.org/$preprint_doi''')
-    handles = {
+    mentions = {
         'review commons': 'Review Commons',
         'elife': 'eLife',
         'peerage of science': 'Peerage of Science',
@@ -47,12 +57,10 @@ class RefereedPreprintContent(Content):
 
     def __init__(self, result):
         super().__init__(result)
-        # self.published_doi = self.result.get('journal_doi', '')
-        # self.published_journal_title = self.result.get('published_journal_title', '')
         if self.result['review_process']['reviews']:
-            self.reviewed_by_twitter_handle = self.handles[self.result['review_process']['reviews'][0]['reviewed_by']]
+            self.reviewed_by_twitter_handle = self.mentions[self.result['review_process']['reviews'][0]['reviewed_by']]
         elif self.result['review_process']['annot']:
-            self.reviewed_by_twitter_handle = self.handles[self.result['review_process']['annot']['reviewed_by']]
+            self.reviewed_by_twitter_handle = self.mentions[self.result['review_process']['annot']['reviewed_by']]
         self.update_substitutions({
             'reviewed_by_twitter_handle': self.reviewed_by_twitter_handle,
         })
@@ -112,29 +120,42 @@ class Twitterer:
 
     def to_be_tweeted(self, limit_date: str):
         results = self.eeb_method(limit_date)
-        not_yet_tweeted = self.filter_not_tweeted(results)
-        return not_yet_tweeted
+        unpublished_records = self.filter_unpublished(results)
+        not_yet_tweeted_records = self.filter_not_tweeted(unpublished_records)
+        return not_yet_tweeted_records
 
-    def filter_not_tweeted(self, results):
-        filtered = []
+    def filter_unpublished(self, results):
+        filtered_records = []
         for collection in results:
             for r in collection['papers']:
-                doi = r['doi']
-                already_tweeted = self.db.exists(TWEET_BY_DOI(params={'doi': doi}))
-                if not already_tweeted:
-                    filtered.append(doi)
-        return filtered
+                doi = r.get('doi', '')
+                record = self.eeb_by_doi(doi)[0]
+                already_published = record.get('journal_doi', '')
+                if not already_published:
+                    filtered_records.append(record)
+        return filtered_records
 
-    def update_status(self, dois):
-        for doi in dois:
-            # fetch the full record, include reviews etc..
-            record = self.eeb_by_doi(doi)
+    def filter_not_tweeted(self, records):
+        filtered_records = []
+        for record in records:
+            doi = record['doi']
+            already_tweeted = self.db.exists(TWEET_BY_DOI(params={'doi': doi}))
+            if not already_tweeted:
+                filtered_records.append(record)
+        return filtered_records
+
+    def update_status(self, records):
+        for record in records:
             # parse the record to extract what is necessary to make tweet content
-            content = self.ContentClass(record[0])
+            content = self.ContentClass(record)
             # update the status with this content
             try:
-                status = self.twitter.update_status(str(content))
-                time.sleep(24.0)  # max 150 post + 150 delete  per hour: 3600 sec / 150 = 24sec !!
+                if DEBUG:
+                    print(content)
+                    status = False
+                else:
+                    status = self.twitter.update_status(str(content))
+                    time.sleep(24.0)  # max 150 post + 150 delete  per hour: 3600 sec / 150 = 24sec !!
                 # keep a copy of the status in the database
                 if status:
                     q = ADD_TWITTER_STATUS(
@@ -158,8 +179,10 @@ class Twitterer:
 
 def main():
     parser = argparse.ArgumentParser(description="Post eeb highlights on Twitter.")
-    parser.add_argument('--limit-date', help='Limit the post for preprint posted after the limit date') # TODO: pub_limit_date vs review_limit_date
+    parser.add_argument('--limit-date', default='2020-07-01', help='Limit the post for preprint posted after the limit date')
+    parser.add_argument('--GO_LIVE', action='store_true', help='This flag MUST be add to post updates on twitter and switch off debug mode.')
     args = parser.parse_args()
+    DEBUG = not args.GO_LIVE
     limit_date = args.limit_date
     t1 = Twitterer(DB, TWITTER, EEB_API().get_refereed_preprints, RefereedPreprintContent)
     t1.run(limit_date=limit_date)
