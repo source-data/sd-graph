@@ -9,7 +9,6 @@ from . import DB, TWITTER, EEB_PUBLIC_API, logger
 
 
 TWITTER_MAX_LENGTH = 280
-DEBUG = True
 
 
 class Content:
@@ -111,12 +110,13 @@ class EEB_API(API):
 
 class Twitterer:
 
-    def __init__(self, db, twitter, eeb_method, ContentClass):
+    def __init__(self, db, twitter, eeb_method, ContentClass, debug=True):
         self.db = db
         self.twitter = twitter
         self.eeb_by_doi = EEB_API().by_doi
         self.eeb_method = eeb_method
         self.ContentClass = ContentClass
+        self.debug = debug
 
     def to_be_tweeted(self, limit_date: str):
         results = self.eeb_method(limit_date)
@@ -150,8 +150,8 @@ class Twitterer:
             content = self.ContentClass(record)
             # update the status with this content
             try:
-                if DEBUG:
-                    print(content)
+                if self.debug:
+                    logger.info(f"debug mode post: \n{content}")
                     status = False
                 else:
                     status = self.twitter.update_status(str(content))
@@ -180,11 +180,11 @@ class Twitterer:
 def main():
     parser = argparse.ArgumentParser(description="Post eeb highlights on Twitter.")
     parser.add_argument('--limit-date', default='2020-07-01', help='Limit the post for preprint posted after the limit date')
-    parser.add_argument('--GO_LIVE', action='store_true', help='This flag MUST be add to post updates on twitter and switch off debug mode.')
+    parser.add_argument('--GO_LIVE', action='store_true', help='This flag MUST be added to post updates on twitter and switch off debug mode.')
     args = parser.parse_args()
-    DEBUG = not args.GO_LIVE
+    debug = not args.GO_LIVE
     limit_date = args.limit_date
-    t1 = Twitterer(DB, TWITTER, EEB_API().get_refereed_preprints, RefereedPreprintContent)
+    t1 = Twitterer(DB, TWITTER, EEB_API().get_refereed_preprints, RefereedPreprintContent, debug=debug)
     t1.run(limit_date=limit_date)
 
 
