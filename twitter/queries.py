@@ -28,12 +28,11 @@ RETURN DISTINCT t
 class TWEET_BY_DOI(Query):
 
     code = '''
-MATCH (a {doi: $doi})
-WHERE (a)-[:Tweeted]->(:Tweet)
-RETURN a
+MATCH (a {doi: $doi})-[:Twitted]->(t:Tweet)
+RETURN DISTINCT t
     '''
     map = {'doi': []}
-    returns = ['doi']
+    returns = ['t']
 
 
 class DELETE_TWEET(Query):

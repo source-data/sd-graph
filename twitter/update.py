@@ -3,6 +3,7 @@ import tweepy
 from string import Template
 import time
 from sdg.sdnode import API
+from neotools.utils import progress
 from .queries import TWEET_BY_DOI, ADD_TWITTER_STATUS
 from typing import Dict
 from . import DB, TWITTER, EEB_PUBLIC_API, logger
@@ -137,11 +138,15 @@ class Twitterer:
 
     def filter_not_tweeted(self, records):
         filtered_records = []
-        for record in records:
+        N = len(records)
+        for i, record in enumerate(records):
+            progress(i, N, "check if already tweeted")
             doi = record['doi']
             already_tweeted = self.db.exists(TWEET_BY_DOI(params={'doi': doi}))
             if not already_tweeted:
                 filtered_records.append(record)
+        print()
+        logger.info(f"{len(filtered_records)} updates to be tweeted.")
         return filtered_records
 
     def update_status(self, records):

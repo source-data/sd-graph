@@ -84,7 +84,7 @@ class ReviewCommonsReviewNode(PeerReviewNode):
     @property
     def significance_section(self):
         text = self._resp['text']
-        r = re.search(r'\n\n#### Significance\w+\n\n(.*)', text, re.IGNORECASE | re.DOTALL)
+        r = re.search(r'\n\n#### Significance\w*\n\n(.*)', text, re.IGNORECASE | re.DOTALL)
         if r:
             section = r.group(1)
         else:
