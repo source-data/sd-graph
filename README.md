@@ -26,17 +26,17 @@ Normally you need this:
 ```bash
 docker-compose  build
 docker-compose up -d
+cat sdg/SD-indices.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>  # define indices
 docker-compose run --rm flask python -m sdg.sdneo PUBLICSEARCH --api sdapi  # import source data public data
 
+aws s3 sync --request-payer requester --exclude "*" --include "*.meca" s3://biorxiv-src-monthly/Current_Content/ .  # update medca archives
 cat neotools/purge_prelim.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p  # remove prelim articles obtained from the CrossRef and bioRxiv APIs
 docker-compose run --rm flask python -m neotools.rxiv2neo data/<path_to_meca_archives> --type meca  # import full text biorxiv preprints
 docker-compose run --rm flask python -m peerreview.neohypo  # import peer reviews from hypothesis and updates publication status
-docker-compose run --rm flask python -m sdg.sdneo PUBLICSEARCH --api sdapi  # import source data public data
 docker-compose run --rm flask python -m sdg.sdneo covid19 --api eebapi  # smarttag collection of preprints
-cat sdg/SD-indices.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>  # define indices
 cat sdg/SD-processing.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>  # generate merged graph
 cat sdg/SD-precompute.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD> # precompute the graph used by front end
-docker-compose run --rm flask python -m twitter.update --limit-date 2020-07-01 --GO_LIVE  # tweet updates
+docker-compose run --rm flask python -m twitter.update --limit-date 2020-07-01 # --GO_LIVE  to go live with Twitter updates
 # visit http:/localhost:8080
 ```
 
