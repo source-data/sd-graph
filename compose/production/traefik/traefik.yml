@@ -54,7 +54,7 @@ http:
           #  service: flask
 
     vuejs-router:
-      rule: "Host(`0.0.0.0`) || Host(`ec2-3-125-193-124.eu-central-1.compute.amazonaws.com`) || Host(`eeb.sourcedata.io`)"
+      rule: "Host(`0.0.0.0`) || Host(`ec2-3-125-193-124.eu-central-1.compute.amazonaws.com`) || Host(`eeb.sourcedata.io`) || Host(`eeb-dev.sourcedata.io`)"
       # priority: 1
       entryPoints:
         - web
@@ -64,7 +64,7 @@ http:
       service: vuejs
 
     web-secure-vuejs-router:
-      rule: "Host(`eeb.sourcedata.io`)"
+      rule: "Host(`eeb.sourcedata.io`) || Host(`eeb-dev.sourcedata.io`)"
       entryPoints:
         - web-secure
       middlewares:
@@ -74,7 +74,7 @@ http:
         # https://docs.traefik.io/master/routing/routers/#certresolver
         certResolver: letsencrypt
     web-secure-api-router:
-      rule: "Host(`eeb.sourcedata.io`)  && PathPrefix(`/api`)"
+      rule: "( Host(`eeb.sourcedata.io`) || Host(`eeb-dev.sourcedata.io`) )  && PathPrefix(`/api`)"
       entryPoints:
         - web-secure
       middlewares:
