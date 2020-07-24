@@ -183,5 +183,4 @@ export default {
     max-width: 300px;
     max-height: 300px;
   }
- 
 </style>
