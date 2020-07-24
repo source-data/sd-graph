@@ -12,15 +12,18 @@
     header.banner-area
       img(src="./assets/EEB_HP_Banner.svg").banner-image
       .banner-title-wrapper
-        h1(@click="goHome").title.pointer.banner-title Early Evidence Base
+        router-link(to="/"  active-class="is-active")
+          h1.title.pointer.banner-title Early Evidence Base
         h3.banner-subtitle Accessing early scientific findings
     el-container
       el-aside(width="180px" style="border-right-style: solid; border-right-width: 1px; padding-top: 50px")
-        el-menu(default-active="1" @select="navigate")
-          el-menu-item(index="0")
-            span.el-icon-s-home
-            | Home
-          el-menu-item(index="1") About
+        el-menu(default-active="1")
+          router-link(to="/"  active-class="is-active")
+            el-menu-item(index="0")
+              span.el-icon-s-home
+              | Home
+          router-link(to="/about"  active-class="is-active")
+            el-menu-item(index="1") About
           el-menu-item(index="2" disabled) For developers
           el-menu-item(index="3" disabled) Contact
         el-divider
@@ -46,33 +49,10 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import home from './views/Home.vue'
 
 export default {
   name: 'app',
-  components: {
-    home,
-  },
-  methods: {
-    goHome() {
-        const home_path = "/home"
-        if (this.$route.path !== home_path) {
-          this.$router.push({path: home_path})
-        }
-    },
-    navigate(key) {
-      const paths = {
-        '0': '/home',
-        '1': '/about',
-        '2': '/dev',
-        '3': '/contact',
-      }
-      const selected_path = paths[key]
-      if (this.$route.path !== selected_path) {
-        this.$router.push({path : selected_path})
-      }
-    }
-  },
+
   computed: {
     thisYear () {
       return new Date().getFullYear()
@@ -111,6 +91,14 @@ export default {
 html, body {
   padding:0;
   margin:0;
+}
+
+a {
+  text-decoration: none;
+}
+
+.el-menu-item a {
+  color: inherit;
 }
 
 </style>
