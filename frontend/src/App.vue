@@ -3,12 +3,12 @@
     .org-credits
       .org-credits--left
         a(href="https://embo.org" target="_blank")
-          img(src="./assets/EEB_E_LOGO.png" class="banner-logo banner-logo--embo")
+          img(src="./assets/EEB_E_LOGO.png" class="banner-logo banner-logo--embo" alt="EMBO Logo")
       .org-credits--right
         a(href="https://embopress.org")
-          img(src="./assets/EEB_EP_LOGO.png" class="banner-logo banner-logo--press")
+          img(src="./assets/EEB_EP_LOGO.png" class="banner-logo banner-logo--press" alt="EMBO Press Logo")
         a(href="https://sourcedata.io" target="_blank")
-          img(src="./assets/EEB_SD_LOGO.png" class="banner-logo banner-logo--sourcedata")
+          img(src="./assets/EEB_SD_LOGO.png" class="banner-logo banner-logo--sourcedata" alt="SourceData Logo")
     header.banner-area
       img(src="./assets/EEB_HP_Banner.svg").banner-image
       .banner-title-wrapper
