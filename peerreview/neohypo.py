@@ -1,4 +1,5 @@
 import re
+from argparse import ArgumentParser
 from typing import Dict
 from neotools.utils import progress
 from . import HYPO, DB
@@ -209,49 +210,8 @@ class Hypothelink:
         print(f"{N_rev}, {N_resp}, {N_annot}")
 
 
-class PublicationUpdate:
-
-    def __init__(self, db):
-        self.db = db
-        self.biorxiv = BioRxiv()
-        self.crossref = CrossRef()
-
-    def get_not_published(self):
-        results = self.db.query(NotYetPublished())
-        dois = [r['doi'] for r in results]
-        return dois
-
-    def check_publication_status(self, preprint_doi):
-        published_doi = self.biorxiv.details(preprint_doi).get('published', None)
-        return published_doi
-
-    def update_status(self, preprint_doi, published_doi):
-        cross_ref_metadata = self.crossref.details(published_doi)
-        published_journal_title = cross_ref_metadata.get('container-title', '')
-        params = {
-            'preprint_doi': preprint_doi,
-            'published_doi': published_doi,
-            'published_journal_title': published_journal_title,
-        }
-        update_published_status = UpdatePublicationStatus(params=params)
-        self.db.query(update_published_status)
-        return published_journal_title
-
-    def run(self):
-        not_yet_published = self.get_not_published()
-        msg = ''
-        N = len(not_yet_published)
-        for i, preprint_doi in enumerate(not_yet_published):
-            published_doi = self.check_publication_status(preprint_doi)
-            if (published_doi is not None) and (published_doi != "NA"):
-                journal = self.update_status(preprint_doi, published_doi)
-                msg = f"{preprint_doi} --> {published_doi} in {journal}                    "
-            progress(i, N, msg)
-
-
 def main():
     Hypothelink(DB, HYPO).run(GROUP_IDS)
-    PublicationUpdate(DB).run()
 
 
 if __name__ == "__main__":
