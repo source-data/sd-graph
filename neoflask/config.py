@@ -3,7 +3,7 @@ from flask_dotenv import DotEnv
 import os
 import sys
 import logging
-from logging.handlers import RotatingFileHandler, SMTPHandler
+from logging.handlers import RotatingFileHandler
 
 
 class Config:
@@ -26,8 +26,8 @@ class Config:
             os.mkdir('log')
         for hdlr in app.logger.handlers[:]:  # remove all old handlers
             app.logger.removeHandler(hdlr)
-        Config.add_logger(app, logging.StreamHandler(stream=sys.stdout))
-        Config.add_logger(app, RotatingFileHandler('log/info.log', maxBytes=10240, backupCount=10))
+        Config.add_logger(app, logging.StreamHandler(stream=sys.stdout), level='DEBUG')
+        Config.add_logger(app, RotatingFileHandler('log/neoflask.log', maxBytes=10240, backupCount=10))
         # if (not app.debug):
         #     auth = None
         #     if app.config['MAIL_USERNAME'] or app.config['MAIL_PASSWORD']:

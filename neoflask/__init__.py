@@ -11,14 +11,14 @@ load_dotenv()
 NEO_URI = os.getenv('NEO_URI')
 NEO_USERNAME = os.getenv("NEO_USERNAME")
 NEO_PASSWORD = os.getenv("NEO_PASSWORD")
-print(__name__)
+
 app = Flask(__name__)
 
-CORS(app) # , resources={r"/*": {"origins": "*"}})
-
+CORS(app)  # , resources={r"/*": {"origins": "*"}})
 
 Config.init_app(app)
 app.config.from_object(Config)
+
 cache = Cache(config={
     'CACHE_DEFAULT_TIMEOUT': 365 * 24 * 60 * 60,
     'CACHE_KEY_PREFIX': __name__,
@@ -32,10 +32,10 @@ cache = Cache(config={
     # 'CACHE_OPTIONS': '',
     # 'CACHE_REDIS_URL': '',
 })
+
 cache.init_app(app)
 with app.app_context():
     cache.clear()
-
 
 DB = Instance(NEO_URI, NEO_USERNAME, NEO_PASSWORD)
 

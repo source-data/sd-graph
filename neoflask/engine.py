@@ -17,7 +17,8 @@ json_str = NewType('json_str', str)
 
 def param_from_request(request, query: Query) -> Dict:
     """
-    Takes a request and extracts the values of the parameters that are required to substitute in the Query.
+    Take a request and extract the values of the parameters that are required to substitute in the Query.
+
     The dictionary query.map maps the substitution variable of the query to the parameters provided in the request.
     The substitutions variables are the keys of the dictionary query.map
     The code of the query (query.code) will be checked to make sure it includes the substitution variable '$key'
@@ -26,12 +27,12 @@ def param_from_request(request, query: Query) -> Dict:
     The second second element of the list is the default value of this parameter if no value was provided in the request.
     If query.map[key] is the empty list, it means that request itself is a string and is the value that needs to be substituted.
 
-    Parameters:
-        request (str or ): the request received by the flask App from which parameters value needs to be extracted
+    Arguments:
+        request (str or ...): the request received by the flask App from which parameters value needs to be extracted
         query (Query): the database query that will be used
 
     Returns:
-        params_dict (Dict): a dictionary with the values of each substitution varibale need by the query
+        (Dict): a dictionary with the values of each substitution variable needed by the query
     """
 
     params_dict = {}
@@ -46,7 +47,7 @@ def param_from_request(request, query: Query) -> Dict:
 
 class Engine:
     """
-    An Engine handles requests received by the Flask app to make appropriate queries to the database and returns the results as json string.
+    Handle requests received from the Flask app to make appropriate database queries and returns the results as json string.
     """
     def __init__(self, neo4j_db: Instance):
         self.neo4j_db = neo4j_db

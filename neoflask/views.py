@@ -1,5 +1,5 @@
-from flask import request, render_template, Response, redirect
-from .search import Engine
+from flask import request, render_template, Response
+from .engine import Engine
 from . import DB, app, cache
 
 
