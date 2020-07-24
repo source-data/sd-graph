@@ -15,6 +15,16 @@ def root():
 # def doc():
 #     return render_template('doc.html', name='me')
 
+from .sitemap import create_sitemap
+@app.route('/sitemap.xml', methods=['GET'])
+# @cache.cached()
+def sitemap():
+    app.logger.info(f"generating sitemap")
+    refereed_preprints = ASKNEO.refereed_preprints__plain(request)
+    dois = [preprint['doi'] for preprint in refereed_preprints]
+    sitemap = create_sitemap(dois)
+    return Response(sitemap, mimetype='text/xml')
+
 
 @app.route('/api/v1/stats', methods=['GET', 'POST'])
 @cache.cached()

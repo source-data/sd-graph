@@ -4,7 +4,7 @@ from typing import Dict, NewType
 from neotools.db import Instance, Query
 from .queries import (
     STATS, BY_DOI, FIG_BY_DOI_IDX, PANEL_BY_NEO_ID,
-    REVIEW_PROCESS_BY_DOI, BY_REVIEWING_SERVICE, 
+    REVIEW_PROCESS_BY_DOI, BY_REVIEWING_SERVICE,
     BY_HYP, AUTOMAGIC,
     BY_METHOD, PANEL_SUMMARY,
     LUCENE_SEARCH, SEARCH_DOI,
@@ -55,7 +55,7 @@ class Engine:
     def ask_neo(self, query: Query) -> json_str:
         def tx_funct(tx, code, params):
             results = tx.run(code, params)
-            data = [r.data(*query.returns) for r in results]  # consuming the data inside the transaction https://neo4j.com/docs/api/python-driver/current/transactions.html 
+            data = [r.data(*query.returns) for r in results]  # consuming the data inside the transaction https://neo4j.com/docs/api/python-driver/current/transactions.html
             return data
         data = self.neo4j_db.query_with_tx_funct(tx_funct, query)
         return data
@@ -147,3 +147,8 @@ class Engine:
         query = REFEREED_PREPRINTS()
         query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
         return self.query2json(query)
+
+    def refereed_preprints__plain(self, request):
+        query = REFEREED_PREPRINTS()
+        query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
+        return self.ask_neo(query)
