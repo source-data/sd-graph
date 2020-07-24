@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Home from '../views/Home.vue'
+import ArticleShow from '../components/highlights/article.vue'
 
 Vue.use(VueRouter)
 
@@ -9,6 +10,12 @@ Vue.use(VueRouter)
     path: '/',
     name: 'Home',
     component: Home
+  },
+
+  {
+    path: '/doi/:doi(.*)',
+    name: 'ArticleShow',
+    component: ArticleShow,
   },
 
   {
