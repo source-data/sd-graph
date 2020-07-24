@@ -55,14 +55,3 @@ export default {
   },
 }
 </script>
-
-<style>
-/* needs to be in parent component */
- .md-content {
-    max-height:350px; 
-    overflow: scroll;
-  }
-  .md-content img {
-    max-height: 60px;
-  }
-</style>

@@ -6,7 +6,7 @@ import json
 from .model import (
     JATS_GRAPH_MODEL,
     CORD19_GRAPH_MODEL,
-    BIORXIV_API_GRAPH_MODEL,
+    # BIORXIV_API_GRAPH_MODEL,
     CROSSREF_PREPRINT_API_GRAPH_MODEL
 )
 from .utils import inner_text
@@ -293,23 +293,23 @@ def self_test():
     cord_n = JSONNode(cord_example, CORD19_GRAPH_MODEL)
     print(cord_n)
 
-    biorxiv_api_example = '''{
-        "doi": "10.1101\/2020.02.12.944629",
-        "title": "Retrocopying expands the functional repertoire of APOBEC3 antiviral proteins in primates",
-        "authors": "Yang, L.; Emerman, M.; Malik, H. S.; McLaughlin, R. N.",
-        "author_corresponding": "Richard N McLaughlin Jr.",
-        "author_corresponding_institution": "Pacific Northwest Research Institute, Fred Hutchinson Cancer Research Center",
-        "date": "2020-02-13",
-        "version": "1",
-        "license": "cc_by_nc",
-        "type": "new results",
-        "category": "genomics",
-        "abstract": "...",
-        "published": "10.7554\/eLife.58436"
-    }'''
-    j = json.loads(biorxiv_api_example)
-    biorxiv_api_n = JSONNode(j, BIORXIV_API_GRAPH_MODEL)
-    print(biorxiv_api_n)
+    # biorxiv_api_example = '''{
+    #     "doi": "10.1101\/2020.02.12.944629",
+    #     "title": "Retrocopying expands the functional repertoire of APOBEC3 antiviral proteins in primates",
+    #     "authors": "Yang, L.; Emerman, M.; Malik, H. S.; McLaughlin, R. N.",
+    #     "author_corresponding": "Richard N McLaughlin Jr.",
+    #     "author_corresponding_institution": "Pacific Northwest Research Institute, Fred Hutchinson Cancer Research Center",
+    #     "date": "2020-02-13",
+    #     "version": "1",
+    #     "license": "cc_by_nc",
+    #     "type": "new results",
+    #     "category": "genomics",
+    #     "abstract": "...",
+    #     "published": "10.7554\/eLife.58436"
+    # }'''
+    # j = json.loads(biorxiv_api_example)
+    # biorxiv_api_n = JSONNode(j, BIORXIV_API_GRAPH_MODEL)
+    # print(biorxiv_api_n)
 
     cross_ref_example = '''
     {

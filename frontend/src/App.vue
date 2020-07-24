@@ -105,6 +105,13 @@ a {
   color: inherit;
 }
 
+.md-content {
+  max-height:350px;
+  overflow: scroll;
+}
+.md-content img {
+  max-height: 60px;
+  }
 </style>
 
 <style scoped lang="scss">
@@ -283,6 +290,8 @@ img.center-img {
 .side_bar_links {
   padding-left: 25px;
 }
+
+
 </style>
 
 
