@@ -1,12 +1,11 @@
 import json
 import re
-from copy import copy
 from typing import Dict, NewType
 from neotools.db import Instance, Query
 from .queries import (
     STATS, BY_DOI, FIG_BY_DOI_IDX, PANEL_BY_NEO_ID,
     REVIEW_PROCESS_BY_DOI, BY_REVIEWING_SERVICE, 
-    BY_MOLECULE, BY_HYP, AUTOMAGIC,
+    BY_HYP, AUTOMAGIC,
     BY_METHOD, PANEL_SUMMARY,
     LUCENE_SEARCH, SEARCH_DOI,
     COVID19, REFEREED_PREPRINTS,
@@ -18,7 +17,22 @@ json_str = NewType('json_str', str)
 
 def param_from_request(request, query: Query) -> Dict:
     """
-    Extracts from the response received by flast the values of the parameters that are required to substitute in the Query query.
+    Take a request and extract the values of the parameters that are required to substitute in the Query.
+
+    The dictionary query.map maps the substitution variable of the query to the parameters provided in the request.
+    The substitutions variables are the keys of the dictionary query.map
+    The code of the query (query.code) will be checked to make sure it includes the substitution variable '$key'
+    The value of query.map[key] is a list. The first element of this list is the name of the parameter expected in the request.
+    The value of the parameter will then be substituted in the code of the query.
+    The second second element of the list is the default value of this parameter if no value was provided in the request.
+    If query.map[key] is the empty list, it means that request itself is a string and is the value that needs to be substituted.
+
+    Arguments:
+        request (str or ...): the request received by the flask App from which parameters value needs to be extracted
+        query (Query): the database query that will be used
+
+    Returns:
+        (Dict): a dictionary with the values of each substitution variable needed by the query
     """
 
     params_dict = {}
@@ -32,7 +46,9 @@ def param_from_request(request, query: Query) -> Dict:
 
 
 class Engine:
-
+    """
+    Handle requests received from the Flask app to make appropriate database queries and returns the results as json string.
+    """
     def __init__(self, neo4j_db: Instance):
         self.neo4j_db = neo4j_db
 
@@ -46,7 +62,7 @@ class Engine:
 
     def query2json(self, query: Query) -> json_str:
         data = self.ask_neo(query)
-        return json.dumps(data, indent=3)
+        return json.dumps(data, indent=2)
 
     def stats(self, request):
         query = STATS()
@@ -79,6 +95,7 @@ class Engine:
         return self.query2json(query)
 
     def fig_by_doi_idx(self, request):
+        app.logger.debug(type(request))
         query = FIG_BY_DOI_IDX()
         query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
         return self.query2json(query)

@@ -122,7 +122,7 @@ CORD19_GRAPH_MODEL = {
     'children': {
         'has_author': {
             'path': {
-                'type': 'authors', 
+                'type': 'Contrib',  # to harmonize with JATS model
                 'funct': lambda d: d['metadata']['authors']
             },
             'properties': {
@@ -144,33 +144,33 @@ CORD19_GRAPH_MODEL = {
 }
 
 
-BIORXIV_API_GRAPH_MODEL = {
-    'path': {
-        'type': 'article',
-        'funct': lambda d: d['article']
-    },
-    'properties': {
-        'article-type': lambda d: 'preliminary',
-        'doi': lambda d: d['doi'],
-        'journal-title': lambda d: 'bioRxiv',
-        'publication-date': lambda d: d['date'],
-        'title': lambda d: d['title'],
-        'abstract': lambda d: d['abstract'],
-        'version': lambda d: d['version']
-    },
-    'children': {
-        'has_author': {
-            'path': {
-                'type': 'author', 
-                'funct': lambda d: d['authors'].split(';')
-            },
-            'properties': {
-                'given_names': lambda text: text.split(',')[1].strip(),
-                'surname': lambda text: text.split(',')[0],
-            },
-        }
-    }
-}
+# BIORXIV_API_GRAPH_MODEL = {
+#     'path': {
+#         'type': 'article',
+#         'funct': lambda d: d['article']
+#     },
+#     'properties': {
+#         'article-type': lambda d: 'preliminary',
+#         'doi': lambda d: d['doi'],
+#         'journal-title': lambda d: 'bioRxiv',
+#         'publication-date': lambda d: d['date'],
+#         'title': lambda d: d['title'],
+#         'abstract': lambda d: d['abstract'],
+#         'version': lambda d: d['version']
+#     },
+#     'children': {
+#         'has_author': {
+#             'path': {
+#                 'type': 'author', 
+#                 'funct': lambda d: d['authors'].split(';')
+#             },
+#             'properties': {
+#                 'given_names': lambda text: text.split(',')[1].strip(),
+#                 'surname': lambda text: text.split(',')[0],
+#             },
+#         }
+#     }
+# }
 
 
 CROSSREF_PREPRINT_API_GRAPH_MODEL = {
@@ -189,7 +189,7 @@ CROSSREF_PREPRINT_API_GRAPH_MODEL = {
     'children': {
         'has_author': {
             'path': {
-                'type': 'author',  # COULD/SHOULD BE Contrib
+                'type': 'Contrib',  # to harmonize with JATS model
                 'funct': lambda d: d['author']
             },
             'properties': {

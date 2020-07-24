@@ -10,9 +10,10 @@ class MATCH_DOI(Query):
 class NotYetPublished(Query):
     code = '''
 MATCH (a:Article)
-WHERE NOT EXISTS(a.journal_doi)
+WHERE (DATETIME(a.publication_date) > DATETIME($limit_date)) AND NOT EXISTS(a.journal_doi)
 RETURN DISTINCT a.doi AS doi
     '''
+    map = {'limit_date': []}
     returns = ['doi']
 
 
