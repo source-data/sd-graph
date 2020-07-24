@@ -17,7 +17,7 @@ def root():
 
 from .sitemap import create_sitemap
 @app.route('/sitemap.xml', methods=['GET'])
-# @cache.cached()
+@cache.cached()
 def sitemap():
     app.logger.info(f"generating sitemap")
     refereed_preprints = ASKNEO.refereed_preprints__plain(request)
