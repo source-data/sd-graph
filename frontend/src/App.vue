@@ -52,7 +52,11 @@ import { mapGetters } from 'vuex'
 
 export default {
   name: 'app',
-
+  metaInfo: {
+    meta: [
+      { name: 'description', content: 'Early Evidence Base (EEB) is an experimental platform that combines artificial intelligence with human curation and expert peer-review to highlight results posted in bioRxiv preprints developed by EMBO Press.' }
+    ]
+  },
   computed: {
     thisYear () {
       return new Date().getFullYear()
