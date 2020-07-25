@@ -3,24 +3,28 @@
     el-row(v-if="article")
       el-row()
         el-col(:span="24")
-            h3 {{ article.title }} 
+            h3
+              | {{ article.title }}
+              |
+              router-link(:to="`/doi/${article.doi}`")
+                span.el-icon-connection
             //- el-row(type="flex" justify="space-between")
             p
-              small() Posted 
+              small() Posted
                 b {{ displayDate(article.pub_date) }}
-                |  on 
+                |  on
                 i {{ displayJournal(article.journal) }}
             p
               small
-                b  doi:  
-                el-link(type="primary" :href="href(article.doi)" target="_blank") https://doi.org/{{ article.doi }} 
+                b  doi:
+                el-link(type="primary" :href="href(article.doi)" target="_blank") https://doi.org/{{ article.doi }}
             p
               small {{ authorList }}
             div(v-if="article.review_process")
               el-collapse(v-for="review in article.review_process.reviews" v-model="activeCollapseItem" accordion)
                 el-collapse-item
                   p(slot="title")
-                      el-popover(v-if="review.highlight" 
+                      el-popover(v-if="review.highlight"
                         placement="top"
                         title="Summary (click tab to read the full review)"
                         width="600"
@@ -32,14 +36,14 @@
                       )
                         span(slot="reference").peer_review_material
                           i.el-icon-document-checked
-                          |   Reviewed by 
+                          |   Reviewed by
                           i {{ displayJournal(review.reviewed_by) }}
                           |  | Reviewer #
                           | {{ review.review_idx }}
                           | ({{ displayDate(review.posting_date) }})
                       span(v-else).peer_review_material
                         i.el-icon-document-checked
-                        |   Reviewed by 
+                        |   Reviewed by
                         i {{ displayJournal(review.reviewed_by) }}
                         |  | Reviewer #
                         | {{ review.review_idx }}
@@ -57,7 +61,7 @@
                   p(slot="title")
                     span.peer_review_material
                       i.el-icon-document-checked
-                      |  Reviewed by 
+                      |  Reviewed by
                       i {{ displayJournal(article.review_process.annot.reviewed_by) }}
                       |  | Review Process File
                       | ({{ displayDate(article.review_process.annot.posting_date) }})
@@ -67,15 +71,15 @@
                 span.peer_review_material
                   //- i(class="fas el-icon-fa-award")
                   i.el-icon-finished
-                  b  Published in: 
-                  i {{ article.published_journal_title }} 
-                b doi: 
+                  b  Published in:
+                  i {{ article.published_journal_title }}
+                b doi:
                 el-link(type="primary" :href="href(article.journal_doi)" target="_blank") https://doi.org/{{ article.journal_doi }}
       el-row(type="flex" justify="space-between")
         el-col(:span="11")
           p
             small(style="line-height:1.5") {{ article.abstract }}
-          p 
+          p
             small(style="font-family: monospace; font-size: 9px") [source: {{ article.source }}]
         el-col(:span="12").scroll
           //- label(for="info-cards" style="font-variant: small-caps") {{ info.length }} information card{{ info.length > 1 ? 's':''}}:
@@ -83,14 +87,14 @@
             el-collapse-item(:title="card.title", :name="index")
               div(v-if="card.entities.length > 1" )
                   p
-                    span(v-for="entity in card.entities") 
+                    span(v-for="entity in card.entities")
                       el-tag(size="medium" :type="mapRole(entity.role)") {{ entity.text }}
                   p(v-if="card.id")
-                    a(target="_blank" :href="`https://search.sourcedata.io/panel/${card.id}`") 
+                    a(target="_blank" :href="`https://search.sourcedata.io/panel/${card.id}`")
                       img(:src="`https://api.sourcedata.io/file.php?panel_id=${card.id}`").fig-img
                     br
-                    el-link(target="_blank" type="primary" :href="`https://search.sourcedata.io/panel/${card.id}`") 
-                      | open as SmartFigures 
+                    el-link(target="_blank" type="primary" :href="`https://search.sourcedata.io/panel/${card.id}`")
+                      | open as SmartFigures
               div(v-else-if="card.text instanceof Array")
                 span(v-for="item in card.text")
                   el-tag(size="medium") {{ item }}
@@ -125,7 +129,7 @@ export default {
         const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
         const month = months[date.getMonth()]
         const day = date.getDate()
-        return month + ' ' + day + ', ' + year 
+        return month + ' ' + day + ', ' + year
     },
     mdRender(md_text) {
       const md = new MarkdownIt({

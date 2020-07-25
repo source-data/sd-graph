@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://eeb.sourcedata.io/sitemap.xml

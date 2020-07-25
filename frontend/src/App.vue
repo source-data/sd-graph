@@ -3,24 +3,27 @@
     .org-credits
       .org-credits--left
         a(href="https://embo.org" target="_blank")
-          img(src="./assets/EEB_E_LOGO.png" class="banner-logo banner-logo--embo")
+          img(src="./assets/EEB_E_LOGO.png" class="banner-logo banner-logo--embo" alt="EMBO Logo")
       .org-credits--right
         a(href="https://embopress.org")
-          img(src="./assets/EEB_EP_LOGO.png" class="banner-logo banner-logo--press")
+          img(src="./assets/EEB_EP_LOGO.png" class="banner-logo banner-logo--press" alt="EMBO Press Logo")
         a(href="https://sourcedata.io" target="_blank")
-          img(src="./assets/EEB_SD_LOGO.png" class="banner-logo banner-logo--sourcedata")
+          img(src="./assets/EEB_SD_LOGO.png" class="banner-logo banner-logo--sourcedata" alt="SourceData Logo")
     header.banner-area
       img(src="./assets/EEB_HP_Banner.svg").banner-image
       .banner-title-wrapper
-        h1(@click="goHome").title.pointer.banner-title Early Evidence Base
+        router-link(to="/"  active-class="is-active")
+          h1.title.pointer.banner-title Early Evidence Base
         h3.banner-subtitle Accessing early scientific findings
     el-container
       el-aside(width="180px" style="border-right-style: solid; border-right-width: 1px; padding-top: 50px")
-        el-menu(default-active="1" @select="navigate")
-          el-menu-item(index="0")
-            span.el-icon-s-home
-            | Home
-          el-menu-item(index="1") About
+        el-menu(default-active="1")
+          router-link(to="/"  active-class="is-active")
+            el-menu-item(index="0")
+              span.el-icon-s-home
+              | Home
+          router-link(to="/about"  active-class="is-active")
+            el-menu-item(index="1") About
           el-menu-item(index="2" disabled) For developers
           el-menu-item(index="3" disabled) Contact
         el-divider
@@ -46,32 +49,13 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import home from './views/Home.vue'
 
 export default {
   name: 'app',
-  components: {
-    home,
-  },
-  methods: {
-    goHome() {
-        const home_path = "/home"
-        if (this.$route.path !== home_path) {
-          this.$router.push({path: home_path})
-        }
-    },
-    navigate(key) {
-      const paths = {
-        '0': '/home',
-        '1': '/about',
-        '2': '/dev',
-        '3': '/contact',
-      }
-      const selected_path = paths[key]
-      if (this.$route.path !== selected_path) {
-        this.$router.push({path : selected_path})
-      }
-    }
+  metaInfo: {
+    meta: [
+      { name: 'description', content: 'Early Evidence Base (EEB) is an experimental platform that combines artificial intelligence with human curation and expert peer-review to highlight results posted in bioRxiv preprints developed by EMBO Press.' }
+    ]
   },
   computed: {
     thisYear () {
@@ -112,13 +96,22 @@ html, body {
   padding:0;
   margin:0;
 }
+
+a {
+  text-decoration: none;
+}
+
+.el-menu-item a {
+  color: inherit;
+}
+
 .md-content {
-  max-height:350px; 
+  max-height:350px;
   overflow: scroll;
 }
 .md-content img {
   max-height: 60px;
-  } 
+  }
 </style>
 
 <style scoped lang="scss">
