@@ -17,11 +17,11 @@ json_str = NewType('json_str', str)
 
 def param_from_request(request, query: Query) -> Dict:
     """
-    Take a request and extract the values of the parameters that are required to substitute in the Query.
+    Take a request and extract the values of the parameters that are required for parameter substitution in the Query.
 
     The dictionary query.map maps the substitution variable of the query to the parameters provided in the request.
-    The substitutions variables are the keys of the dictionary query.map
-    The code of the query (query.code) will be checked to make sure it includes the substitution variable '$key'
+    The names of the substitutions variables in the query are the keys of the dictionary query.map
+    The code of the query is provided in query.code and will be checked to make sure it includes the substitution variables listed in query.map.
     The value of query.map[key] is a list. The first element of this list is the name of the parameter expected in the request.
     The value of the parameter will then be substituted in the code of the query.
     The second second element of the list is the default value of this parameter if no value was provided in the request.
@@ -47,12 +47,18 @@ def param_from_request(request, query: Query) -> Dict:
 
 class Engine:
     """
-    Handle requests received from the Flask app to make appropriate database queries and returns the results as json string.
+    Handle requests received from the Flask app, make respective database queries and returns the results.
+
+    Arguments:
+        neo4j_db (Instance): a neotools.db.Instance that connects to the database and handles transactions
     """
     def __init__(self, neo4j_db: Instance):
         self.neo4j_db = neo4j_db
 
-    def ask_neo(self, query: Query) -> json_str:
+    def ask_neo(self, query: Query) -> Dict:
+        """
+        Run a query a nd
+        """
         def tx_funct(tx, code, params):
             results = tx.run(code, params)
             data = [r.data(*query.returns) for r in results]  # consuming the data inside the transaction https://neo4j.com/docs/api/python-driver/current/transactions.html 
@@ -61,6 +67,15 @@ class Engine:
         return data
 
     def query2json(self, query: Query) -> json_str:
+        """
+        Take a Query, run it through the database and returns the results as json string
+
+        Arguments:
+            query (Query): the query to be run
+
+        Returns:
+            (json_str): the stringified json results returned by the database
+        """
         data = self.ask_neo(query)
         return json.dumps(data, indent=2)
 
