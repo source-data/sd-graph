@@ -1,6 +1,4 @@
-import json
-import re
-from typing import Dict, NewType
+from typing import Dict
 from neotools.db import Instance, Query
 from .queries import (
     STATS, BY_DOI, FIG_BY_DOI_IDX, PANEL_BY_NEO_ID,
@@ -115,21 +113,17 @@ class Engine:
 
     def search(self, query: str) -> Dict:
         query_lucene = LUCENE_SEARCH()
-        query_lucene.params = param_from_request(query, query_lucene)  # need to know which param to extract from request depending on query.map
-        # escape lucene special characters in params['query']
-        text = query_lucene.params['query'] # NOTE: this makes it mandatory for the cypher SEARCH query to use the '$query' param. Not great, but that how it is.
-        quoted = re.sub(r'([\+\-!\(\)\{\}\[\]\^\"~\*\?\:\\/&\|])', r'"\1"', text)  # should be a custom converter in views: https://exploreflask.com/en/latest/views.html#custom-converters
-        query_lucene.params['query'] = quoted
+        query_lucene.params = param_from_request(query, query_lucene)
         response_lucene = self.ask_neo(query_lucene)
 
         query_doi = SEARCH_DOI()
-        query_doi.params = param_from_request(query, query_doi)  # need to know which param to extract from request depending on query.map
+        query_doi.params = param_from_request(query, query_doi)
         found_doi = self.ask_neo(query_doi)
         if found_doi:
             response = found_doi
         else:
             response = response_lucene
-        return json.dumps(response, indent=3)
+        return response
 
     def covid19(self, request) -> Dict:
         query = COVID19()

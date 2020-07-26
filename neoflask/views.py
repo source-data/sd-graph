@@ -2,7 +2,9 @@ from flask import request, render_template, jsonify, Response
 from .engine import Engine
 from .sitemap import create_sitemap
 from . import DB, app, cache
+from .converter import LuceneQueryConverter
 
+app.url_map.converters['escape_lucene'] = LuceneQueryConverter
 
 ASKNEO = Engine(DB)
 
@@ -103,7 +105,7 @@ def fig_by_doi_idx():
 #     return jsonify(ASKNEO.panel_by_neo_id(id=id))
 
 
-@app.route('/api/v1/search/<query>', methods=['GET'])
+@app.route('/api/v1/search/<escape_lucene:query>', methods=['GET'])
 @cache.cached()
 def search(query: str):
     app.logger.info(f"search '{query}'")
