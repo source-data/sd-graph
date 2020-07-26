@@ -11,9 +11,6 @@ from .queries import (
     COVID19, REFEREED_PREPRINTS,
 )
 
-# symbolic type for a json string
-json_str = NewType('json_str', str)
-
 
 def param_from_request(request, query: Query) -> Dict:
     """
@@ -57,7 +54,7 @@ class Engine:
 
     def ask_neo(self, query: Query) -> Dict:
         """
-        Run a query a nd
+        Run a query and return the database results as dictionary with the keys specified in the query.returns list.
         """
         def tx_funct(tx, code, params):
             results = tx.run(code, params)
@@ -66,68 +63,62 @@ class Engine:
         data = self.neo4j_db.query_with_tx_funct(tx_funct, query)
         return data
 
-    def stats(self, request):
+    def stats(self, request) -> Dict:
         query = STATS()
-        query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
+        query.params = param_from_request(request, query)
         return self.ask_neo(query)
 
-    # def by_molecule(self, request):
-    #     query = BY_MOLECULE()
-    #     query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
-    #     return self.ask_neo(query)
-
-    def by_method(self, request):
+    def by_method(self, request) -> Dict:
         query = BY_METHOD()
-        query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
+        query.params = param_from_request(request, query)
         return self.ask_neo(query)
 
-    def by_reviewing_service(self, limit_date):
+    def by_reviewing_service(self, limit_date: str) -> Dict:
         query = BY_REVIEWING_SERVICE()
-        query.params = param_from_request(limit_date, query)  # need to know which param to extract from request depending on query.map
+        query.params = param_from_request(limit_date, query)
         return self.ask_neo(query)
 
-    def by_doi(self, doi):
+    def by_doi(self, doi: str) -> Dict:
         query = BY_DOI()
-        query.params = param_from_request(doi, query)  # need to know which param to extract from request depending on query.map
+        query.params = param_from_request(doi, query)
         return self.ask_neo(query)
 
-    def review_by_doi(self, doi):
+    def review_by_doi(self, doi: str) -> Dict:
         query = REVIEW_PROCESS_BY_DOI()
-        query.params = param_from_request(doi, query)  # need to know which param to extract from request depending on query.map
+        query.params = param_from_request(doi, query)
         return self.ask_neo(query)
 
-    def fig_by_doi_idx(self, request):
-        app.logger.debug(type(request))
+    def fig_by_doi_idx(self, request) -> Dict:
         query = FIG_BY_DOI_IDX()
-        query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
+        query.params = param_from_request(request, query)
         return self.ask_neo(query)
 
-    def panel_by_neo_id(self, id):
+    def panel_by_neo_id(self, id: str) -> Dict:
         query = PANEL_BY_NEO_ID()
-        query.params = param_from_request(id, query)  # need to know which param to extract from request depending on query.map
+        query.params = param_from_request(id, query)
         return self.ask_neo(query)
 
-    def by_hyp(self, limit_date):
+    def by_hyp(self, limit_date: str) -> Dict:
         query = BY_HYP()
-        query.params = param_from_request(limit_date, query)  # need to know which param to extract from request depending on query.map
+        query.params = param_from_request(limit_date, query)
         return self.ask_neo(query)
 
-    def automagic(self, limit_date):
+    def automagic(self, limit_date: str) -> Dict:
         query = AUTOMAGIC()
-        query.params = param_from_request(limit_date, query)  # need to know which param to extract from request depending on query.map
+        query.params = param_from_request(limit_date, query)
         return self.ask_neo(query)
 
-    def panel_summary(self, panel_id):
+    def panel_summary(self, panel_id: str) -> Dict:
         query = PANEL_SUMMARY()
-        query.params = param_from_request(panel_id, query)  # need to know which param to extract from request depending on query.map
+        query.params = param_from_request(panel_id, query)
         return self.ask_neo(query)
 
-    def search(self, query):
+    def search(self, query: str) -> Dict:
         query_lucene = LUCENE_SEARCH()
         query_lucene.params = param_from_request(query, query_lucene)  # need to know which param to extract from request depending on query.map
         # escape lucene special characters in params['query']
         text = query_lucene.params['query'] # NOTE: this makes it mandatory for the cypher SEARCH query to use the '$query' param. Not great, but that how it is.
-        quoted = re.sub(r'([\+\-!\(\)\{\}\[\]\^\"~\*\?\:\\/&\|])', r'"\1"', text)
+        quoted = re.sub(r'([\+\-!\(\)\{\}\[\]\^\"~\*\?\:\\/&\|])', r'"\1"', text)  # should be a custom converter in views: https://exploreflask.com/en/latest/views.html#custom-converters
         query_lucene.params['query'] = quoted
         response_lucene = self.ask_neo(query_lucene)
 
@@ -140,12 +131,12 @@ class Engine:
             response = response_lucene
         return json.dumps(response, indent=3)
 
-    def covid19(self, request):
+    def covid19(self, request) -> Dict:
         query = COVID19()
-        query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
+        query.params = param_from_request(request, query)
         return self.ask_neo(query)
 
-    def refereed_preprints(self, request):
+    def refereed_preprints(self, request) -> Dict:
         query = REFEREED_PREPRINTS()
-        query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
+        query.params = param_from_request(request, query)
         return self.ask_neo(query)

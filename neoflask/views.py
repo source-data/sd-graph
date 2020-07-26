@@ -19,6 +19,9 @@ def root():
 @app.route('/sitemap.xml', methods=['GET'])
 @cache.cached()
 def sitemap():
+    """
+    Generate dynamically a sitemap urls for both refereed preprints and covid19 collections.
+    """
     refereed_preprints = ASKNEO.refereed_preprints(request)
     covid19 = ASKNEO.covid19(request)
     dois = [preprint['doi'] for preprint in refereed_preprints + covid19]
