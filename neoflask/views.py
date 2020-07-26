@@ -20,7 +20,9 @@ def root():
 @cache.cached()
 def sitemap():
     refereed_preprints = ASKNEO.refereed_preprints(request)
-    dois = [preprint['doi'] for preprint in refereed_preprints]
+    covid19 = ASKNEO.covid19(request)
+    dois = [preprint['doi'] for preprint in refereed_preprints + covid19]
+    dois = set(dois)  # remove duplicates
     app.logger.info(f"generating sitemap with {len(dois)} links.")
     sitemap = create_sitemap(dois)
     return Response(sitemap, mimetype='text/xml')
