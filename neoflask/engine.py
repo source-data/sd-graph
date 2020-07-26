@@ -66,74 +66,61 @@ class Engine:
         data = self.neo4j_db.query_with_tx_funct(tx_funct, query)
         return data
 
-    def query2json(self, query: Query) -> json_str:
-        """
-        Take a Query, run it through the database and returns the results as json string
-
-        Arguments:
-            query (Query): the query to be run
-
-        Returns:
-            (json_str): the stringified json results returned by the database
-        """
-        data = self.ask_neo(query)
-        return json.dumps(data, indent=2)
-
     def stats(self, request):
         query = STATS()
         query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
-        return self.query2json(query)
+        return self.ask_neo(query)
 
     # def by_molecule(self, request):
     #     query = BY_MOLECULE()
     #     query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
-    #     return self.query2json(query)
+    #     return self.ask_neo(query)
 
     def by_method(self, request):
         query = BY_METHOD()
         query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
-        return self.query2json(query)
+        return self.ask_neo(query)
 
     def by_reviewing_service(self, limit_date):
         query = BY_REVIEWING_SERVICE()
         query.params = param_from_request(limit_date, query)  # need to know which param to extract from request depending on query.map
-        return self.query2json(query)
+        return self.ask_neo(query)
 
     def by_doi(self, doi):
         query = BY_DOI()
         query.params = param_from_request(doi, query)  # need to know which param to extract from request depending on query.map
-        return self.query2json(query)
+        return self.ask_neo(query)
 
     def review_by_doi(self, doi):
         query = REVIEW_PROCESS_BY_DOI()
         query.params = param_from_request(doi, query)  # need to know which param to extract from request depending on query.map
-        return self.query2json(query)
+        return self.ask_neo(query)
 
     def fig_by_doi_idx(self, request):
         app.logger.debug(type(request))
         query = FIG_BY_DOI_IDX()
         query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
-        return self.query2json(query)
+        return self.ask_neo(query)
 
     def panel_by_neo_id(self, id):
         query = PANEL_BY_NEO_ID()
         query.params = param_from_request(id, query)  # need to know which param to extract from request depending on query.map
-        return self.query2json(query)
+        return self.ask_neo(query)
 
     def by_hyp(self, limit_date):
         query = BY_HYP()
         query.params = param_from_request(limit_date, query)  # need to know which param to extract from request depending on query.map
-        return self.query2json(query)
+        return self.ask_neo(query)
 
     def automagic(self, limit_date):
         query = AUTOMAGIC()
         query.params = param_from_request(limit_date, query)  # need to know which param to extract from request depending on query.map
-        return self.query2json(query)
+        return self.ask_neo(query)
 
     def panel_summary(self, panel_id):
         query = PANEL_SUMMARY()
         query.params = param_from_request(panel_id, query)  # need to know which param to extract from request depending on query.map
-        return self.query2json(query)
+        return self.ask_neo(query)
 
     def search(self, query):
         query_lucene = LUCENE_SEARCH()
@@ -156,14 +143,9 @@ class Engine:
     def covid19(self, request):
         query = COVID19()
         query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
-        return self.query2json(query)
+        return self.ask_neo(query)
 
     def refereed_preprints(self, request):
-        query = REFEREED_PREPRINTS()
-        query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
-        return self.query2json(query)
-
-    def refereed_preprints__plain(self, request):
         query = REFEREED_PREPRINTS()
         query.params = param_from_request(request, query)  # need to know which param to extract from request depending on query.map
         return self.ask_neo(query)
