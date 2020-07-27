@@ -3,13 +3,13 @@
     el-row
       el-col(:span="20" :offset="2")
         p <i>Early Evidence Base</i> (EEB) is an <b>experimental platform</b>
-          |  that  combines artificial intelligence with human curation 
-          |  and expert peer-review to highlight results posted in 
+          |  that  combines artificial intelligence with human curation
+          |  and expert peer-review to highlight results posted in
           el-link(type="primary" href="https://biorxiv.org") bioRxiv
-          |  preprints. 
-        p The EEB platform is a technology experiment developed by  
-          el-link(type="primary" href="https://embopress.org") EMBO Press. 
-          
+          |  preprints.
+        p The EEB platform is a technology experiment developed by
+          el-link(type="primary" href="https://embopress.org") EMBO Press.
+
         p EEB helps user to browse preprints in several ways
         ul
           li Expert reviews linked to preprints provide in-depth analyses of the reported evidence.
@@ -17,9 +17,9 @@
           li A selection of recent SARS-CoV-2 preprints are  highlighted based on the variety of experimental approaches used and the number of biological topics investigated.
     el-row
       el-col(:span="20" :offset="2")
-        div(v-if="progressStep() < 4")
-          p Initializing... ({{this.progress}} / 4)  
-             el-button(circle plain type="primary" :loading="true" size="normal") 
+        div(v-if="progress() < 4")
+          p Initializing... ({{this.progress}} / 4)
+             el-button(circle plain type="primary" :loading="true" size="normal")
         div(v-else="")
           QuickAccess
     el-row
@@ -45,9 +45,6 @@ export default {
     }
   },
   computed: {
-    thisYear () {
-      return new Date().getFullYear()
-    },
     ...mapGetters(['db_stats', 'progress'])
   },
 }
