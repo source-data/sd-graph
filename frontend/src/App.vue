@@ -37,7 +37,7 @@
               |  experiments in the SourceData knowledge graph
             p
               code {{db_stats.total_nodes || 0 }}
-              |  nodes in EBB.
+              |  nodes in EEB.
       el-main
         router-view
     el-footer
