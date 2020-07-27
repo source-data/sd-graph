@@ -463,17 +463,15 @@ RETURN
 class STATS(Query):
     code = '''
 MATCH (a:Article)
-WITH COUNT(a) AS N_jats
-MATCH (sd:SDPanel {source: 'sdapi'})
-WITH COUNT(sd) AS N_sdapi, N_jats
-OPTIONAL MATCH (eeb:SDArticle {source: 'eebapi'})
-WITH COUNT(eeb) AS N_eeb, N_sdapi, N_jats
-MATCH (n)
-WITH COUNT(n) AS N_nodes, N_eeb, N_sdapi, N_jats
-MATCH ()-[r]->()
-RETURN COUNT(r) AS N_rel, N_nodes, N_eeb, N_sdapi, N_jats
+WHERE toLower(a.journal_title) = 'biorxiv'
+WITH COUNT(DISTINCT a.doi) AS biorxiv_preprints
+MATCH (a:VizPaper {query:"by_reviewing_service"})
+WITH COUNT(DISTINCT a.doi) AS refereed_preprints, biorxiv_preprints
+MATCH (a:SDArticle {source: "eebapi"})
+WITH COUNT(DISTINCT a.doi) AS autoannotated_preprints, refereed_preprints, biorxiv_preprints
+RETURN biorxiv_preprints, refereed_preprints, autoannotated_preprints
     '''
-    returns = ['N_jats', 'N_sdapi', 'N_eeb', 'N_nodes', 'N_rel']
+    returns = ['biorxiv_preprints', 'refereed_preprints', 'autoannotated_preprints']
 
 
 class PANEL_SUMMARY(Query):
