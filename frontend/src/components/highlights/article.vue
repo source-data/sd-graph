@@ -24,14 +24,21 @@ export default {
   },
   methods: {
     getArticle (doi) {
-      httpClient.get(`/api/v1/doi/${doi}`)
-        .then((response) => {
+      httpClient.get(`/api/v1/doi/${doi}`).then(
+        (response) => {
           let article = response.data[0]
-          if (!article.doi) {
-            article = null
+          if (article.doi) {
+            httpClient.get(`/api/v1/review/${doi}`).then(
+              (response) => {
+                if (response.data[0]) {
+                  let review_process = response.data[0].review_process
+                  article.review_process = review_process
+                  this.article = article
+                }
+              }
+            )
           }
-          this.article = article
-        })
+      })
     },
   },
   beforeRouteEnter (to, from, next) {
