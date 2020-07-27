@@ -78,6 +78,7 @@
                   i {{ article.published_journal_title }}
                 b doi:
                 a(:href="href(article.journal_doi)" target="_blank") https://doi.org/{{ article.journal_doi }}
+
       el-row(type="flex" justify="space-between")
         el-col(:span="11")
           p
