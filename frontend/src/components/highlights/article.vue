@@ -27,12 +27,8 @@ export default {
       httpClient.get(`/api/v1/doi/${doi}`).then(
         (response) => {
           let article = response.data[0]
-<<<<<<< HEAD
-          if (!article.doi) { // if the backend doesn't find the article it
+          if (article.doi) { // if the backend doesn't find the article it
                               // returns an article with all its properties set to null
-            article = null
-=======
-          if (article.doi) {
             httpClient.get(`/api/v1/review/${doi}`).then(
               (response) => {
                 if (response.data[0]) {
@@ -42,7 +38,6 @@ export default {
                 }
               }
             )
->>>>>>> 1e74f7d639ec4931f6b18a6f43ae16231371ba3d
           }
       })
     },
