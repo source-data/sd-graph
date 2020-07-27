@@ -21,6 +21,7 @@ def create_sitemap(dois):
     dt = datetime.datetime.now().strftime("%Y-%m-%d")
 
     add_url(root, loc=BASE_URL, lastmod=dt, changefreq="weekly", priority="1.0")
+    add_url(root, loc=f"{BASE_URL}/about", lastmod=dt, changefreq="monthly", priority="1.0")
 
     for doi in dois:
         add_url(root, loc=f"{BASE_URL}/doi/{doi}", priority="0.9")
