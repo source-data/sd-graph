@@ -11,7 +11,7 @@
             //- el-row(type="flex" justify="space-between")
             p
               small() Posted
-                b {{ displayDate(article.pub_date) }}
+                b  {{ displayDate(article.pub_date) }}
                 |  on
                 i {{ displayJournal(article.journal) }}
             p
@@ -72,8 +72,8 @@
                   //- i(class="fas el-icon-fa-award")
                   i.el-icon-finished
                   b  Published in:
-                  i {{ article.published_journal_title }}
-                b doi:
+                  i  {{ article.published_journal_title }}
+                b  doi:
                 el-link(type="primary" :href="href(article.journal_doi)" target="_blank") https://doi.org/{{ article.journal_doi }}
       el-row(type="flex" justify="space-between")
         el-col(:span="11")
