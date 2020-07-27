@@ -34,8 +34,8 @@ export default {
                 if (response.data[0]) {
                   let review_process = response.data[0].review_process
                   article.review_process = review_process
-                  this.article = article
                 }
+                this.article = article
               }
             )
           }
