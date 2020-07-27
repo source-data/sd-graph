@@ -103,7 +103,6 @@
                   el-tag(size="medium") {{ item }}
               div(v-else="typeof card.text === 'string'")
                 small(style="line-height:1.3") {{ card.text }}
-    el-divider
 </template>
 <script>
 

@@ -1,29 +1,33 @@
 <template lang="pug">
   div
-    el-row(type="flex" class="row-bg" justify="space-between")
-      el-col
-        h1 Results
-      el-col
-        p(v-if="selectedTab==='byReviewingService'")
-          small Sort by: 
-          el-radio-group(v-model="sortBy" size="mini" @change="sortRecords")
-            el-radio-button(label="pub_date")
-              | preprint date
-            el-radio-button(label="posting_date")
-              | reviewing date
-          el-switch(
-            style="margin-left:10px"
-            v-model="sortDirection"
-            @change="sortRecords"
-            active-icon-class="el-icon-sort-up"
-            active-value="asc"
-            active-color="#409EFF"
-            inactive-icon-class="el-icon-sort-down"
-            inactive-value="desc"
-            inactive-color="#409EFF"
-          )
     div(v-if="records.length > 0")
-        HighlitedListItem(:article="article" v-for="article in records")
+      el-row(type="flex" class="row-bg" justify="space-between")
+        el-col
+          h1 {{ records.length }} results found:
+        el-col
+          p(v-if="selectedTab==='byReviewingService'")
+            small Sort by:
+            el-radio-group(v-model="sortBy" size="mini" @change="sortRecords")
+              el-radio-button(label="pub_date")
+                | preprint date
+              el-radio-button(label="posting_date")
+                | reviewing date
+            el-switch(
+              style="margin-left:10px"
+              v-model="sortDirection"
+              @change="sortRecords"
+              active-icon-class="el-icon-sort-up"
+              active-value="asc"
+              active-color="#409EFF"
+              inactive-icon-class="el-icon-sort-down"
+              inactive-value="desc"
+              inactive-color="#409EFF"
+            )
+    div(v-if="records.length > 0")
+      div(v-for="article in records")
+        el-card.box-card(shadow="hover")
+          HighlitedListItem(:article="article")
+        br
     div(v-else)
         p No results
 </template>

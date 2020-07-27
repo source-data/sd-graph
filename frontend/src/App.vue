@@ -65,7 +65,8 @@ export default {
   },
   beforeCreate () {
     this.$store.dispatch('statsFromFlask').then(
-      () => this.$store.commit('incrementInit'))
+      () => this.$store.commit('incrementInit')
+    )
     this.$store.dispatch('byReviewingService/getAll').then(
       () => {
         this.$store.dispatch('highlights/listByCurrent', 'byReviewingService').then(
@@ -99,6 +100,7 @@ html, body {
 
 a {
   text-decoration: none;
+  color: #66b1ff;
 }
 
 .el-menu-item a {
