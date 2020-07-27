@@ -118,6 +118,10 @@ a {
 .margin-0 {
   margin: 0;
 }
+
+.margin-5 {
+  margin: 5px;
+}
 </style>
 
 <style scoped lang="scss">

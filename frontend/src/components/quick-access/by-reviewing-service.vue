@@ -2,12 +2,12 @@
   div
     el-row(type="flex" class="row-bg" justify="space-between")
       el-col
-        p.margin-0
-          small Reviewing service
+        p.margin-5
+          small Select a reviewing service
         el-radio-group(size="mini" @change="onSelect" v-model="selectedRev")
           el-radio-button(v-for="id in reviewingList" :label="id") {{ displayJournal(id) }}
       el-col
-        p.margin-0
+        p.margin-5
           small Sort by:
         el-radio-group(v-model="sortBy" size="mini" @change="sortRecords")
           el-radio-button(label="pub_date")
