@@ -27,7 +27,8 @@ export default {
       httpClient.get(`/api/v1/doi/${doi}`)
         .then((response) => {
           let article = response.data[0]
-          if (!article.doi) {
+          if (!article.doi) { // if the backend doesn't find the article it
+                              // returns an article with all its properties set to null
             article = null
           }
           this.article = article
