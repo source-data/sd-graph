@@ -113,7 +113,11 @@ a {
 }
 .md-content img {
   max-height: 60px;
-  }
+}
+
+.margin-0 {
+  margin: 0;
+}
 </style>
 
 <style scoped lang="scss">
