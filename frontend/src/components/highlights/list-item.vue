@@ -10,14 +10,17 @@
                 span.el-icon-connection
             //- el-row(type="flex" justify="space-between")
             p
-              small() Posted
+              small
+                | Posted
+                |
                 b {{ displayDate(article.pub_date) }}
                 |  on
+                |
                 i {{ displayJournal(article.journal) }}
             p
               small
-                b  doi:
-                el-link(type="primary" :href="href(article.doi)" target="_blank") https://doi.org/{{ article.doi }}
+                b doi:
+                a(:href="href(article.doi)" target="_blank") https://doi.org/{{ article.doi }}
             p
               small {{ authorList }}
             div(v-if="article.review_process")
@@ -74,7 +77,7 @@
                   b  Published in:
                   i {{ article.published_journal_title }}
                 b doi:
-                el-link(type="primary" :href="href(article.journal_doi)" target="_blank") https://doi.org/{{ article.journal_doi }}
+                a(:href="href(article.journal_doi)" target="_blank") https://doi.org/{{ article.journal_doi }}
       el-row(type="flex" justify="space-between")
         el-col(:span="11")
           p
@@ -93,7 +96,7 @@
                     a(target="_blank" :href="`https://search.sourcedata.io/panel/${card.id}`")
                       img(:src="`https://api.sourcedata.io/file.php?panel_id=${card.id}`").fig-img
                     br
-                    el-link(target="_blank" type="primary" :href="`https://search.sourcedata.io/panel/${card.id}`")
+                    a(target="_blank" :href="`https://search.sourcedata.io/panel/${card.id}`")
                       | open as SmartFigures
               div(v-else-if="card.text instanceof Array")
                 span(v-for="item in card.text")
