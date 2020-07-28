@@ -7,18 +7,38 @@
             |  that  combines artificial intelligence with human curation
             |  and expert peer-review to highlight results posted in
             |
-            a(href="https://biorxiv.org") bioRxiv
+            a(href="https://biorxiv.org" target="_blank") bioRxiv
             |  preprints.
           p
             |The EEB platform is a technology experiment developed by
             |
-            a(href="https://embopress.org") EMBO Press.
-
-          p EEB helps user to browse preprints in several ways
+            a(href="https://embopress.org" target="_blank") EMBO Press 
+            | and 
+            a(href="https://sourcedata.io" target="_blank") SourceData
+            |. 
+          p Follow 
+            a(href="https://twitter.com/EarlyEvidence" target="_blank") @EarlyEvidence
+            |  on Twitter to receive updates and new highlighted preprints.
+          p Discover preprints with one of these methods:
           ul
-            li Expert reviews linked to preprints provide in-depth analyses of the reported evidence.
-            li Hypotheses related to the biology of SARS-CoV-2/COVID-19 are highlighted and linked to the reespective studies.
-            li A selection of recent SARS-CoV-2 preprints are  highlighted based on the variety of experimental approaches used and the number of biological topics investigated.
+            li
+              //- i(class="el-icon-reading")
+              b  Refereed Preprints: 
+              |  browse preprints that are linked to expert reviews.
+            li
+              //- i(class="fas el-icon-fa-flask")
+              b  COVID-19 hypotheses: 
+              |  find recent studies related to the biology of SARS-CoV-2/COVID-19 based on the hypotheses they are testing.
+            li
+              //- i(class="el-icon-magic-stick")
+              b  Automagic:
+              |  check out a selection of 20 SARS-CoV-2 preprints automatically highlighted based on the diversity of experimental approaches used and biological topics investigated.
+            li
+              //- i(class="el-icon-search")
+              b  Search COVID-19 preprints:
+              |  find preprints by keyword, author name or doi.
+
+
     el-row
       el-col(:span="20" :offset="2")
         br

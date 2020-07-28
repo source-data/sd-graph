@@ -30,14 +30,14 @@
         div(style="padding:10px")
           small Database stats:
             p
-              code {{ db_stats.ai_annotated || 0 }}
-              |  preprints automatically annotated.
+              code {{ db_stats.biorxiv_preprints || 0 }}
+              |  bioRxiv preprints loaded.
             p
-              code {{ db_stats.sd_annotated || 0 }}
-              |  experiments in the SourceData knowledge graph
+              code {{ db_stats.refereed_preprints || 0 }}
+              |  refereed preprints highlighted.
             p
-              code {{db_stats.total_nodes || 0 }}
-              |  nodes in EEB.
+              code {{db_stats.autoannotated_preprints || 0 }}
+              |  COVID-19 preprints annotated automatically.
       el-main
         router-view
     el-footer
@@ -123,6 +123,10 @@ a {
 
 .margin-0 {
   margin: 0;
+}
+
+.margin-5 {
+  margin: 5px;
 }
 </style>
 

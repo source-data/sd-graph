@@ -62,11 +62,9 @@ export default new Vuex.Store({
         .then((response) => {
           const resp = response.data[0]
           const stats = {
-            total_preprints: resp.N_jats,
-            sd_annotated: resp.N_sdapi,
-            ai_annotated: resp.N_eeb,
-            total_nodes: resp.N_nodes,
-            total_rel: resp.N_rel
+            autoannotated_preprints: resp.autoannotated_preprints,
+            biorxiv_preprints: resp.biorxiv_preprints,
+            refereed_preprints: resp.refereed_preprints,
           }
           commit('setStats', stats)
         })

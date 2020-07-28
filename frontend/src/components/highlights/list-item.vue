@@ -20,7 +20,7 @@
             p
               small
                 b doi:
-                a(:href="href(article.doi)" target="_blank") https://doi.org/{{ article.doi }}
+                a(:href="href(article.doi)" target="_blank")  https://doi.org/{{ article.doi }}
             p
               small {{ authorList }}
             div(v-if="article.review_process")
@@ -65,7 +65,7 @@
                     span.peer_review_material
                       i.el-icon-document-checked
                       |  Reviewed by
-                      i {{ displayJournal(article.review_process.annot.reviewed_by) }}
+                      i  {{ displayJournal(article.review_process.annot.reviewed_by) }}
                       |  | Review Process File
                       | ({{ displayDate(article.review_process.annot.posting_date) }})
                   div(v-html="mdRender(article.review_process.annot.text)").md-content
@@ -75,9 +75,9 @@
                   //- i(class="fas el-icon-fa-award")
                   i.el-icon-finished
                   b  Published in:
-                  i {{ article.published_journal_title }}
-                b doi:
-                a(:href="href(article.journal_doi)" target="_blank") https://doi.org/{{ article.journal_doi }}
+                  i  {{ article.published_journal_title }}
+                b  doi:
+                a(:href="href(article.journal_doi)" target="_blank")  https://doi.org/{{ article.journal_doi }}
 
       el-row(type="flex" justify="space-between")
         el-col(:span="11")
