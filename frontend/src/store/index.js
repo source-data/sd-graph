@@ -23,7 +23,7 @@ export default new Vuex.Store({
   },
   state: {
     journalNameDict: {
-      'biorxiv': 'bioRxiv', 
+      'biorxiv': 'bioRxiv',
       'medrxiv': 'medRxiv',
       'review commons': 'Review Commons',
       'elife': 'eLife',
@@ -38,14 +38,10 @@ export default new Vuex.Store({
       total_rel: undefined
     },
     loadingRecords: false,
-    initializationStage: 0
   },
   getters: {
     db_stats(state) {
       return state.stats
-    },
-    progress(state) {
-      return state.initializationStage
     },
     journalName: (state) => (id) => { return state.journalNameDict[id.toLowerCase()] }
   },
@@ -59,9 +55,6 @@ export default new Vuex.Store({
     setNotLoading (state) {
       state.loadingRecords = false
     },
-    incrementInit (state) {
-      state.initializationStage += 1
-    }
   },
   actions: {
     statsFromFlask ({ commit }) {

@@ -21,13 +21,9 @@
             li A selection of recent SARS-CoV-2 preprints are  highlighted based on the variety of experimental approaches used and the number of biological topics investigated.
     el-row
       el-col(:span="20" :offset="2")
-        div(v-if="progressStep() < 4")
-          p Initializing... ({{this.progress}} / 4)
-             el-button(circle plain type="primary" :loading="true" size="normal")
-        div(v-else="")
-          br
-          el-card.box-card
-            QuickAccess
+        br
+        el-card.box-card
+          QuickAccess
     el-row
       el-col(:span="20" :offset="2")
         Highlights

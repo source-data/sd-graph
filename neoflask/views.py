@@ -3,6 +3,7 @@ from .engine import Engine
 from .sitemap import create_sitemap
 from . import DB, app, cache
 from .converter import LuceneQueryConverter
+from flask_cors import cross_origin
 
 app.url_map.converters['escape_lucene'] = LuceneQueryConverter
 
@@ -85,6 +86,15 @@ def by_doi(doi: str):
     app.logger.info(f"search doi:{doi}")
     return jsonify(ASKNEO.by_doi(doi=doi))
 
+
+@app.route('/api/v1/dois/', methods=['POST'])
+@cross_origin(origin='*',headers=['Content-Type','Authorization'])
+@cache.cached()
+def by_dois():
+    dois = request.json['dois']
+    app.logger.info(f"search dois:{dois}")
+    data = [ASKNEO.by_doi(doi=doi)[0] for doi in dois]
+    return jsonify(data)
 
 @app.route('/api/v1/review/<path:doi>', methods=['GET', 'POST'])
 @cache.cached()
