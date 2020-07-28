@@ -64,30 +64,36 @@ export default {
     ...mapGetters(['db_stats'])
   },
   beforeCreate () {
-    this.$store.dispatch('statsFromFlask').then(
-      () => this.$store.commit('incrementInit')
-    )
-    this.$store.dispatch('byReviewingService/getAll').then(
-      () => {
-        this.$store.dispatch('highlights/listByCurrent', 'byReviewingService').then(
-          () => {
-            this.$store.commit('highlights/sortRecords', {
+    const initialLightAppLoad = () => {
+      console.debug("initialLightAppLoad start")
+      return this.$store.dispatch('byReviewingService/getAll')
+        .then(() => {
+          return this.$store.dispatch('highlights/listByCurrent', 'byReviewingService')
+        })
+        .then(() => {
+          this.$store.commit('highlights/sortRecords', {
               sortBy: 'posting_date',
               direction: 'desc',
             })
-          }
-        )
-      }
-    ).then(
-          () => this.$store.commit('incrementInit')
-    ),
-    this.$store.dispatch('byHyp/getAll').then(
-      () => this.$store.commit('incrementInit')
-    ),
-    this.$store.dispatch('byAutomagic/getAll').then(
-      () => this.$store.commit('incrementInit')
-    ),
-    this.$store.commit('highlights/updateSelectedTab', 'byReviewingService')
+          this.$store.commit('highlights/updateSelectedTab', 'byReviewingService')
+          console.debug("initialLightAppLoad done")
+        })
+        // .then(() => this.$store.commit('incrementInit') )
+    }
+    const secondHeavyFullAppLoad = () => {
+      console.debug("secondHeavyFullAppLoad start")
+      this.$store.dispatch('statsFromFlask')
+        // .then(() => this.$store.commit('incrementInit'))
+
+      this.$store.dispatch('byHyp/getAll')
+        // .then( () => this.$store.commit('incrementInit') )
+
+      this.$store.dispatch('byAutomagic/getAll')
+        // .then( () => this.$store.commit('incrementInit') )
+    }
+
+
+    initialLightAppLoad().then(secondHeavyFullAppLoad)
   },
 }
 </script>
