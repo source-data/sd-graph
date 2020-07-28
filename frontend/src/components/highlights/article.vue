@@ -1,6 +1,7 @@
 <template lang="pug">
   div
     div(v-if="article")
+      h1 lklalals
       HighlitedListItem(:article="article")
     div(v-else="article")
       h1 The article with doi #[em {{ article_doi }}] was not found.
@@ -24,21 +25,19 @@ export default {
   },
   methods: {
     getArticle (doi) {
-      httpClient.get(`/api/v1/doi/${doi}`).then(
-        (response) => {
-          let article = response.data[0]
-          if (article.doi) { // if the backend doesn't find the article it
-                              // returns an article with all its properties set to null
-            httpClient.get(`/api/v1/review/${doi}`).then(
-              (response) => {
-                if (response.data[0]) {
-                  let review_process = response.data[0].review_process
-                  article.review_process = review_process
-                  this.article = article
-                }
-              }
-            )
-          }
+      httpClient.get(`/api/v1/doi/${doi}`).then((response) => {
+        let article = response.data[0]
+        if (article.doi) {  // if the backend doesn't find the article it
+                            // returns an article with all its properties set to null
+          this.article = article
+          return httpClient.get(`/api/v1/review/${doi}`)
+        }
+      })
+      .then((response) => {
+        if (response.data[0]) {
+          let review_process = response.data[0].review_process
+          this.article.review_process = review_process
+        }
       })
     },
   },
