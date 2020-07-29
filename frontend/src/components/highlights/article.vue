@@ -1,7 +1,6 @@
 <template lang="pug">
   div
     div(v-if="article")
-      h1 lklalals
       HighlitedListItem(:article="article")
     div(v-else="article")
       h1 The article with doi #[em {{ article_doi }}] was not found.
@@ -16,6 +15,19 @@ export default {
   name:'article-show',
   components: {
     HighlitedListItem,
+  },
+  metaInfo () {
+    if (!this.article) {
+      return {
+        title: undefined,
+      }
+    }
+    return {
+      title: this.article.title,
+      meta: [
+        { name: 'description', content: this.article.abstract }
+      ],
+    }
   },
   data () {
     return {
@@ -49,6 +61,7 @@ export default {
   },
   beforeRouteUpdate (to, from, next) {
     this.article_doi = to.params.doi
+    this.getArticle(to.params.doi)
     next()
   },
 }
