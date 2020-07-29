@@ -92,6 +92,13 @@ def by_doi(doi: str):
 def by_dois():
     dois = request.json['dois']
     app.logger.info(f"search dois:{dois}")
+    return _by_dois(dois)
+
+@cache.cached()
+def _by_dois(dois):
+    """
+    auxiliary method that supports caching
+    """
     data = [ASKNEO.by_doi(doi=doi)[0] for doi in dois]
     return jsonify(data)
 
