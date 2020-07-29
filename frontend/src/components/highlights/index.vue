@@ -3,7 +3,7 @@
     div(v-show="loadingRecords" )
       el-row
         el-col
-          el-button(circle plain type="primary" :loading="true" style="position: absolute; right: 0; top: 10px;")
+          el-button(circle type="primary" :loading="true" style="position: absolute; right: 0; top: 10px;")
     div(:class="{'highlights-loading': loadingRecords}")
       div(v-if="records.length > 0")
         el-row(type="flex" class="row-bg" justify="space-between")
