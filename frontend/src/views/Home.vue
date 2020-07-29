@@ -73,6 +73,35 @@ export default {
   computed: {
     ...mapGetters(['db_stats', 'progress'])
   },
+  beforeCreate () {
+    const initialLightAppLoad = () => {
+      return this.$store.dispatch('byReviewingService/getAll')
+        .then(() => {
+          return this.$store.dispatch('highlights/listByCurrent', 'byReviewingService')
+        })
+        .then(() => {
+          this.$store.commit('highlights/sortRecords', {
+              sortBy: 'posting_date',
+              direction: 'desc',
+            })
+          this.$store.commit('highlights/updateSelectedTab', 'byReviewingService')
+          console.debug("initialLightAppLoad done")
+        })
+        // .then(() => this.$store.commit('incrementInit') )
+    }
+    const secondHeavyFullAppLoad = () => {
+      this.$store.dispatch('statsFromFlask')
+        // .then(() => this.$store.commit('incrementInit'))
+
+      this.$store.dispatch('byHyp/getAll')
+        // .then( () => this.$store.commit('incrementInit') )
+
+      this.$store.dispatch('byAutomagic/getAll')
+        // .then( () => this.$store.commit('incrementInit') )
+    }
+
+    initialLightAppLoad().then(secondHeavyFullAppLoad)
+  },
 }
 </script>
 
