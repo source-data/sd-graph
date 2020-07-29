@@ -69,6 +69,7 @@ http:
         - web-secure
       middlewares:
         - csrf
+        - test-compress
       service: vuejs
       tls:
         # https://docs.traefik.io/master/routing/routers/#certresolver
@@ -79,6 +80,7 @@ http:
         - web-secure
       middlewares:
         - csrf
+        - test-compress
       service: flask
       tls:
         # https://docs.traefik.io/master/routing/routers/#certresolver
@@ -96,6 +98,8 @@ http:
       # https://docs.djangoproject.com/en/dev/ref/csrf/#ajax
       headers:
         hostsProxyHeaders: ['X-CSRFToken']
+    test-compress:
+      compress: {}
     # embo-intranet-ipwhitelist:
     #   ipWhiteList:
     #     sourceRange:
