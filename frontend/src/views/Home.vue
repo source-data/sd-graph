@@ -13,10 +13,14 @@
             |The EEB platform is a technology experiment developed by
             |
             a(href="https://embopress.org" target="_blank" rel="noopener") EMBO Press
+            |
             | and
+            |
             a(href="https://sourcedata.io" target="_blank" rel="noopener") SourceData
             |.
-          p Follow
+          p
+            | Follow
+            |
             a(href="https://twitter.com/EarlyEvidence" target="_blank" rel="noopener") @EarlyEvidence
             |  on Twitter to receive updates and new highlighted preprints.
           p Discover preprints with one of these methods:
