@@ -20,7 +20,7 @@
             p
               small
                 b doi:
-                a(:href="href(article.doi)" target="_blank")  https://doi.org/{{ article.doi }}
+                a(:href="href(article.doi)" target="_blank" rel="noopener")  https://doi.org/{{ article.doi }}
             p
               small {{ authorList }}
             div(v-if="article.review_process")
@@ -77,7 +77,7 @@
                   b  Published in:
                   i  {{ article.published_journal_title }}
                 b  doi:
-                a(:href="href(article.journal_doi)" target="_blank")  https://doi.org/{{ article.journal_doi }}
+                a(:href="href(article.journal_doi)" target="_blank" rel="noopener")  https://doi.org/{{ article.journal_doi }}
 
       el-row(type="flex" justify="space-between")
         el-col(:span="11")
@@ -94,10 +94,10 @@
                     span(v-for="entity in card.entities")
                       el-tag(size="medium" :type="mapRole(entity.role)") {{ entity.text }}
                   p(v-if="card.id")
-                    a(target="_blank" :href="`https://search.sourcedata.io/panel/${card.id}`")
+                    a(target="_blank" rel="noopener" :href="`https://search.sourcedata.io/panel/${card.id}`")
                       img(:src="`https://api.sourcedata.io/file.php?panel_id=${card.id}`").fig-img
                     br
-                    a(target="_blank" :href="`https://search.sourcedata.io/panel/${card.id}`")
+                    a(target="_blank" rel="noopener" :href="`https://search.sourcedata.io/panel/${card.id}`")
                       | open as SmartFigures
               div(v-else-if="card.text instanceof Array")
                 span(v-for="item in card.text")
