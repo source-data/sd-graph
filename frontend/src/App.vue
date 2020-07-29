@@ -27,7 +27,7 @@
           el-menu-item(index="2" disabled) For developers
           el-menu-item(index="3" disabled) Contact
         el-divider
-        div(style="padding:10px")
+        div(v-if="db_stats.length" style="padding:10px")
           small Database stats:
             p
               code {{ db_stats.biorxiv_preprints || 0 }}
