@@ -89,7 +89,6 @@ def by_doi(doi: str):
 
 @app.route('/api/v1/dois/', methods=['POST'])
 @cross_origin(origin='*',headers=['Content-Type','Authorization'])
-@cache.cached()
 def by_dois():
     dois = request.json['dois']
     app.logger.info(f"search dois:{dois}")
