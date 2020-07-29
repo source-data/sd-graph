@@ -92,31 +92,24 @@ export default {
       commit('setIsLoading')
       const current = rootGetters[[module, 'currentRecord'].join('/')]
       const loadComplete = rootGetters[[module, 'isLoaded'].join('/')]
-      if (loadComplete) {
-        if ('papers' in current) {
-          const dois = current.papers.map(c => c.doi)
-          const promises = dois.map((doi) => {
-            return httpClient.get(`/api/v1/doi/${doi}`)
-          })
-          return Promise.all(promises).then((responses) => {
-            let non_empty = responses.filter(
-              r => r.data.length > 0
-            )
-            const records = non_empty.reduce((acc, r) => {
-              return [preProcessRecord(r.data[0], current), ...acc]
-            }, [])
-            commit('addRecords', records)
-            return records
-          }).finally(() => {
-            commit('sortRecords')
-            commit('setNotLoading')
-          })
-        } else {
-          commit('setNotLoading')
-          commit('addRecords', [])
-          return {}
-        }
+      if (!loadComplete || ! ('papers' in current)) {
+        commit('setNotLoading')
+        commit('addRecords', [])
+        return
       }
+      httpClient.post('/api/v1/dois/', {
+          dois: current.papers.map(c => c.doi),
+        })
+        .then((response) => {
+          const records = response.data.reduce((acc, article) => {
+            return [preProcessRecord(article, current), ...acc]
+          }, [])
+          commit('addRecords', records)
+        })
+        .finally(() => {
+          commit('sortRecords')
+          commit('setNotLoading')
+        })
     },
   }
 }
