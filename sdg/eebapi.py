@@ -107,12 +107,12 @@ class EEBAPI(API):
     GET_FIGURE = 'figure'
 
     def collection(self, collection_names):
-        collections = []
+        data = {}
         for name in collection_names:
             url = EEB_PUBLIC_API + self.GET_COLLECTION + name
-            data = self.rest2data(url)
-            collections.append(SDCollection(data, name))
-        return collections
+            data[name] = self.rest2data(url)
+        collection = SDCollection(data)
+        return collection
 
     def article(self, doi):
         url = EEB_PUBLIC_API + self.GET_ARTICLE + doi

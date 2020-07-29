@@ -115,21 +115,23 @@ class SDAPI(API):
         authenticated_session = requests.Session()
         authenticated_session.auth = (SD_API_USERNAME, SD_API_PASSWORD)
         self.session_retry = self.requests_retry_session(session=authenticated_session)
-        self.collection_id = None
 
-    def collection(self, collection_names):
+    def collection(self, collection_names) -> SDCollection:
         def get_collection_id(collection_name):
             url = SD_API_URL + self.GET_COLLECTION + collection_name
             data = self.rest2data(url)
             collection_id = data[0]['collection_id']
             return collection_id
 
-        collection_name = collection_names[0] # sdapi only processes 1 collection
-        self.collection_id = get_collection_id(collection_name)
-        url = SD_API_URL + self.GET_COLLECTION + self.collection_id + "/" + self.GET_LIST
-        collection = self.generate_sdnode(url, SDCollection, collection_name, self.collection_id)
-        collections = [collection]  # for compatibility wiht eebapi which returns several collections
-        return collections
+        ids = []
+        data = {}
+        for name in collection_names:
+            collection_id = get_collection_id(collection_name)
+            ids.append(collection_id)
+            url = SD_API_URL + self.GET_COLLECTION + self.collection_id + "/" + self.GET_LIST
+            data[name] = self.rest2data(url)
+        collection = SDCollection(data, ids)
+        return collection
 
     def article(self, doi):
         url = SD_API_URL + self.GET_COLLECTION + self.collection_id + "/" + self.GET_ARTICLE + doi
