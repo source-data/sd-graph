@@ -92,14 +92,11 @@ def by_doi(doi: str):
 def by_dois():
     dois = request.json['dois']
     app.logger.info(f"search dois:{dois}")
-    return _by_dois(dois)
-
-@cache.cached()
-def _by_dois(dois):
-    """
-    auxiliary method that supports caching
-    """
-    data = [ASKNEO.by_doi(doi=doi)[0] for doi in dois]
+    cache_key = str(hash(frozenset(dois)))
+    data = cache.get(cache_key)
+    if data is None:
+        data = [ASKNEO.by_doi(doi=doi)[0] for doi in dois]
+        cache.add(cache_key, data)
     return jsonify(data)
 
 @app.route('/api/v1/review/<path:doi>', methods=['GET', 'POST'])
