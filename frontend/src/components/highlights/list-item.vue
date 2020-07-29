@@ -40,6 +40,7 @@
                         span(slot="reference").peer_review_material
                           i.el-icon-document-checked
                           |   Reviewed by
+                          |
                           i {{ displayJournal(review.reviewed_by) }}
                           |  | Reviewer #
                           | {{ review.review_idx }}
@@ -47,6 +48,7 @@
                       span(v-else).peer_review_material
                         i.el-icon-document-checked
                         |   Reviewed by
+                        |
                         i {{ displayJournal(review.reviewed_by) }}
                         |  | Reviewer #
                         | {{ review.review_idx }}
@@ -177,14 +179,17 @@ export default {
 }
 </script>
 
+<style>
+  .peer_review_material {
+    color:#364497;
+    font-weight: bold;
+  }
+</style>
+
 <style scoped>
   .scroll {
     max-height: 500px;
     overflow: auto;
-  }
-  .peer_review_material {
-    color:#364497;
-    font-weight: bold;
   }
   .fig-img {
     max-width: 300px;
