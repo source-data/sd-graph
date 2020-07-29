@@ -31,11 +31,9 @@ export default new Vuex.Store({
       'peerage of science': 'Peerage of Science',
     },
     stats: {
-      total_preprints: undefined,
-      sd_annotated: undefined,
-      ai_annotated: undefined,
-      total_nodes: undefined,
-      total_rel: undefined
+      autoannotated_preprints: undefined,
+      biorxiv_preprints: undefined,
+      refereed_preprints: undefined,
     },
     loadingRecords: false,
   },
@@ -66,6 +64,7 @@ export default new Vuex.Store({
             biorxiv_preprints: resp.biorxiv_preprints,
             refereed_preprints: resp.refereed_preprints,
           }
+          console.debug('stats', stats)
           commit('setStats', stats)
         })
         .finally(() => {

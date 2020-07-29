@@ -8,9 +8,7 @@
             |  and expert peer-review to highlight results posted in
             |
             a(href="https://biorxiv.org" target="_blank" rel="noopener") bioRxiv
-            |  preprints.
-          p
-            |The EEB platform is a technology experiment developed by
+            |  preprints. EEB is a technology experiment developed by
             |
             a(href="https://embopress.org" target="_blank" rel="noopener") EMBO Press
             |
@@ -32,11 +30,11 @@
             li
               //- i(class="fas el-icon-fa-flask")
               b  COVID-19 hypotheses:
-              |  find recent studies related to the biology of SARS-CoV-2/COVID-19 based on the hypotheses they are testing.
+              |  find recent studies related to the biology of SARS-CoV-2/COVID-19 based on hypotheses they are testing.
             li
               //- i(class="el-icon-magic-stick")
               b  Automagic:
-              |  check out a selection of 20 SARS-CoV-2 preprints automatically highlighted based on the diversity of experimental approaches used and biological topics investigated.
+              |  check out a selection of 20 SARS-CoV-2 preprints automatically highlighted based on their diversity in experimental approaches and biological topics.
             li
               //- i(class="el-icon-search")
               b  Search COVID-19 preprints:
@@ -55,7 +53,6 @@
 
 
 <script>
-import { mapGetters } from 'vuex'
 import QuickAccess from '../components/quick-access/index.vue'
 import Highlights from '../components/highlights/index.vue'
 
@@ -64,14 +61,6 @@ export default {
   components: {
     QuickAccess,
     Highlights,
-  },
-  methods: {
-    progressStep () {
-      return this.progress
-    }
-  },
-  computed: {
-    ...mapGetters(['db_stats', 'progress'])
   },
   beforeCreate () {
     const initialLightAppLoad = () => {
@@ -87,19 +76,12 @@ export default {
           this.$store.commit('highlights/updateSelectedTab', 'byReviewingService')
           console.debug("initialLightAppLoad done")
         })
-        // .then(() => this.$store.commit('incrementInit') )
     }
     const secondHeavyFullAppLoad = () => {
       this.$store.dispatch('statsFromFlask')
-        // .then(() => this.$store.commit('incrementInit'))
-
       this.$store.dispatch('byHyp/getAll')
-        // .then( () => this.$store.commit('incrementInit') )
-
       this.$store.dispatch('byAutomagic/getAll')
-        // .then( () => this.$store.commit('incrementInit') )
     }
-
     initialLightAppLoad().then(secondHeavyFullAppLoad)
   },
 }
