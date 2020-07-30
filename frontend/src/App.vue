@@ -2,12 +2,12 @@
   el-container
     .org-credits
       .org-credits--left
-        a(href="https://embo.org" target="_blank")
+        a(href="https://embo.org" target="_blank" rel="noopener")
           img(src="./assets/EEB_E_LOGO.png" class="banner-logo banner-logo--embo" alt="EMBO Logo")
       .org-credits--right
         a(href="https://embopress.org")
           img(src="./assets/EEB_EP_LOGO.png" class="banner-logo banner-logo--press" alt="EMBO Press Logo")
-        a(href="https://sourcedata.io" target="_blank")
+        a(href="https://sourcedata.io" target="_blank" rel="noopener")
           img(src="./assets/EEB_SD_LOGO.png" class="banner-logo banner-logo--sourcedata" alt="SourceData Logo")
     header.banner-area
       img(src="./assets/EEB_HP_Banner.svg").banner-image
@@ -27,17 +27,17 @@
           el-menu-item(index="2" disabled) For developers
           el-menu-item(index="3" disabled) Contact
         el-divider
-        div(style="padding:10px")
+        div(v-if="db_stats" style="padding:10px")
           small Database stats:
             p
-              code {{ db_stats.ai_annotated || 0 }}
-              |  preprints automatically annotated.
+              code {{ db_stats.biorxiv_preprints || 0 }}
+              |  bioRxiv preprints loaded.
             p
-              code {{ db_stats.sd_annotated || 0 }}
-              |  experiments in the SourceData knowledge graph
+              code {{ db_stats.refereed_preprints || 0 }}
+              |  refereed preprints highlighted.
             p
-              code {{db_stats.total_nodes || 0 }}
-              |  nodes in EBB.
+              code {{db_stats.autoannotated_preprints || 0 }}
+              |  COVID-19 preprints annotated automatically.
       el-main
         router-view
     el-footer
@@ -55,38 +55,16 @@ export default {
   metaInfo: {
     meta: [
       { name: 'description', content: 'Early Evidence Base (EEB) is an experimental platform that combines artificial intelligence with human curation and expert peer-review to highlight results posted in bioRxiv preprints developed by EMBO Press.' }
-    ]
+    ],
+    title: 'Accessing early scientific findings',
+    // all titles will be injected into this template
+    titleTemplate: '%s | Early Evidence Base'
   },
   computed: {
     thisYear () {
       return new Date().getFullYear()
     },
     ...mapGetters(['db_stats'])
-  },
-  beforeCreate () {
-    this.$store.dispatch('statsFromFlask').then(
-      () => this.$store.commit('incrementInit'))
-    this.$store.dispatch('byReviewingService/getAll').then(
-      () => {
-        this.$store.dispatch('highlights/listByCurrent', 'byReviewingService').then(
-          () => {
-            this.$store.commit('highlights/sortRecords', {
-              sortBy: 'posting_date',
-              direction: 'desc',
-            })
-          }
-        )
-      }
-    ).then(
-          () => this.$store.commit('incrementInit')
-    ),
-    this.$store.dispatch('byHyp/getAll').then(
-      () => this.$store.commit('incrementInit')
-    ),
-    this.$store.dispatch('byAutomagic/getAll').then(
-      () => this.$store.commit('incrementInit')
-    ),
-    this.$store.commit('highlights/updateSelectedTab', 'byReviewingService')
   },
 }
 </script>
@@ -99,6 +77,7 @@ html, body {
 
 a {
   text-decoration: none;
+  color: #66b1ff;
 }
 
 .el-menu-item a {
@@ -111,7 +90,15 @@ a {
 }
 .md-content img {
   max-height: 60px;
-  }
+}
+
+.margin-0 {
+  margin: 0;
+}
+
+.margin-5 {
+  margin: 5px;
+}
 </style>
 
 <style scoped lang="scss">

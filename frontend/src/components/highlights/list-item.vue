@@ -10,14 +10,17 @@
                 span.el-icon-connection
             //- el-row(type="flex" justify="space-between")
             p
-              small() Posted
+              small
+                | Posted
+                |
                 b {{ displayDate(article.pub_date) }}
                 |  on
+                |
                 i {{ displayJournal(article.journal) }}
             p
               small
-                b  doi:
-                el-link(type="primary" :href="href(article.doi)" target="_blank") https://doi.org/{{ article.doi }}
+                b doi:
+                a(:href="href(article.doi)" target="_blank" rel="noopener")  https://doi.org/{{ article.doi }}
             p
               small {{ authorList }}
             div(v-if="article.review_process")
@@ -37,6 +40,7 @@
                         span(slot="reference").peer_review_material
                           i.el-icon-document-checked
                           |   Reviewed by
+                          |
                           i {{ displayJournal(review.reviewed_by) }}
                           |  | Reviewer #
                           | {{ review.review_idx }}
@@ -44,6 +48,7 @@
                       span(v-else).peer_review_material
                         i.el-icon-document-checked
                         |   Reviewed by
+                        |
                         i {{ displayJournal(review.reviewed_by) }}
                         |  | Reviewer #
                         | {{ review.review_idx }}
@@ -62,7 +67,7 @@
                     span.peer_review_material
                       i.el-icon-document-checked
                       |  Reviewed by
-                      i {{ displayJournal(article.review_process.annot.reviewed_by) }}
+                      i  {{ displayJournal(article.review_process.annot.reviewed_by) }}
                       |  | Review Process File
                       | ({{ displayDate(article.review_process.annot.posting_date) }})
                   div(v-html="mdRender(article.review_process.annot.text)").md-content
@@ -72,9 +77,10 @@
                   //- i(class="fas el-icon-fa-award")
                   i.el-icon-finished
                   b  Published in:
-                  i {{ article.published_journal_title }}
-                b doi:
-                el-link(type="primary" :href="href(article.journal_doi)" target="_blank") https://doi.org/{{ article.journal_doi }}
+                  i  {{ article.published_journal_title }}
+                b  doi:
+                a(:href="href(article.journal_doi)" target="_blank" rel="noopener")  https://doi.org/{{ article.journal_doi }}
+
       el-row(type="flex" justify="space-between")
         el-col(:span="11")
           p
@@ -90,17 +96,16 @@
                     span(v-for="entity in card.entities")
                       el-tag(size="medium" :type="mapRole(entity.role)") {{ entity.text }}
                   p(v-if="card.id")
-                    a(target="_blank" :href="`https://search.sourcedata.io/panel/${card.id}`")
+                    a(target="_blank" rel="noopener" :href="`https://search.sourcedata.io/panel/${card.id}`")
                       img(:src="`https://api.sourcedata.io/file.php?panel_id=${card.id}`").fig-img
                     br
-                    el-link(target="_blank" type="primary" :href="`https://search.sourcedata.io/panel/${card.id}`")
+                    a(target="_blank" rel="noopener" :href="`https://search.sourcedata.io/panel/${card.id}`")
                       | open as SmartFigures
               div(v-else-if="card.text instanceof Array")
                 span(v-for="item in card.text")
                   el-tag(size="medium") {{ item }}
               div(v-else="typeof card.text === 'string'")
                 small(style="line-height:1.3") {{ card.text }}
-    el-divider
 </template>
 <script>
 
@@ -174,14 +179,17 @@ export default {
 }
 </script>
 
+<style>
+  .peer_review_material {
+    color:#364497;
+    font-weight: bold;
+  }
+</style>
+
 <style scoped>
   .scroll {
     max-height: 500px;
     overflow: auto;
-  }
-  .peer_review_material {
-    color:#364497;
-    font-weight: bold;
   }
   .fig-img {
     max-width: 300px;

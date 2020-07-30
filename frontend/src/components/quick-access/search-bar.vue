@@ -1,11 +1,16 @@
 <template lang="pug">
   div
     h5 Search titles, abstracts, figure legends, authors or dois.
-    el-form(:inline="true" :model="search")
-      el-form-item
-        el-input(v-model="search.input" placeholder="keywords, authors, doi" clearable=true prefix-icon="el-icon-search")
-      el-form-item
-        el-button(type="primary" @click="onSubmit") Search
+    .el-form.el-form--inline
+      .el-form-item
+        .el-form-item__content
+          .el-input.el-input--prefix.el-input--suffix
+            input.el-input__inner(v-model="query" placeholder="keywords, authors, doi", @keyup.enter="onSubmit")
+            span.el-input__prefix
+              i.el-input__icon.el-icon-search
+      .el-form-item
+        .el-form-item__content
+          el-button(type="primary" @click="onSubmit") Search
 </template>
 
 <script>
@@ -13,14 +18,13 @@
 export default {
   data: function() {
     return {
-      search: {
-        input: '',
-      } 
+      query: ''
     }
   },
   methods: {
     onSubmit()  {
-      this.$emit('submit', this.search.input)
+      console.log("submitting", this.query)
+      this.$emit('submit', this.query)
     },
   }
 }

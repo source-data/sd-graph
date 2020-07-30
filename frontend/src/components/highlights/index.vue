@@ -1,57 +1,42 @@
 <template lang="pug">
   div
-    el-row(type="flex" class="row-bg" justify="space-between")
-      el-col
-        h1 Results
-      el-col
-        p(v-if="selectedTab==='byReviewingService'")
-          small Sort by: 
-          el-radio-group(v-model="sortBy" size="mini" @change="sortRecords")
-            el-radio-button(label="pub_date")
-              | preprint date
-            el-radio-button(label="posting_date")
-              | reviewing date
-          el-switch(
-            style="margin-left:10px"
-            v-model="sortDirection"
-            @change="sortRecords"
-            active-icon-class="el-icon-sort-up"
-            active-value="asc"
-            active-color="#409EFF"
-            inactive-icon-class="el-icon-sort-down"
-            inactive-value="desc"
-            inactive-color="#409EFF"
-          )
-    div(v-if="records.length > 0")
-        HighlitedListItem(:article="article" v-for="article in records")
-    div(v-else)
-        p No results
+    div(v-show="loadingRecords" )
+      el-row
+        el-col
+          el-button(circle type="primary" :loading="true" style="position: absolute; right: 0; top: 10px;")
+    div(:class="{'highlights-loading': loadingRecords}")
+      div(v-if="records.length > 0")
+        el-row(type="flex" class="row-bg" justify="space-between")
+          el-col
+            h1 {{ records.length }} results found:
+      p(v-else) No results
+
+      div(v-for="article in records")
+        el-card.box-card(shadow="hover")
+          HighlitedListItem(:article="article")
+        br
 </template>
 
 <script>
 import HighlitedListItem from './list-item.vue'
-import { mapGetters } from 'vuex'
+import { mapGetters, mapState } from 'vuex'
 
 
 export default {
-  data () {
-    return {
-      sortBy: 'posting_date',
-      sortDirection: 'desc',
-    }
-  },
   components: {
     HighlitedListItem,
   },
-  methods: {
-    sortRecords() {
-      this.$store.commit('highlights/setSortBy', {value: this.sortBy})
-      this.$store.commit('highlights/setSortDirection', {value: this.sortDirection})
-      this.$store.commit('highlights/sortRecords')
-    },
-  },
   computed: {
-    ...mapGetters('highlights', ['records', 'selectedTab']),
+    ...mapGetters('highlights', ['records']),
+    ...mapState('highlights', ['loadingRecords'])
   },
 }
 </script>
+
+<style lang="scss">
+.highlights-loading {
+  h1, h2, h3, h4, h5, h6, p, small, b, i, em, a, span, div {
+    color: #bbb;
+  }
+}
+</style>

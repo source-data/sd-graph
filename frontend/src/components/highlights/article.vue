@@ -16,6 +16,19 @@ export default {
   components: {
     HighlitedListItem,
   },
+  metaInfo () {
+    if (!this.article) {
+      return {
+        title: undefined,
+      }
+    }
+    return {
+      title: this.article.title,
+      meta: [
+        { name: 'description', content: this.article.abstract }
+      ],
+    }
+  },
   data () {
     return {
       article: undefined,
@@ -24,14 +37,20 @@ export default {
   },
   methods: {
     getArticle (doi) {
-      httpClient.get(`/api/v1/doi/${doi}`)
-        .then((response) => {
-          let article = response.data[0]
-          if (!article.doi) {
-            article = null
-          }
+      httpClient.get(`/api/v1/doi/${doi}`).then((response) => {
+        let article = response.data[0]
+        if (article.doi) {  // if the backend doesn't find the article it
+                            // returns an article with all its properties set to null
           this.article = article
-        })
+          return httpClient.get(`/api/v1/review/${doi}`)
+        }
+      })
+      .then((response) => {
+        if (response.data[0]) {
+          let review_process = response.data[0].review_process
+          this.article.review_process = review_process
+        }
+      })
     },
   },
   beforeRouteEnter (to, from, next) {
@@ -42,6 +61,7 @@ export default {
   },
   beforeRouteUpdate (to, from, next) {
     this.article_doi = to.params.doi
+    this.getArticle(to.params.doi)
     next()
   },
 }

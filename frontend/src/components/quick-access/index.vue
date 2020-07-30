@@ -1,10 +1,8 @@
 <template lang="pug">
   div
-    h1 Quick Access 
-      el-button(v-if="loadingRecords" circle plain type="primary" :loading="true" size="mini" style="padding:2px") 
     el-tabs(@tab-click="onSelectTab" tab-position="top" v-model="activeTab")
       el-tab-pane(name="byReviewingService")
-        span(slot="label") 
+        span(slot="label")
           i(class="el-icon-reading")
           |  Refereed Preprints
         QuickAccessByReviewingService(@change="onChangeByReviewingService")
@@ -27,7 +25,6 @@
           i(class="el-icon-search")
           |  Search COVID-19 preprints
         QuickAccessSearchBar(@submit="onSubmitSearch")
-      el-divider
 </template>
 
 <script>
