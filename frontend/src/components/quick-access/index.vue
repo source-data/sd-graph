@@ -1,29 +1,17 @@
 <template lang="pug">
   div
-    el-tabs(@tab-click="onSelectTab" tab-position="top" v-model="activeTab")
-      el-tab-pane(name="byReviewingService")
-        span(slot="label")
-          i(class="el-icon-reading")
-          |  Refereed Preprints
+    el-tabs(tab-position="top" v-model="activeTab_")
+      el-tab-pane(:name="tabs.REFEREED_PREPRINTS_TAB")
+        router-link(to="/refereed_preprints" slot="label") Refereed Preprints
         QuickAccessByReviewingService(@change="onChangeByReviewingService")
-      //- el-tab-pane(label="By Method")
-      //-   QuickAccessByMethod(@change="onChangeByMethod")
-      el-tab-pane(name="byHyp")
-        span(slot="label")
-          i(class="fas el-icon-fa-flask")
-          |  COVID-19 hypotheses
+      el-tab-pane(:name="tabs.COVID19_HYP_TAB")
+        router-link(to="/covid19/by_hyp" slot="label") COVID-19 hypotheses
         QuickAccessByHyp(@change="onChangeByHyp")
-      //- el-tab-pane(label="By Molecule")
-      //-   QuickAccessByMol(@change="onChangeByMol")
-      el-tab-pane(name="byAutomagic")
-        span(slot="label")
-          i(class="el-icon-magic-stick")
-          |  Automagic COVID-19 selection
+      el-tab-pane(:name="tabs.COVID19_AUTOMAGIC_TAB")
+        router-link(to="/covid19/automagic" slot="label") Automagic COVID-19 selection
         QuickAccessByAutomagic
-      el-tab-pane(name="fulltextSearch")
-        span(slot="label")
-          i(class="el-icon-search")
-          |  Search COVID-19 preprints
+      el-tab-pane(:name="tabs.COVID19_SEARCH")
+        router-link(to="/covid19/search" slot="label") Search COVID-19 preprints
         QuickAccessSearchBar(@submit="onSubmitSearch")
 </template>
 
@@ -34,11 +22,11 @@ import QuickAccessByMethod from './by-method.vue'
 import QuickAccessByMol from './by-mol.vue'
 import QuickAccessByHyp from './by-hyp.vue'
 import QuickAccessSearchBar from './search-bar.vue'
-
+import { REFEREED_PREPRINTS_TAB, COVID19_HYP_TAB, COVID19_AUTOMAGIC_TAB, COVID19_SEARCH } from '../../components/quick-access/tab-names'
 import { mapState } from 'vuex'
 
 export default {
-  name: 'app',
+  name: 'QuickAccessIndex',
   components: {
     QuickAccessByReviewingService,
     QuickAccessByAutomagic,
@@ -47,16 +35,27 @@ export default {
     QuickAccessByHyp,
     QuickAccessSearchBar,
   },
+
+  props: {
+    activeTab: String,
+  },
   data () {
     return {
-      activeTab: 'byReviewingService'
+      activeTab_: undefined,
+    }
+  },
+  watch: {
+    activeTab (val) {
+      // element's `el-tabs` component wants to have v-model assigned to it, so we will have to give
+      // to him and keep it in sync with whatevr our parent component passes down as prop.
+      // This little trick allows the parent component to dictate which tab is now active
+      // which in turn is determined by the current route
+      if (this.activeTab_ !== val) {
+        this.activeTab_ = val
+      }
     }
   },
   methods: {
-    onSelectTab () {
-      this.$store.commit('highlights/updateSelectedTab', this.activeTab)
-      this.$store.dispatch('highlights/listByCurrent', this.activeTab)
-    },
     onSubmitSearch(term) {
       this.$store.dispatch('fulltextSearch/search', term).then(
         () => {this.$store.dispatch('highlights/listByCurrent', 'fulltextSearch')}
@@ -72,7 +71,10 @@ export default {
     },
   },
   computed: {
-    ...mapState('highlights', ['loadingRecords'])
+    ...mapState('highlights', ['loadingRecords']),
+    tabs () {
+      return { REFEREED_PREPRINTS_TAB, COVID19_HYP_TAB, COVID19_AUTOMAGIC_TAB, COVID19_SEARCH }
+    }
   }
 }
 </script>
