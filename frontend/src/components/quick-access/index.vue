@@ -80,7 +80,5 @@ export default {
 </script>
 
 <style lang="scss">
-.spaced-row {
-  padding: 1px;
-}
+
 </style>

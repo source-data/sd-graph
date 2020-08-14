@@ -99,6 +99,9 @@ a {
 .margin-5 {
   margin: 5px;
 }
+.spaced-row {
+  padding: 1px;
+}
 </style>
 
 <style scoped lang="scss">
