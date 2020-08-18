@@ -1,0 +1,22 @@
+#!/bin/bash
+###################################################################
+# Set of scripts to be exectued on the remote host as part of the
+# database deployment task
+#
+echo '  * [remote] stopping docker'
+docker-compose -f production.yml down
+
+echo '  * [remote] loading dump'
+docker run --rm \
+    --name neo4j-dump \
+    --env-file .env \
+    --mount type=bind,source=/home/ec2-user/sd-graph,target=/app \
+    --mount type=volume,source=sd-graph_production_neo4j_data,target=/data \
+    neo4j:3.5 \
+    bin/neo4j-admin load --from=/app/graph.dump --database=graph.db --force
+
+# echo '  * [remote] cleaning up'
+# docker rm --force neo4j-dumps
+
+echo '  * [remote] starting docker'
+docker-compose -f production.yml up -d

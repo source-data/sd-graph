@@ -1,0 +1,48 @@
+#!/bin/sh
+# inspired from: https://gist.github.com/waylan/4080362
+
+ProgName=$(basename $0)
+
+help(){
+    echo "Usage: $ProgName <subcommand> [options]\n"
+    echo "Subcommands:"
+    echo "    production: Updates eeb.sourcedata.io with the latest changes from git branch master"
+    echo "    staging: Updates eeb-dev.sourcedata.io with the latest changes from git branch dev"
+    echo ""
+    echo "For help with each subcommand run:"
+    echo "$ProgName <subcommand> -h|--help"
+    echo ""
+}
+
+sub_production(){
+    echo "[deploy:production] START"
+    ssh ec2-user@eeb.sourcedata.io "cd sd-graph/ && git checkout master && git pull && docker-compose -f production.yml build && docker-compose -f production.yml up -d"
+    echo "[deploy:production] DONE :)"
+}
+sub_staging(){
+    echo "[deploy:staging] START"
+    ssh ec2-user@eeb-dev.sourcedata.io "cd sd-graph/ && git checkout dev && git pull && docker-compose -f production.yml build && docker-compose -f production.yml up -d"
+    echo "[deploy:staging] DONE :)"
+}
+
+sub_baz(){
+    echo "Running 'baz' command."
+    echo "First arg is '$1'."
+    echo "Second arg is '$2'."
+}
+
+subcommand=$1
+case $subcommand in
+    "" | "-h" | "--help")
+        help
+        ;;
+    *)
+        shift
+        sub_${subcommand} $@
+        if [ $? = 127 ]; then
+            echo "Error: '$subcommand' is not a known subcommand." >&2
+            echo "       Run '$ProgName --help' for a list of known subcommands." >&2
+            exit 1
+        fi
+        ;;
+esac

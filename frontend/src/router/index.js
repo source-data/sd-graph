@@ -11,6 +11,26 @@ Vue.use(VueRouter)
     name: 'Home',
     component: Home
   },
+  {
+    path: '/refereed_preprints',
+    name: 'RefereedPreprints',
+    component: Home
+  },
+  {
+    path: '/covid19/by_hyp',
+    name: 'Covid19ByHyp',
+    component: Home
+  },
+  {
+    path: '/covid19/automagic',
+    name: 'Covid19Automagic',
+    component: Home
+  },
+  {
+    path: '/covid19/search',
+    name: 'Covid19Search',
+    component: Home
+  },
 
   {
     path: '/doi/:doi(.*)',

@@ -1,0 +1,120 @@
+#!/bin/bash
+
+log(){
+  echo "[`date +%Y-%m-%d-%H.%M.%S`] $1"
+}
+
+load_dotenv(){
+  if [ -f .env ]
+  then
+    log "# loading .env file"
+    export $(cat .env | sed 's/#.*//g' | xargs)
+  else
+    log "# .env file missing. Aborting"
+    exit 1
+  fi
+}
+
+update_local_neo4j(){
+  log "starting docker"
+  docker-compose  build
+  docker-compose up -d
+
+  log "defining indices"
+  cat sdg/SD-indices.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
+
+  log "import source data public data. Logging to `log/sdg.sdneo-publicsearch.log`"
+  docker-compose run --rm flask python -m sdg.sdneo PUBLICSEARCH --api sdapi
+
+  log "updating meca archives"
+  aws s3 sync --request-payer requester --exclude "*" --include "*.meca" s3://biorxiv-src-monthly/Current_Content /usb01/shared/biorxiv-src-monthly
+  # alternative using docker
+  # docker run --rm -it -v ~/.aws:/root/.aws --mount type=bind,source=/raid/lemberge/sd-graph/biorxiv/Current_Content/July_2020,target=/root/Current_Content/July_2020 amazon/aws-cli s3 sync --request-payer requester --exclude "*" --include "*.meca" s3://biorxiv-src-monthly/Current_Content/July_2020 ./Current_Content/July_2020 --dryrun
+
+
+  log "remove prelim articles obtained from the CrossRef and bioRxiv APIs"
+  cat neotools/purge_prelim.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
+
+  log "import full text biorxiv preprints"
+  docker-compose run --rm -v /usb01/shared/biorxiv-src-monthly:/biorxiv-src-monthly flask python -m neotools.rxiv2neo /biorxiv-src-monthly --type meca
+
+  log "import peer reviews from hypothesis"
+  docker-compose run --rm flask python -m peerreview.neohypo
+
+  log "smarttag specified collection of preprints"
+  docker-compose run --rm flask python -m sdg.sdneo covid19 --api eebapi
+
+  log "generate merged graph"
+  cat sdg/SD-processing.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
+
+  log "precompute the graph used by front end"
+  cat sdg/SD-precompute.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
+
+}
+
+publish_on_twitter(){
+  log "publishing on twitter"
+  docker-compose run --rm flask python -m twitter.update --limit-date 2020-07-01 # --GO_LIVE to go live with Twitter updates
+}
+
+
+dump_local_neo4j(){
+  local DUMP_NAME=$1
+  log "[dumping neo4j] - start"
+  log "  * stopping docker-compose"
+  # Make sure you dont have your neo4j running:
+  docker-compose down
+
+  log "  * removing older dumps"
+  docker run --rm --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data -it neo4j:3.5 find /data -type f -name graph.db.dump* -delete
+
+  log "  * dumping to data/neo4j-data/$DUMP_NAME"
+  # dump the contents of your database using a temporary container
+  docker run --rm --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data -it neo4j:3.5 bin/neo4j-admin dump --database=graph.db --to=data/$DUMP_NAME
+
+  log "  * restarting docker-compose"
+  docker-compose up -d
+  log "[dumping neo4j] - done"
+}
+
+deploy_database_to_production(){
+  local PRODUCTION_ADDRESS="ec2-user@eeb.sourcedata.io"
+  local NEO4J_DUMP_LOCAL_PATH=$1
+  deploy_database $PRODUCTION_ADDRESS $NEO4J_DUMP_LOCAL_PATH
+}
+
+deploy_database_to_staging(){
+  local STAGING_ADDRESS="ec2-user@eeb-dev.sourcedata.io"
+  local NEO4J_DUMP_LOCAL_PATH=$1
+  deploy_database $STAGING_ADDRESS $NEO4J_DUMP_LOCAL_PATH
+}
+
+deploy_database(){
+  local SERVER_ADDRESS=$1
+  local NEO4J_DUMP_LOCAL_PATH=$2
+  local NEO4J_DUMP_REMOTE_PATH="/home/ec2-user/sd-graph/graph.dump"
+
+  log "[deploy database] - $SERVER_ADDRESS"
+
+  log "  * scp $NEO4J_DUMP_LOCAL_PATH"
+  scp $NEO4J_DUMP_LOCAL_PATH $SERVER_ADDRESS:$NEO4J_DUMP_REMOTE_PATH
+
+  log "  * scp loading neo4j dump on remote"
+  ssh $SERVER_ADDRESS "cd /home/ec2-user/sd-graph && ./deploy/__db__/remote"
+}
+
+log "############################################################"
+log "##"
+log "## STARTING SD-GRAPH DB DEPLOY"
+log "##"
+
+load_dotenv
+update_local_neo4j
+NEO4J_DUMP_NAME="graph.db.dump.`date +%Y-%m-%d-%H.%M.%S`"
+dump_local_neo4j $NEO4J_DUMP_NAME
+deploy_database_to_staging data/neo4j-data/$NEO4J_DUMP_NAME
+
+log "##"
+log "## FINISHED SD-GRAPH DB DEPLOY"
+log "##"
+log "############################################################"
