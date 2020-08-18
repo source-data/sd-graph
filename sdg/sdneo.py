@@ -25,7 +25,7 @@ class SDNeo:
         article_nodes = self.create_articles(collection.children)
         self.create_relationships(collection_node, article_nodes, 'has_article')
         return collection_node
-    
+
     def create_articles(self, doi_list: List[str]):
         def filter_existing_complete_articles(doi_list: List[str]):
             filtered_list = []
