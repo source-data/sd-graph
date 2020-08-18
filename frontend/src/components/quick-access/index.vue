@@ -23,7 +23,7 @@
       el-tab-pane(name="fulltextSearch")
         span(slot="label")
           i(class="el-icon-search")
-          |  Search COVID-19 preprints
+          |  Search
         QuickAccessSearchBar(@submit="onSubmitSearch")
 </template>
 
