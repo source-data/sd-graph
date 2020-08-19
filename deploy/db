@@ -1,5 +1,35 @@
 #!/bin/bash
 
+# exit when any command fails
+set -e
+# enable !! command completion
+# set -o history -o histexpand
+
+mail_developers(){
+  local developers_emails="mainar@embl.de,lemberge@embl.de"
+  # local developers_emails="mainar@embl.de"
+  local subject=$1
+  local body=$2
+  echo -e "$2" | mail -s "[sd-graph deploy/db] $subject" $developers_emails
+}
+
+on_exit(){
+  local last_exit_code=$1
+  local line_number=$last_line
+  local last_cmd=$current_command
+  if [ $last_exit_code -eq 0 ]; then
+    mail_developers "success" "$last_cmd exited with code $last_exit_code"
+  else
+    mail_developers "errors" "$last_cmd exited with code $last_exit_code on line $line_number"
+  fi
+}
+
+# https://medium.com/@dirk.avery/the-bash-trap-trap-ce6083f36700
+# keep track of the last executed command
+trap 'last_command=$current_command; current_command=$BASH_COMMAND; last_line=$LINENO' DEBUG
+trap 'on_exit $?' EXIT
+
+
 log(){
   echo "[`date +%Y-%m-%d-%H.%M.%S`] $1"
 }
@@ -20,14 +50,17 @@ update_local_neo4j(){
   docker-compose  build
   docker-compose up -d
 
+  # remove indices from automatic steps, run this only manually
   log "defining indices"
   cat sdg/SD-indices.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
 
-  log "import source data public data. Logging to `log/sdg.sdneo-publicsearch.log`"
-  docker-compose run --rm flask python -m sdg.sdneo PUBLICSEARCH --api sdapi
+  # run on monthly basis
+  #log "import source data public data. Logging to `log/sdg.sdneo-publicsearch.log`"
+  #docker-compose run --rm flask python -m sdg.sdneo PUBLICSEARCH --api sdapi
 
-  log "updating meca archives"
-  aws s3 sync --request-payer requester --exclude "*" --include "*.meca" s3://biorxiv-src-monthly/Current_Content /usb01/shared/biorxiv-src-monthly
+  # run on a weekly basis
+  #log "updating meca archives"
+  #aws s3 sync --request-payer requester --exclude "*" --include "*.meca" s3://biorxiv-src-monthly/Current_Content /usb01/shared/biorxiv-src-monthly
   # alternative using docker
   # docker run --rm -it -v ~/.aws:/root/.aws --mount type=bind,source=/raid/lemberge/sd-graph/biorxiv/Current_Content/July_2020,target=/root/Current_Content/July_2020 amazon/aws-cli s3 sync --request-payer requester --exclude "*" --include "*.meca" s3://biorxiv-src-monthly/Current_Content/July_2020 ./Current_Content/July_2020 --dryrun
 
@@ -36,13 +69,22 @@ update_local_neo4j(){
   cat neotools/purge_prelim.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
 
   log "import full text biorxiv preprints"
-  docker-compose run --rm -v /usb01/shared/biorxiv-src-monthly:/biorxiv-src-monthly flask python -m neotools.rxiv2neo /biorxiv-src-monthly --type meca
+  # this is missing the July_2020
+  #docker-compose run --rm -v /usb01/shared/biorxiv-src-monthly:/biorxiv-src-monthly flask python -m neotools.rxiv2neo /biorxiv-src-monthly/July_2020 --type meca
+  local CURRENT_MONTH=`date +%B`
+  local CURRENT_YEAR=`date +%Y`
+  docker-compose run --rm -v /usb01/shared/biorxiv-src-monthly:/biorxiv-src-monthly flask python -m neotools.rxiv2neo /biorxiv-src-monthly/"$CURRENT_MONTH"_"$CURRENT_YEAR" --type meca
 
   log "import peer reviews from hypothesis"
   docker-compose run --rm flask python -m peerreview.neohypo
 
+  log "updates publication status"
+  docker-compose run --rm flask python -m peerreview.published
+
   log "smarttag specified collection of preprints"
   docker-compose run --rm flask python -m sdg.sdneo covid19 --api eebapi
+
+  # extra step missing to be merged from other branch
 
   log "generate merged graph"
   cat sdg/SD-processing.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
@@ -103,6 +145,21 @@ deploy_database(){
   ssh $SERVER_ADDRESS "cd /home/ec2-user/sd-graph && ./deploy/__db__/remote"
 }
 
+cache_warmup(){
+  local HOST=$1
+  local SERVER_ADDRESS="https://$HOST"
+  log $SERVER_ADDRESS/api/v1/automagic/
+  curl $SERVER_ADDRESS/api/v1/automagic/
+  log $SERVER_ADDRESS/api/v1/by_hyp/
+  ls --fake
+  curl $SERVER_ADDRESS/api/v1/by_hyp/
+  log $SERVER_ADDRESS/api/v1/by_reviewing_service/
+  curl $SERVER_ADDRESS/api/v1/by_reviewing_service/
+  log $SERVER_ADDRESS/api/v1/stats
+  curl $SERVER_ADDRESS/api/v1/stats
+}
+
+
 log "############################################################"
 log "##"
 log "## STARTING SD-GRAPH DB DEPLOY"
@@ -113,8 +170,10 @@ update_local_neo4j
 NEO4J_DUMP_NAME="graph.db.dump.`date +%Y-%m-%d-%H.%M.%S`"
 dump_local_neo4j $NEO4J_DUMP_NAME
 deploy_database_to_staging data/neo4j-data/$NEO4J_DUMP_NAME
+cache_warmup eeb-dev.sourcedata.io
 
 log "##"
 log "## FINISHED SD-GRAPH DB DEPLOY"
 log "##"
 log "############################################################"
+echo "done :)"
