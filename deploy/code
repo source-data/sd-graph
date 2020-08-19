@@ -1,5 +1,11 @@
 #!/bin/sh
 # inspired from: https://gist.github.com/waylan/4080362
+# Script for deploying the latest code.
+# For production code in the `master` branch is deployed
+# For staging code in the `dev` branch is deployed
+# Example of usege
+#   ./deploy/code staging
+#   ./deploy/code production
 
 ProgName=$(basename $0)
 
