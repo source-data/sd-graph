@@ -84,7 +84,8 @@ update_local_neo4j(){
   log "smarttag specified collection of preprints"
   docker-compose run --rm flask python -m sdg.sdneo covid19 --api eebapi
 
-  # extra step missing to be merged from other branch
+  log "smarttag specified collection of preprints"
+  docker-compose run --rm flask python -m sdg.sdneo refereed-preprints --api eebapi
 
   log "generate merged graph"
   cat sdg/SD-processing.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
