@@ -1,7 +1,7 @@
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
-from typing import Dict
+from typing import Dict, List
 from . import logger
 
 
@@ -34,24 +34,27 @@ class SDNode:
 
 
 class BaseCollection(SDNode):
-    def __init__(self, data, name, id=None):
+    def __init__(self, data, ids: List = []):
+        # TODO: name_list instead of name
         super().__init__(data)
-        self.name = name
-        self.id = id or ''
-        self.update_properties({'name': name, 'id': id})
+        names = data.keys()
+        self.name = "_".join(names)
+        self.id = '///'.join(ids)
+        self.update_properties({'name': self.name, 'id': self.id})
         children = []
-        for d in data:
-            doi = d.get('doi', '')
-            sdid = d.get('id', '')
-            title = d.get('title', '')
-            if doi: # check if alreeady there!
-                children.append(doi)
-            elif sdid:
-                logger.warning(f"using sdid {sdid} instead of doi for: \n{title}.")
-                children.append(sdid)
-            else:
-                logger.error(f"no doi and no sd id for {title} in collection {name}.")
-        self.children = children
+        for name in names:
+            for d in data[name]:
+                doi = d.get('doi', '')
+                sdid = d.get('id', '')
+                title = d.get('title', '')
+                if doi:
+                    children.append(doi)
+                elif sdid:
+                    logger.warning(f"using sdid {sdid} instead of doi for: \n{title}.")
+                    children.append(sdid)
+                else:
+                    logger.error(f"no doi and no sd id for {title} in collection {name}.")
+        self.children = list(set(children))
 
     def __len__(self):
         return len(self.children)

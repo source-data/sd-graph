@@ -11,7 +11,7 @@
         router-link(to="/covid19/automagic" slot="label") Automagic COVID-19 selection
         QuickAccessByAutomagic
       el-tab-pane(:name="tabs.COVID19_SEARCH")
-        router-link(to="/covid19/search" slot="label") Search COVID-19 preprints
+        router-link(to="/covid19/search" slot="label") Search preprints
         QuickAccessSearchBar(@submit="onSubmitSearch")
 </template>
 

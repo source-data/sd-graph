@@ -118,6 +118,7 @@ class BioRxiv(API):
     def details(self, doi: str) -> Dict:
         url = f'https://api.biorxiv.org/detail/{doi}'
         response = self.rest2data(url)
+        # TODO: test if response not empty first
         if response['messages'][0]['status'] == 'ok':
             response = response['collection'][0]
         else:

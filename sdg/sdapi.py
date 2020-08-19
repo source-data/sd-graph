@@ -1,5 +1,6 @@
 import argparse
 import requests
+from typing import List
 from .sdnode import (
     API,
     BaseCollection, BaseArticle, BaseFigure, BasePanel, BaseTag
@@ -117,19 +118,18 @@ class SDAPI(API):
         self.session_retry = self.requests_retry_session(session=authenticated_session)
         self.collection_id = None
 
-    def collection(self, collection_names):
-        def get_collection_id(collection_name):
+    def collection(self, collection_names: List[str]) -> SDCollection:
+        def get_collection_id(collection_name: str):
             url = SD_API_URL + self.GET_COLLECTION + collection_name
             data = self.rest2data(url)
             collection_id = data[0]['collection_id']
             return collection_id
 
-        collection_name = collection_names[0] # sdapi only processes 1 collection
-        self.collection_id = get_collection_id(collection_name)
+        self.collection_id = get_collection_id(collection_names[0])
         url = SD_API_URL + self.GET_COLLECTION + self.collection_id + "/" + self.GET_LIST
-        collection = self.generate_sdnode(url, SDCollection, collection_name, self.collection_id)
-        collections = [collection]  # for compatibility wiht eebapi which returns several collections
-        return collections
+        data = self.rest2data(url)
+        collection = SDCollection({collection_names[0]: data}, [self.collection_id])
+        return collection
 
     def article(self, doi):
         url = SD_API_URL + self.GET_COLLECTION + self.collection_id + "/" + self.GET_ARTICLE + doi
@@ -155,7 +155,7 @@ class SDAPI(API):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser( description="interace to the SourceData API" )
-    parser.add_argument('collection', nargs="?", default="PUBLICSEARCH", help="Takes the name of a collection (try \"PUBLICSEARCH\") nd returns the list of papers")
+    parser.add_argument('collections', nargs="?", default="PUBLICSEARCH", help="Takes the name of a collection (try \"PUBLICSEARCH\") nd returns the list of papers")
     parser.add_argument('-L', '--listing', action="store_true", help="List of articles in the collection.") 
     parser.add_argument('-D', '--doi', default='', help="Takes a doi and return article information")
     parser.add_argument('-F', '--figure', default='', help="Takes the figure index and returns the figure legend for the figure in the paper specified with the --doi option") 
@@ -168,7 +168,7 @@ if __name__ == '__main__':
     panel_id = args.panel
     sdapi = SDAPI()
     if collection_name:
-        collection = sdapi.collection(collection_name)
+        collection = sdapi.collection([collection_name])
         print(f'collection {collection.name} has id = {collection.id} and has {len(collection)} articles.')
 
     if listing:

@@ -10,15 +10,21 @@ class SDNeo:
         self.db = db
         self.api = api
 
-    def create_graph(self, collection_names):
-        collections = self.api.collection(collection_names)
-        children = set()
-        for coll in collections:
-            children.update(coll.children)
-        children = list(children)
-        logger.info(f"collections with {len(children)} children")
-        self.create_articles(children)  # children should be unique
-        return collections
+    def create_graph(self, collection_names: List[str]):
+        collection_node = self.create_collection(collection_names)
+        return collection_node
+
+    def create_collection(self, collection_names: List[str]):
+        # there can be only 1 single collection that serves as root to the graph
+        # even if several collection_names are provided, a single collection_node is returned 
+        # that includes unique children aggregated over the several collections
+        # collection, collection_node, skipped_collection_ids = self.create_nodes(self.api.collection, collection_names)
+        collection = self.api.collection(collection_names)
+        collection_node = self.db.node(collection)
+        logger.info(f"collections {collection.name} with {len(collection.children)} children")
+        article_nodes = self.create_articles(collection.children)
+        self.create_relationships(collection_node, article_nodes, 'has_article')
+        return collection_node
 
     def create_articles(self, doi_list: List[str]):
         def filter_existing_complete_articles(doi_list: List[str]):

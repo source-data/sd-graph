@@ -55,7 +55,7 @@ RETURN COUNT(DISTINCT paper) AS `papers in the by reviewing service`;
 
 
 
-// BY HYP
+// BY HYP ON COVID-19
 
 ///////////////////////////////EXCLUSION LIST///////////////////////////////
 //Exclusion list based on SourceData normalized entities
@@ -78,17 +78,17 @@ WITH COLLECT(DISTINCT terms) AS exclusion_list
 
 ///////////////////////////////CHOOSE SD CURATED FIRST///////////////////////////////
 //prioritize manually curated papers
-MATCH (a:SDArticle)
-WHERE toLower(a.journalName) IN ["biorxiv", "medrxiv"]
-WITH a, exclusion_list
-ORDER BY a.source DESC // manually curated source = 'sdapi' sorted before automatic papers where source = 'eebapi'
-WITH DISTINCT a.doi AS doi, COLLECT(a) AS same_paper, exclusion_list
-WITH same_paper[0] as a, exclusion_list
+//MATCH (a:SDArticle)
+//WHERE toLower(a.journalName) IN ["biorxiv", "medrxiv"]
+//WITH a, exclusion_list
+//ORDER BY a.source DESC // manually curated source = 'sdapi' sorted before automatic papers where source = 'eebapi'
+//WITH DISTINCT a.doi AS doi, COLLECT(a) AS same_paper, exclusion_list
+//WITH same_paper[0] as a, exclusion_list
 
 ///////////////////////////////IDENTIFY HYPOTHESES//////////////////////////////////
 // identify hypotheses as intervention - assayed pairs
 MATCH
-  (a)-->(f:SDFigure)-->(p:SDPanel),
+  (col:SDCollection {name:"covid19"})-[:has_article]->(a:SDArticle)-->(f:SDFigure)-->(p:SDPanel),
   path_1=(p)-->(i:CondTag {role: "intervention"})-->(ctrl:H_Entity)-->(ctrl_term:Term),
   path_2=(p)-->(m:CondTag {role: "assayed"})-->(meas:H_Entity)-->(meas_term:Term)
 WHERE
@@ -184,7 +184,7 @@ RETURN DISTINCT "done" AS `papers in the by hypothesis set`;
 
 // AUTOMAGIC
 // find entities
-MATCH (a:SDArticle {journalName: "biorxiv"})-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity {category: "assay"})-[:Has_text]->(name:Term)
+MATCH (col:SDCollection {name:"covid19"})-[:has_article]->(a:SDArticle {journalName: "biorxiv"})-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity {category: "assay"})-[:Has_text]->(name:Term)
 WITH
   a, entity, name
 //find synonyms
@@ -220,7 +220,7 @@ WITH COLLECT({rank: i, preprint: preprint_list[i-1]}) AS ranked_by_assay
 //WITH DISTINCT preprint.doi AS doi, COLLECT(DISTINCT preprint)[0] AS a, ranked_by_assay //keep only the most recent
 
 // find entities
-MATCH (a:SDArticle {journalName: "biorxiv"})-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity {category: "entity"})-[:Has_text]->(name:Term)
+MATCH (col:SDCollection {name:"covid19"})-[:has_article]->(a:SDArticle {journalName: "biorxiv"})-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity {category: "entity"})-[:Has_text]->(name:Term)
 WITH DISTINCT
   ranked_by_assay,
   a, p, entity, name
