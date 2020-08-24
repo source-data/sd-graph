@@ -56,6 +56,7 @@
 import QuickAccess from '../components/quick-access/index.vue'
 import Highlights from '../components/highlights/index.vue'
 import { REFEREED_PREPRINTS_TAB, COVID19_HYP_TAB, COVID19_AUTOMAGIC_TAB, COVID19_SEARCH } from '../components/quick-access/tab-names'
+import { deUrlifyServiceId } from '../store/by-reviewing-service'
 
 function chooseActiveTabBasedOnCurrentRoute (to) {
   switch (to.name) {
@@ -155,13 +156,24 @@ export default {
   },
   beforeRouteEnter (to, from, next) {
     next((vm) => {
+      vm.chooseActiveReviewingServiceBasedOnCurrentRoute(to, from)
       vm.activeTab = chooseActiveTabBasedOnCurrentRoute(to)
       vm.$store.dispatch('highlights/listByCurrent', vm.activeTab)
     })
   },
   beforeRouteUpdate (to, from, next) {
+    this.chooseActiveReviewingServiceBasedOnCurrentRoute(to, from)
     this.activeTab = chooseActiveTabBasedOnCurrentRoute(to)
     next()
+  },
+  methods: {
+    chooseActiveReviewingServiceBasedOnCurrentRoute (to, from) {
+      if (to.name === 'RefereedPreprints' && to.params.service !== from.params.service) {
+        const serviceId = deUrlifyServiceId(to.params.service)
+        this.$store.commit('byReviewingService/showRecord', { id: serviceId })
+        this.$store.dispatch('highlights/listByCurrent', 'byReviewingService')
+      }
+    }
   },
 }
 </script>

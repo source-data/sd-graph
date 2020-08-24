@@ -9,10 +9,11 @@ Vue.use(VueRouter)
   {
     path: '/',
     name: 'Home',
-    component: Home
+    // component: Home
+    redirect: '/refereed_preprints/review_commons',
   },
   {
-    path: '/refereed_preprints',
+    path: '/refereed_preprints/:service',
     name: 'RefereedPreprints',
     component: Home
   },

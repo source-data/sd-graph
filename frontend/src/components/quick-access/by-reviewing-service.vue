@@ -3,9 +3,11 @@
     el-row(type="flex" class="row-bg" justify="space-between")
       el-col
         p.margin-5
-          small Select a reviewing service
-        el-radio-group(size="mini" @change="onSelect" v-model="selectedRev")
-          el-radio-button(v-for="id in reviewingList" :label="id") {{ displayJournal(id) }}
+          small Select a reviewing service!
+        .el-radio-group
+          label.el-radio-button.el-radio-button--mini(v-for="id in reviewingList" :label="id")
+            router-link.el-radio-button__inner(:to="{ name: 'RefereedPreprints', params: { service: urlifyServiceId(id) } }") {{ displayJournal(id) }}
+
       el-col
         p.margin-5
           small Sort by:
@@ -29,6 +31,8 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import { urlifyServiceId } from '../../store/by-reviewing-service'
+
 
 export default {
   data () {
@@ -60,7 +64,20 @@ export default {
     },
     displayJournal(id) {
       return this.journalName(id)
-    }
+    },
+    urlifyServiceId,
   },
 }
 </script>
+
+<style lang="scss" scoped>
+  .router-link-active {
+    color: #FFFFFF;
+    background-color: #409EFF;
+    border-color: #409EFF;
+
+    &:hover {
+      color: #EEE;
+    }
+  }
+</style>

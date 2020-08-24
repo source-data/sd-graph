@@ -5,7 +5,7 @@ import byAutomagic from './by-automagic'
 import byMethod from './by-method'
 import byMol from './by-mol'
 import byHyp from './by-hyp'
-import byReviewingService from './by-reviewing-service'
+import { byReviewingService } from './by-reviewing-service'
 import highlights from './highlights'
 import fulltextSearch from './fulltext-search'
 
@@ -41,7 +41,7 @@ export default new Vuex.Store({
     db_stats(state) {
       return state.stats
     },
-    journalName: (state) => (id) => { return state.journalNameDict[id.toLowerCase()] }
+    journalName: (state) => (id) => { return state.journalNameDict[id.toLowerCase()] },
   },
   mutations: {
     setStats (state, stats) {
@@ -64,7 +64,6 @@ export default new Vuex.Store({
             biorxiv_preprints: resp.biorxiv_preprints,
             refereed_preprints: resp.refereed_preprints,
           }
-          console.debug('stats', stats)
           commit('setStats', stats)
         })
         .finally(() => {

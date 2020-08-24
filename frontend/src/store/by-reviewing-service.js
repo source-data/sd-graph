@@ -1,6 +1,26 @@
 import httpClient from '../lib/http'
 
-export default {
+const serviceId2Slug = {
+  'biorxiv': 'biorxiv',
+  'medrxiv': 'medrxiv',
+  'review commons': 'review_commons',
+  'elife': 'elife',
+  'embo press': 'embo_press',
+  'peerage of science': 'peerage_of_science',
+}
+const serviceSlug2Id = Object.keys(serviceId2Slug).reduce((acc, serviceId) => {
+  const serviceSlug = serviceId2Slug[serviceId]
+  return {...acc, [serviceSlug]: serviceId}
+}, {})
+
+export function urlifyServiceId (serviceId) {
+  return serviceId2Slug[serviceId]
+}
+export function deUrlifyServiceId (serviceSlug) {
+  return serviceSlug2Id[serviceSlug]
+}
+
+export const byReviewingService = {
   namespaced: true,
   state: {
     records: {},
