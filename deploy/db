@@ -6,8 +6,8 @@ set -e
 # set -o history -o histexpand
 
 mail_developers(){
-  local developers_emails="mainar@embl.de,lemberge@embl.de"
-  # local developers_emails="mainar@embl.de"
+  # local developers_emails="mainar@embl.de,lemberge@embl.de"
+  local developers_emails="mainar@embl.de"
   local subject=$1
   local body=$2
   echo -e "$2" | mail -s "[sd-graph deploy/db] $subject" $developers_emails

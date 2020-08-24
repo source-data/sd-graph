@@ -22,14 +22,6 @@ export default new Vuex.Store({
     fulltextSearch
   },
   state: {
-    journalNameDict: {
-      'biorxiv': 'bioRxiv',
-      'medrxiv': 'medRxiv',
-      'review commons': 'Review Commons',
-      'elife': 'eLife',
-      'embo press': 'EMBO Press',
-      'peerage of science': 'Peerage of Science',
-    },
     stats: {
       autoannotated_preprints: undefined,
       biorxiv_preprints: undefined,
@@ -41,7 +33,7 @@ export default new Vuex.Store({
     db_stats(state) {
       return state.stats
     },
-    journalName: (state) => (id) => { return state.journalNameDict[id.toLowerCase()] },
+
   },
   mutations: {
     setStats (state, stats) {

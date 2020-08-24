@@ -13,9 +13,6 @@ export default {
     records (state) {
       return Object.values(state.records)
     },
-    journalName (state, rootState, getters, rootGetters) {
-      return rootGetters.journalName
-    },
     selectedTab (state) {
       return state.selectedTab
     },

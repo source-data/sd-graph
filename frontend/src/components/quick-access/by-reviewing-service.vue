@@ -32,6 +32,7 @@
 <script>
 import { mapGetters } from 'vuex'
 import { urlifyServiceId } from '../../store/by-reviewing-service'
+import { journalName } from '../../store/by-reviewing-service'
 
 
 export default {
@@ -46,7 +47,6 @@ export default {
     ...mapGetters('byReviewingService', [
       'records',
     ]),
-    ...mapGetters(['journalName']),
     reviewingList () {
       return this.records.map(
         (r) => {return r.id}
@@ -63,7 +63,7 @@ export default {
       this.$emit('change', selectedItemId)
     },
     displayJournal(id) {
-      return this.journalName(id)
+      return journalName(id)
     },
     urlifyServiceId,
   },

@@ -107,11 +107,10 @@
               div(v-else="typeof card.text === 'string'")
                 small(style="line-height:1.3") {{ card.text }}
 </template>
+
 <script>
-
 import MarkdownIt from 'markdown-it'
-
-import { mapGetters } from 'vuex'
+import { journalName } from '../../store/by-reviewing-service'
 
 export default {
   props: {
@@ -145,7 +144,7 @@ export default {
       return md.render(md_text)
     },
     displayJournal(id) {
-      return this.journalName(id)
+      return journalName(id)
     },
     mapRole(role) {
       const map = {
@@ -161,7 +160,6 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['journalName']),
     authorList () {
       return this.article.authors.map(author => `${author.surname?author.surname+' ':''}${author.given_names?author.given_names:''}${author.collab?author.collab:''}${(author.corresp=='yes'?'*':'')}`).join(', ')
     },

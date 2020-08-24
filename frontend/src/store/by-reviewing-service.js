@@ -13,11 +13,24 @@ const serviceSlug2Id = Object.keys(serviceId2Slug).reduce((acc, serviceId) => {
   return {...acc, [serviceSlug]: serviceId}
 }, {})
 
+const serviceId2Name = {
+  'biorxiv': 'bioRxiv',
+  'medrxiv': 'medRxiv',
+  'review commons': 'Review Commons',
+  'elife': 'eLife',
+  'embo press': 'EMBO Press',
+  'peerage of science': 'Peerage of Science',
+}
+
 export function urlifyServiceId (serviceId) {
   return serviceId2Slug[serviceId]
 }
 export function deUrlifyServiceId (serviceSlug) {
   return serviceSlug2Id[serviceSlug]
+}
+
+export function journalName (serviceId) {
+  return serviceId2Name[serviceId.toLowerCase()]
 }
 
 export const byReviewingService = {
