@@ -22,22 +22,30 @@ import Intro from '../layouts/intro.vue'
 import { REFEREED_PREPRINTS_TAB, COVID19_HYP_TAB, COVID19_AUTOMAGIC_TAB, COVID19_SEARCH } from '../components/quick-access/tab-names'
 import { serviceSlug2Id } from '../store/by-reviewing-service'
 
-function chooseActiveTabBasedOnCurrentRoute (to) {
-  switch (to.name) {
-    case 'RefereedPreprints':
-      return REFEREED_PREPRINTS_TAB
-    case 'Covid19ByHyp':
-      return COVID19_HYP_TAB
-    case 'Covid19Automagic':
-      return COVID19_AUTOMAGIC_TAB
-    case 'Covid19Search':
-      return COVID19_SEARCH
-    default:
-      return REFEREED_PREPRINTS_TAB
+function getStoreNameForCollection (collection, service) {
+  let storeName = undefined
+  switch (collection) {
+    case 'refereed_preprints':
+      storeName = REFEREED_PREPRINTS_TAB
+      break
+    case 'covid19':
+      switch (service) {
+        case 'by_hyp':
+          storeName = COVID19_HYP_TAB
+          break
+        case 'automagic':
+          storeName = COVID19_AUTOMAGIC_TAB
+          break
+        case 'search':
+          storeName = COVID19_SEARCH
+          break
+      }
+      break
   }
+  return storeName
 }
 
-function initApp (activeTab, $store) {
+function initApp (collection, service, $store) {
   /**
    * App initialization
    * This function is responsible of loading required data in multiple steps
@@ -46,7 +54,8 @@ function initApp (activeTab, $store) {
    */
   let initialLoad = null
   let delayedLoad = []
-  switch (activeTab) {
+  const storeName = getStoreNameForCollection(collection, service)
+  switch (storeName) {
     case REFEREED_PREPRINTS_TAB:
       initialLoad = REFEREED_PREPRINTS_TAB
       delayedLoad = [
@@ -84,6 +93,10 @@ function initApp (activeTab, $store) {
     }
     return $store.dispatch(`${storeName}/getAll`)
       .then(() => {
+        if (storeName === REFEREED_PREPRINTS_TAB) {
+          const serviceId = serviceSlug2Id(service)
+          $store.commit('byReviewingService/showRecord', { id: serviceId })
+        }
         return $store.dispatch('highlights/listByCurrent', storeName)
       })
       .then(() => {
@@ -110,36 +123,30 @@ export default {
     Highlights,
     Intro,
   },
-  data () {
-    return {
-      activeTab: undefined,
+  props: {
+    collection: String,
+    service: String,
+  },
+  computed: {
+    activeTab () {
+      return getStoreNameForCollection(this.collection, this.service)
     }
   },
-  beforeCreate () {
-    const activeTab = chooseActiveTabBasedOnCurrentRoute(this.$route)
-    initApp(activeTab, this.$store)
+
+  created () {
+    initApp(this.collection, this.service, this.$store)
   },
-  beforeRouteEnter (to, from, next) {
-    next((vm) => {
-      vm.chooseActiveReviewingServiceBasedOnCurrentRoute(to, from)
-      vm.activeTab = chooseActiveTabBasedOnCurrentRoute(to)
-      vm.$store.dispatch('highlights/listByCurrent', vm.activeTab)
-    })
-  },
+
   beforeRouteUpdate (to, from, next) {
-    this.chooseActiveReviewingServiceBasedOnCurrentRoute(to, from)
-    this.activeTab = chooseActiveTabBasedOnCurrentRoute(to)
+    if (to.params.collection === 'refereed_preprints' && to.params.service !== from.params.service) {
+      const serviceId = serviceSlug2Id(to.params.service)
+      this.$store.commit('byReviewingService/showRecord', { id: serviceId })
+    }
+    const storeName = getStoreNameForCollection(to.params.collection, to.params.service)
+    this.$store.dispatch('highlights/listByCurrent', storeName)
     next()
   },
-  methods: {
-    chooseActiveReviewingServiceBasedOnCurrentRoute (to, from) {
-      if (to.name === 'RefereedPreprints' && to.params.service !== from.params.service) {
-        const serviceId = serviceSlug2Id(to.params.service)
-        this.$store.commit('byReviewingService/showRecord', { id: serviceId })
-        this.$store.dispatch('highlights/listByCurrent', 'byReviewingService')
-      }
-    }
-  },
+
 }
 </script>
 

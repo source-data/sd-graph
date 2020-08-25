@@ -6,7 +6,7 @@
           small Select a reviewing service!
         .el-radio-group
           label.el-radio-button.el-radio-button--mini(v-for="id in reviewingList" :label="id")
-            router-link.el-radio-button__inner(:to="{ name: 'RefereedPreprints', params: { service: serviceId2Slug(id) } }") {{ serviceId2Name(id) }}
+            router-link.el-radio-button__inner(:to="{ path: `/refereed_preprints/${serviceId2Slug(id)}` }") {{ serviceId2Name(id) }}
 
       el-col
         p.margin-5

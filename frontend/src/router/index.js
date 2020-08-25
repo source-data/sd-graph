@@ -1,42 +1,25 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Home from '../views/Home.vue'
-import ArticleShow from '../components/highlights/article.vue'
+
 
 Vue.use(VueRouter)
 
   const routes = [
   {
     path: '/',
-    name: 'Home',
-    // component: Home
     redirect: '/refereed_preprints/review_commons',
   },
   {
-    path: '/refereed_preprints/:service',
-    name: 'RefereedPreprints',
-    component: Home
+    path: '/:collection/:service',
+    name: 'Home',
+    component: Home,
+    props: true,
   },
-  {
-    path: '/covid19/by_hyp',
-    name: 'Covid19ByHyp',
-    component: Home
-  },
-  {
-    path: '/covid19/automagic',
-    name: 'Covid19Automagic',
-    component: Home
-  },
-  {
-    path: '/covid19/search',
-    name: 'Covid19Search',
-    component: Home
-  },
-
   {
     path: '/doi/:doi(.*)',
     name: 'ArticleShow',
-    component: ArticleShow,
+    component: () => import(/* webpackChunkName: "ArticleShow" */ '../components/highlights/article.vue')
   },
 
   {

@@ -44,6 +44,9 @@ export default {
       activeTab_: undefined,
     }
   },
+  mounted () {
+    this.activeTab_ = this.activeTab
+  },
   watch: {
     activeTab (val) {
       // element's `el-tabs` component wants to have v-model assigned to it, so we will have to give
