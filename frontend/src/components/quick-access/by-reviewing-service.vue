@@ -6,7 +6,7 @@
           small Select a reviewing service!
         .el-radio-group
           label.el-radio-button.el-radio-button--mini(v-for="id in reviewingList" :label="id")
-            router-link.el-radio-button__inner(:to="{ name: 'RefereedPreprints', params: { service: urlifyServiceId(id) } }") {{ displayJournal(id) }}
+            router-link.el-radio-button__inner(:to="{ name: 'RefereedPreprints', params: { service: serviceId2Slug(id) } }") {{ serviceId2Name(id) }}
 
       el-col
         p.margin-5
@@ -31,9 +31,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import { urlifyServiceId } from '../../store/by-reviewing-service'
-import { journalName } from '../../store/by-reviewing-service'
-
+import { serviceId2Slug, serviceId2Name } from '../../store/by-reviewing-service'
 
 export default {
   data () {
@@ -62,10 +60,8 @@ export default {
     onSelect (selectedItemId) {
       this.$emit('change', selectedItemId)
     },
-    displayJournal(id) {
-      return journalName(id)
-    },
-    urlifyServiceId,
+    serviceId2Slug,
+    serviceId2Name,
   },
 }
 </script>

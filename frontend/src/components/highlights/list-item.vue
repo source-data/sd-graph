@@ -16,7 +16,7 @@
                 b {{ displayDate(article.pub_date) }}
                 |  on
                 |
-                i {{ displayJournal(article.journal) }}
+                i {{ serviceId2Name(article.journal) }}
             p
               small
                 b doi:
@@ -41,7 +41,7 @@
                           i.el-icon-document-checked
                           |   Reviewed by
                           |
-                          i {{ displayJournal(review.reviewed_by) }}
+                          i {{ serviceId2Name(review.reviewed_by) }}
                           |  | Reviewer #
                           | {{ review.review_idx }}
                           | ({{ displayDate(review.posting_date) }})
@@ -49,7 +49,7 @@
                         i.el-icon-document-checked
                         |   Reviewed by
                         |
-                        i {{ displayJournal(review.reviewed_by) }}
+                        i {{ serviceId2Name(review.reviewed_by) }}
                         |  | Reviewer #
                         | {{ review.review_idx }}
                         | ({{ displayDate(review.posting_date) }})
@@ -67,7 +67,7 @@
                     span.peer_review_material
                       i.el-icon-document-checked
                       |  Reviewed by
-                      i  {{ displayJournal(article.review_process.annot.reviewed_by) }}
+                      i  {{ serviceId2Name(article.review_process.annot.reviewed_by) }}
                       |  | Review Process File
                       | ({{ displayDate(article.review_process.annot.posting_date) }})
                   div(v-html="mdRender(article.review_process.annot.text)").md-content
@@ -110,7 +110,7 @@
 
 <script>
 import MarkdownIt from 'markdown-it'
-import { journalName } from '../../store/by-reviewing-service'
+import { serviceId2Name } from '../../store/by-reviewing-service'
 
 export default {
   props: {
@@ -143,9 +143,7 @@ export default {
       })
       return md.render(md_text)
     },
-    displayJournal(id) {
-      return journalName(id)
-    },
+    serviceId2Name,
     mapRole(role) {
       const map = {
         'intervention': 'danger',

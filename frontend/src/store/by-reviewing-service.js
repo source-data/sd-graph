@@ -1,6 +1,6 @@
 import httpClient from '../lib/http'
 
-const serviceId2Slug = {
+const _serviceId2Slug = {
   'biorxiv': 'biorxiv',
   'medrxiv': 'medrxiv',
   'review commons': 'review_commons',
@@ -8,12 +8,13 @@ const serviceId2Slug = {
   'embo press': 'embo_press',
   'peerage of science': 'peerage_of_science',
 }
-const serviceSlug2Id = Object.keys(serviceId2Slug).reduce((acc, serviceId) => {
-  const serviceSlug = serviceId2Slug[serviceId]
+
+const _serviceSlug2Id = Object.keys(_serviceId2Slug).reduce((acc, serviceId) => {
+  const serviceSlug = _serviceId2Slug[serviceId]
   return {...acc, [serviceSlug]: serviceId}
 }, {})
 
-const serviceId2Name = {
+const _serviceId2Name = {
   'biorxiv': 'bioRxiv',
   'medrxiv': 'medRxiv',
   'review commons': 'Review Commons',
@@ -22,15 +23,15 @@ const serviceId2Name = {
   'peerage of science': 'Peerage of Science',
 }
 
-export function urlifyServiceId (serviceId) {
-  return serviceId2Slug[serviceId]
+export function serviceId2Slug (serviceId) {
+  return _serviceId2Slug[serviceId]
 }
-export function deUrlifyServiceId (serviceSlug) {
-  return serviceSlug2Id[serviceSlug]
+export function serviceSlug2Id (serviceSlug) {
+  return _serviceSlug2Id[serviceSlug]
 }
 
-export function journalName (serviceId) {
-  return serviceId2Name[serviceId.toLowerCase()]
+export function serviceId2Name (serviceId) {
+  return _serviceId2Name[serviceId.toLowerCase()]
 }
 
 export const byReviewingService = {
