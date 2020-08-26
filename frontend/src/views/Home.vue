@@ -1,15 +1,15 @@
 <template lang="pug">
   div
     el-row
-      el-col(:span="20" :offset="2")
+      el-col
         Intro
     el-row
-      el-col(:span="20" :offset="2")
+      el-col
         br
         el-card.box-card
           QuickAccess(:activeTab="activeTab")
     el-row
-      el-col(:span="20" :offset="2")
+      el-col
         Highlights
 </template>
 

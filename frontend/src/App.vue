@@ -4,7 +4,7 @@
     Banner
     el-container
       LeftSideBar
-      el-main
+      el-main.my-main
         router-view
     el-footer
       Footer
@@ -37,6 +37,18 @@ export default {
 </script>
 
 <style lang="scss">
+
+/* Portrait */
+@media only screen
+  and (min-device-width: 375px)
+  and (max-device-width: 812px)
+  and (-webkit-min-device-pixel-ratio: 3)
+  and (orientation: portrait) {
+    .el-main.my-main {
+      padding: 0;
+    }
+}
+
 html, body {
   padding:0;
   margin:0;

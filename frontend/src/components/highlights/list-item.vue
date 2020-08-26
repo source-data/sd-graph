@@ -1,5 +1,5 @@
 <template lang="pug">
-  div
+  .hihglight__list-item
     el-row(v-if="article")
       el-row()
         el-col(:span="24")
@@ -180,6 +180,9 @@ export default {
     color:#364497;
     font-weight: bold;
   }
+  .hihglight__list-item .el-collapse-item__header {
+    line-height: 1em;
+  }
 </style>
 
 <style scoped>
@@ -191,4 +194,5 @@ export default {
     max-width: 300px;
     max-height: 300px;
   }
+
 </style>
