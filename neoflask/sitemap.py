@@ -22,6 +22,12 @@ def create_sitemap(dois):
 
     add_url(root, loc=BASE_URL, lastmod=dt, changefreq="weekly", priority="1.0")
     add_url(root, loc=f"{BASE_URL}/about", lastmod=dt, changefreq="monthly", priority="1.0")
+    add_url(root, loc=f"{BASE_URL}/refereed_preprints/review_commons", lastmod=dt, changefreq="monthly", priority="1.0")
+    add_url(root, loc=f"{BASE_URL}/refereed_preprints/peerage_of_science", lastmod=dt, changefreq="monthly", priority="1.0")
+    add_url(root, loc=f"{BASE_URL}/refereed_preprints/embo_press", lastmod=dt, changefreq="monthly", priority="1.0")
+    add_url(root, loc=f"{BASE_URL}/refereed_preprints/elife", lastmod=dt, changefreq="monthly", priority="1.0")
+    add_url(root, loc=f"{BASE_URL}/covid19/by_hyp", lastmod=dt, changefreq="monthly", priority="1.0")
+    add_url(root, loc=f"{BASE_URL}/covid19/search", lastmod=dt, changefreq="monthly", priority="1.0")
 
     for doi in dois:
         add_url(root, loc=f"{BASE_URL}/doi/{doi}", priority="0.9")
