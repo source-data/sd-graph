@@ -109,11 +109,11 @@ dump_local_neo4j(){
   docker-compose down
 
   log "  * removing older dumps"
-  docker run --rm --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data -it neo4j:3.5 find /data -type f -name graph.db.dump* -delete
+  docker run --rm --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data neo4j:3.5 find /data -type f -name graph.db.dump* -delete
 
   log "  * dumping to data/neo4j-data/$DUMP_NAME"
   # dump the contents of your database using a temporary container
-  docker run --rm --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data -it neo4j:3.5 bin/neo4j-admin dump --database=graph.db --to=data/$DUMP_NAME
+  docker run --rm --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data neo4j:3.5 bin/neo4j-admin dump --database=graph.db --to=data/$DUMP_NAME
 
   log "  * restarting docker-compose"
   docker-compose up -d
