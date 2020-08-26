@@ -27,7 +27,11 @@ export default {
   },
   metaInfo: {
     meta: [
-      { name: 'description', content: 'Early Evidence Base (EEB) is an experimental platform that combines artificial intelligence with human curation and expert peer-review to highlight results posted in bioRxiv preprints developed by EMBO Press.' }
+      {
+        vmid: 'description',
+        name: 'description',
+        content: 'Early Evidence Base (EEB) is an experimental platform that combines artificial intelligence with human curation and expert peer-review to highlight results posted in bioRxiv preprints developed by EMBO Press.',
+      }
     ],
     title: 'Accessing early scientific findings',
     // all titles will be injected into this template

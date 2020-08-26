@@ -25,7 +25,11 @@ export default {
     return {
       title: this.article.title,
       meta: [
-        { name: 'description', content: this.article.abstract }
+        {
+          vmid: 'description',
+          name: 'description',
+          content: this.article.abstract
+        },
       ],
     }
   },
