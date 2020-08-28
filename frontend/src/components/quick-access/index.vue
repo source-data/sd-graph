@@ -10,8 +10,8 @@
       el-tab-pane(:name="tabs.COVID19_AUTOMAGIC_TAB")
         router-link(to="/covid19/automagic" slot="label") Automagic COVID-19 selection
         QuickAccessByAutomagic
-      el-tab-pane(:name="tabs.COVID19_SEARCH")
-        router-link(to="/covid19/search" slot="label") Search preprints
+      el-tab-pane(:name="tabs.FULLTEXT_SEARCH")
+        router-link(to="/all/search" slot="label") Search preprints
         QuickAccessSearchBar(@submit="onSubmitSearch")
 </template>
 
@@ -22,7 +22,7 @@ import QuickAccessByMethod from './by-method.vue'
 import QuickAccessByMol from './by-mol.vue'
 import QuickAccessByHyp from './by-hyp.vue'
 import QuickAccessSearchBar from './search-bar.vue'
-import { REFEREED_PREPRINTS_TAB, COVID19_HYP_TAB, COVID19_AUTOMAGIC_TAB, COVID19_SEARCH } from '../../components/quick-access/tab-names'
+import { REFEREED_PREPRINTS_TAB, COVID19_HYP_TAB, COVID19_AUTOMAGIC_TAB, FULLTEXT_SEARCH } from '../../components/quick-access/tab-names'
 import { mapState } from 'vuex'
 
 export default {
@@ -72,7 +72,7 @@ export default {
   computed: {
     ...mapState('highlights', ['loadingRecords']),
     tabs () {
-      return { REFEREED_PREPRINTS_TAB, COVID19_HYP_TAB, COVID19_AUTOMAGIC_TAB, COVID19_SEARCH }
+      return { REFEREED_PREPRINTS_TAB, COVID19_HYP_TAB, COVID19_AUTOMAGIC_TAB, FULLTEXT_SEARCH }
     }
   }
 }

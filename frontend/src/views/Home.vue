@@ -19,7 +19,7 @@ import QuickAccess from '../components/quick-access/index.vue'
 import Highlights from '../components/highlights/index.vue'
 import Intro from '../layouts/intro.vue'
 
-import { REFEREED_PREPRINTS_TAB, COVID19_HYP_TAB, COVID19_AUTOMAGIC_TAB, COVID19_SEARCH } from '../components/quick-access/tab-names'
+import { REFEREED_PREPRINTS_TAB, COVID19_HYP_TAB, COVID19_AUTOMAGIC_TAB, FULLTEXT_SEARCH } from '../components/quick-access/tab-names'
 import { serviceSlug2Id } from '../store/by-reviewing-service'
 
 function getStoreNameForCollection (collection, service) {
@@ -36,8 +36,12 @@ function getStoreNameForCollection (collection, service) {
         case 'automagic':
           storeName = COVID19_AUTOMAGIC_TAB
           break
+      }
+      break
+    case 'all':
+      switch (service) {
         case 'search':
-          storeName = COVID19_SEARCH
+          storeName = FULLTEXT_SEARCH
           break
       }
       break
@@ -77,7 +81,7 @@ function initApp (collection, service, $store) {
         COVID19_HYP_TAB,
       ]
       break;
-    case COVID19_SEARCH:
+    case FULLTEXT_SEARCH:
       initialLoad = null
       delayedLoad = [
         COVID19_HYP_TAB,
