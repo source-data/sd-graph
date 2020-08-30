@@ -1,23 +1,22 @@
 <template lang="pug">
-  div
-    //- el-aside(max-width="180px" style="border-right-style: solid; border-right-width: 1px; padding-top: 50px")
-    el-menu( :collapse="isCollapsed")
+  v-navigation-drawer(app clipped)
+    v-list(nav)
       router-link(to="/" active-class="is-active")
-        el-menu-item(index="0")
-          i.el-icon-s-home
-          span(slot="title") Home
-      router-link(to="/about" active-class="is-active")
-        el-menu-item(index="1")
-          i.el-icon-info
-          span(slot="title") About
-      el-menu-item(index="2" disabled)
-        i.el-icon-lollipop
-        span(slot="title") For developers
-      el-menu-item(index="3" disabled)
-        i.el-icon-s-promotion
-        span(slot="title") Contact
+        v-list-item(index="0")
+          v-icon(dense class="pa-1") mdi-home
+          span Home
+      router-link(to="/about")
+        v-list-item(index="1")
+          v-icon(dense class="pa-1") mdi-information-outline
+          span About
+      v-list-item(index="2" disabled)
+        v-icon(dense class="pa-1") mdi-code-braces
+        span For developers
+      v-list-item(index="3" disabled)
+        v-icon(dense class="pa-1") mdi-email-open-outline
+        span Contact
     div(v-if="db_stats && !isCollapsed" style="padding:10px")
-      el-divider
+      v-divider
       small Database stats:
         p
           code {{ db_stats.biorxiv_preprints || 0 }}

@@ -1,13 +1,18 @@
 <template lang="pug">
-  .org-credits
-    .org-credits--left
-      a(href="https://embo.org" target="_blank" rel="noopener")
-        img(src="../assets/EEB_E_LOGO.png" class="banner-logo banner-logo--embo" alt="EMBO Logo")
-    .org-credits--right
-      a(href="https://embopress.org")
-        img(src="../assets/EEB_EP_LOGO.png" class="banner-logo banner-logo--press" alt="EMBO Press Logo")
-      a(href="https://sourcedata.io" target="_blank" rel="noopener")
-        img(src="../assets/EEB_SD_LOGO.png" class="banner-logo banner-logo--sourcedata" alt="SourceData Logo")
+    v-app-bar(
+      app 
+      clipped-left 
+      prominent 
+      shrink-on-scroll
+      src="../assets/EEB_HP_Banner.svg"
+    )
+    //-   a(href="https://embo.org" target="_blank" rel="noopener")
+    //-     img(src="../assets/EEB_E_LOGO.png" class="banner-logo banner-logo--embo" alt="EMBO Logo")
+    //- .org-credits--right
+    //-   a(href="https://embopress.org")
+    //-     img(src="../assets/EEB_EP_LOGO.png" class="banner-logo banner-logo--press" alt="EMBO Press Logo")
+    //-   a(href="https://sourcedata.io" target="_blank" rel="noopener")
+    //-     img(src="../assets/EEB_SD_LOGO.png" class="banner-logo banner-logo--sourcedata" alt="SourceData Logo")
 </template>
 
 <style lang="scss" scoped>

@@ -1,6 +1,7 @@
 <template lang="pug">
-    el-card.box-card
-        p <i>Early Evidence Base</i> (EEB) is an <b>experimental platform</b>
+    div(class="px-5")
+      p
+        | <i>Early Evidence Base</i> (EEB) is an <b>experimental platform</b>
         |  that  combines artificial intelligence with human curation
         |  and expert peer-review to highlight results posted in
         |
@@ -13,12 +14,13 @@
         |
         a(href="https://sourcedata.io" target="_blank" rel="noopener") SourceData
         |.
-        p
+      p
         | Follow
         |
         a(href="https://twitter.com/EarlyEvidence" target="_blank" rel="noopener") @EarlyEvidence
         |  on Twitter to receive updates and new highlighted preprints.
-        p Discover preprints with one of these methods:
+      p 
+        | Discover preprints with one of these methods:
         ul
             li
                 //- i(class="el-icon-reading")
