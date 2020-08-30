@@ -44,10 +44,11 @@
 </template>
 
 <script>
-import TopNavBar from './layouts/top-nav-bar'
-import Banner from './layouts/banner'
-import LeftSideBar from './layouts/left-side-bar'
-import Footer from './layouts/footer' 
+//import TopNavBar from './layouts/top-nav-bar'
+//import Banner from './layouts/banner'
+//import LeftSideBar from './layouts/left-side-bar'
+//import Footer from './layouts/footer' 
+import HelloWorld from './components/HelloWorld'
 
 export default {
   name: 'App',
