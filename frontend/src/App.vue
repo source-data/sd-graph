@@ -70,6 +70,8 @@ a {
 }
 
 .md-content {
+  font-family:'Courier New', Courier, monospace;
+  font-size: 14px;
   max-height:350px;
   overflow: scroll;
 }

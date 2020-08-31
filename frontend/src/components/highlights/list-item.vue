@@ -1,13 +1,16 @@
 <template lang="pug">
-    v-card(v-if="article" class="pa-5")
+    v-card(
+      v-if="article"
+      class="pa-5"
+      color="blue-grey lighten-5"
+    )
       v-row()
         v-col(:cols="12")
             h3
               | {{ article.title }}
               |
               router-link(:to="`/doi/${article.doi}`")
-                span.el-icon-connection
-            //- el-row(type="flex" justify="space-between")
+                v-icon(color="indigo lighten-3") mdi-link-variant
             p
               small
                 | Posted
@@ -23,32 +26,29 @@
             p
               small {{ authorList }}
             div(v-if="article.review_process")
-              v-expansion-panels(
-                v-for="review in article.review_process.reviews"
-                focusable
-              )
-                v-expansion-panel
-                  v-expansion-panel-header
-                      el-popover(v-if="review.highlight"
-                        placement="top"
-                        title="Summary (click tab to read the full review)"
-                        width="600"
-                        trigger="hover"
-                        :content="review.highlight"
-                        transition="el-fade-in-linear"
-                        :visible-arrow="false"
-                        :open-delay="500"
+              v-expansion-panels(focusable)
+                v-expansion-panel(v-for="review in article.review_process.reviews")
+                  v-expansion-panel-header()
+                    div(v-if="review.highlight")
+                      v-tooltip(
+                        v-if="review.highlight"
+                        top
+                        max-width="500px"
                       )
-                        span(slot="reference").peer_review_material
-                          v-icon(small class="px-1") mdi-text-box-check-outline
-                          |   Reviewed by
-                          |
-                          i {{ serviceId2Name(review.reviewed_by) }}
-                          |  | Reviewer #
-                          | {{ review.review_idx }}
-                          | ({{ displayDate(review.posting_date) }})
-                      span(v-else).peer_review_material
-                        v-icon(small class="px-1") mdi-text-box-check-outline
+                        template(v-slot:activator="{ on, attrs }")
+                          span(text v-bind="attrs" v-on="on")
+                            v-icon(small class="px-1" color="indigo lighten-3") mdi-text-box-check-outline
+                            |   Reviewed by
+                            |
+                            i {{ serviceId2Name(review.reviewed_by) }}
+                            |  | Reviewer #
+                            | {{ review.review_idx }}
+                            | ({{ displayDate(review.posting_date) }})
+                        p {{ review.highlight }}
+                        b Click on tab to read full review.
+                    div(v-else)
+                      span.peer_review_material
+                        v-icon(small class="px-1" color="indigo lighten-3") mdi-text-box-check-outline
                         |   Reviewed by
                         |
                         i {{ serviceId2Name(review.reviewed_by) }}
@@ -57,34 +57,32 @@
                         | ({{ displayDate(review.posting_date) }})
                   v-expansion-panel-content
                     p(v-html="mdRender(review.text)").md-content
-              v-expansion-panels(v-if="article.review_process.response")
-                v-expansion-panel
+                v-expansion-panel(v-if="article.review_process.response" focusable)
                   v-expansion-panel-header
-                    span.peer_review_material
-                      v-icon(small class="px-1") mdi-message-text-outline
+                    span
+                      v-icon(small class="px-1" color="indigo lighten-3") mdi-message-text-outline
                       |   Response to the Reviewers
                   v-expansion-panel-content
                     p(v-html="mdRender(article.review_process.response.text)").md-content
-              v-expansion-panels(v-if="article.review_process.annot")
-                v-expansion-panel
+                v-expansion-panel(v-if="article.review_process.annot")
                   v-expansion-panel-header
-                    span.peer_review_material
-                      i.el-icon-document-checked
+                    span
+                      v-icon(small class="px-1" color="indigo lighten-3") mdi-text-box-check-outline
                       |  Reviewed by
                       i  {{ serviceId2Name(article.review_process.annot.reviewed_by) }}
                       |  | Review Process File
                       | ({{ displayDate(article.review_process.annot.posting_date) }})
                   v-expansion-panel-content
                     p(v-html="mdRender(article.review_process.annot.text)").md-content
-            p(v-if="article.journal_doi")
-              small
-                span.peer_review_material
-                  //- i(class="fas el-icon-fa-award")
-                  i.el-icon-finished
-                  b  Published in:
-                  i  {{ article.published_journal_title }}
-                b  doi:
-                a(:href="href(article.journal_doi)" target="_blank" rel="noopener")  https://doi.org/{{ article.journal_doi }}
+            v-expansion-panels(v-if="article.journal_doi")
+              .v-expansion-panel
+                .v-expansion-panel-header
+                  span
+                    v-icon(small class="px-1" color="indigo lighten-3") mdi-certificate-outline
+                    | Published in:
+                    i  {{ article.published_journal_title }}
+                    b  doi:
+                    a(:href="href(article.journal_doi)" target="_blank" rel="noopener")  https://doi.org/{{ article.journal_doi }}
 
       v-row(justify="space-between")
         v-col(:cols="6")
@@ -94,8 +92,8 @@
             small(style="font-family: monospace; font-size: 9px") [source: {{ article.source }}]
         v-col(:cols="6").scroll
           //- label(for="info-cards" style="font-variant: small-caps") {{ info.length }} information card{{ info.length > 1 ? 's':''}}:
-          v-expansion-panels(v-for="(card, index) in info" id="infor-cards" v-model="activeCards")
-            v-expansion-panel(:value="index")
+          v-expansion-panels
+            v-expansion-panel(v-for="(card, index) in info" id="infor-cards" v-model="activeCards" :value="index")
               v-expansion-panel-header {{ card.title }}
               v-expansion-panel-content(v-if="card.entities.length > 1" )
                   p
@@ -108,9 +106,8 @@
                     a(target="_blank" rel="noopener" :href="`https://search.sourcedata.io/panel/${card.id}`")
                       | open as SmartFigures
               v-expansion-panel-content(v-else-if="card.text instanceof Array")
-                span(v-for="item in card.text")
-                  v-chip(small) {{ item }}
-              div(v-else="typeof card.text === 'string'")
+                v-chip(v-for="item in card.text" small) {{ item }}
+              v-expansion-panel-content(v-else="typeof card.text === 'string'")
                 small(style="line-height:1.3") {{ card.text }}
 </template>
 
@@ -179,16 +176,6 @@ export default {
   },
 }
 </script>
-
-<style>
-  .peer_review_material {
-    color:#364497;
-    font-weight: bold;
-  }
-  .hihglight__list-item .el-collapse-item__header {
-    line-height: 1em;
-  }
-</style>
 
 <style scoped>
   .scroll {

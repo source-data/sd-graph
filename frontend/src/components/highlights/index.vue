@@ -3,8 +3,8 @@
     div(v-if="records.length > 0")
       h1 {{ records.length }} results found:
     p(v-else) No results
-    v-container(v-for="article in records" :class="{'highlights-loading': loadingRecords}")
-      v-row(no-gutters)
+    v-container(:class="{'highlights-loading': loadingRecords}")
+      v-row(v-for="article in records")
         v-col
           HighlitedListItem(:article="article")
       br
