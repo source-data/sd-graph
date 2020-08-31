@@ -1,96 +1,94 @@
 <template lang="pug">
-    v-card(
-      v-if="article"
-      class="pa-5"
-      color="blue-grey lighten-5"
-    )
-      v-row()
-        v-col(:cols="12")
-            h3
-              | {{ article.title }}
-              |
-              router-link(:to="`/doi/${article.doi}`")
-                v-icon(color="indigo lighten-3") mdi-link-variant
-            p
-              small
-                | Posted
+  v-card(
+    v-if="article"
+    class="pa-5"
+    color="blue-grey lighten-5"
+  )
+    v-card-title
+      | {{ article.title }}
+      router-link(:to="`/doi/${article.doi}`")
+        v-icon(color="indigo lighten-3") mdi-link-variant
+    v-card-subtitle
+      p {{ authorList }} 
+      p 
+        | Posted
+        |
+        b {{ displayDate(article.pub_date) }}
+        |  on
+        |
+        i {{ serviceId2Name(article.journal) }}
+      p
+        b doi:
+        a(:href="href(article.doi)" target="_blank" rel="noopener")
+          |
+          | https://doi.org/{{ article.doi }}
+    v-card-text
+      v-expansion-panels(v-if="article.review_process" focusable)
+        v-expansion-panel(v-for="review in article.review_process.reviews")
+          v-expansion-panel-header()
+            div(v-if="review.highlight")
+              v-tooltip(
+                v-if="review.highlight"
+                top
+                max-width="500px"
+              )
+                template(v-slot:activator="{ on, attrs }")
+                  span(text v-bind="attrs" v-on="on")
+                    v-icon(small class="px-1" color="indigo lighten-3") mdi-text-box-check-outline
+                    |   Reviewed by
+                    |
+                    i {{ serviceId2Name(review.reviewed_by) }}
+                    |  | Reviewer #
+                    | {{ review.review_idx }}
+                    | ({{ displayDate(review.posting_date) }})
+                b Significance
+                p {{ review.highlight }}
+                b Click on tab to read full review.
+            div(v-else)
+              span.peer_review_material
+                v-icon(small class="px-1" color="indigo lighten-3") mdi-text-box-check-outline
+                |   Reviewed by
                 |
-                b {{ displayDate(article.pub_date) }}
-                |  on
-                |
-                i {{ serviceId2Name(article.journal) }}
-            p
-              small
-                b doi:
-                a(:href="href(article.doi)" target="_blank" rel="noopener")  https://doi.org/{{ article.doi }}
-            p
-              small {{ authorList }}
-            div(v-if="article.review_process")
-              v-expansion-panels(focusable)
-                v-expansion-panel(v-for="review in article.review_process.reviews")
-                  v-expansion-panel-header()
-                    div(v-if="review.highlight")
-                      v-tooltip(
-                        v-if="review.highlight"
-                        top
-                        max-width="500px"
-                      )
-                        template(v-slot:activator="{ on, attrs }")
-                          span(text v-bind="attrs" v-on="on")
-                            v-icon(small class="px-1" color="indigo lighten-3") mdi-text-box-check-outline
-                            |   Reviewed by
-                            |
-                            i {{ serviceId2Name(review.reviewed_by) }}
-                            |  | Reviewer #
-                            | {{ review.review_idx }}
-                            | ({{ displayDate(review.posting_date) }})
-                        p {{ review.highlight }}
-                        b Click on tab to read full review.
-                    div(v-else)
-                      span.peer_review_material
-                        v-icon(small class="px-1" color="indigo lighten-3") mdi-text-box-check-outline
-                        |   Reviewed by
-                        |
-                        i {{ serviceId2Name(review.reviewed_by) }}
-                        |  | Reviewer #
-                        | {{ review.review_idx }}
-                        | ({{ displayDate(review.posting_date) }})
-                  v-expansion-panel-content
-                    p(v-html="mdRender(review.text)").md-content
-                v-expansion-panel(v-if="article.review_process.response" focusable)
-                  v-expansion-panel-header
-                    span
-                      v-icon(small class="px-1" color="indigo lighten-3") mdi-message-text-outline
-                      |   Response to the Reviewers
-                  v-expansion-panel-content
-                    p(v-html="mdRender(article.review_process.response.text)").md-content
-                v-expansion-panel(v-if="article.review_process.annot")
-                  v-expansion-panel-header
-                    span
-                      v-icon(small class="px-1" color="indigo lighten-3") mdi-text-box-check-outline
-                      |  Reviewed by
-                      i  {{ serviceId2Name(article.review_process.annot.reviewed_by) }}
-                      |  | Review Process File
-                      | ({{ displayDate(article.review_process.annot.posting_date) }})
-                  v-expansion-panel-content
-                    p(v-html="mdRender(article.review_process.annot.text)").md-content
-            v-expansion-panels(v-if="article.journal_doi")
-              .v-expansion-panel
-                .v-expansion-panel-header
-                  span
-                    v-icon(small class="px-1" color="indigo lighten-3") mdi-certificate-outline
-                    | Published in:
-                    i  {{ article.published_journal_title }}
-                    b  doi:
-                    a(:href="href(article.journal_doi)" target="_blank" rel="noopener")  https://doi.org/{{ article.journal_doi }}
+                i {{ serviceId2Name(review.reviewed_by) }}
+                |  | Reviewer #
+                | {{ review.review_idx }}
+                | ({{ displayDate(review.posting_date) }})
+          v-expansion-panel-content
+            p(v-html="mdRender(review.text)").md-content
+        v-expansion-panel(v-if="article.review_process.response" focusable)
+          v-expansion-panel-header
+            span
+              v-icon(small class="px-1" color="indigo lighten-3") mdi-message-text-outline
+              |   Response to the Reviewers
+          v-expansion-panel-content
+            p(v-html="mdRender(article.review_process.response.text)").md-content
+        v-expansion-panel(v-if="article.review_process.annot")
+          v-expansion-panel-header
+            span
+              v-icon(small class="px-1" color="indigo lighten-3") mdi-text-box-check-outline
+              |  Reviewed by
+              i  {{ serviceId2Name(article.review_process.annot.reviewed_by) }}
+              |  | Review Process File
+              | ({{ displayDate(article.review_process.annot.posting_date) }})
+          v-expansion-panel-content
+            p(v-html="mdRender(article.review_process.annot.text)").md-content
+      v-expansion-panels(v-if="article.journal_doi")
+        .v-expansion-panel
+          .v-expansion-panel-header
+            span
+              v-icon(small class="px-1" color="indigo lighten-3") mdi-certificate-outline
+              | Published in:
+              i  {{ article.published_journal_title }}
+              b  doi:
+              a(:href="href(article.journal_doi)" target="_blank" rel="noopener")  https://doi.org/{{ article.journal_doi }}
 
-      v-row(justify="space-between")
-        v-col(:cols="6")
-          p
-            small(style="line-height:1.5") {{ article.abstract }}
-          p
-            small(style="font-family: monospace; font-size: 9px") [source: {{ article.source }}]
-        v-col(:cols="6").scroll
+      v-row
+        v-col
+          v-card
+            v-card-title Abstract
+            v-card-text
+              p(class="text--primary") {{ article.abstract }}
+        v-col.scroll
           //- label(for="info-cards" style="font-variant: small-caps") {{ info.length }} information card{{ info.length > 1 ? 's':''}}:
           v-expansion-panels
             v-expansion-panel(v-for="(card, index) in info" id="infor-cards" v-model="activeCards" :value="index")
@@ -186,5 +184,7 @@ export default {
     max-width: 300px;
     max-height: 300px;
   }
-
+  .v-card__text, .v-card__title { /* bug fix; see https://github.com/vuetifyjs/vuetify/issues/9130 */
+    word-break: normal; /* maybe !important  */
+  }
 </style>
