@@ -19,24 +19,24 @@
         |
         a(href="https://twitter.com/EarlyEvidence" target="_blank" rel="noopener") @EarlyEvidence
         |  on Twitter to receive updates and new highlighted preprints.
-      p 
-        | Discover preprints with one of these methods:
-        ul
-            li
-                //- i(class="el-icon-reading")
-                b  Refereed Preprints:
-                |  browse preprints that are linked to expert reviews.
-            li
-                //- i(class="fas el-icon-fa-flask")
-                b  COVID-19 hypotheses:
-                |  find recent studies related to the biology of SARS-CoV-2/COVID-19 based on hypotheses they are testing.
-            li
-                //- i(class="el-icon-magic-stick")
-                b  Automagic:
-                |  check out a selection of 20 SARS-CoV-2 preprints automatically highlighted based on their diversity in experimental approaches and biological topics.
-            li
-                //- i(class="el-icon-search")
-                b  Search COVID-19 preprints:
-                |  find preprints by keyword, author name or doi.
+      //- p 
+      //-   | Discover preprints with one of these methods:
+      //-   ul
+      //-       li
+      //-           //- i(class="el-icon-reading")
+      //-           b  Refereed Preprints:
+      //-           |  browse preprints that are linked to expert reviews.
+      //-       li
+      //-           //- i(class="fas el-icon-fa-flask")
+      //-           b  COVID-19 hypotheses:
+      //-           |  find recent studies related to the biology of SARS-CoV-2/COVID-19 based on hypotheses they are testing.
+      //-       li
+      //-           //- i(class="el-icon-magic-stick")
+      //-           b  Automagic:
+      //-           |  check out a selection of 20 SARS-CoV-2 preprints automatically highlighted based on their diversity in experimental approaches and biological topics.
+      //-       li
+      //-           //- i(class="el-icon-search")
+      //-           b  Search COVID-19 preprints:
+      //-           |  find preprints by keyword, author name or doi.
 
 </template>

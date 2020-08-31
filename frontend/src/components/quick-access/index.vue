@@ -1,5 +1,6 @@
 <template lang="pug">
   v-card(class="pa-5")
+    v-card-title Discover preprint with one of these methods
     v-tabs(v-model="activeTab_")
       v-tab(:value="tabs.REFEREED_PREPRINTS_TAB")
         router-link(to="/refereed_preprints/review_commons")
