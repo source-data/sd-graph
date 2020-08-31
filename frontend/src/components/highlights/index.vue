@@ -1,14 +1,12 @@
 <template lang="pug">
-  v-container(:class="{'highlights-loading': loadingRecords}" :loading="loadingRecords")
+  div
     div(v-if="records.length > 0")
-      v-row(type="flex" class="row-bg" justify="space-between")
-        v-col
-          h1 {{ records.length }} results found:
+      h1 {{ records.length }} results found:
     p(v-else) No results
-
-    div(v-for="article in records")
-      v-card(class="pa-5")
-        HighlitedListItem(:article="article")
+    v-container(v-for="article in records" :class="{'highlights-loading': loadingRecords}")
+      v-row(no-gutters)
+        v-col
+          HighlitedListItem(:article="article")
       br
 </template>
 

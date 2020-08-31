@@ -1,6 +1,6 @@
 <template lang="pug">
   v-card(class="pa-5" outlined)
-    v-row()
+    v-row
       v-col
         p Select reviewing service:
         v-btn-toggle(m-model="selectedRev" mandatory)
@@ -35,9 +35,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters('byReviewingService', [
-      'records',
-    ]),
+    ...mapGetters('byReviewingService', ['records']),
     reviewingList () {
       return this.records.map(
         (r) => {return r.id}

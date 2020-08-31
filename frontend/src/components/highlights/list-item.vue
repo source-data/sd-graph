@@ -1,8 +1,7 @@
 <template lang="pug">
-  .hihglight__list-item
-    el-row(v-if="article")
-      el-row()
-        el-col(:span="24")
+    v-card(v-if="article" class="pa-5")
+      v-row()
+        v-col(:cols="12")
             h3
               | {{ article.title }}
               |
@@ -24,9 +23,12 @@
             p
               small {{ authorList }}
             div(v-if="article.review_process")
-              el-collapse(v-for="review in article.review_process.reviews" v-model="activeCollapseItem" accordion)
-                el-collapse-item
-                  p(slot="title")
+              v-expansion-panels(
+                v-for="review in article.review_process.reviews"
+                focusable
+              )
+                v-expansion-panel
+                  v-expansion-panel-header
                       el-popover(v-if="review.highlight"
                         placement="top"
                         title="Summary (click tab to read the full review)"
@@ -38,7 +40,7 @@
                         :open-delay="500"
                       )
                         span(slot="reference").peer_review_material
-                          i.el-icon-document-checked
+                          v-icon(small class="px-1") mdi-text-box-check-outline
                           |   Reviewed by
                           |
                           i {{ serviceId2Name(review.reviewed_by) }}
@@ -46,31 +48,34 @@
                           | {{ review.review_idx }}
                           | ({{ displayDate(review.posting_date) }})
                       span(v-else).peer_review_material
-                        i.el-icon-document-checked
+                        v-icon(small class="px-1") mdi-text-box-check-outline
                         |   Reviewed by
                         |
                         i {{ serviceId2Name(review.reviewed_by) }}
                         |  | Reviewer #
                         | {{ review.review_idx }}
                         | ({{ displayDate(review.posting_date) }})
-                  div(v-html="mdRender(review.text)").md-content
-              el-collapse(v-if="article.review_process.response")
-                el-collapse-item
-                  p(slot="title")
+                  v-expansion-panel-content
+                    p(v-html="mdRender(review.text)").md-content
+              v-expansion-panels(v-if="article.review_process.response")
+                v-expansion-panel
+                  v-expansion-panel-header
                     span.peer_review_material
-                      i.el-icon-notebook-2
+                      v-icon(small class="px-1") mdi-message-text-outline
                       |   Response to the Reviewers
-                  div(v-html="mdRender(article.review_process.response.text)").md-content
-              el-collapse(v-if="article.review_process.annot")
-                el-collapse-item
-                  p(slot="title")
+                  v-expansion-panel-content
+                    p(v-html="mdRender(article.review_process.response.text)").md-content
+              v-expansion-panels(v-if="article.review_process.annot")
+                v-expansion-panel
+                  v-expansion-panel-header
                     span.peer_review_material
                       i.el-icon-document-checked
                       |  Reviewed by
                       i  {{ serviceId2Name(article.review_process.annot.reviewed_by) }}
                       |  | Review Process File
                       | ({{ displayDate(article.review_process.annot.posting_date) }})
-                  div(v-html="mdRender(article.review_process.annot.text)").md-content
+                  v-expansion-panel-content
+                    p(v-html="mdRender(article.review_process.annot.text)").md-content
             p(v-if="article.journal_doi")
               small
                 span.peer_review_material
@@ -81,29 +86,30 @@
                 b  doi:
                 a(:href="href(article.journal_doi)" target="_blank" rel="noopener")  https://doi.org/{{ article.journal_doi }}
 
-      el-row(type="flex" justify="space-between")
-        el-col(:span="11")
+      v-row(justify="space-between")
+        v-col(:cols="6")
           p
             small(style="line-height:1.5") {{ article.abstract }}
           p
             small(style="font-family: monospace; font-size: 9px") [source: {{ article.source }}]
-        el-col(:span="12").scroll
+        v-col(:cols="6").scroll
           //- label(for="info-cards" style="font-variant: small-caps") {{ info.length }} information card{{ info.length > 1 ? 's':''}}:
-          el-collapse(v-for="(card, index) in info" id="infor-cards" v-model="activeCards")
-            el-collapse-item(:title="card.title", :name="index")
-              div(v-if="card.entities.length > 1" )
+          v-expansion-panels(v-for="(card, index) in info" id="infor-cards" v-model="activeCards")
+            v-expansion-panel(:value="index")
+              v-expansion-panel-header {{ card.title }}
+              v-expansion-panel-content(v-if="card.entities.length > 1" )
                   p
                     span(v-for="entity in card.entities")
-                      el-tag(size="medium" :type="mapRole(entity.role)") {{ entity.text }}
+                      v-chip(small :type="mapRole(entity.role)") {{ entity.text }}
                   p(v-if="card.id")
                     a(target="_blank" rel="noopener" :href="`https://search.sourcedata.io/panel/${card.id}`")
                       img(:src="`https://api.sourcedata.io/file.php?panel_id=${card.id}`").fig-img
                     br
                     a(target="_blank" rel="noopener" :href="`https://search.sourcedata.io/panel/${card.id}`")
                       | open as SmartFigures
-              div(v-else-if="card.text instanceof Array")
+              v-expansion-panel-content(v-else-if="card.text instanceof Array")
                 span(v-for="item in card.text")
-                  el-tag(size="medium") {{ item }}
+                  v-chip(small) {{ item }}
               div(v-else="typeof card.text === 'string'")
                 small(style="line-height:1.3") {{ card.text }}
 </template>
@@ -119,7 +125,6 @@ export default {
   data() {
     return {
       activeCards: [0,1],
-      activeCollapseItem: []
     }
   },
   methods: {
