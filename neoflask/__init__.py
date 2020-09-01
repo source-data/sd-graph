@@ -14,7 +14,7 @@ NEO_PASSWORD = os.getenv("NEO_PASSWORD")
 
 app = Flask(__name__)
 
-CORS(app)  # , resources={r"/*": {"origins": "*"}})
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 Config.init_app(app)
 app.config.from_object(Config)
