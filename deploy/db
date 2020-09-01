@@ -281,13 +281,13 @@ main() {
   log "##"
   local
 
-  # load_dotenv
-  # update_local_neo4j $PERIODICITY
-  # NEO4J_DUMP_NAME="graph.db.dump.`date +%Y-%m-%d-%H.%M.%S`"
-  # dump_local_neo4j $NEO4J_DUMP_NAME
-  # # deploy_database_to_staging data/neo4j-data/$NEO4J_DUMP_NAME
-  # deploy_database $REMOTE_HOST data/neo4j-data/$NEO4J_DUMP_NAME
-  # cache_warmup $REMOTE_HOST
+  load_dotenv
+  update_local_neo4j $PERIODICITY
+  NEO4J_DUMP_NAME="graph.db.dump.`date +%Y-%m-%d-%H.%M.%S`"
+  dump_local_neo4j $NEO4J_DUMP_NAME
+  # deploy_database_to_staging data/neo4j-data/$NEO4J_DUMP_NAME
+  deploy_database $REMOTE_HOST data/neo4j-data/$NEO4J_DUMP_NAME
+  cache_warmup $REMOTE_HOST
 
   log "##"
   log "## FINISHED SD-GRAPH DB DEPLOY"
