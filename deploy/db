@@ -10,7 +10,11 @@ mail_developers(){
   local developers_emails="mainar@embl.de"
   local subject=$1
   local body=$2
-  echo -e "$2" | mail -s "[sd-graph deploy/db] $subject" $developers_emails
+  if [ ! -z $LOG_FILE ]; then
+    local _log=`cat $LOG_FILE`
+    local log="----------\n\nOutput of log file: $LOG_FILE\n$_log"
+  fi
+  echo -e "$2\n\n$log" | mail -s "[sd-graph deploy/db] $subject" $developers_emails
 }
 
 on_exit(){
@@ -18,9 +22,9 @@ on_exit(){
   local line_number=$last_line
   local last_cmd=$current_command
   if [ $last_exit_code -eq 0 ]; then
-    mail_developers "success" "$last_cmd exited with code $last_exit_code"
+    mail_developers "$STAGE_NAME $PERIODICITY: success" "$last_cmd exited with code $last_exit_code"
   else
-    mail_developers "errors" "$last_cmd exited with code $last_exit_code on line $line_number"
+    mail_developers "$STAGE_NAME $PERIODICITY: errors" "$last_cmd exited with code $last_exit_code on line $line_number"
   fi
 }
 
@@ -203,7 +207,43 @@ cache_warmup(){
 }
 
 main() {
-  local STAGE_NAME=$1
+
+  # parse arguments
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --stage_name*|-s*)
+        if [[ "$1" != *=* ]]; then shift; fi # Value is next arg if no `=`
+        STAGE_NAME="${1#*=}"
+        ;;
+      --log_file*|-l*)
+        if [[ "$1" != *=* ]]; then shift; fi
+        LOG_FILE="${1#*=}"
+        ;;
+      --help|-h)
+        echo "--------------------------------------------------------------------------------------"
+        echo "deploy db"
+        echo "--------------------------------------------------------------------------------------"
+        echo ""
+        echo "deploy/db --stage_name STAGE_NAME [--log_file 'PATH/TO/LOG/FILE']"
+        echo ""
+        echo "Options:"
+        echo "  --help | -h"
+        echo "  --stage_name | -s (staging|production)"
+        echo "  --log_file | -l 'quoted/path/to/file.log'"
+        echo ""
+        echo "example of usage:"
+        echo "  deploy/db --stage_name staging --log_file '/home/eeb/logs/deploydb.log'"
+        echo ""
+        exit 0
+        ;;
+      *)
+        >&2 printf "Error: Invalid argument\n"
+        exit 1
+        ;;
+    esac
+    shift
+  done
+
   case $STAGE_NAME in
     "staging")
       REMOTE_HOST="eeb-dev.sourcedata.io"
@@ -212,7 +252,7 @@ main() {
       REMOTE_HOST="eeb.sourcedata.io"
       ;;
     *)
-      echo "[ERROR] Argument - please specify a valid stage name (staging|production)"
+      echo "[ERROR] Argument - please specify a valid --stage_name (staging|production)"
       exit 1
       ;;
   esac
@@ -229,19 +269,25 @@ main() {
   fi
 
 
+  if [ ! -z $LOG_FILE ]; then
+    # LOG_FILE is specified, let's redirect stdout and stderr to the $LOG_FILE
+    exec >> $LOG_FILE
+    exec 2>&1
+  fi
+
   log "############################################################"
   log "##"
   log "## STARTING SD-GRAPH DB DEPLOY"
   log "##"
   local
 
-  load_dotenv
-  update_local_neo4j $PERIODICITY
-  NEO4J_DUMP_NAME="graph.db.dump.`date +%Y-%m-%d-%H.%M.%S`"
-  dump_local_neo4j $NEO4J_DUMP_NAME
-  # deploy_database_to_staging data/neo4j-data/$NEO4J_DUMP_NAME
-  deploy_database $REMOTE_HOST data/neo4j-data/$NEO4J_DUMP_NAME
-  cache_warmup $REMOTE_HOST
+  # load_dotenv
+  # update_local_neo4j $PERIODICITY
+  # NEO4J_DUMP_NAME="graph.db.dump.`date +%Y-%m-%d-%H.%M.%S`"
+  # dump_local_neo4j $NEO4J_DUMP_NAME
+  # # deploy_database_to_staging data/neo4j-data/$NEO4J_DUMP_NAME
+  # deploy_database $REMOTE_HOST data/neo4j-data/$NEO4J_DUMP_NAME
+  # cache_warmup $REMOTE_HOST
 
   log "##"
   log "## FINISHED SD-GRAPH DB DEPLOY"
@@ -250,4 +296,4 @@ main() {
   echo "done :)"
 }
 
-main $1
+main $@
