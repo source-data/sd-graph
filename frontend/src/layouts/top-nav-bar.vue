@@ -3,6 +3,7 @@
       app 
       clipped-left 
       prominent
+      height=250
       color="blue-grey darken-2"
       shrink-on-scroll
       fade-img-on-scroll
