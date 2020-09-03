@@ -90,13 +90,13 @@
               p(class="text--primary") {{ article.abstract }}
         v-col.scroll
           //- label(for="info-cards" style="font-variant: small-caps") {{ info.length }} information card{{ info.length > 1 ? 's':''}}:
-          v-expansion-panels
-            v-expansion-panel(v-for="(card, index) in info" id="infor-cards" v-model="activeCards" :value="index")
+          v-expansion-panels(multiple v-model="activeCards" )
+            v-expansion-panel(v-for="card in info" id="infor-cards" )
               v-expansion-panel-header {{ card.title }}
-              v-expansion-panel-content(v-if="card.entities.length > 1" )
+              v-expansion-panel-content(v-if="card.entities.length > 1")
                   p
                     span(v-for="entity in card.entities")
-                      v-chip(small :type="mapRole(entity.role)") {{ entity.text }}
+                      v-chip(small outlined :type="mapRole(entity.role)") {{ entity.text }}
                   p(v-if="card.id")
                     a(target="_blank" rel="noopener" :href="`https://search.sourcedata.io/panel/${card.id}`")
                       img(:src="`https://api.sourcedata.io/file.php?panel_id=${card.id}`").fig-img
@@ -104,7 +104,7 @@
                     a(target="_blank" rel="noopener" :href="`https://search.sourcedata.io/panel/${card.id}`")
                       | open as SmartFigures
               v-expansion-panel-content(v-else-if="card.text instanceof Array")
-                v-chip(v-for="item in card.text" small) {{ item }}
+                v-chip(v-for="item in card.text" small outline) {{ item }}
               v-expansion-panel-content(v-else="typeof card.text === 'string'")
                 small(style="line-height:1.3") {{ card.text }}
 </template>

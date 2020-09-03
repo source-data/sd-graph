@@ -44,16 +44,16 @@ export default {
 
 <style lang="scss">
 
-/* Portrait */
-@media only screen
-  and (min-device-width: 375px)
-  and (max-device-width: 812px)
-  and (-webkit-min-device-pixel-ratio: 3)
-  and (orientation: portrait) {
-    .v-main.my-main {
-      padding: 0;
-    }
-}
+// /* Portrait */
+// @media only screen
+//   and (min-device-width: 375px)
+//   and (max-device-width: 812px)
+//   and (-webkit-min-device-pixel-ratio: 3)
+//   and (orientation: portrait) {
+//     .v-main.my-main {
+//       padding: 0;
+//     }
+// }
 
 html, body {
   padding:0;
@@ -65,10 +65,6 @@ a {
   color: #66b1ff;
 }
 
-.el-menu-item a {
-  color: inherit;
-}
-
 .md-content {
   font-family:'Courier New', Courier, monospace;
   font-size: 14px;
@@ -77,17 +73,6 @@ a {
 }
 .md-content img {
   max-height: 60px;
-}
-
-.margin-0 {
-  margin: 0;
-}
-
-.margin-5 {
-  margin: 5px;
-}
-.spaced-row {
-  padding: 1px;
 }
 
 .pointer {
