@@ -1,20 +1,28 @@
 <template lang="pug">
-  div
-    div(v-if="article")
-      HighlitedListItem(:article="article")
-    div(v-else="article")
-      h1 The article with doi #[em {{ article_doi }}] was not found.
+  v-container
+    v-row(v-if="article")
+      v-col
+        HighlightedListItem(:article="article")
+    v-row(v-else="article")
+      v-col
+        v-card
+          v-card-title 
+            | The article with doi:
+            |
+            code {{ article_doi }}
+            |
+            | was not found.
 
 </template>
 
 <script>
 import httpClient from '../../lib/http'
-import HighlitedListItem from './list-item.vue'
+import HighlightedListItem from './list-item.vue'
 
 export default {
   name:'article-show',
   components: {
-    HighlitedListItem,
+    HighlightedListItem,
   },
   metaInfo () {
     if (!this.article) {

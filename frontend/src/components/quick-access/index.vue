@@ -1,17 +1,30 @@
 <template lang="pug">
-  div
-    el-tabs(tab-position="top" v-model="activeTab_")
-      el-tab-pane(:name="tabs.REFEREED_PREPRINTS_TAB")
-        router-link(to="/refereed_preprints/review_commons" slot="label") Refereed Preprints
+  v-card(class="pa-5")
+    v-card-title Discover preprints with one of these methods
+    v-tabs(v-model="activeTab_")
+      v-tab(:value="tabs.REFEREED_PREPRINTS_TAB")
+        router-link(to="/refereed_preprints/review_commons")
+          v-icon(class="px-1") mdi-book-open-variant
+          | Refereed Preprints
+      v-tab(:value="tabs.COVID19_HYP_TAB")
+        router-link(to="/covid19/by_hyp")
+          v-icon(class="px-1") mdi-help-circle-outline
+          | COVID-19 hypotheses
+      v-tab(:value="tabs.COVID19_AUTOMAGIC_TAB")
+        router-link(to="/covid19/automagic")
+          v-icon(class="px-1") mdi-auto-fix
+          | Automagic COVID-19 selection
+      v-tab(:value="tabs.FULLTEXT_SEARCH")
+        router-link(to="/all/search")
+          v-icon(class="px-1") mdi-text-box-search-outline
+          | Search preprints
+      v-tab-item 
         QuickAccessByReviewingService
-      el-tab-pane(:name="tabs.COVID19_HYP_TAB")
-        router-link(to="/covid19/by_hyp" slot="label") COVID-19 hypotheses
+      v-tab-item
         QuickAccessByHyp(@change="onChangeByHyp")
-      el-tab-pane(:name="tabs.COVID19_AUTOMAGIC_TAB")
-        router-link(to="/covid19/automagic" slot="label") Automagic COVID-19 selection
+      v-tab-item
         QuickAccessByAutomagic
-      el-tab-pane(:name="tabs.FULLTEXT_SEARCH")
-        router-link(to="/all/search" slot="label") Search preprints
+      v-tab-item
         QuickAccessSearchBar(@submit="onSubmitSearch")
 </template>
 

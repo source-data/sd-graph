@@ -1,123 +1,59 @@
 <template lang="pug">
-  header.banner-area
-    img(src="../assets/EEB_HP_Banner.svg").banner-image
-    .banner-title-wrapper
-      router-link(to="/"  active-class="is-active")
-        h1.title.pointer.banner-title Early Evidence Base
-      h3.banner-subtitle Accessing early scientific findings
+  .banner-title-wrapper
+    router-link(to="/"  active-class="is-active")
+      .text-xl-h2.text-lg-h2.text-md-h3.text-sm-h4.text-h5.pointer.banner-title 
+        b Early Evidence Base
+        .text-xl-h4.text-lg-h4.text-md-h5.text-sm-h6.text-h6.pointer.banner-subtitle Accessing early scientific findings
 </template>
 
 <style lang="scss" scoped>
-.banner-image {
-  display:none;
-}
-
-@media screen and (min-width:680px) {
-  .banner-image {
-    display:block;
-    width:100%;
-  }
-}
-
-.banner-area {
-  position:relative;
-  display:block;
-  background-image: url("../assets/EEB_HP_Banner.svg");
-  background-size:cover;
-}
-
-@media screen and (min-width:680px) {
-  .banner-area {
-    position:relative;
-    display:flex;
-    align-items:center;
-    background-image:none;
-  }
-}
 
 
 .banner-title-wrapper {
-  padding: 2rem 2rem;
+  padding: 1rem 1rem;
   background-color: rgba(255,255,255,0.75);
+  position: absolute;
+  top: 3rem;
 }
 
-@media screen and (min-width:680px) {
+@media screen and (min-width: 600px) {
   .banner-title-wrapper {
     position: absolute;
-    // top:2rem;
-    left:180px;
-    padding: 2rem 2rem;
-    background-color: rgba(255,255,255,0.75);
+    top: 3rem;
+    left: 80px;
   }
 }
 
-@media screen and (min-width:1080px) {
+@media screen and (min-width: 960px) {
   .banner-title-wrapper {
-      left: 180px;
+    position: absolute;
+    top: 3rem;
+    left: 200px;
   }
 }
 
-@media screen and (min-width:1160px) {
+@media screen and (min-width: 1264px) {
   .banner-title-wrapper {
-    padding: 4rem 2rem;
+    position: absolute;
+    top: 3rem;
+    left: 250px;
   }
 }
 
-@media screen and (min-width:1800px) {
+@media screen and (min-width:1904px) {
   .banner-title-wrapper {
-    padding: 6rem 3rem;
+    position: absolute;
+    top: 3rem;
+    left: 350px;
   }
 }
 
 .banner-title {
   color:#0a5769;
-  font-size: 2.5rem;
-  line-height:1;
-
-  margin:0 0 1rem 0;
 }
 
 .banner-subtitle {
   color:#217b90;
-  font-size: 1.5rem;
-  line-height:1;
-
-  margin:0 0 0 0;
-}
-
-@media screen and (min-width:1080px) {
-  .banner-title {
-    font-size: 5rem;
-
-  }
-
-  .banner-subtitle {
-    font-size: 2rem;
-
-  }
-}
-
-@media screen and (min-width:1690px) {
-  .banner-title {
-    font-size: 6rem;
-  }
-
-  .banner-subtitle {
-    font-size:3rem;
-  }
-}
-
-
-@media screen and (min-width:680px) {
-  .banner-logo--press,
-  .banner-logo--sourcedata {
-    max-height:none;
-  }
-}
-
-.banner_img {
-  background-image: url("../assets/EEB_HP_Banner.svg");
-  background-size:cover;
 }
 
 </style>

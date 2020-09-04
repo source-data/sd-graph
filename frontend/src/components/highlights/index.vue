@@ -1,20 +1,13 @@
 <template lang="pug">
   div
-    div(v-show="loadingRecords" )
-      el-row
-        el-col
-          el-button(circle type="primary" :loading="true" style="position: absolute; right: 0; top: 10px;")
-    div(:class="{'highlights-loading': loadingRecords}")
-      div(v-if="records.length > 0")
-        el-row(type="flex" class="row-bg" justify="space-between")
-          el-col
-            h1 {{ records.length }} results found:
-      p(v-else) No results
-
-      div(v-for="article in records")
-        el-card.box-card(shadow="hover")
+    div(v-if="records.length > 0")
+      h1 {{ records.length }} results found:
+    p(v-else) No results
+    v-container(:class="{'highlights-loading': loadingRecords}")
+      v-row(v-for="article in records")
+        v-col
           HighlitedListItem(:article="article")
-        br
+      br
 </template>
 
 <script>

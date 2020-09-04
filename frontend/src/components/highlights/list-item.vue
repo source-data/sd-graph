@@ -1,110 +1,111 @@
 <template lang="pug">
-  .hihglight__list-item
-    el-row(v-if="article")
-      el-row()
-        el-col(:span="24")
-            h3
-              | {{ article.title }}
-              |
-              router-link(:to="`/doi/${article.doi}`")
-                span.el-icon-connection
-            //- el-row(type="flex" justify="space-between")
-            p
-              small
-                | Posted
+  v-card(
+    v-if="article"
+    class="pa-5"
+    color="blue-grey lighten-5"
+  )
+    v-card-title
+      | {{ article.title }}
+      router-link(:to="`/doi/${article.doi}`")
+        v-icon(color="indigo lighten-3") mdi-link-variant
+    v-card-subtitle
+      p {{ authorList }} 
+      p 
+        | Posted
+        |
+        b {{ displayDate(article.pub_date) }}
+        |  on
+        |
+        i {{ serviceId2Name(article.journal) }}
+      p
+        b doi:
+        a(:href="href(article.doi)" target="_blank" rel="noopener")
+          |
+          | https://doi.org/{{ article.doi }}
+    v-card-text
+      v-expansion-panels(v-if="article.review_process" focusable)
+        v-expansion-panel(v-for="review in article.review_process.reviews")
+          v-expansion-panel-header()
+            div(v-if="review.highlight")
+              v-tooltip(
+                v-if="review.highlight"
+                top
+                max-width="500px"
+              )
+                template(v-slot:activator="{ on, attrs }")
+                  span(text v-bind="attrs" v-on="on")
+                    v-icon(small class="px-1" color="indigo lighten-3") mdi-text-box-check-outline
+                    |   Reviewed by
+                    |
+                    i {{ serviceId2Name(review.reviewed_by) }}
+                    |  | Reviewer #
+                    | {{ review.review_idx }}
+                    | ({{ displayDate(review.posting_date) }})
+                b Significance
+                p {{ review.highlight }}
+                b Click on tab to read full review.
+            div(v-else)
+              span.peer_review_material
+                v-icon(small class="px-1" color="indigo lighten-3") mdi-text-box-check-outline
+                |   Reviewed by
                 |
-                b {{ displayDate(article.pub_date) }}
-                |  on
-                |
-                i {{ serviceId2Name(article.journal) }}
-            p
-              small
-                b doi:
-                a(:href="href(article.doi)" target="_blank" rel="noopener")  https://doi.org/{{ article.doi }}
-            p
-              small {{ authorList }}
-            div(v-if="article.review_process")
-              el-collapse(v-for="review in article.review_process.reviews" v-model="activeCollapseItem" accordion)
-                el-collapse-item
-                  p(slot="title")
-                      el-popover(v-if="review.highlight"
-                        placement="top"
-                        title="Summary (click tab to read the full review)"
-                        width="600"
-                        trigger="hover"
-                        :content="review.highlight"
-                        transition="el-fade-in-linear"
-                        :visible-arrow="false"
-                        :open-delay="500"
-                      )
-                        span(slot="reference").peer_review_material
-                          i.el-icon-document-checked
-                          |   Reviewed by
-                          |
-                          i {{ serviceId2Name(review.reviewed_by) }}
-                          |  | Reviewer #
-                          | {{ review.review_idx }}
-                          | ({{ displayDate(review.posting_date) }})
-                      span(v-else).peer_review_material
-                        i.el-icon-document-checked
-                        |   Reviewed by
-                        |
-                        i {{ serviceId2Name(review.reviewed_by) }}
-                        |  | Reviewer #
-                        | {{ review.review_idx }}
-                        | ({{ displayDate(review.posting_date) }})
-                  div(v-html="mdRender(review.text)").md-content
-              el-collapse(v-if="article.review_process.response")
-                el-collapse-item
-                  p(slot="title")
-                    span.peer_review_material
-                      i.el-icon-notebook-2
-                      |   Response to the Reviewers
-                  div(v-html="mdRender(article.review_process.response.text)").md-content
-              el-collapse(v-if="article.review_process.annot")
-                el-collapse-item
-                  p(slot="title")
-                    span.peer_review_material
-                      i.el-icon-document-checked
-                      |  Reviewed by
-                      i  {{ serviceId2Name(article.review_process.annot.reviewed_by) }}
-                      |  | Review Process File
-                      | ({{ displayDate(article.review_process.annot.posting_date) }})
-                  div(v-html="mdRender(article.review_process.annot.text)").md-content
-            p(v-if="article.journal_doi")
-              small
-                span.peer_review_material
-                  //- i(class="fas el-icon-fa-award")
-                  i.el-icon-finished
-                  b  Published in:
-                  i  {{ article.published_journal_title }}
-                b  doi:
-                a(:href="href(article.journal_doi)" target="_blank" rel="noopener")  https://doi.org/{{ article.journal_doi }}
+                i {{ serviceId2Name(review.reviewed_by) }}
+                |  | Reviewer #
+                | {{ review.review_idx }}
+                | ({{ displayDate(review.posting_date) }})
+          v-expansion-panel-content
+            p(v-html="mdRender(review.text)").md-content
+        v-expansion-panel(v-if="article.review_process.response" focusable)
+          v-expansion-panel-header
+            span
+              v-icon(small class="px-1" color="indigo lighten-3") mdi-message-text-outline
+              |   Response to the Reviewers
+          v-expansion-panel-content
+            p(v-html="mdRender(article.review_process.response.text)").md-content
+        v-expansion-panel(v-if="article.review_process.annot")
+          v-expansion-panel-header
+            span
+              v-icon(small class="px-1" color="indigo lighten-3") mdi-text-box-check-outline
+              |  Reviewed by
+              i  {{ serviceId2Name(article.review_process.annot.reviewed_by) }}
+              |  | Review Process File
+              | ({{ displayDate(article.review_process.annot.posting_date) }})
+          v-expansion-panel-content
+            p(v-html="mdRender(article.review_process.annot.text)").md-content
+      v-expansion-panels(v-if="article.journal_doi")
+        .v-expansion-panel
+          .v-expansion-panel-header
+            span
+              v-icon(small class="px-1" color="indigo lighten-3") mdi-certificate-outline
+              | Published in:
+              i  {{ article.published_journal_title }}
+              b  doi:
+              a(:href="href(article.journal_doi)" target="_blank" rel="noopener")  https://doi.org/{{ article.journal_doi }}
 
-      el-row(type="flex" justify="space-between")
-        el-col(:span="11")
-          p
-            small(style="line-height:1.5") {{ article.abstract }}
-          p
-            small(style="font-family: monospace; font-size: 9px") [source: {{ article.source }}]
-        el-col(:span="12").scroll
+      v-row
+        v-col
+          v-card
+            v-card-title Abstract
+            v-card-text
+              p(class="text--primary") {{ article.abstract }}
+        v-col.scroll
           //- label(for="info-cards" style="font-variant: small-caps") {{ info.length }} information card{{ info.length > 1 ? 's':''}}:
-          el-collapse(v-for="(card, index) in info" id="infor-cards" v-model="activeCards")
-            el-collapse-item(:title="card.title", :name="index")
-              div(v-if="card.entities.length > 1" )
+          v-expansion-panels(multiple v-model="activeCards" )
+            v-expansion-panel(v-for="card in info" id="infor-cards" )
+              v-expansion-panel-header {{ card.title }}
+              v-expansion-panel-content(v-if="card.entities.length > 1")
                   p
                     span(v-for="entity in card.entities")
-                      el-tag(size="medium" :type="mapRole(entity.role)") {{ entity.text }}
+                      v-chip(small outlined :type="mapRole(entity.role)") {{ entity.text }}
                   p(v-if="card.id")
                     a(target="_blank" rel="noopener" :href="`https://search.sourcedata.io/panel/${card.id}`")
                       img(:src="`https://api.sourcedata.io/file.php?panel_id=${card.id}`").fig-img
                     br
                     a(target="_blank" rel="noopener" :href="`https://search.sourcedata.io/panel/${card.id}`")
                       | open as SmartFigures
-              div(v-else-if="card.text instanceof Array")
-                span(v-for="item in card.text")
-                  el-tag(size="medium") {{ item }}
-              div(v-else="typeof card.text === 'string'")
+              v-expansion-panel-content(v-else-if="card.text instanceof Array")
+                v-chip(v-for="item in card.text" small outline) {{ item }}
+              v-expansion-panel-content(v-else="typeof card.text === 'string'")
                 small(style="line-height:1.3") {{ card.text }}
 </template>
 
@@ -119,7 +120,6 @@ export default {
   data() {
     return {
       activeCards: [0,1],
-      activeCollapseItem: []
     }
   },
   methods: {
@@ -175,16 +175,6 @@ export default {
 }
 </script>
 
-<style>
-  .peer_review_material {
-    color:#364497;
-    font-weight: bold;
-  }
-  .hihglight__list-item .el-collapse-item__header {
-    line-height: 1em;
-  }
-</style>
-
 <style scoped>
   .scroll {
     max-height: 500px;
@@ -194,5 +184,7 @@ export default {
     max-width: 300px;
     max-height: 300px;
   }
-
+  .v-card__text, .v-card__title { /* bug fix; see https://github.com/vuetifyjs/vuetify/issues/9130 */
+    word-break: normal; /* maybe !important  */
+  }
 </style>

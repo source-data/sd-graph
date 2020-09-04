@@ -1,48 +1,47 @@
 <template lang="pug">
-  .org-credits
-    .org-credits--left
-      a(href="https://embo.org" target="_blank" rel="noopener")
-        img(src="../assets/EEB_E_LOGO.png" class="banner-logo banner-logo--embo" alt="EMBO Logo")
-    .org-credits--right
-      a(href="https://embopress.org")
-        img(src="../assets/EEB_EP_LOGO.png" class="banner-logo banner-logo--press" alt="EMBO Press Logo")
-      a(href="https://sourcedata.io" target="_blank" rel="noopener")
-        img(src="../assets/EEB_SD_LOGO.png" class="banner-logo banner-logo--sourcedata" alt="SourceData Logo")
+    div
+      v-app-bar(
+        app 
+        clipped-left 
+        prominent
+        height=250
+        color="blue-grey darken-2"
+        hide-on-scroll
+        fade-img-on-scroll
+        scroll-threshold="700"
+        src="../assets/EEB_HP_Banner.svg"
+      )
+        Banner
+        div(style="height: 100%").d-flex.align-end
+          a(href="https://embo.org" target="_blank" rel="noopener")
+            img(src="../assets/EEB_E_LOGO.png" alt="EMBO Logo").logo-EMBO
+        div(style="width: 100%; height: 100%").d-flex.justify-end
+            .d-flex.align-end
+              a(href="https://embopress.org")
+                img(src="../assets/EEB_EP_LOGO.png" alt="EMBO Press Logo").logo-EP
+              //- a(href="https://sourcedata.io" target="_blank" rel="noopener")
+              //-   img(src="../assets/EEB_SD_LOGO.png" alt="SourceData Logo")
 </template>
 
-<style lang="scss" scoped>
-.org-credits {
-  display:flex;
-  justify-content: space-between;
-  padding: 1rem;
-  background: #f5f5f5
-}
+<script>
 
-.org-credits--left, .org-credits--right {
-  display:flex;
-  align-items: center;
-}
+import Banner from './banner'
 
-.org-credits--right .banner-logo {
-  margin-left:2rem;
-}
-
-
-.org-credits--right {
-  flex-direction:column;
-  justify-content: center;
-}
-.banner-logo--press,
-.banner-logo--sourcedata {
-  max-height:30px
-}
-
-
-@media screen and (min-width:680px) {
-
-  .org-credits--right {
-    flex-direction:row;
-    justify-content: flex-end;
+export default {
+  components: {
+    Banner
   }
 }
+</script>
+
+<style lang="scss" scoped>
+
+.logo-EMBO {
+  max-height: 60px;
+}
+
+.logo-EP {
+  max-height: 80px;
+}
+
 </style>

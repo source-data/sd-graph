@@ -1,32 +1,27 @@
 <template lang="pug">
-  div
-    el-row(type="flex" class="row-bg" justify="space-between")
-      el-col
-        p.margin-5
-          small Select a reviewing service:
-        .el-radio-group
-          label.el-radio-button.el-radio-button--mini(v-for="id in reviewingList" :label="id")
-            router-link.el-radio-button__inner(:to="{ path: `/refereed_preprints/${serviceId2Slug(id)}` }") {{ serviceId2Name(id) }}
-
-      el-col
-        p.margin-5
-          small Sort by:
-        el-radio-group(v-model="sortBy" size="mini" @change="sortRecords")
-          el-radio-button(label="pub_date")
-            | preprint date
-          el-radio-button(label="posting_date")
-            | reviewing date
-        el-switch(
-          style="margin-left:10px"
-          v-model="sortDirection"
-          @change="sortRecords"
-          active-icon-class="el-icon-sort-up"
-          active-value="asc"
-          active-color="#409EFF"
-          inactive-icon-class="el-icon-sort-down"
-          inactive-value="desc"
-          inactive-color="#409EFF"
-        )
+  v-card(class="pa-5" outlined)
+    v-card-title Preprints linked to peer reviews
+    v-card-text
+      v-row
+        v-col
+          p Reviewing services:
+          v-btn-toggle(m-model="selectedRev" mandatory)
+            router-link(v-for="id in reviewingList" :to="{ path: `/refereed_preprints/${serviceId2Slug(id)}` }")
+              v-btn(small) {{ serviceId2Name(id) }}
+        v-col
+          p Sort by:
+          v-btn-toggle(v-model="sortBy" @change="sortRecords")
+            v-btn(x-small outlined value="pub_date")
+              | preprint date
+            v-btn(x-small outlined value="posting_date")
+              | reviewing date
+        v-col
+          p Order:
+          v-btn-toggle(v-model="sortDirection" @change="sortRecords" mandatory)
+            v-btn(x-small icon value="desc")
+              v-icon(dense) mdi-sort-descending
+            v-btn(x-small icon value="asc")
+              v-icon(dense) mdi-sort-ascending
 </template>
 
 <script>
@@ -42,9 +37,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters('byReviewingService', [
-      'records',
-    ]),
+    ...mapGetters('byReviewingService', ['records']),
     reviewingList () {
       return this.records.map(
         (r) => {return r.id}

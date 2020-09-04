@@ -1,6 +1,6 @@
 <template lang="pug">
-  el-row
-    el-col(:span="16" :offset="4")
+  v-row()
+    v-col(align="right")
       small EMBO 	&#169; {{ thisYear }}
 </template>
 

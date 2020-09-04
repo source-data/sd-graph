@@ -1,14 +1,13 @@
 <template lang="pug">
-  div
-    h5 Recent hypotheses tested in preprints related to SARS-CoV-2/COVID-19.
-    el-radio-group(@change="onSelect" v-model="selectedHyp" size="mini" fill="#406482")
-      span(v-for="hyp in hypList").spaced-row
-        el-radio-button(:label="hyp.id" style="margin: 1px;")
-          el-tag(v-for="ctrl_var in hyp.hyp.ctrl_v" size="mini" type="danger" effect="dark") {{ ctrl_var }}
-          i(class="el-icon-minus")
-          i(class="el-icon-question")
-          i(class="el-icon-right")
-          el-tag(v-for="meas_var in hyp.hyp.meas_v" size="mini" type="" effect="dark") {{ meas_var }} 
+  v-card(class="pa-5" outlined)
+    v-card-title Recent hypotheses tested in preprints related to SARS-CoV-2/COVID-19.
+    v-btn-toggle(v-for="hyp in hypList" @change="onSelect" v-model="selectedHyp")
+       v-btn(:value="hyp.id" small text class="ma-1")
+          v-chip(v-for="ctrl_var in hyp.hyp.ctrl_v" color="red lighten-3" x-small) {{ ctrl_var }}
+          v-icon(small) mdi-minus
+          v-icon(small) mdi-help-circle-outline
+          v-icon(small) mdi-arrow-right
+          v-chip(v-for="meas_var in hyp.hyp.meas_v" color="blue lighten-3" x-small) {{ meas_var }} 
 </template>
 
 <script>
@@ -18,7 +17,7 @@ export default {
   data () {
     return {
       // default value
-      selectedHyp: 0,
+      selectedHyp: 0
     }
   },
   computed: {
@@ -36,3 +35,4 @@ export default {
   },
 }
 </script>
+

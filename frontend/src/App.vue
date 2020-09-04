@@ -1,29 +1,27 @@
 <template lang="pug">
-  el-container
-    TopNavBar
-    Banner
-    el-container
+  v-app
+    v-main
       LeftSideBar
-      el-main.my-main
-        router-view
-    el-footer
+      TopNavBar
+      router-view
+    v-footer
       Footer
-
 </template>
 
 <script>
 import TopNavBar from './layouts/top-nav-bar'
 import Banner from './layouts/banner'
 import LeftSideBar from './layouts/left-side-bar'
-import Footer from './layouts/footer'
+import Footer from './layouts/footer' 
 
 export default {
-  name: 'app',
+  name: 'App',
+
   components: {
     TopNavBar,
     Banner,
     LeftSideBar,
-    Footer,
+    Footer
   },
   metaInfo: {
     meta: [
@@ -37,21 +35,25 @@ export default {
     // all titles will be injected into this template
     titleTemplate: '%s | Early Evidence Base'
   },
-}
+  data: () => ({
+    //
+  }),
+};
 </script>
+
 
 <style lang="scss">
 
-/* Portrait */
-@media only screen
-  and (min-device-width: 375px)
-  and (max-device-width: 812px)
-  and (-webkit-min-device-pixel-ratio: 3)
-  and (orientation: portrait) {
-    .el-main.my-main {
-      padding: 0;
-    }
-}
+// /* Portrait */
+// @media only screen
+//   and (min-device-width: 375px)
+//   and (max-device-width: 812px)
+//   and (-webkit-min-device-pixel-ratio: 3)
+//   and (orientation: portrait) {
+//     .v-main.my-main {
+//       padding: 0;
+//     }
+// }
 
 html, body {
   padding:0;
@@ -63,11 +65,9 @@ a {
   color: #66b1ff;
 }
 
-.el-menu-item a {
-  color: inherit;
-}
-
 .md-content {
+  font-family:'Courier New', Courier, monospace;
+  font-size: 14px;
   max-height:350px;
   overflow: scroll;
 }
@@ -75,21 +75,9 @@ a {
   max-height: 60px;
 }
 
-.margin-0 {
-  margin: 0;
-}
-
-.margin-5 {
-  margin: 5px;
-}
-.spaced-row {
-  padding: 1px;
-}
-
 .pointer {
   cursor: pointer;
 }
 
 </style>
-
 

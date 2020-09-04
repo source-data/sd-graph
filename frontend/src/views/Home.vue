@@ -1,15 +1,13 @@
 <template lang="pug">
-  div
-    el-row
-      el-col
+  v-container()
+    v-row
+      v-col
         Intro
-    el-row
-      el-col
-        br
-        el-card.box-card
-          QuickAccess(:activeTab="activeTab")
-    el-row
-      el-col
+    v-row
+      v-col
+        QuickAccess(:activeTab="activeTab")
+    v-row
+      v-col
         Highlights
 </template>
 
