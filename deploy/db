@@ -196,14 +196,15 @@ deploy_database(){
 cache_warmup(){
   local HOST=$1
   local SERVER_ADDRESS="https://$HOST"
-  log $SERVER_ADDRESS/api/v1/automagic/
-  curl $SERVER_ADDRESS/api/v1/automagic/
-  log $SERVER_ADDRESS/api/v1/by_hyp/
-  curl $SERVER_ADDRESS/api/v1/by_hyp/
-  log $SERVER_ADDRESS/api/v1/by_reviewing_service/
-  curl $SERVER_ADDRESS/api/v1/by_reviewing_service/
-  log $SERVER_ADDRESS/api/v1/stats
-  curl $SERVER_ADDRESS/api/v1/stats
+  log "Cache warmup:"
+  log "   * $SERVER_ADDRESS/api/v1/automagic/"
+  curl $SERVER_ADDRESS/api/v1/automagic/ > /dev/null 2>&1
+  log "   * $SERVER_ADDRESS/api/v1/by_hyp/"
+  curl $SERVER_ADDRESS/api/v1/by_hyp/ > /dev/null 2>&1
+  log "   * $SERVER_ADDRESS/api/v1/by_reviewing_service/"
+  curl $SERVER_ADDRESS/api/v1/by_reviewing_service/ > /dev/null 2>&1
+  log "   * $SERVER_ADDRESS/api/v1/stats"
+  curl $SERVER_ADDRESS/api/v1/stats > /dev/null 2>&1
 }
 
 main() {

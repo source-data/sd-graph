@@ -28,7 +28,7 @@ docker-compose  build
 docker-compose up -d
 cat sdg/SD-indices.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>  # define indices
 docker-compose run --rm flask python -m sdg.sdneo PUBLICSEARCH --api sdapi  # import source data public data
-docker run --rm -it -v ~/.aws:/root/.aws --mount type=bind,source=<volume>/biorxiv/Current_Content/July_2020,target=/root/Current_Content/July_2020 amazon/aws-cli s3 sync --request-payer requester --exclude "*" --include "*.meca" s3://biorxiv-src-monthly/Current_Content/July_2020 ./Current_Content/July_2020/ --dryrun 
+docker run --rm -it -v ~/.aws:/root/.aws --mount type=bind,source=<volume>/biorxiv/Current_Content/July_2020,target=/root/Current_Content/July_2020 amazon/aws-cli s3 sync --request-payer requester --exclude "*" --include "*.meca" s3://biorxiv-src-monthly/Current_Content/July_2020 ./Current_Content/July_2020/ --dryrun
 
 aws s3 sync --request-payer requester --exclude "*" --include "*.meca" s3://biorxiv-src-monthly/Current_Content/July_2020 <path-to-biorxiv-archive>/biorxiv/Current_content/July_2020/
  # update meca archives; sync to folder outside of docker build scope
@@ -99,6 +99,17 @@ Finally launch the service again
 
 ```
 docker-compose -f production.yml up -d --remove-orphans
+```
+
+#### snippet to restore `download` db in your local computer
+```bash
+docker run --rm \
+    --name neo4j-dump \
+    --env-file .env \
+    --mount type=bind,source=$PWD,target=/app \
+    --mount type=bind,source=$PWD/data/neo4j-data,target=/data \
+    -it neo4j:3.5 \
+    bin/neo4j-admin load --from=/app/download --database=graph.db --force
 ```
 
 
