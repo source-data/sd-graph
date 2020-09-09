@@ -2,7 +2,7 @@
   v-card(class="pa-5")
     v-card-title Discover preprints with one of these methods
     v-tabs(v-model="activeTab_")
-      v-tab(to="/refereed-preprints/review-commons")
+      v-tab(to="/refereed-preprints")
         v-icon(class="px-1") mdi-book-open-variant
         | Refereed Preprints
       v-tab(to="/covid19/by-hyp")
@@ -14,7 +14,7 @@
       v-tab(to="/all/search")
         v-icon(class="px-1") mdi-text-box-search-outline
         | Search preprints
-      v-tab-item(value="/refereed-preprints/review-commons")
+      v-tab-item(value="/refereed-preprints")
         QuickAccessByReviewingService
       v-tab-item(value="/covid19/by-hyp")
         QuickAccessByHyp(@change="onChangeByHyp")
