@@ -5,7 +5,7 @@
         Intro
     v-row
       v-col
-        QuickAccess(:activeTab="activeTab")
+        QuickAccess
     v-row
       v-col
         Highlights
@@ -128,11 +128,6 @@ export default {
   props: {
     collection: String,
     service: String,
-  },
-  computed: {
-    activeTab () {
-      return getStoreNameForCollection(this.collection, this.service)
-    }
   },
 
   created () {

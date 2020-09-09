@@ -44,28 +44,9 @@ export default {
     QuickAccessByHyp,
     QuickAccessSearchBar,
   },
-
-  props: {
-    activeTab: String,
-  },
   data () {
     return {
       activeTab_: undefined,
-    }
-  },
-  mounted () {
-    this.activeTab_ = this.activeTab
-  },
-  watch: {
-    activeTab (val) {
-      // element's `el-tabs` component wants to have v-model assigned to it, so we will have to give
-      // to him and keep it in sync with whatevr our parent component passes down as prop.
-      // This little trick allows the parent component to dictate which tab is now active
-      // which in turn is determined by the current route
-      console.debug("watching activeTab", this.activeTab, this.activeTab_, val)
-      if (this.activeTab_ !== val) {
-        this.activeTab_ = val
-      }
     }
   },
   methods: {
