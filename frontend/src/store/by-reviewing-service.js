@@ -3,10 +3,10 @@ import httpClient from '../lib/http'
 const _serviceId2Slug = {
   'biorxiv': 'biorxiv',
   'medrxiv': 'medrxiv',
-  'review commons': 'review_commons',
+  'review commons': 'review-commons',
   'elife': 'elife',
-  'embo press': 'embo_press',
-  'peerage of science': 'peerage_of_science',
+  'embo press': 'embo-press',
+  'peerage of science': 'peerage-of-science',
 }
 
 const _serviceSlug2Id = Object.keys(_serviceId2Slug).reduce((acc, serviceId) => {

@@ -23,12 +23,12 @@ import { serviceSlug2Id } from '../store/by-reviewing-service'
 function getStoreNameForCollection (collection, service) {
   let storeName = undefined
   switch (collection) {
-    case 'refereed_preprints':
+    case 'refereed-preprints':
       storeName = REFEREED_PREPRINTS_TAB
       break
     case 'covid19':
       switch (service) {
-        case 'by_hyp':
+        case 'by-hyp':
           storeName = COVID19_HYP_TAB
           break
         case 'automagic':
@@ -140,7 +140,7 @@ export default {
   },
 
   beforeRouteUpdate (to, from, next) {
-    if (to.params.collection === 'refereed_preprints' && to.params.service !== from.params.service) {
+    if (to.params.collection === 'refereed-preprints' && to.params.service !== from.params.service) {
       const serviceId = serviceSlug2Id(to.params.service)
       this.$store.commit('byReviewingService/showRecord', { id: serviceId })
     }

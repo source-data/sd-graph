@@ -6,7 +6,7 @@
         v-col
           p Reviewing services:
           v-btn-toggle(m-model="selectedRev" mandatory)
-            router-link(v-for="id in reviewingList" :to="{ path: `/refereed_preprints/${serviceId2Slug(id)}` }")
+            router-link(v-for="id in reviewingList" :to="{ path: `/refereed-preprints/${serviceId2Slug(id)}` }")
               v-btn(small) {{ serviceId2Name(id) }}
         v-col
           p Sort by:

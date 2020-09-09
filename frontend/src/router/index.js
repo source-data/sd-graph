@@ -8,7 +8,7 @@ Vue.use(VueRouter)
   const routes = [
   {
     path: '/',
-    redirect: '/refereed_preprints/review_commons',
+    redirect: '/refereed-preprints/review-commons',
   },
   {
     path: '/:collection/:service',

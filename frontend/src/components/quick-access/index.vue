@@ -3,11 +3,11 @@
     v-card-title Discover preprints with one of these methods
     v-tabs(v-model="activeTab_")
       v-tab(:value="tabs.REFEREED_PREPRINTS_TAB")
-        router-link(to="/refereed_preprints/review_commons")
+        router-link(to="/refereed-preprints/review-commons")
           v-icon(class="px-1") mdi-book-open-variant
           | Refereed Preprints
       v-tab(:value="tabs.COVID19_HYP_TAB")
-        router-link(to="/covid19/by_hyp")
+        router-link(to="/covid19/by-hyp")
           v-icon(class="px-1") mdi-help-circle-outline
           | COVID-19 hypotheses
       v-tab(:value="tabs.COVID19_AUTOMAGIC_TAB")
@@ -18,7 +18,7 @@
         router-link(to="/all/search")
           v-icon(class="px-1") mdi-text-box-search-outline
           | Search preprints
-      v-tab-item 
+      v-tab-item
         QuickAccessByReviewingService
       v-tab-item
         QuickAccessByHyp(@change="onChangeByHyp")
