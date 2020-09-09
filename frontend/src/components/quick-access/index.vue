@@ -31,8 +31,8 @@
 <script>
 import QuickAccessByReviewingService from './by-reviewing-service.vue'
 import QuickAccessByAutomagic from './by-automagic.vue'
-import QuickAccessByMethod from './by-method.vue'
-import QuickAccessByMol from './by-mol.vue'
+// import QuickAccessByMethod from './by-method.vue'
+// import QuickAccessByMol from './by-mol.vue'
 import QuickAccessByHyp from './by-hyp.vue'
 import QuickAccessSearchBar from './search-bar.vue'
 import { REFEREED_PREPRINTS_TAB, COVID19_HYP_TAB, COVID19_AUTOMAGIC_TAB, FULLTEXT_SEARCH } from '../../components/quick-access/tab-names'
@@ -43,8 +43,8 @@ export default {
   components: {
     QuickAccessByReviewingService,
     QuickAccessByAutomagic,
-    QuickAccessByMethod,
-    QuickAccessByMol,
+    // QuickAccessByMethod,
+    // QuickAccessByMol,
     QuickAccessByHyp,
     QuickAccessSearchBar,
   },

@@ -4,7 +4,7 @@
       h1 {{ records.length }} results found:
     p(v-else) No results
     v-container(:class="{'highlights-loading': loadingRecords}")
-      v-row(v-for="article in records")
+      v-row(v-for="article in records" :key="article.id")
         v-col
           HighlitedListItem(:article="article")
       br
