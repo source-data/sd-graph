@@ -34,6 +34,26 @@ export function serviceId2Name (serviceId) {
   return _serviceId2Name[serviceId.toLowerCase()]
 }
 
+export function getReviewingServiceDescription (serviceName) {
+  switch (serviceName) {
+    case 'review-commons':
+      return 'this is the review-commons description'
+    case 'biorxiv':
+      return 'this is the biorxiv description'
+    case 'medrxiv':
+      return 'this is the medrxiv description'
+    case 'elife':
+      return 'this is the elife description'
+    case 'embo-press':
+      return 'this is the embo-press description'
+    case 'peerage-of-science':
+      return 'this is the peerage-of-science description'
+    default:
+      break;
+  }
+}
+
+
 export const byReviewingService = {
   namespaced: true,
   state: {

@@ -8,6 +8,7 @@
           v-btn-toggle(v-model="selectedRev" mandatory)
             router-link(v-for="id in reviewingList" :key="serviceId2Slug(id)" :to="{ path: `/refereed-preprints/${serviceId2Slug(id)}` }")
               v-btn(small :value="serviceId2Slug(id)") {{ serviceId2Name(id) }}
+          p {{ selectedReviewingServiceDescription }}
         v-col
           p Sort by:
           v-btn-toggle(v-model="sortBy" @change="sortRecords")
@@ -26,7 +27,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import { serviceId2Slug, serviceId2Name } from '../../store/by-reviewing-service'
+import { serviceId2Slug, serviceId2Name, getReviewingServiceDescription } from '../../store/by-reviewing-service'
 
 export default {
   data () {
@@ -46,6 +47,9 @@ export default {
         (r) => {return r.id}
       ).sort().reverse()
     },
+    selectedReviewingServiceDescription () {
+      return getReviewingServiceDescription(this.selectedRev)
+    }
   },
   methods: {
     sortRecords() {
