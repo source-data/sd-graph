@@ -8,7 +8,7 @@
           v-btn-toggle(v-model="selectedRev" mandatory)
             router-link(v-for="id in reviewingList" :key="serviceId2Slug(id)" :to="{ path: `/refereed-preprints/${serviceId2Slug(id)}` }")
               v-btn(small :value="serviceId2Slug(id)") {{ serviceId2Name(id) }}
-          p {{ selectedReviewingServiceDescription }}
+          div(v-html="selectedReviewingServiceDescription").pt-3
         v-col
           p Sort by:
           v-btn-toggle(v-model="sortBy" @change="sortRecords")
