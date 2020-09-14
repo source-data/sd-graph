@@ -9,18 +9,18 @@
     v-container(:class="{'highlights-loading': loadingRecords}")
       v-row(v-for="article in records" :key="article.id")
         v-col
-          HighlitedListItem(:article="article")
+          HighlightedListItem(:article="article")
       br
 </template>
 
 <script>
-import HighlitedListItem from './list-item.vue'
+import HighlightedListItem from './list-item.vue'
 import { mapGetters, mapState } from 'vuex'
 
 
 export default {
   components: {
-    HighlitedListItem,
+    HighlightedListItem,
   },
   computed: {
     ...mapGetters('highlights', ['records']),
