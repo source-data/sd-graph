@@ -191,7 +191,7 @@ RETURN DISTINCT "done" AS `papers in the by hypothesis set`;
  // find assays
 MATCH (col:SDCollection)-[:has_article]->(a:SDArticle {journalName: "biorxiv"})-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity {category: "assay"})-[:Has_text]->(name:Term)
 WHERE
-  (col.name = "refereed-preprints") AND
+  (col.name = "covid19") AND
   size(name.text) > 1  // exclude embarassing artefacts of the not so AI engine
 WITH
   a, entity, name
@@ -227,17 +227,12 @@ MERGE (info)-[:HasEntity]->(item:VizEntity {text: text, category: 'assay'})
 // find entities
 MATCH (col:SDCollection)-[:has_article]->(a:SDArticle {journalName: "biorxiv"})-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity {category: "entity"})-[:Has_text]->(name:Term)
 WHERE
-  (col.name = "refereed-preprints") AND
+  (col.name = "covid19") AND
   size(name.text) > 1 OR toLower(name.text) = "s"  // exclude embarassing artefacts of the not so AI engine but keep spike S SARS protein
 WITH DISTINCT
   a, p, entity, name
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 WHERE length(name.text) > 1 OR toLower(name.text) = "s"  // exclude embarassing artefacts of the not so AI engine
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
 //find synonyms
 MATCH
    (name)<-[:Has_text]-(s:H_Entity {category: "entity"})
@@ -279,11 +274,11 @@ MERGE (info)-[:HasEntity]->(item:VizEntity {text: text, category: 'entity'})
 ///////////////////////PART C: RETURN BY SUM OF RANKS///////////////////////////////
 //sum of ranks
 // rank by assay
-WITH
-  (col:SDCollection {name: "covid19"})
+MATCH (col:SDCollection {name: "covid19"})-->(a:SDArticle)
+WITH a
 MATCH (viza:VizArticle)-[:HasInfo]->(info:VizInfo )-[:HasEntity]->(entity:VizEntity {category: 'assay'})
 WHERE
-  viza.doi = col.doi
+  viza.doi = a.doi
 WITH
    viza, COUNT(DISTINCT entity) AS N_entities
 WITH
