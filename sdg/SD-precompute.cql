@@ -189,8 +189,10 @@ RETURN DISTINCT "done" AS `papers in the by hypothesis set`;
 
 // AUTOMAGIC
  // find assays
-MATCH (col:SDCollection {name:"covid19"})-[:has_article]->(a:SDArticle {journalName: "biorxiv"})-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity {category: "assay"})-[:Has_text]->(name:Term)
-WHERE length(name.text) > 1  // exclude embarassing artefacts of the not so AI engine
+MATCH (col:SDCollection)-[:has_article]->(a:SDArticle {journalName: "biorxiv"})-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity {category: "assay"})-[:Has_text]->(name:Term)
+WHERE
+  (col.name = "refereed-preprints") AND
+  size(name.text) > 1  // exclude embarassing artefacts of the not so AI engine
 WITH
   a, entity, name
 //find synonyms
@@ -230,7 +232,10 @@ WHERE
 WITH DISTINCT
   a, p, entity, name
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 WHERE length(name.text) > 1 OR toLower(name.text) = "s"  // exclude embarassing artefacts of the not so AI engine
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 //find synonyms
