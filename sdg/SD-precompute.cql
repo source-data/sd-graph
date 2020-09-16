@@ -48,7 +48,10 @@ WITH DISTINCT
     f.label AS fig_label, f.caption AS caption, f.position_idx AS position_idx
 ORDER BY
     reviewing.rank ASC, pub_date DESC, position_idx ASC
-MERGE (paper:VizPaper {id: reviewing.name, doi: doi, query: "by_reviewing_service", pub_date: pub_date, peer_review_date: review_date, rank: pub_date})
+// TODO: replace id: reviewing.name and query by a VizCollection and VizSubCollection?
+MERGE (col:VizCollection {name: "refereed-preprints"})-->(subcol:VizSubCollection {name: reviewing.name})
+MERGE (paper:VizPaper {doi: doi, pub_date: pub_date, peer_review_date: review_date, rank: pub_date})
+MERGE (subcol)-->(paper)
 MERGE (paper)-[:HasInfo]->(info:VizInfo {title: fig_label, text: caption, rank: position_idx}) // MERGE cannot be used if properties are NULL; this is why prelim entries are linked to empty figs
 //RETURN paper, info;
 RETURN COUNT(DISTINCT paper) AS `papers in the by reviewing service`;
@@ -162,7 +165,9 @@ WITH
 UNWIND hyp.ctrl_v AS ctrl_v
 UNWIND hyp.meas_v AS meas_v
 UNWIND entities as entity // THIS IS KILLING IT IF entities == []
-MERGE (paper:VizPaper {id: id, doi:doi, query: "by_hyp", pub_date: toString(DATETIME(pub_date)), rank: paper_rank})
+MERGE (col:VizCollection {name: "by_hyp"})-->(subcol:VizSubCollection {name: "hyp_" + toString(id)})
+MERGE (paper:VizPaper {doi:doi, pub_date: toString(DATETIME(pub_date)), rank: paper_rank})
+MERGE (subcol)-->(paper)
 MERGE (info:VizInfo {title: info_title, text: info_text, rank: info_rank, id: info_id}) // avoid probelms with NULL and MERGE
 MERGE (paper)-[:HasInfo]->(info)
 MERGE (c:VizEntity {text: ctrl_v})-[:HasPotentialEffectOn]->(m:VizEntity {text: meas_v})
@@ -207,65 +212,95 @@ ORDER BY id(entity)
 WITH DISTINCT a, COLLECT(DISTINCT entity.name)[0] AS representative_entity, most_used
 WITH DISTINCT a, COLLECT(DISTINCT representative_entity) AS entities, COUNT(DISTINCT representative_entity) AS N_entities
 ORDER BY N_entities DESC
-WITH COLLECT(DISTINCT {title: a.title, doi: a.doi, source:a.source, entities: entities, pub_date: a.pub_date, N_entities: N_entities}) as preprint_list
-WITH preprint_list, range(1, size(preprint_list)) AS ranks
-UNWIND ranks as i
-WITH COLLECT({rank: i, preprint: preprint_list[i-1]}) AS ranked_by_assay
+//create info and entities for visualization
+MERGE (paper:VizPaper {doi: a.doi, pub_date: toString(DATETIME(a.pub_date))})
+MERGE (paper)-[:HasInfo]->(info:VizInfo {title: 'Experimental approaches' , rank: "0"})
+WITH paper, info, exp_assays
+UNWIND exp_assays AS text
+MERGE (info)-[:HasEntity]->(item:VizEntity {text: text, category: 'assay'})
+
 
 ///////////////////////PART B: RANK BY NUMBER OF ENTITIES///////////////////////////////
 
-//start with only most recent version
-//MATCH (preprint:SDArticle {journalName: "biorxiv"})
-//WITH preprint, ranked_by_assay
-//ORDER BY preprint.version DESC
-//WITH DISTINCT preprint.doi AS doi, COLLECT(DISTINCT preprint)[0] AS a, ranked_by_assay //keep only the most recent
-
 // find entities
-MATCH (col:SDCollection {name:"covid19"})-[:has_article]->(a:SDArticle {journalName: "biorxiv"})-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity {category: "entity"})-[:Has_text]->(name:Term)
+MATCH (col:SDCollection)-[:has_article]->(a:SDArticle {journalName: "biorxiv"})-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity {category: "entity"})-[:Has_text]->(name:Term)
+WHERE
+  (col.name = "refereed-preprints") AND
+  size(name.text) > 1 OR toLower(name.text) = "s"  // exclude embarassing artefacts of the not so AI engine but keep spike S SARS protein
 WITH DISTINCT
-  ranked_by_assay,
   a, p, entity, name
+<<<<<<< Updated upstream
 WHERE length(name.text) > 1 OR toLower(name.text) = "s"  // exclude embarassing artefacts of the not so AI engine
+=======
+>>>>>>> Stashed changes
 //find synonyms
 MATCH
-   (name)<-[:Has_text]-(s:H_Entity {category:"entity"})
+   (name)<-[:Has_text]-(s:H_Entity {category: "entity"})
 WHERE
   (s.type = entity.type) OR
   ((s.type = "gene" OR s.type = "protein" OR s.type = "geneprod") AND (entity.type = "gene" OR entity.type = "protein" OR entity.type = "geneprod"))
 WITH
-  ranked_by_assay,
   a, p, entity, name, s
 OPTIONAL MATCH (s)-[:Has_text]->(syn1:Term)
-WHERE syn1 <> name
 //combine synonyms
 WITH DISTINCT
-  ranked_by_assay,
   a, entity, COUNT(DISTINCT p) AS N_panels, COLLECT(DISTINCT name) + COLLECT(DISTINCT syn1) AS all_synonyms
 UNWIND all_synonyms AS syn
 // remove duplicates
 WITH DISTINCT
-  ranked_by_assay,
   a, entity, N_panels, syn
 // use most popular synonym
 ORDER BY syn.freq_in_panel DESC
 WITH DISTINCT
-  ranked_by_assay,
   a, entity, N_panels, COLLECT(DISTINCT syn)[0] AS most_used
 ORDER BY id(entity)
 //collapse identical synonym groups
 WITH DISTINCT
-  ranked_by_assay,
   a, COLLECT(DISTINCT entity.name)[0] AS representative_entity, SUM(N_panels) AS N, most_used
 WHERE N > 2
 WITH DISTINCT
-  ranked_by_assay,
   a, 
   COLLECT(DISTINCT representative_entity) AS entities, 
   COUNT(DISTINCT representative_entity) AS N_entities
 ORDER BY N_entities DESC
+//create info and entities for visualization
+MERGE (paper:VizPaper {doi: a.doi, pub_date: toString(DATETIME(a.pub_date))})
+MERGE (paper)-[:HasInfo]->(info:VizInfo {title: 'Biological entities', rank: "1"})
+WITH paper, info, exp_assays
+UNWIND entities AS text
+MERGE (info)-[:HasEntity]->(item:VizEntity {text: text, category: 'entity'})
+
+
+///////////////////////PART C: RETURN BY SUM OF RANKS///////////////////////////////
+//sum of ranks
+// rank by assay
+WITH
+  (col:SDCollection {name: "covid19"})
+MATCH (viza:VizArticle)-[:HasInfo]->(info:VizInfo )-[:HasEntity]->(entity:VizEntity {category: 'assay'})
+WHERE
+  viza.doi = col.doi
+WITH
+   viza, COUNT(DISTINCT entity) AS N_entities
+WITH
+  COLLECT(DISTINCT {preprint: viza, N_entities: N_entities}) as preprint_list
+WITH 
+  preprint_list, range(1, size(preprint_list)) AS ranks
+UNWIND ranks as i
+WITH
+  COLLECT({rank: i, preprint: preprint_list[i-1]}) AS ranked_by_assay
+// rank by entities
 WITH
   ranked_by_assay,
-  COLLECT(DISTINCT {title: a.title, doi: a.doi, source:a.source, entities: entities, pub_date: a.pub_date, N_entities: N_entities}) as preprint_list
+  (col:SDCollection {name: "covid19"})
+MATCH (viza:VizArticle)-[:HasInfo]->(info:VizInfo )-[:HasEntity]->(entity:VizEntity {category: 'entity'})
+WHERE
+  ranked_by_assay
+WITH
+  ranked_by_assay,
+  viza, COUNT(DISTINCT entity) AS N_entities
+WITH
+  ranked_by_assay,
+  COLLECT(DISTINCT {preprint: viza, N_entities: N_entities}) as preprint_list
 WITH 
   ranked_by_assay,
   preprint_list, range(1, size(preprint_list)) AS ranks
@@ -273,32 +308,20 @@ UNWIND ranks as i
 WITH
   ranked_by_assay,
   COLLECT({rank: i, preprint: preprint_list[i-1]}) AS ranked_by_entities
-
-///////////////////////PART C: RETURN BY SUM OF RANKS///////////////////////////////
-//sum of ranks
-WHERE (ranked_by_entities <> []) AND (ranked_by_assay <> [])
+//Sum of ranks
 WITH ranked_by_assay + ranked_by_entities AS ranked
 UNWIND ranked as item //ranked by assay are listed first, ranked by biol entities second
 WITH DISTINCT 
   item.preprint.doi as doi,
-  item.preprint.pub_date AS pub_date,
-  COLLECT(DISTINCT item.preprint.entities) AS entities, // list of assays first, list of biol entities second
   SUM(item.rank) AS rank_sum,
   COLLECT(item.rank) AS ranks
-WHERE size(ranks)=2
+WHERE size(ranks) = 2
 WITH 
-  doi, pub_date, entities[0] AS exp_assays, entities[1] AS bio_entities, rank_sum      
+  item.preprint as preprint, rank_sum     
 ORDER BY rank_sum ASC
 LIMIT 20
-// unpack
-MERGE (paper:VizPaper {id: 'automagic', doi: doi, query:'automagic', pub_date: toString(DATETIME(pub_date)), rank: rank_sum})
-MERGE (paper)-[:HasInfo]->(info_2:VizInfo {title: 'Experimental approaches' , text: exp_assays, rank: "0"})
-MERGE (paper)-[:HasInfo]->(info_1:VizInfo {title: 'Biological entities' , text: bio_entities, rank: "1"})
-WITH paper, info_1, info_2, bio_entities, exp_assays
-UNWIND bio_entities AS text_1
-MERGE (info_1)-[:HasEntity]->(item_1:VizEntity {text: text_1})
-WITH paper, info_1, info_2, item_1, exp_assays
-UNWIND exp_assays AS text_2
-MERGE (info_2)-[:HasEntity]->(item_2:VizEntity {text: text_2})
-//RETURN paper, info_1, info_2, item_1, item_2;
-RETURN COUNT(DISTINCT paper) AS `papers in the automagic set`;
+MERGE (automagic:VizCollection {name: 'automagic'})
+MERGE (covid19:VizSubCollection {name: 'covid19'})
+MERGE (automagic)-->(covid19)
+MERGE (covid19)-->(preprint)
+MERGE (preprint)-->(r:VizRank {value: rank_sum, name: 'automagic'})
