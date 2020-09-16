@@ -247,10 +247,10 @@ main() {
 
   case $STAGE_NAME in
     "staging")
-      REMOTE_HOST="eeb-dev.sourcedata.io"
+      REMOTE_HOST="eeb-dev.embo.org"
       ;;
     "production")
-      REMOTE_HOST="eeb.sourcedata.io"
+      REMOTE_HOST="eeb.embo.org"
       ;;
     *)
       echo "[ERROR] Argument - please specify a valid --stage_name (staging|production)"
