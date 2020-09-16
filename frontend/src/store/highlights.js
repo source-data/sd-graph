@@ -54,6 +54,9 @@ export default {
           return r.review_process.reviews
           .map(review => new Date(review.posting_date))
           .reduce(most_recent, new Date('2000-01-01'))
+        },
+        rank: (r) => {
+          return parseInt(r.rank)
         }
       }
       const sort_metric = sortMethod[state.sortBy]
@@ -114,6 +117,7 @@ export default {
 function preProcessRecord (record, current) {
   return Object.assign({}, record, {
     id: record.doi,
+    rank: current.papers.find(a => a.doi === record.doi).rank,
     info: current.papers.find(a => a.doi === record.doi).info
   })
 }

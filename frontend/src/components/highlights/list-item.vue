@@ -24,7 +24,7 @@
           | https://doi.org/{{ article.doi }}
     v-card-text
       v-expansion-panels(v-if="article.review_process" focusable)
-        v-expansion-panel(v-for="review in article.review_process.reviews" :key="review.review_idx")
+        v-expansion-panel(v-for="(review, i) in article.review_process.reviews" :key="i")
           v-expansion-panel-header()
             div(v-if="review.highlight")
               v-tooltip(

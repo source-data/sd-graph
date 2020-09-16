@@ -37,18 +37,18 @@ export function serviceId2Name (serviceId) {
 export function getReviewingServiceDescription (serviceName) {
   switch (serviceName) {
     case 'review-commons':
-      return 'this is the review-commons description'
+      return '<p>Learn more about <i>Review Commons</i> at <a target="_blank" href="https://reviewcommons.org">https://reviewcommons.org</a></p>'
     case 'biorxiv':
-      return 'this is the biorxiv description'
+      return '<p>Learn more about <i>bioRxiv</i> at <a target="_blank" href="https://www.biorxiv.org/">https://biorxiv.org/</a></p>'
     case 'medrxiv':
-      return 'this is the medrxiv description'
+      return '<p>Learn more about <i>medRxiv</i> at <a target="_blank" href="https://www.medRxiv.org/">https://medRxiv.org/</a></p>'
     case 'elife':
-      return 'this is the elife description'
+      return '<p>Learn more about <i>eLife</i> Preprint Review at <a target="_blank" href="http://elifesci.org/preprint-review">http://elifesci.org/preprint-review</a></p>'
     case 'embo-press':
-      return 'this is the embo-press description'
+      return '<p>Learn more about <i>EMBO Press</i> Transparent Review at <a target="_blank" href="https://www.embopress.org/policies">https://embopress.org</a></p>'
     case 'peerage-of-science':
-      return 'this is the peerage-of-science description'
-    default:
+      return '<p>Learn more about <i>Peerage of Science</i> at <a target="_blank" href="https://www.peerageofscience.org/">https://peerageofscience.org/</a></p>'
+    default: 
       break;
   }
 }

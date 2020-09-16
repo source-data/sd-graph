@@ -15,6 +15,9 @@ WITH ct
 DELETE ct
 RETURN COUNT(DISTINCT ct) AS `deleted CondTag`;
 
+MATCH (ct:CondTag)
+RETURN COUNT(ct) AS `remaining CondTag`;
+
 MATCH (h:H_Entity)-[r]-()
 WITH h, r
 DELETE r
@@ -22,9 +25,15 @@ WITH h
 DELETE h
 RETURN COUNT(DISTINCT h) AS `deleted H_Entity`;
 
+MATCH (h:H_Entity)
+RETURN COUNT(h) AS `remaining H_Entity`;
+
 MATCH (t:Term)
 DELETE t
 RETURN COUNT(DISTINCT t) AS `deleted Term`;
+
+MATCH (t:Term)
+RETURN COUNT(t) AS `remaining Term`;
 
 
 //journal name to lower case
@@ -272,17 +281,17 @@ RETURN COUNT(DISTINCT r) AS N_auth_relationships;
 
 // resolver nodes to map resource to base url and possibly to id regex pattern (according to identifiers.org)
 // need to provide a recipe to transform in to compact identifier and just use identifiers.org
-MERGE(:Resolver {name: "NCBI gene", url: "http://www.ncbi.nlm.nih.gov/gene/"}); // 59272
-MERGE(:Resolver {name: "NCBI taxon", url: "http://www.ncbi.nlm.nih.gov/taxonomy/"}); // 10090
-MERGE(:Resolver {name: "OBI", url: "https://bioportal.bioontology.org/ontologies/OBI/?p=classes&conceptid=http://purl.obolibrary.org/obo/", about: "http://purl.obolibrary.org/obo/"}); // OBI_0000445
-MERGE(:Resolver {name: "Uberon", url: "http://purl.bioontology.org/ontology/UBERON/"}); // UBERON:0000955
-MERGE(:Resolver {name: "CVCL", url: "https://identifiers.org/cellosaurus:"}); // CVCL_0574
-MERGE(:Resolver {name: "BAO", url: "http://bioportal.bioontology.org/ontologies/BAO/bao:", about: "http://www.bioassayontology.org/bao#"}); // BAO_0000134
-MERGE(:Resolver {name: "Gene Ontology", url: "http://purl.bioontology.org/ontology/GO/"}); // GO:0071735
-MERGE(:Resolver {name: "CL", url: "http://purl.bioontology.org/ontology/CL/"}); // CL:0000583
-MERGE(:Resolver {name: "Uniprot", url: "https://www.uniprot.org/uniprot/"}); // P0DTC2
-MERGE(:Resolver {name: "ChEBI", url: "http://www.ebi.ac.uk/chebi/searchId.do?chebiId="}); // CHEBI:29687
-MERGE(:Resolver {name: "Disease ontology", url: "http://purl.bioontology.org/ontology/DOID/"}); // DOID:2801
+// MERGE(:Resolver {name: "NCBI gene", url: "http://www.ncbi.nlm.nih.gov/gene/"}); // 59272
+// MERGE(:Resolver {name: "NCBI taxon", url: "http://www.ncbi.nlm.nih.gov/taxonomy/"}); // 10090
+// MERGE(:Resolver {name: "OBI", url: "https://bioportal.bioontology.org/ontologies/OBI/?p=classes&conceptid=http://purl.obolibrary.org/obo/", about: "http://purl.obolibrary.org/obo/"}); // OBI_0000445
+// MERGE(:Resolver {name: "Uberon", url: "http://purl.bioontology.org/ontology/UBERON/"}); // UBERON:0000955
+// MERGE(:Resolver {name: "CVCL", url: "https://identifiers.org/cellosaurus:"}); // CVCL_0574
+// MERGE(:Resolver {name: "BAO", url: "http://bioportal.bioontology.org/ontologies/BAO/bao:", about: "http://www.bioassayontology.org/bao#"}); // BAO_0000134
+// MERGE(:Resolver {name: "Gene Ontology", url: "http://purl.bioontology.org/ontology/GO/"}); // GO:0071735
+// MERGE(:Resolver {name: "CL", url: "http://purl.bioontology.org/ontology/CL/"}); // CL:0000583
+// MERGE(:Resolver {name: "Uniprot", url: "https://www.uniprot.org/uniprot/"}); // P0DTC2
+// MERGE(:Resolver {name: "ChEBI", url: "http://www.ebi.ac.uk/chebi/searchId.do?chebiId="}); // CHEBI:29687
+// MERGE(:Resolver {name: "Disease ontology", url: "http://purl.bioontology.org/ontology/DOID/"}); // DOID:2801
 
 
 //Link H_Entity to ontologies

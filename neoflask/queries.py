@@ -178,11 +178,12 @@ ORDER BY
     DATETIME(paper.rank) ASC, // rank is pub_date
     info.rank ASC // rank is figure label
 WITH DISTINCT
-    paper, COLLECT(info_card) AS info_cards
+    paper, COLLECT(info_card) AS info_cards,
+    toString(DATETIME(paper.rank)) as rank //just for consistency to have a rank field in the paper object
 RETURN
     paper.id AS id,
     paper.id AS name,
-    COLLECT(DISTINCT {doi: paper.doi, info: info_cards, pub_date: paper.pub_date, peer_review_date: toString(paper.peer_review_date)}) AS papers
+    COLLECT(DISTINCT {doi: paper.doi, info: info_cards, pub_date: paper.pub_date, peer_review_date: toString(paper.peer_review_date), rank: rank}) AS papers
   '''
     map = {'limit_date': []}
     returns = ['name', 'id', 'papers']
@@ -202,7 +203,7 @@ WITH DISTINCT paper, info, ctrl_v, meas_v, entity
 ORDER BY
   id(ctrl_v) ASC, // deterministic
   id(meas_v) ASC, // deterministic
-  entity.category DESC, entity.role DESC // to male viz nicer, but frontend may have to fine tune
+  entity.category DESC, entity.role DESC // to make viz nicer, but frontend may have to fine tune
 WITH DISTINCT
   paper, info,
   COLLECT(DISTINCT entity{.*}) AS panel_entities,
@@ -217,10 +218,11 @@ WITH
     entities: panel_entities // entity properties: text, category, type role, ext_id
    } as extended_info
 WITH
-  paper, COLLECT(extended_info) as info_cards, hyp
+  paper, COLLECT(extended_info) as info_cards, hyp,
+  toString(DATETIME(paper.rank)) as rank // just for consistency to have a rank fieldin the paper object
 WITH DISTINCT
   hyp,
-  COLLECT({doi: paper.doi, info: info_cards, pub_date: paper.pub_date}) AS papers
+  COLLECT({doi: paper.doi, info: info_cards, pub_date: paper.pub_date, rank: rank}) AS papers
 WITH COLLECT([hyp, papers]) AS all_results
 UNWIND range(0, size(all_results)-1) as i
 RETURN i as id, all_results[i][0] AS hyp, all_results[i][1] AS papers
@@ -242,10 +244,10 @@ WITH DISTINCT paper, exp_assays, biol_entities
 ORDER BY
    paper.rank ASC //rank is rank sum score
 WITH DISTINCT
-  paper.doi AS doi, paper.pub_date AS pub_date, 
+  paper.doi AS doi, paper.pub_date AS pub_date, paper.rank as rank,
   [{title: "Experimental approaches", text: "", entities: COLLECT(DISTINCT {text: exp_assays.text})},
    {title: "Biological entities", text: "", entities: COLLECT(DISTINCT {text: biol_entities.text})}] AS info
-WITH {doi: doi, info: info, pub_date: pub_date} AS paper
+WITH {doi: doi, info: info, pub_date: pub_date, rank: rank} AS paper
 RETURN 'automagic list' AS name, "1" AS id, COLLECT(paper) AS papers
     '''
     map = {'limit_date': []}
