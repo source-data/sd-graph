@@ -78,45 +78,52 @@ class BY_DOI(Query):
 //by doi
 //
 MATCH (preprint:Article {doi: $doi})
+// EXPLAIN MATCH (preprint:Article {doi: "10.1101/2020.04.19.049254"})
 WITH preprint, preprint.version AS version
 ORDER BY version DESC
 WITH COLLECT(preprint)[0] AS a
-OPTIONAL MATCH
-   (a)-->(auth:Contrib)
-OPTIONAL MATCH (auth)-->(id:Contrib_id)
 OPTIONAL MATCH (a)-->(f:Fig)
 OPTIONAL MATCH (a)-[r:HasReview]->(review:Review)
 OPTIONAL MATCH (a)-[:HasResponse]->(response:Response)
 OPTIONAL MATCH (a)-[:HasAnnot]->(annot:PeerReviewMaterial)
+OPTIONAL MATCH (a)-->(auth:Contrib)
 WITH DISTINCT
-    id(a) AS id,
-    a.doi AS doi,
-    a.version AS version,
-    a.source AS source,
-    a.journal_title AS journal, // this is the preprint server
-    a.title AS title,
-    a.abstract AS abstract,
-    a.journal_doi AS journal_doi,
-    a.published_journal_title AS published_journal_title, // this is the journal of final publication
-    toString(DATETIME(a.publication_date)) AS pub_date, // pub date as preprint!
-    auth,
-    id.text AS ORCID,
-    COUNT(DISTINCT f) AS nb_figures,
-    review, response, annot
-WITH id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title, auth, ORCID, nb_figures, review, response, annot
+  id(a) AS id,
+  a.doi AS doi,
+  a.version AS version, 
+  a.source AS source,
+  a.journal_title AS journal, // this is the preprint server
+  a.title AS title,
+  a.abstract AS abstract,
+  a.journal_doi AS journal_doi,
+  a.published_journal_title AS published_journal_title, // this is the journal of final publication
+  toString(DATETIME(a.publication_date)) AS pub_date, // pub date as preprint!
+  COUNT(DISTINCT f) AS nb_figures,
+  auth,
+  review, response, annot
+OPTIONAL MATCH (assay:VizEntity {category: 'assay'})<-[:HasEntity]-(:VizPaper {doi: doi})-[:HasEntity]->(entity:VizEntity {category: 'entity'})
+OPTIONAL MATCH (auth)-->(auth_id:Contrib_id)
+WITH
+  id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title, 
+  auth,
+  auth_id.text AS ORCID, 
+  nb_figures, review, response, annot,
+  COLLECT(DISTINCT entity.text) AS entities, COLLECT(DISTINCT assay.text) AS assays
 ORDER BY
     review.review_idx ASC,
     auth.position_idx ASC
 WITH
     id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title, auth, ORCID, nb_figures,
-    {reviews: COLLECT(DISTINCT review {.*}), response: response {.*}, annot: annot {.*}} AS review_process
+    {reviews: COLLECT(DISTINCT review {.*}), response: response {.*}, annot: annot {.*}} AS review_process,
+    entities, assays
 RETURN DISTINCT 
     id, doi, version, source, journal, title, abstract, toString(DATETIME(pub_date)) AS pub_date, //standardization of date time format, necessary for Safari
     journal_doi, published_journal_title, COLLECT(DISTINCT auth {.surname, .given_names, .position_idx, .corresp, orcid: ORCID}) AS authors,
-    nb_figures, review_process
+    nb_figures, review_process,
+    entities, assays
     '''
     map = {'doi': []}
-    returns = ['id', 'doi', 'version', 'source', 'journal', 'title', 'abstract', 'authors', 'pub_date', 'journal_doi', 'published_journal_title', 'nb_figures', 'review_process']
+    returns = ['id', 'doi', 'version', 'source', 'journal', 'title', 'abstract', 'authors', 'pub_date', 'journal_doi', 'published_journal_title', 'nb_figures', 'review_process', 'entities', 'assays', 'controlled_variables', 'measured_variables']
 
 
 class FIG_BY_DOI_IDX(Query):
@@ -168,64 +175,46 @@ class BY_REVIEWING_SERVICE(Query):
 
     code = '''
 // Using precomputed Viz nodes
-MATCH (col:VizCollection {name: "refereed-preprints")-->(subcol:VizSubCollection)-->(paper:VizPaper {query: "by_reviewing_service"})
+MATCH (col:VizCollection {name: "refereed-preprints"})-->(subcol:VizSubCollection)-->(paper:VizPaper)
 WHERE DATETIME(paper.peer_review_date) > DATETIME($limit_date)
-OPTIONAL MATCH (paper)-[:HasInfo]->(info:VizInfo)
 WITH DISTINCT
-   paper, info,
-   {title: info.title, text: info.text, rank: info.rank, entities: []} AS info_card
-ORDER BY
-    DATETIME(paper.rank) ASC, // rank is pub_date
-    info.rank ASC // rank is figure label
-WITH DISTINCT
-    paper, COLLECT(info_card) AS info_cards,
-    toString(DATETIME(paper.rank)) as rank //just for consistency to have a rank field in the paper object
+   subcol, 
+   paper{.*, rank: ""} AS paper_j // json serializable
 RETURN
-    paper.id AS id,
-    paper.id AS name,
-    COLLECT(DISTINCT {doi: paper.doi, info: info_cards, pub_date: paper.pub_date, peer_review_date: toString(paper.peer_review_date), rank: rank}) AS papers
+    subcol.name AS id,
+    COLLECT(DISTINCT paper_j) as papers
   '''
     map = {'limit_date': []}
-    returns = ['name', 'id', 'papers']
+    returns = ['id', 'papers']
 
 
 class BY_HYP(Query):
 
     code = '''
 // Using precomputed Viz nodes
-MATCH 
-  (paper:VizPaper {query: "by_hyp"})-->(info:VizInfo),
-  (paper)-[:HasEntity]->(ctrl_v:VizEntity)-[:HasPotentialEffectOn]->(meas_v:VizEntity)
+MATCH
+  (col:VizCollection {name: "by_hyp"})-->(subcol:VizSubCollection),
+  (subcol)-->(paper:VizPaper),
+  (subcol)-[:HasEntity]->(ctrl_v:VizEntity)-[:HasPotentialEffectOn]->(meas_v:VizEntity)
 WHERE DATETIME(paper.pub_date) > DATETIME($limit_date)
-OPTIONAL MATCH
-  (info)-[:HasEntity]->(entity:VizEntity)
-WITH DISTINCT paper, info, ctrl_v, meas_v, entity
+WITH DISTINCT paper, ctrl_v, meas_v
 ORDER BY
   id(ctrl_v) ASC, // deterministic
   id(meas_v) ASC, // deterministic
-  entity.category DESC, entity.role DESC // to make viz nicer, but frontend may have to fine tune
+  DATETIME(paper.pub_date) DESC
 WITH DISTINCT
-  paper, info,
-  COLLECT(DISTINCT entity{.*}) AS panel_entities,
+  paper{.*, rank: ""} AS paper_j, // JSON serializable
   {ctrl_v: COLLECT(DISTINCT ctrl_v.text), meas_v: COLLECT(DISTINCT meas_v.text)} AS hyp
-ORDER BY
-   DATETIME(paper.rank) DESC, // rank is pub date
-   info.rank ASC // rank is fig label + panel label
-WITH
-  paper, hyp,
-  info{
-    .*, // title (label of the figure), text (caption of the figure), rank, id 
-    entities: panel_entities // entity properties: text, category, type role, ext_id
-   } as extended_info
-WITH
-  paper, COLLECT(extended_info) as info_cards, hyp,
-  toString(DATETIME(paper.rank)) as rank // just for consistency to have a rank fieldin the paper object
-WITH DISTINCT
+ WITH DISTINCT
   hyp,
-  COLLECT({doi: paper.doi, info: info_cards, pub_date: paper.pub_date, rank: rank}) AS papers
+  COLLECT(paper_j) AS papers
+// assign an id to each hyp-collection of papers
 WITH COLLECT([hyp, papers]) AS all_results
 UNWIND range(0, size(all_results)-1) as i
-RETURN i as id, all_results[i][0] AS hyp, all_results[i][1] AS papers
+RETURN 
+  i as id, 
+  all_results[i][0] AS hyp, 
+  all_results[i][1] AS papers
     '''
     map = {'limit_date': []}
     returns = ['id', 'hyp', 'papers']
@@ -237,21 +226,23 @@ class AUTOMAGIC(Query):
 // using precomputed Viz nodes
 MATCH
   (col:VizCollection {name: "automagic"})-->(subcol:VizSubCollection {name: "covid19"})-->(paper:VizPaper),
-  (paper)-[:HasInfo]->(:VizInfo)-[:HasEntity]->(exp_assays:VizEntity {category: "assay"}),
-  (paper)-[:HasInfo]->(:VizInfo)-[:HasEntity]->(biol_entities:VizEntity {category: "entity"})
+  (paper:VizPaper)-[:HasPaperRank]->(rank:VizPaperRank {context: "automagic"}),
+  (paper)-[:HasEntity]->(exp_assays:VizEntity {category: "assay"}),
+  (paper)-[:HasEntity]->(biol_entities:VizEntity {category: "entity"})
 WHERE DATETIME(paper.pub_date) > DATETIME($limit_date)
-WITH DISTINCT paper, exp_assays, biol_entities
-ORDER BY
-   paper.rank ASC //rank is rank sum score
 WITH DISTINCT
-  paper.doi AS doi, paper.pub_date AS pub_date, paper.rank as rank,
-  [{title: "Experimental approaches", text: "", entities: COLLECT(DISTINCT {text: exp_assays.text})},
-   {title: "Biological entities", text: "", entities: COLLECT(DISTINCT {text: biol_entities.text})}] AS info
-WITH {doi: doi, info: info, pub_date: pub_date, rank: rank} AS paper
-RETURN "automagic" AS name, "covid19" AS id, COLLECT(paper) AS papers
+  paper, rank.value AS automagic_rank,
+  COLLECT(DISTINCT {text: biol_entities.text}) AS exp_assays,
+  COLLECT(DISTINCT {text: exp_assays.text}) AS biol_entities
+ORDER BY
+  automagic_rank ASC //rank is rank sum score
+WITH DISTINCT
+  paper{.*, rank: automagic_rank} AS paper_j, // JSON serializable
+  automagic_rank 
+RETURN "covid19" AS id, COLLECT(paper_j) AS papers
     '''
     map = {'limit_date': []}
-    returns = ['name', 'id', 'papers']
+    returns = ['id', 'papers']
 
 
 class LUCENE_SEARCH(Query):
