@@ -14,6 +14,7 @@ DROP INDEX ON :H_Entity(ext_ids);
 DROP INDEX ON :H_Entity(type);
 DROP INDEX ON :CondTag(category);
 DROP INDEX ON :CondTag(name);
+DROP INDEX ON :VizPaper(doi);
 
 //create
 CREATE INDEX ON :SDArticle(doi);
@@ -30,6 +31,7 @@ CREATE INDEX ON :H_Entity(ext_ids);
 CREATE INDEX ON :H_Entity(type);
 CREATE INDEX ON :CondTag(category);
 CREATE INDEX ON :CondTag(name);
+CREATE INDEX ON :VizPaper(doi);
 
 
 //Full text indexing
