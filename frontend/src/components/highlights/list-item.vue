@@ -90,11 +90,11 @@
               p(class="text--primary") {{ article.abstract }}
         v-col
           v-expansion-panels(multiple v-model="activeCards" )
-            v-expansion-panel(:key="0")
+            v-expansion-panel(v-if="article.assays.length > 0" :key="0")
               v-expansion-panel-header Assays & Methods
               v-expansion-panel-content
                 v-chip(v-for="(item, index) in article.assays" small outlined :key="`assay-text-${index}`").blue-grey--text {{ item }}
-            v-expansion-panel(:key="1")
+            v-expansion-panel(v-if="article.entities.length > 0" :key="1")
               v-expansion-panel-header Entities
               v-expansion-panel-content
                 v-chip(v-for="(item, index) in article.entities" small outlined :key="`entities-text-${index}`").amber--text.text--darken-3 {{ item }}
