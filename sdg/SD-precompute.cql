@@ -56,7 +56,9 @@ ORDER BY
 MERGE (col:VizCollection {name: "refereed-preprints"})
 MERGE (subcol:VizSubCollection {name: reviewing.name})
 // VizPaper needs all field required for sorting, filtering and ranking
-MERGE (paper:VizPaper {doi: doi, pub_date: pub_date, peer_review_date: review_date})
+MERGE (paper:VizPaper {doi: doi, pub_date: pub_date})
+MERGE (revdate:VizReviewDate {date: review_date})
+MERGE (paper)-[:HasReviewDate]->(revdate)
 MERGE (col)-[:HasSubCol]->(subcol)
 MERGE (subcol)-[:HasPaper]->(paper)
 MERGE (info:VizInfo {doi: doi, title: fig_label, text: caption, rank: position_idx, id: position_idx, info_type: "fig-caption"}) // MERGE cannot be used if properties are NULL; this is why prelim entries are linked to empty figs
@@ -174,7 +176,7 @@ UNWIND hyp.meas_v AS meas_v // string
 UNWIND entities as entity // THIS IS KILLING IT IF entities == []
 MERGE (col:VizCollection {name: "by_hyp"})
 MERGE (subcol:VizSubCollection {name: "hyp_" + toString(id)})
-MERGE (paper:VizPaper {doi:doi, pub_date: toString(DATETIME(pub_date))})
+MERGE (paper:VizPaper {doi: doi, pub_date: toString(DATETIME(pub_date))})
 MERGE (col)-[:HasSubCol]->(subcol)
 MERGE (subcol)-[:HasPaper]->(paper)
 MERGE (info:VizInfo {doi: doi, title: info_title, text: info_text, rank: info_rank, id: info_id, info_type: "panel-caption"}) // avoid probelms with NULL and MERGE
@@ -191,7 +193,7 @@ RETURN DISTINCT "done" AS `papers in the hypothesis set`;
 // find assays
 MATCH (col:SDCollection)-[:has_article]->(a:SDArticle {journalName: "biorxiv"})-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity {category: "assay"})-[:Has_text]->(name:Term)
 WHERE
-  ((col.name = "covid19") OR col.name = "refereed-preprint") AND
+  (col.name = "covid19" OR col.name = "refereed-preprints") AND
   size(name.text) > 1  // exclude embarassing artefacts of the not so AI engine
 WITH
   a, entity, name
@@ -223,8 +225,8 @@ MERGE (paper)-[:HasEntity]->(entity);
 // find entities
 MATCH (col:SDCollection)-[:has_article]->(a:SDArticle {journalName: "biorxiv"})-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity {category: "entity"})-[:Has_text]->(name:Term)
 WHERE
-  ((col.name = "covid19") OR col.name = "refereed-preprint") AND
-  size(name.text) > 1 OR toLower(name.text) = "s"  // exclude embarassing artefacts of the not so AI engine but keep spike S SARS protein
+  (col.name = "covid19" OR col.name = "refereed-preprints") AND
+  (size(name.text) > 1 OR toLower(name.text) = "s" ) // exclude embarassing artefacts of the not so AI engine but keep spike S SARS protein
 WITH DISTINCT
   a, p, entity, name
 WHERE length(name.text) > 1 OR toLower(name.text) = "s"  // exclude embarassing artefacts of the not so AI engine
@@ -258,13 +260,15 @@ WITH DISTINCT
   COLLECT(DISTINCT representative_entity) AS entity_names, 
   COUNT(DISTINCT representative_entity) AS N_entities
 //create info and entities for visualization
+
+//BUT THIS CAN DANGLE WITHOUT ATTACHMENT TO COLLECTION
 MERGE (paper:VizPaper {doi: a.doi, pub_date: toString(DATETIME(a.pub_date))})
 WITH paper, entity_names
 UNWIND entity_names AS text
 MERGE (entity:VizEntity {text: text, category: "entity"})
 MERGE (paper)-[:HasEntity]->(entity);
 
-//sum of ranks
+//sum of ranks for covid19 collection
 // rank by assay
 MATCH (col:SDCollection {name: "covid19"})-->(a:SDArticle)
 WITH a

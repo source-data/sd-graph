@@ -117,7 +117,6 @@ export default {
 function preProcessRecord (record, current) {
   return Object.assign({}, record, {
     id: record.doi,
-    rank: current.papers.find(a => a.doi === record.doi).rank,
-    info: current.papers.find(a => a.doi === record.doi).info
+    rank: current.papers.find(a => a.doi === record.doi).rank
   })
 }

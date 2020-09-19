@@ -88,25 +88,16 @@
             v-card-title Abstract
             v-card-text
               p(class="text--primary") {{ article.abstract }}
-        v-col.scroll
-          //- label(for="info-cards" style="font-variant: small-caps") {{ info.length }} information card{{ info.length > 1 ? 's':''}}:
+        v-col
           v-expansion-panels(multiple v-model="activeCards" )
-            v-expansion-panel(v-for="card in info" id="infor-cards" :key="card.rank")
-              v-expansion-panel-header {{ card.title }}
-              v-expansion-panel-content(v-if="card.entities.length > 1")
-                  p
-                    span(v-for="entity in card.entities")
-                      v-chip(small outlined :type="mapRole(entity.role)") {{ entity.text }}
-                  p(v-if="card.id")
-                    a(target="_blank" rel="noopener" :href="`https://search.sourcedata.io/panel/${card.id}`")
-                      img(:src="`https://api.sourcedata.io/file.php?panel_id=${card.id}`").fig-img
-                    br
-                    a(target="_blank" rel="noopener" :href="`https://search.sourcedata.io/panel/${card.id}`")
-                      | open as SmartFigures
-              v-expansion-panel-content(v-else-if="card.text instanceof Array")
-                v-chip(v-for="(item, index) in card.text" small outline :key="`card-${card.rank}-text-${index}`") {{ item }}
-              v-expansion-panel-content(v-else="typeof card.text === 'string'")
-                small(style="line-height:1.3") {{ card.text }}
+            v-expansion-panel(:key="0")
+              v-expansion-panel-header Assays & Methods
+              v-expansion-panel-content
+                v-chip(v-for="(item, index) in article.assays" small outlined :key="`assay-text-${index}`").blue-grey--text {{ item }}
+            v-expansion-panel(:key="1")
+              v-expansion-panel-header Entities
+              v-expansion-panel-content
+                v-chip(v-for="(item, index) in article.entities" small outlined :key="`entities-text-${index}`").amber--text.text--darken-3 {{ item }}
 </template>
 
 <script>

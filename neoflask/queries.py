@@ -101,6 +101,7 @@ WITH DISTINCT
   COUNT(DISTINCT f) AS nb_figures,
   auth,
   review, response, annot
+//ANCHOR VizPaper TO VizCollection and VizSubCollection?
 OPTIONAL MATCH (assay:VizEntity {category: 'assay'})<-[:HasEntity]-(:VizPaper {doi: doi})-[:HasEntity]->(entity:VizEntity {category: 'entity'})
 OPTIONAL MATCH (auth)-->(auth_id:Contrib_id)
 WITH
@@ -175,8 +176,8 @@ class BY_REVIEWING_SERVICE(Query):
 
     code = '''
 // Using precomputed Viz nodes
-MATCH (col:VizCollection {name: "refereed-preprints"})-->(subcol:VizSubCollection)-->(paper:VizPaper)
-WHERE DATETIME(paper.peer_review_date) > DATETIME($limit_date)
+MATCH (col:VizCollection {name: "refereed-preprints"})-[:HasSubCol]->(subcol:VizSubCollection)-[:HasPaper]->(paper:VizPaper)-[:HasReviewDate]->(revdate:VizReviewDate)
+WHERE DATETIME(revdate.date) > DATETIME($limit_date)
 WITH DISTINCT
    subcol, 
    paper{.*, rank: ""} AS paper_j // json serializable
@@ -193,9 +194,10 @@ class BY_HYP(Query):
     code = '''
 // Using precomputed Viz nodes
 MATCH
-  (col:VizCollection {name: "by_hyp"})-->(subcol:VizSubCollection),
-  (subcol)-->(paper:VizPaper),
-  (subcol)-[:HasEntity]->(ctrl_v:VizEntity)-[:HasPotentialEffectOn]->(meas_v:VizEntity)
+  (col:VizCollection {name: "by_hyp"})-[:HasSubCol]->(subcol:VizSubCollection),
+  (subcol)-[:HasPaper]->(paper:VizPaper),
+  (subcol)-[:HasEntity]->(ctrl_v:VizEntity {role: "controlled_variable"}),
+  (subcol)-[:HasEntity]->(meas_v:VizEntity {role: "measured_variable"})
 WHERE DATETIME(paper.pub_date) > DATETIME($limit_date)
 WITH DISTINCT paper, ctrl_v, meas_v
 ORDER BY
@@ -341,7 +343,7 @@ class STATS(Query):
 MATCH (a:Article)
 WHERE toLower(a.journal_title) = 'biorxiv'
 WITH COUNT(DISTINCT a.doi) AS biorxiv_preprints
-MATCH (a:VizPaper {query:"by_reviewing_service"})
+MATCH (:VizCollection {name: "refereed-preprints"})-[:HasSubCol]->(:VizSubCollection)-[:HasPaper]->(a:VizPaper)
 WITH COUNT(DISTINCT a.doi) AS refereed_preprints, biorxiv_preprints
 MATCH (a:SDArticle {source: "eebapi"})
 WITH COUNT(DISTINCT a.doi) AS autoannotated_preprints, refereed_preprints, biorxiv_preprints
