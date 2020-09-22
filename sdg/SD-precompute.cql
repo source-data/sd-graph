@@ -229,7 +229,6 @@ WHERE
   (size(name.text) > 1 OR toLower(name.text) = "s" ) // exclude embarassing artefacts of the not so AI engine but keep spike S SARS protein
 WITH DISTINCT
   a, p, entity, name
-WHERE size(name.text) > 1 OR toLower(name.text) = "s"  // exclude embarassing artefacts of the not so AI engine
 //find synonyms
 MATCH
    (name)<-[:Has_text]-(s:H_Entity {category: "entity"})
