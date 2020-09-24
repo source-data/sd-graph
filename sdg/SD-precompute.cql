@@ -193,34 +193,40 @@ RETURN DISTINCT "done" AS `papers in the hypothesis set`;
 // find assays
 MATCH (col:SDCollection)-[:has_article]->(a:SDArticle {journalName: "biorxiv"})-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity {category: "assay"})-[:Has_text]->(name:Term)
 WHERE
+  //a.doi = "10.1101/2020.06.29.178129" AND  // for testing
   (col.name = "covid19" OR col.name = "refereed-preprints") AND
   size(name.text) > 1  // exclude embarassing artefacts of the not so AI engine
 WITH
-  a, entity, name
-//find synonyms
+  a, t, name
+// link to entity network
 MATCH
    (name)<-[:Has_text]-(bridge:H_Entity {category:"assay"})
-WITH a, entity, name, bridge
-OPTIONAL MATCH
-    (bridge)-[:Has_text]->(syn1:Term)
-//combine synonyms
-WITH DISTINCT a, entity, COLLECT(name) + COLLECT(syn1) AS all_synonyms
-UNWIND all_synonyms AS syn
-// remove duplicates
-WITH DISTINCT a, entity, syn
-// rank synonym by popularity
-ORDER BY syn.freq_in_panel DESC
-WITH DISTINCT a, entity, COLLECT(DISTINCT syn)[0] AS most_used
-ORDER BY id(entity)
-//collapse identical synonym groups
-WITH DISTINCT a, COLLECT(DISTINCT entity.name)[0] AS representative_entity, most_used
-WITH DISTINCT a, COLLECT(DISTINCT representative_entity) AS entity_names, COUNT(DISTINCT representative_entity) AS N_entities
-//create info and entities for visualization
+//WHERE
+//   bridge.concept_ext_ids <> ""
+// find respective concept id
+WITH
+  a,
+  name,
+  COUNT(DISTINCT t) AS freq_in_this_paper,
+  bridge.assay_concept_id AS concept_id,
+  bridge.concept_name AS concept_name
+WITH a, name, freq_in_this_paper, concept_id, concept_name
+ORDER BY freq_in_this_paper DESC
+// find most frequently used term in paper for each concept
+WITH DISTINCT
+// aggregate concepts with same name but different ids due to imperfect community detection
+// RETURN  DISTINCT // for testing
+  a, COLLECT(DISTINCT name.text)[0] AS name_in_this_paper, 
+  SUM(freq_in_this_paper) AS aggregated_freq, 
+  COLLECT(DISTINCT name.text) AS syn_in_this_paper, 
+  COLLECT(DISTINCT concept_id) AS all_concept_id, 
+  concept_name 
+//cutoff to eliminate terms that map to a single concept and are only detected once
+WHERE aggregated_freq > 1
+// build viz graph
 MERGE (paper:VizPaper {doi: a.doi, pub_date: toString(DATETIME(a.pub_date))})
-WITH paper, entity_names
-UNWIND entity_names AS text
-MERGE (entity:VizEntity {text: text, category: 'assay'})
-MERGE (paper)-[:HasEntity]->(entity);
+MERGE (entity:VizEntity {text: name_in_this_paper, category: 'assay'})
+MERGE (paper)-[:HasEntity]->(entity); 
 
 // find entities
 MATCH (col:SDCollection)-[:has_article]->(a:SDArticle {journalName: "biorxiv"})-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity {category: "entity"})-[:Has_text]->(name:Term)

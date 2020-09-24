@@ -191,13 +191,50 @@ SET t.freq_in_panel = freq
 RETURN COUNT (t) as `tags with popularity frequency added`;
 
 
-
 //infer tested hypotheses at condensed tag level
 MATCH 
    (p:SDPanel)-->(intervention:CondTag {role: "intervention"}),
    (p:SDPanel)-->(assayed:CondTag {role: "assayed"})
 MERGE (intervention)-[r:H]->(assayed)
 RETURN COUNT(r) AS `hypotheses at cond tag level`;
+
+// quasi synonyms
+// H_Entity - Term - H_Entity network for quasi-synonyms
+MATCH
+    (entity_1:H_Entity)-[:Has_text]->(bridge:Term)<-[:Has_text]-(entity_2:H_Entity)
+WHERE
+    entity_1 <> entity_2 AND
+    entity_1.category = "assay" AND entity_2.category = "assay"
+MERGE
+    (entity_1)-[r:related_concept]-(entity_2)
+RETURN
+COUNT(r);
+
+// COMMUNITY DETECTION
+CALL algo.louvain(
+  'MATCH (h:H_Entity {category: "assay"}) RETURN id(h) AS id',
+  'MATCH (h1:H_Entity {category: "assay"})-[:related_concept]-(h2:H_Entity) RETURN id(h1) AS source, id(h2) AS target',
+  {graph: 'cypher',
+   writeProperty: 'assay_concept_id'
+  }
+);
+
+// adding cluster name
+MATCH (entity:H_Entity {category: "assay"})-[:Has_text]->(te:Term)
+WITH entity, COUNT(DISTINCT te) AS entity_popularity
+ORDER BY entity_popularity DESC
+WITH
+  entity.assay_concept_id AS concept_id, 
+  COUNT(DISTINCT entity) AS size, 
+  COLLECT(entity)[0] AS most_popular_entity, 
+  COLLECT(DISTINCT entity) AS cluster
+UNWIND cluster AS entity
+SET entity.concept_name = most_popular_entity.name, entity.concept_ext_ids = most_popular_entity.ext_ids
+RETURN DISTINCT 
+  most_popular_entity.concept_name,
+  most_popular_entity.concept_ext_ids,
+  concept_id, size, 
+  COUNT( DISTINCT entity.assay_concept_id) AS `clusters of assay related concepts`;
 
 
 //copy publication date and abstract from jats articles to SDArticles
