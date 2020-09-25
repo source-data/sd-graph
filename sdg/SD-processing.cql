@@ -231,10 +231,10 @@ WITH
 UNWIND cluster AS entity
 SET entity.concept_name = most_popular_entity.name, entity.concept_ext_ids = most_popular_entity.ext_ids
 RETURN DISTINCT 
-  most_popular_entity.concept_name,
-  most_popular_entity.concept_ext_ids,
-  concept_id, size, 
-  COUNT( DISTINCT entity.assay_concept_id) AS `clusters of assay related concepts`;
+  // most_popular_entity.concept_name,
+  // most_popular_entity.concept_ext_ids,
+  // concept_id, size, 
+  COUNT(DISTINCT entity.assay_concept_id) AS `clusters of assay related concepts`;
 
 
 //copy publication date and abstract from jats articles to SDArticles
