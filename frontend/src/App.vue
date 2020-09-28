@@ -65,16 +65,6 @@ a {
   color: #66b1ff;
 }
 
-.md-content {
-  font-family:'Courier New', Courier, monospace;
-  font-size: 14px;
-  max-height:350px;
-  overflow: scroll;
-}
-.md-content img {
-  max-height: 60px;
-}
-
 .pointer {
   cursor: pointer;
 }
