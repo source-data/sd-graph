@@ -4,6 +4,8 @@ download
 data/
 rack/
 log/
+deploy/__db__/logrotate-graph.db.dump.conf
+deploy/__db__/logrotate.state
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
