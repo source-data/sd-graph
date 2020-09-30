@@ -35,7 +35,6 @@ def get_inner_text_without_sup_xref(e: Element):
 
 
 def get_abstract_text(e: Element):
-    import pdb; pdb.set_trace()
     text = " ".join([get_inner_text_without_sup_xref(p) for p in e.xpath('.//p')])
     return text
 
