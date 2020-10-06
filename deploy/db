@@ -73,9 +73,9 @@ update_local_neo4j() {
     log "import full text biorxiv preprints"
     # this is missing the July_2020
     #docker-compose run --rm -v /usb01/shared/biorxiv-src-monthly:/biorxiv-src-monthly flask python -m neotools.rxiv2neo /biorxiv-src-monthly/July_2020 --type meca
-    local CURRENT_MONTH=`date +%B`
+    local PREVIOUS_MONTH=`date --date='-1 month' +%B` # Biorxiv only publishes monthly updates when the month is over, meaning the 1st of September we get access to August content
     local CURRENT_YEAR=`date +%Y`
-    docker-compose run --rm -v /usb01/shared/biorxiv-src-monthly:/biorxiv-src-monthly flask python -m neotools.rxiv2neo /biorxiv-src-monthly/"$CURRENT_MONTH"_"$CURRENT_YEAR" --type meca
+    docker-compose run --rm -v /usb01/shared/biorxiv-src-monthly:/biorxiv-src-monthly flask python -m neotools.rxiv2neo /biorxiv-src-monthly/"$PREVIOUS_MONTH"_"$CURRENT_YEAR" --type meca
   }
 
   import_peer_reviews_from_hypo() {
@@ -160,15 +160,19 @@ dump_local_neo4j(){
   local DUMP_NAME=$1
   log "[dumping neo4j] - start"
   log "  * stopping docker-compose"
+
   # Make sure you dont have your neo4j running:
   docker-compose down
 
-  log "  * removing older dumps"
-  docker run --rm --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data neo4j:3.5 find /data -type f -name graph.db.dump* -delete
+  # rotate backup once before we dump, just in case some old files are still there
+  rotate_backup
 
-  log "  * dumping to data/neo4j-data/$DUMP_NAME"
+  log "  * setting right permissions to dir: data/neo4j-data/dumps"
+  sudo chown systemd-resolve:systemd-journal data/neo4j-data/dumps
+
+  log "  * dumping to data/neo4j-data/dumps/$DUMP_NAME"
   # dump the contents of your database using a temporary container
-  docker run --rm --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data neo4j:3.5 bin/neo4j-admin dump --database=graph.db --to=data/$DUMP_NAME
+  docker run --rm --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data neo4j:3.5 bin/neo4j-admin dump --database=graph.db --to=data/dumps/$DUMP_NAME
 
   log "  * restarting docker-compose"
   docker-compose up -d
@@ -191,6 +195,20 @@ deploy_database(){
   local wait_for_docker_in_minutes=5
   log "  * waiting $wait_for_docker_in_minutes minutes to be sure docker is up and running"
   sleep $(( $wait_for_docker_in_minutes * 60 ))
+}
+
+rotate_backup(){
+  # you may need to add something like this to your sudoers file
+  #
+  #     eeb ALL=(root) NOPASSWD: /bin/chown -R eeb\:eeb data/neo4j-data/dumps
+  #     eeb ALL=(root) NOPASSWD: /bin/chown systemd-resolve\:systemd-journal data/neo4j-data/dumps
+
+
+  log "make sure all previously dumped databases files belong to our user"
+  sudo /bin/chown -R `whoami`:`whoami` data/neo4j-data/dumps
+
+  log "  * rotating backups"
+  logrotate deploy/__db__/logrotate-graph.db.dump.conf --state deploy/__db__/logrotate.state --force
 }
 
 cache_warmup(){
@@ -284,10 +302,11 @@ main() {
 
   load_dotenv
   update_local_neo4j $PERIODICITY
-  NEO4J_DUMP_NAME="graph.db.dump.`date +%Y-%m-%d-%H.%M.%S`"
+  NEO4J_DUMP_NAME="graph.db.dump"
   dump_local_neo4j $NEO4J_DUMP_NAME
   # deploy_database_to_staging data/neo4j-data/$NEO4J_DUMP_NAME
-  deploy_database $REMOTE_HOST data/neo4j-data/$NEO4J_DUMP_NAME
+  deploy_database $REMOTE_HOST data/neo4j-data/dumps/$NEO4J_DUMP_NAME
+  rotate_backup
   cache_warmup $REMOTE_HOST
 
   log "##"
