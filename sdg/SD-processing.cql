@@ -9,27 +9,21 @@ CREATE CONSTRAINT ON (te:Term) ASSERT te.text IS UNIQUE;
 // prelimin solution before proper combined keys are implemented that will allow using MERGE instead of CREATE cond Tags
 
 MATCH (ct:CondTag)-[r]-()
-WITH ct, r
-DELETE r
-WITH ct
-DELETE ct
+DETACH DELETE ct
 RETURN COUNT(DISTINCT ct) AS `deleted CondTag`;
 
 MATCH (ct:CondTag)
 RETURN COUNT(ct) AS `remaining CondTag`;
 
 MATCH (h:H_Entity)-[r]-()
-WITH h, r
-DELETE r
-WITH h
-DELETE h
+DETACH DELETE h
 RETURN COUNT(DISTINCT h) AS `deleted H_Entity`;
 
 MATCH (h:H_Entity)
 RETURN COUNT(h) AS `remaining H_Entity`;
 
 MATCH (t:Term)
-DELETE t
+DETACH DELETE t
 RETURN COUNT(DISTINCT t) AS `deleted Term`;
 
 MATCH (t:Term)

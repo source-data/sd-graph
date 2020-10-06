@@ -34,6 +34,11 @@ def get_inner_text_without_sup_xref(e: Element):
     return get_inner_text(e)
 
 
+def get_abstract_text(e: Element):
+    text = " ".join([get_inner_text_without_sup_xref(p) for p in e.xpath('.//p')])
+    return text
+
+
 def get_datetime(e: Element):
     # datetime('2015-06-24T12:50:35.556+0100')
     # <date date-type="accepted">
@@ -77,7 +82,7 @@ JATS_GRAPH_MODEL = {
         'doi': ('front/article-meta/article-id[@pub-id-type="doi"]', get_text),
         'version': ('front/article-meta/article-version', get_text),
         'title': ('front/article-meta/title-group/article-title', get_inner_text),
-        'abstract': ('front/article-meta/abstract/p', get_inner_text_without_sup_xref),
+        'abstract': ('front/article-meta/abstract/p|front/article-meta/abstract', get_abstract_text),
         'publication-date': ('front/article-meta/history/date[@date-type="accepted"]', get_datetime),
     },
     'children': {
