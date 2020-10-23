@@ -133,7 +133,10 @@ class API:
 
     def __init__(self):
         self.session_retry = self.requests_retry_session()
-        self.session_retry.headers.update({"Accept": "application/json"})
+        self.session_retry.headers.update({
+            "Accept": "application/json",
+            "From": "thomas.lemberger@embo.org"
+        })
 
     @staticmethod
     def requests_retry_session(
