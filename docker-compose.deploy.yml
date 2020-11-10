@@ -1,0 +1,58 @@
+version: '3'
+#volumes:
+#  local_neo4j_data: {}
+#  local_neo4j_logs: {}
+
+services:
+  flask:
+    build:
+      context: .
+      dockerfile: ./compose/local/flask/Dockerfile
+    image: neoflask_local_flask
+    depends_on:
+      - neo4j
+      - redis
+    volumes:
+      - .:/app
+      - ./log:/log
+    env_file:
+      - ./.env
+    #ports:
+      # - "0.0.0.0:5000:5000"
+      #  - "5050:5000"
+    shm_size: '16gb'
+    #command: /start
+
+  neo4j:
+    image: neo4j:3.5
+    ulimits:
+      nofile:
+        soft: 40000
+        hard: 40000
+    volumes:
+      - ./data/neo4j-data:/data
+      - ./data/neo4j-logs:/logs
+    env_file:
+      - ./.env
+    #ports:
+    #  - "7474:7474"
+    #  - "7687:7687"
+
+  vuejs:
+    build:
+      context: .
+      dockerfile: ./compose/local/vuejs/Dockerfile
+    image: neoflask_local_vuejs
+    volumes:
+      - './frontend:/app'
+      - '/app/node_modules'
+    env_file:
+      - ./.env
+    #ports:
+    #  - "8080:8080"
+    #command: /start
+
+  redis:
+    image: redis:6
+    volumes:
+      - ./data/redis-data:/data
