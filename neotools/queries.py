@@ -10,9 +10,9 @@ class SOURCE_BY_UUID(Query):
 
 class CREATE_INDEX_DOI(Query):
 
-    code = '''CREATE INDEX ON :Article(doi);'''
+    code = '''CREATE INDEX article_doi IF NOT EXISTS FOR (n:Article) ON (n.doi);'''
 
 
 class CREATE_INDEX_VERSION(Query):
 
-    code = '''CREATE INDEX ON :Article(version);'''
+    code = '''CREATE INDEX article_version IF NOT EXISTS FOR (n:Article) ON (n.version);'''

@@ -1,37 +1,20 @@
 //indices and constraints
-// drop all
-DROP INDEX ON :SDArticle(doi);
-DROP INDEX ON :SDTag(text);
-DROP INDEX ON :SDTag(ext_ids);
-DROP INDEX ON :SDTag(type);
-DROP INDEX ON :SDTag(role);
-DROP INDEX ON :SDTag(ext_names);
-DROP INDEX ON :SDTag(norm_text);
-DROP INDEX ON :CondTag(ext_ids);
-DROP INDEX ON :CondTag(text);
-DROP INDEX ON :CondTag(ext_tax_names);
-DROP INDEX ON :H_Entity(ext_ids);
-DROP INDEX ON :H_Entity(type);
-DROP INDEX ON :CondTag(category);
-DROP INDEX ON :CondTag(name);
-DROP INDEX ON :VizPaper(doi);
-
 //create
-CREATE INDEX ON :SDArticle(doi);
-CREATE INDEX ON :SDTag(text);
-CREATE INDEX ON :SDTag(ext_ids);
-CREATE INDEX ON :SDTag(type);
-CREATE INDEX ON :SDTag(role);
-CREATE INDEX ON :SDTag(ext_names);
-CREATE INDEX ON :SDTag(norm_text);
-CREATE INDEX ON :CondTag(ext_ids);
-CREATE INDEX ON :CondTag(text);
-CREATE INDEX ON :CondTag(ext_tax_names);
-CREATE INDEX ON :H_Entity(ext_ids);
-CREATE INDEX ON :H_Entity(type);
-CREATE INDEX ON :CondTag(category);
-CREATE INDEX ON :CondTag(name);
-CREATE INDEX ON :VizPaper(doi);
+CREATE INDEX sdarticle_doi IF NOT EXISTS FOR (n:SDArticle) ON (n.doi);
+CREATE INDEX sdtga_text IF NOT EXISTS FOR (n:SDTag) ON (n.text);
+CREATE INDEX sdtag_ext_ids IF NOT EXISTS FOR (n:SDTag) ON (n.ext_ids);
+CREATE INDEX sdtag_type IF NOT EXISTS FOR (n:SDTag) ON (n.type);
+CREATE INDEX sdtag_role IF NOT EXISTS FOR (n:SDTag) ON (n.role);
+CREATE INDEX sdtag_ext_names IF NOT EXISTS FOR (n:SDTag) ON (n.ext_names);
+CREATE INDEX sdtag_norm_text IF NOT EXISTS FOR (n:SDTag) ON (n.norm_text);
+CREATE INDEX condtag_ext_ids IF NOT EXISTS FOR (n:CondTag) ON (n.ext_ids);
+CREATE INDEX condtag_text IF NOT EXISTS FOR (n:CondTag) ON (n.text);
+CREATE INDEX condtag_ext_tax_names IF NOT EXISTS FOR (n:CondTag) ON (n.ext_tax_names);
+CREATE INDEX h_entity_ext_ids IF NOT EXISTS FOR (n:H_Entity) ON (n.ext_ids);
+CREATE INDEX h_entity_typ IF NOT EXISTS FOR (n:H_Entity) ON (n.type);
+CREATE INDEX condtag_category IF NOT EXISTS FOR (n:CondTag) ON (n.category);
+CREATE INDEX condtag_name IF NOT EXISTS FOR (n:CondTag) ON (n.name);
+CREATE INDEX vizpaper_doi IF NOT EXISTS FOR (n:VizPaper) ON (n.doi);
 
 
 //Full text indexing

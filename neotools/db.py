@@ -83,7 +83,7 @@ class Instance:
         def tx_funct(tx, code, params):
             results = tx.run(code, params)
             found_one = results.single() is not None
-            summary = results.summary()
+            summary = results.consume()
             notifications = summary.notifications
             if notifications:
                 print(f"WARNING: {notifications} when checking for existence.")
