@@ -67,14 +67,14 @@ class XMLNode:
             properties = self.find_properties(element, recipe_for_properties)
         if graph_model:  # not a terminal leaf node
             text = element.text
-            if text:  # add the text property only if there is text
+            if text and not re.match(r'^\s+$', text):  # add the text property only if there is text
                 properties['text'] = text
         else:  # terminal leaf node
             text = inner_text(element)
             if text:
                 properties['text'] = text
         tail = element.tail
-        if tail:
+        if tail and not re.match(r'^\s+$', tail):
             properties['tail'] = tail
         properties['position_idx'] = position_idx
         # remove hyphens and namespace prefix
@@ -97,7 +97,7 @@ class XMLNode:
                     val = funct(e)
                     if val is not None:
                         target_value.append(val)
-            elif target_elements:
+            elif target_elements:  # take value only from the first element of the list
                 target_value = funct(target_elements[0])
             if target_value:
                 properties[property] = target_value
@@ -216,6 +216,17 @@ def self_test():
                     </contrib>
                 </contrib-group>
                 <pub-date pub-type="epub"><year>2020</year></pub-date>
+                <article-categories>
+                    <subj-group subj-group-type="author-type">
+                        <subject>Regular Article</subject>
+                    </subj-group>
+                    <subj-group subj-group-type="heading">
+                        <subject>New Results</subject>
+                    </subj-group>
+                    <subj-group subj-group-type="hwp-journal-coll">
+                        <subject>Microbiology</subject>
+                    </subj-group>
+                </article-categories>
             </article-meta>
         </front>
         <body>

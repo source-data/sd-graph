@@ -1,9 +1,9 @@
 /////PROCESSING THE GRAPH//////
 
 
-CREATE CONSTRAINT ON (h:H_Entity) ASSERT h.combo_id IS UNIQUE;
+CREATE CONSTRAINT h_entity_id IF NOT EXISTS ON (h:H_Entity) ASSERT h.combo_id IS UNIQUE;
 //CREATE CONSTRAINT ON (h:H_Entity) ASSERT (h.ext_id, h.type, h.category, h.name) IS NODE KEY; //only neo4j Enterprise!
-CREATE CONSTRAINT ON (te:Term) ASSERT te.text IS UNIQUE;
+CREATE CONSTRAINT term_text_ IF NOT EXISTS ON (te:Term) ASSERT te.text IS UNIQUE;
 
 // purge processed nodes
 // prelimin solution before proper combined keys are implemented that will allow using MERGE instead of CREATE cond Tags
@@ -187,29 +187,31 @@ RETURN COUNT (t) as `tags with popularity frequency added`;
 
 //infer tested hypotheses at condensed tag level
 MATCH 
-   (p:SDPanel)-->(intervention:CondTag {role: "intervention"}),
-   (p:SDPanel)-->(assayed:CondTag {role: "assayed"})
+  (p:SDPanel)-->(intervention:CondTag {role: "intervention"}),
+  (p:SDPanel)-->(assayed:CondTag {role: "assayed"})
 MERGE (intervention)-[r:H]->(assayed)
 RETURN COUNT(r) AS `hypotheses at cond tag level`;
 
 // quasi synonyms
 // H_Entity - Term - H_Entity network for quasi-synonyms
 MATCH
-    (entity_1:H_Entity)-[:Has_text]->(bridge:Term)<-[:Has_text]-(entity_2:H_Entity)
+  (entity_1:H_Entity)-[:Has_text]->(bridge:Term)<-[:Has_text]-(entity_2:H_Entity)
 WHERE
-    entity_1 <> entity_2 AND
+  entity_1 <> entity_2 AND
     entity_1.category = "assay" AND entity_2.category = "assay"
 MERGE
-    (entity_1)-[r:related_concept]-(entity_2)
+  (entity_1)-[r:related_concept]-(entity_2)
 RETURN
-COUNT(r);
+  COUNT(r);
 
-// COMMUNITY DETECTION
-CALL algo.louvain(
-  'MATCH (h:H_Entity {category: "assay"}) RETURN id(h) AS id',
-  'MATCH (h1:H_Entity {category: "assay"})-[:related_concept]-(h2:H_Entity) RETURN id(h1) AS source, id(h2) AS target',
-  {graph: 'cypher',
-   writeProperty: 'assay_concept_id'
+
+// COMMUNITY DETECTION FOR PSEUDO SYNONYMS
+MATCH (h:H_Entity) SET assay_concept_id = Null;
+CALL gds.louvain.write(
+  {
+    nodeQuery: 'MATCH (h:H_Entity {category: "assay"}) RETURN id(h) AS id',
+    relationshipQuery: 'MATCH (h1:H_Entity {category: "assay"})-[:related_concept]-(h2:H_Entity {category: "assay"}) RETURN id(h1) AS source, id(h2) AS target',
+    writeProperty: 'assay_concept_id'
   }
 );
 
@@ -244,7 +246,6 @@ WITH DISTINCT doi, COLLECT(pub_date)[0] AS most_recent, COLLECT(abstract)[0] AS 
 SET a += {pub_date: most_recent, abstract: abstr}
 RETURN COUNT(DISTINCT a);
 
-
 //Link to authors via Contrib nodes
 MATCH (jats:Article), (sd:SDArticle)
 WHERE jats.doi = sd.doi
@@ -268,36 +269,94 @@ RETURN COUNT(DISTINCT r) AS N_auth_relationships;
 
 
 //create hypotheses summaries at paper level
+MATCH 
+  (art:SDArticle)-->(f1:SDFigure)-->(p1:SDPanel)-->(i1:CondTag)-[h1:H]->(a1:CondTag)<--(p1),
+  (i1)-->(ih:H_Entity), (a1)-->(ah:H_Entity)
+// RETURN art,ih,ah,COLLECT(f1),COLLECT(p1),COLLECT(i1),COLLECT(a1),COUNT(DISTINCT p1) AS N_p,COUNT(DISTINCT f1) AS N_f ORDER BY N_p DESC LIMIT 1
+WITH art,ih,ah, COUNT(DISTINCT(p1)) AS N_p, COUNT(DISTINCT(f1)) AS N_f
+  MERGE (ih)-[:Is_Intervention_of]->(h:Hypothesis)-[:Has_Assayed]->(ah)
+  MERGE (art)-[:HasH {n_panels:N_p,n_figures:N_f}]->(h)
+RETURN COUNT(DISTINCT h) AS `hypotheses at paper level`;
 
-//MATCH 
-//    (art:SDArticle)-->(f1:SDFigure)-->(p1:SDPanel)-->(i1:CondTag)-[h1:H]->(a1:CondTag)<--(p1),
-//    (i1)-->(ih:H_Entity), (a1)-->(ah:H_Entity)
-//RETURN art,ih,ah,COLLECT(f1),COLLECT(p1),COLLECT(i1),COLLECT(a1),COUNT(DISTINCT p1) AS N_p,COUNT(DISTINCT f1) AS N_f ORDER BY N_p DESC LIMIT 1
-//WITH art,ih,ah, COUNT(DISTINCT(p1)) AS N_p, COUNT(DISTINCT(f1)) AS N_f
-//    MERGE (ih)-[:Is_Intervention_of]->(h:Hypothesis)-[:Has_Assayed]->(ah)
-//    MERGE (art)-[:HasH {n_panels:N_p,n_figures:N_f}]->(h)
-//RETURN COUNT(DISTINCT h) AS `hypotheses at paper level`;
 
-//ad weight to hypotheses
+// add text descr to hypothesis
+MATCH (ih:H_Entity)-[:Is_Intervention_of]->(h:Hypothesis)-[:Has_Assayed]->(ah:H_Entity) 
+SET h.description = ih.name + " --> " + ah.name;
 
-//MATCH 
-//   (art:SDArticle)-[rel:HasH]->(h:Hypothesis)
-//WITH h, COUNT(DISTINCT art) AS N
-//SET h.N = N;
-//RETURN "added weight to hypotheses";
 
-//link entities with hypothesis links
+// flag possible self-test hypotheses
+MATCH (h:Hypothesis) SET h.self_test = False;
+MATCH
+  (ih:H_Entity)-[:Is_Intervention_of]->(h:Hypothesis)-[:Has_Assayed]->(ah:H_Entity),
+  (ih)-->(same:Term)
+WITH h, ah, same
+MATCH (ah)-->(same)
+SET h.self_test = True
+RETURN COUNT(DISTINCT h) AS `flagged self-test hypotheses`;
 
-//MATCH
-//   (ih:H_Entity)-[:Is_Intervention_of]->(h:Hypothesis)-[:Has_Assayed]->(ah:H_Entity)
-//MERGE (ih)-[tested:Tested]->(ah)
-//RETURN COUNT(tested) AS `hypotheses at entity level`;
+
+// Flag possible boring entities, helpful to filter them later
+// Exclusion list based on SourceData normalized and reporter entities
+MATCH (h:H_Entity) SET h.boring = False;
+MATCH (syn:Term)<--(entity:H_Entity)<--(ct:CondTag)
+WHERE 
+  entity.ext_ids <> ""
+WITH DISTINCT entity.name AS name, COLLECT(DISTINCT syn.text) AS synonyms, COLLECT(DISTINCT ct) AS cts, 1.0*COUNT(DISTINCT ct) AS N
+UNWIND cts as ct
+WITH DISTINCT name, synonyms, N, ct.role as role, 1.0*COUNT(DISTINCT ct) AS N_role
+WITH name, synonyms, role, N, N_role, 100.0*(N_role / N) AS fract
+ORDER BY N DESC, fract DESC
+WITH name, synonyms, N, COLLECT(role)[0] AS dominant_role, COLLECT(fract)[0] AS dom_fract
+WHERE 
+  (dominant_role = "normalizing" OR dominant_role = "reporter")
+  AND
+  dom_fract > 75 AND N > 10.0
+WITH COLLECT(name) + synonyms AS all
+UNWIND all as terms
+WITH COLLECT(DISTINCT terms) AS exclusion_list
+UNWIND exclusion_list AS excluded_term
+MATCH (h:H_Entity)-->(te:Term {text: excluded_term})
+SET h.boring = True;
+
+
+//Add weight to hypotheses nodes
+MATCH (a:SDArticle)-[h:HasH]->(hyp:Hypothesis)
+WITH 
+  hyp, 
+  SUM(DISTINCT h.n_panels) AS sum_n_panels, 
+  SUM(DISTINCT h.n_figures) AS sum_n_figures, 
+  COUNT(DISTINCT a) AS n_articles
+SET 
+  hyp.n_panels = sum_n_panels,
+  hyp.n_figures = sum_n_figures,
+  hyp.n_articles = n_articles
+RETURN DISTINCT "added weights to hypotheses nodes";
+
+
+// hypothesis-as-node network
+MATCH
+  (up:H_Entity)-[:Is_Intervention_of]->(h1:Hypothesis)-[:Has_Assayed]->(ah:H_Entity)-[:Is_Intervention_of]->(h2:Hypothesis)-[:Has_Assayed]->(do:H_Entity)
+WHERE (NOT up.boring) AND (NOT ah.boring) AND (NOT do.boring)
+MERGE (h1)-[chain:hyp_chain]->(h2)
+RETURN COUNT(DISTINCT chain) AS `hypothesis chains`;
+
+
+// hypothesis-as-edge network
+MATCH
+  (ih:H_Entity)-[:Is_Intervention_of]->(h:Hypothesis)-[:Has_Assayed]->(ah:H_Entity)
+WHERE (NOT ih.boring) AND (NOT ah.boring)
+MERGE (ih)-[tested:Tested]->(ah)
+RETURN COUNT(tested) AS `hypotheses at entity level`;
+
 
 //transfer hypothesis weight to :Tested links
+MATCH (i:H_Entity)-->(h:Hypothesis)-->(a:H_Entity), (i)-[r:Tested]->(a)
+SET
+  r.n_panels = h.n_panels,
+  r.n_figures = h.n_figures,
+  r.n_articles = h.n_articles
+RETURN DISTINCT "transferred hypothesis weight to :Tested links";
 
-//MATCH (i:H_Entity)-->(h:Hypothesis)-->(a:H_Entity), (i)-[r:Tested]->(a)
-//SET r.N = h.N;
-//RETURN "transferred hypothesis weight to :Tested links";
 
 //add scale to entities
 
@@ -323,7 +382,3 @@ RETURN COUNT(DISTINCT r) AS N_auth_relationships;
 // MERGE(:Resolver {name: "Uniprot", url: "https://www.uniprot.org/uniprot/"}); // P0DTC2
 // MERGE(:Resolver {name: "ChEBI", url: "http://www.ebi.ac.uk/chebi/searchId.do?chebiId="}); // CHEBI:29687
 // MERGE(:Resolver {name: "Disease ontology", url: "http://purl.bioontology.org/ontology/DOID/"}); // DOID:2801
-
-
-//Link H_Entity to ontologies
-

@@ -88,7 +88,7 @@ def by_doi(doi: str):
 
 
 @app.route('/api/v1/dois/', methods=['POST'])
-@cross_origin(origin='*',headers=['Content-Type','Authorization'])
+@cross_origin(origin='*', headers=['Content-Type','Authorization'])
 def by_dois():
     dois = request.json['dois']
     app.logger.info(f"search dois:{dois}")
@@ -146,3 +146,17 @@ def covid19():
 @cache.cached()
 def refereed_preprints():
     return jsonify(ASKNEO.refereed_preprints(request))
+
+
+@app.route('/api/v1/subjects', methods=['GET', 'POST'])
+@cache.cached()
+def subjects():
+    app.logger.info(f"subjects names")
+    return jsonify(ASKNEO.subjects(request))
+
+
+@app.route('/api/v1/collection/<subject>', methods=['GET', 'POST'])
+@cache.cached()
+def subject_collection(subject: str):
+    app.logger.info(f"collection '{subject}'")
+    return jsonify(ASKNEO.subject_collection(subject))

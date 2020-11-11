@@ -51,6 +51,14 @@ RETURN a.status as status
     returns = ['status']
 
 
+class COLLECTION_NAMES(Query):
+    code = '''
+MATCH (subject:Subject)
+RETURN DISTINCT subject.text AS subject
+    '''
+    returns = ['subject']
+
+
 class DELETE_TREE(Query):
     code = '''
 MATCH (a:SDArticle {doi: $doi})-[r1]->(f:SDFigure)-[r2]->(p:SDPanel)-[r3]->(t:SDTag)

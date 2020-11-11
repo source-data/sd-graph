@@ -1,6 +1,6 @@
 import argparse
 from typing import List
-from .queries import SDARTICLE_LOADING_STATUS, DELETE_TREE, SET_STATUS
+from .queries import SDARTICLE_LOADING_STATUS, DELETE_TREE, SET_STATUS, COLLECTION_NAMES
 from . import DB, logger
 
 
@@ -116,13 +116,7 @@ class SDNeo:
         return rel
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Uploads collections to neo4j datatbase")
-    parser.add_argument('collections', nargs="+", help="Name(s) of the collection(s) to download (multiple collections separated by space)")
-    parser.add_argument('--api', choices=['sdapi', 'eebapi'], default='sdapi', help="Name of the REST api to use.")
-    args = parser.parse_args()
-    collections = args.collections
-    api_name = args.api
+def import_as_one_collection(collections, api_name, db):
     if api_name == 'eebapi':
         from .eebapi import EEBAPI
         sdneo = SDNeo(api=EEBAPI(), db=DB)
@@ -130,5 +124,23 @@ if __name__ == "__main__":
         from .sdapi import SDAPI
         sdneo = SDNeo(api=SDAPI(), db=DB)
     print(f"Importing: {', '.join(collections)} with api={api_name}")
-    graph = sdneo.create_graph(collection_names=collections)
-    print(f"Imported {len(graph)} papers.")
+    sdneo.create_graph(collection_names=collections)
+    print(f"Imported {', '.join(collections)} papers.")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Uploads collections to neo4j datatbase")
+    parser.add_argument('collections', nargs="+", help="Name(s) of the collection(s) to download (multiple collections separated by space)")
+    parser.add_argument('--api', choices=['sdapi', 'eebapi'], default='sdapi', help="Name of the REST api to use.")
+    args = parser.parse_args()
+    api_name = args.api
+    collections = args.collections
+
+    if collections == ['subject_collections']:
+        # subject collections are each imported separately
+        subject_names = DB.query(COLLECTION_NAMES())
+        for subject in subject_names:
+            import_as_one_collection(subject, api_name, db=DB)
+    else:
+        # multiple collections are aggregated into one
+        import_as_one_collection(collections, api_name, db=DB)

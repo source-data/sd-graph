@@ -72,6 +72,34 @@ ORDER BY pub_date DESC
     returns = ['id', 'pub_date', 'title', 'abstract', 'version', 'doi', 'journal', 'nb_figures', 'review_process']
 
 
+class COLLECTION_NAMES(Query):
+    code = '''
+MATCH (subject:Subject)
+RETURN subject.text AS subject
+    '''
+    returns = ['subject']
+
+
+class SUBJECT_COLLECTIONS(Query):
+
+    code = '''
+MATCH (a:Article)-[:has_subject]->(subject:Subject)
+WHERE toLower(subject.text) = toLower($subject)
+RETURN
+  a.doi AS id,
+  a.publication_date AS pub_date,
+  a.title AS title,
+  a.abstract AS abstract,
+  a.version AS version,
+  a.doi AS doi,
+  a.journal_title AS journal,
+  a.score AS score
+ORDER BY DATETIME(pub_date) DESC, score DESC
+    '''
+    map = {'subject': []}
+    returns = ['id', 'pub_date', 'title', 'abstract', 'version', 'doi', 'journal', 'score']
+
+
 class BY_DOI(Query):
 
     code = '''

@@ -6,6 +6,7 @@ from .queries import (
     BY_HYP, AUTOMAGIC,
     LUCENE_SEARCH, SEARCH_DOI,
     COVID19, REFEREED_PREPRINTS,
+    COLLECTION_NAMES, SUBJECT_COLLECTIONS,
 )
 
 
@@ -131,5 +132,15 @@ class Engine:
 
     def refereed_preprints(self, request) -> Dict:
         query = REFEREED_PREPRINTS()
+        query.params = param_from_request(request, query)
+        return self.ask_neo(query)
+
+    def subjects(self, request) -> Dict:
+        query = COLLECTION_NAMES()
+        query.params = param_from_request(request, query)
+        return self.ask_neo(query)
+
+    def subject_collection(self, request) -> Dict:
+        query = SUBJECT_COLLECTIONS()
         query.params = param_from_request(request, query)
         return self.ask_neo(query)
