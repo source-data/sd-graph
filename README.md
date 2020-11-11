@@ -63,7 +63,7 @@ docker run --rm --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/
 docker-compose down
 
 # load the contents of your database using a temporary container
-docker run --rm --name neo4j-load --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data -it neo4j:4.1 bin/neo4j-admin load --database=neo4j --from=data/<dump_filename> # --force # ADDING --force WILL OVERWRITE EXISTING DB!
+docker run --rm --name neo4j-load --env-file .env --mount type=bind,source=$PWD,target=/app -it neo4j:4.1 bin/neo4j-admin load --database=neo4j --from=app/<dump_filename> # --force # ADDING --force WILL OVERWRITE EXISTING DB!
 # if there is no pre-existing graph.db, then the option --force needs to me ommitted to avoid "command failed: unable to load database: NoSuchFileException"
 
 ```

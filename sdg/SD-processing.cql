@@ -206,7 +206,7 @@ RETURN
 
 
 // COMMUNITY DETECTION FOR PSEUDO SYNONYMS
-MATCH (h:H_Entity) SET assay_concept_id = Null;
+MATCH (h:H_Entity) SET h.assay_concept_id = Null;
 CALL gds.louvain.write(
   {
     nodeQuery: 'MATCH (h:H_Entity {category: "assay"}) RETURN id(h) AS id',
