@@ -38,6 +38,7 @@ docker-compose run --rm flask python -m peerreview.neohypo  # import peer review
 docker-compose run --rm flask python -m peerreview.published  # updates publication status
 docker-compose run --rm flask python -m sdg.sdneo covid19 --api eebapi  # smarttag specified collection of preprints
 docker-compose run --rm flask python -m sdg.sdneo refereed-preprints --api eebapi  # smarttag specified collection of preprints
+docker-compose run --rm flask python -m sdg.sdneo subject-collections --api eebapi  # smarttag all bioRxiv subject collections
 cat sdg/SD-processing.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>  # generate merged graph
 cat sdg/SD-precompute.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>  # precompute the graph used by front end
 docker-compose run --rm flask python -m twitter.update --limit-date 2020-07-01  # --GO_LIVE  to go live with Twitter updates
@@ -53,7 +54,7 @@ Inspired by https://serverfault.com/questions/835092/how-do-you-perform-a-dump-o
 docker-compose down
 
 # dump the contents of your database using a temporary container
-docker run --rm --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data -it neo4j:4.1 bin/neo4j-admin dump --database=neo4j --to=data/graph.db.dump.`date +%Y-%m-%d-%H.%M.%S`
+docker run --rm --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data -it neo4j:4.1 bin/neo4j-admin dump --database=neo4j --to=data/neo4j.db.dump.`date +%Y-%m-%d-%H.%M.%S`
 ```
 
 ## How to load content into the neo4j database

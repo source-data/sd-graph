@@ -15,7 +15,12 @@ services:
     volumes:
       - .:/app
       - ./log:/log
-      - $BIORXIV_PATH:/app/biorxiv # to be provided in .env
+      - ${BIORXIV_PATH}:/app/biorxiv # to be provided in .env
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /tmp:/tmp
+    environment:
+      - XAUTHORITY=${XAUTH} # needs to make sure export XAUTH before i.e. in .bashrc
+      - DISPLAY=${DISPLAY} # this seems to be exported by default 
     env_file:
       - ./.env
     ports:

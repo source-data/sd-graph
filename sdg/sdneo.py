@@ -136,7 +136,7 @@ if __name__ == "__main__":
     api_name = args.api
     collections = args.collections
 
-    if collections == ['subject_collections']:
+    if collections == ['subject-collections']:
         # subject collections are each imported separately
         subject_names = DB.query(COLLECTION_NAMES())
         for subject in subject_names:
