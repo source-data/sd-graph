@@ -341,21 +341,21 @@ MERGE (h1)-[chain:hyp_chain]->(h2)
 RETURN COUNT(DISTINCT chain) AS `hypothesis chains`;
 
 
-// hypothesis-as-edge network
-MATCH
-  (ih:H_Entity)-[:Is_Intervention_of]->(h:Hypothesis)-[:Has_Assayed]->(ah:H_Entity)
-WHERE (NOT ih.boring) AND (NOT ah.boring)
-MERGE (ih)-[tested:Tested]->(ah)
-RETURN COUNT(tested) AS `hypotheses at entity level`;
+// // hypothesis-as-edge network
+// MATCH
+//   (ih:H_Entity)-[:Is_Intervention_of]->(h:Hypothesis)-[:Has_Assayed]->(ah:H_Entity)
+// WHERE (NOT ih.boring) AND (NOT ah.boring)
+// MERGE (ih)-[tested:Tested]->(ah)
+// RETURN COUNT(tested) AS `hypotheses at entity level`;
 
 
-//transfer hypothesis weight to :Tested links
-MATCH (i:H_Entity)-->(h:Hypothesis)-->(a:H_Entity), (i)-[r:Tested]->(a)
-SET
-  r.n_panels = h.n_panels,
-  r.n_figures = h.n_figures,
-  r.n_articles = h.n_articles
-RETURN DISTINCT "transferred hypothesis weight to :Tested links";
+// //transfer hypothesis weight to :Tested links
+// MATCH (i:H_Entity)-->(h:Hypothesis)-->(a:H_Entity), (i)-[r:Tested]->(a)
+// SET
+//   r.n_panels = h.n_panels,
+//   r.n_figures = h.n_figures,
+//   r.n_articles = h.n_articles
+// RETURN DISTINCT "transferred hypothesis weight to :Tested links";
 
 
 //add scale to entities
