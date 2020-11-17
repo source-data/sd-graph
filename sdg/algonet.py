@@ -37,6 +37,7 @@ from GraphRicciCurvature.FormanRicci import FormanRicci
 import community as community_louvain  # https://github.com/taynaud/python-louvain
 from . import DB
 from neotools.db import Query
+from sklearn import preprocessing
 import matplotlib.pyplot as plt
 from collections import OrderedDict
 import matplotlib
@@ -134,6 +135,7 @@ def dict2subgraphs(g, communities):
     subgraphs = [g.subgraph(nbunch) for nbunch in nbunches]
     return subgraphs
 
+
 def louvain(g):
     communities = community_louvain.best_partition(g.to_undirected())
     # best_partition() returns Dict[nodeId, communityId] but we want List[Graph]
@@ -175,14 +177,23 @@ def list_subgraph_central(subgraphs, N=10, **kwargs):
         draw(subg, centrality)
         for node_id, val in centrality.items():
             node = subg.nodes[node_id]
-            print(f"\t{i}: {node.get('description')} in {', '.join([doi for doi in node.get('dois')])} ({val})")
-        
+            print(f"\t{i}: {node.get('description')} in {', '.join([doi for doi in node.get('dois')])} ({val})") 
 
 
 def group_central(g, subgraphs):
     for i, subg in enumerate(subgraphs):
         centrality = nx.group_betweenness_centrality(g, subg)
         print(f"\t{i}: {centrality}")
+
+
+def viz_curvature(curv, N=5):
+    curv.compute_ricci_flow(iterations=100)
+    pos_curv = nx.spring_layout(curv.G, weight='weight', seed=10)
+    c = nx.get_edge_attributes(curv.G, 'ricciCurvature')
+    le = preprocessing.LabelEncoder()
+    node_color = le.fit_transform(list(c.values()))
+    nx.draw(curv.G, pos_curv, edge_cmap=plt.cm.PuOr, edge_color=node_color, node_size=50, linewidths=0, alpha=0.8)
+    plt.show()
 
 
 def curvature(subgraphs, percentile=10):
@@ -192,21 +203,17 @@ def curvature(subgraphs, percentile=10):
         curv = OllivierRicci(subg.to_undirected(), alpha=0.5, method="Sinkhorn", verbose="INFO")
         # curv = FormanRicci(subg)
         curv.compute_ricci_curvature()
-        curv.compute_ricci_flow(iterations=10)
         curvatures = []
-        # nx.get_edge_attributes(G, curvature).values()
-        for i, j in curv.G.edges():
-            curvature = curv.G[i][j]['ricciCurvature']
-            # curvature = curv.G[i][j]['formanCurvature']
-            curvatures.append({'edge': (i, j), 'curvature': curvature})
-        threshold_value = np.percentile([c['curvature'] for c in curvatures], percentile)
-        curvatures = [c for c in curvatures if c['curvature'] < threshold_value]
-        curvatures_sorted = sorted(curvatures, key=lambda x: x['curvature'], reverse=False)  # negative curvature are in bridges
+        curvatures = nx.get_node_attributes(curv.G, 'ricciCurvature')
+        threshold_value = np.percentile([x for x in curvatures.values()], percentile)
+        curvatures = [(k, v) for k, v in curvatures.items() if v < threshold_value]
+        curvatures_sorted = sorted(curvatures, key=lambda x: x[1], reverse=False)  # negative curvature are in bridges
 
-        for c in curvatures_sorted[:10]:
-            source = subg.nodes[c['edge'][0]]
-            target = subg.nodes[c['edge'][1]]
-            print(f"\t{source['description']}-->{target['description']} ({c['curvature']})")
+        for nodeId, val in curvatures_sorted[:10]:
+            node = subg.nodes[nodeId]
+            print(f"\t{node['description']} ({val})")
+
+        viz_curvature(curv)
 
 
 def draw(subg, centrality, threshold_value=0):
@@ -221,7 +228,7 @@ def draw(subg, centrality, threshold_value=0):
         colors.append(color)
         size = 30 if centrality.get(id, 0) > threshold_value else 10
         node_size.append(size)
-    pos = nx.kamada_kawai_layout(subg)
+    pos = nx.spring_layout(subg, weight='weight')
     nx.draw(
         subg,
         pos=pos,
@@ -236,14 +243,16 @@ def draw(subg, centrality, threshold_value=0):
         vmin=0, vmax=0.001)
     plt.show()
 
+
 def hist_metric(g, metric_name):
     # fromh ttps://graphriccicurvature.readthedocs.io/en/latest/tutorial.html
-        # Plot the histogram of Ricci curvatures
+    # Plot the histogram of Ricci curvatures
     # plt.subplot(2, 1, 1)
     metric_values = nx.get_edge_attributes(g, metric_name).values()
     plt.hist(metric_values, bins=20)
     plt.title("Histogram of Ricci Curvatures")
     plt.show()
+
 
 def neo2nx():
     # g_entity_as_nodes = full_graph(ENTITY_AS_NODE(params={'threshold': 2}))
@@ -268,17 +277,17 @@ def neo2nx():
     # print("CURVATURE ON ENTITY SUBGRAPHS")
     # curvature(subgraphs_entity)
 
-    g_hyp_as_nodes = full_graph(HYP_AS_NODE(params={'threshold': 2, 'date': '2020-02-01'}))
+    g_hyp_as_nodes = full_graph(HYP_AS_NODE(params={'threshold': 5, 'date': '2020-02-01'}))
     print("COMMUNITIES, HYP")
     print(nx.info(g_hyp_as_nodes))
     subgraphs_hyp = community_sub_graphs(g_hyp_as_nodes, funct=lambda x: nx.community.greedy_modularity_communities(x.to_undirected()))  #funct=curvature_communities) # funct=lambda x: nx.community.greedy_modularity_communities(x.to_undirected())) #nx.community.greedy_modularity_communities(x.to_undirected()))  # community_louvain.best_partition
-    list_subgraph_central(subgraphs_hyp, funct=nx.betweenness_centrality)  # nx.percolation_centrality, attribute='state'  load_centrality
+    # list_subgraph_central(subgraphs_hyp, funct=nx.betweenness_centrality)  # nx.percolation_centrality, attribute='state'  load_centrality
 
     # components = wcc_sub_graphs(g_hyp_as_nodes)
     # list_subgraph_bridges(components)
 
-    # print("CURVATURE ON HYP SUBGRAPHS")
-    # curvature(subgraphs_hyp)
+    print("CURVATURE ON HYP SUBGRAPHS")
+    curvature(subgraphs_hyp)
 
 
 def nx2neo(centrality):
