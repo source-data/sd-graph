@@ -33,7 +33,6 @@ import networkx as nx
 import numpy as np
 from GraphRicciCurvature.OllivierRicci import OllivierRicci  # https://github.com/saibalmars/GraphRicciCurvature
 from GraphRicciCurvature.FormanRicci import FormanRicci
-# import community as community_louvain  # https://github.com/taynaud/python-louvain
 from cdlib.algorithms import spinglass, louvain, girvan_newman, label_propagation, infomap
 from . import DB
 from neotools.db import Query
@@ -41,6 +40,7 @@ from sklearn import preprocessing
 import matplotlib.pyplot as plt
 from math import isnan, log
 from collections import OrderedDict
+from datetime import datetime, timedelta
 import matplotlib
 matplotlib.use('TkAgg')  # supported values are ['GTK3Agg', 'GTK3Cairo', 'MacOSX', 'nbAgg', 'Qt4Agg', 'Qt4Cairo', 'Qt5Agg', 'Qt5Cairo', 'TkAgg', 'TkCairo', 'WebAgg', 'WX', 'WXAgg', 'WXCairo', 'agg', 'cairo', 'pdf', 'pgf', 'ps', 'svg', 'template']#
 
@@ -58,6 +58,7 @@ matplotlib.use('TkAgg')  # supported values are ['GTK3Agg', 'GTK3Cairo', 'MacOSX
 # TODO: [x] undirected graph WHERE id(source) > id(target)
 # TODO: [ ] difference between betweennness and percolatoin centrality
 # TODO: [ ] normalize centrality by multiplying by -log freq of n_panels / N_panels
+# TODO: [ ] generate benchmark list with random selection, by freq, by degree and by centrality and neg centrality
 
 
 
@@ -227,6 +228,16 @@ def dict2subgraphs(g, communities):
     return subgraphs
 
 
+def curvature(subg):
+    # negative of the curvature: positive value are the most curved bridge-like; negative are the most community like
+    curv = OllivierRicci(subg, alpha=0.3, exp_power=0.5, method="Sinkhorn", verbose="INFO")
+    # curv = FormanRicci(subg)
+    curv.compute_ricci_curvature()
+    curvatures = dict(curv.G.nodes('ricciCurvature'))
+    curvatures = {k: -v for k, v in curvatures.items()}  # change size so that most neg curv are prioritized
+    return curvatures
+
+
 def curvature_communities(g, iterations=20):
     curv = OllivierRicci(g.to_undirected(), alpha=0.3, exp_power=0.5, method="Sinkhorn", verbose="INFO")
     curv.compute_ricci_flow(iterations=iterations)
@@ -277,44 +288,30 @@ def list_subgraph_central(subgraphs, stats, funct, percentile=5, max=10, viz=Fal
     return highlights
 
 
-def curvature(subgraphs, percentile=10):
-    for i, subg in enumerate(subgraphs[0:10]):
-        print(f"{i}: {len(subg)} nodes with CC={nx.average_clustering(subg):.3f}")
-        curv = OllivierRicci(subg.to_undirected(), alpha=0.3, exp_power=0.5, method="Sinkhorn", verbose="INFO")
-        # curv = FormanRicci(subg)
-        curv.compute_ricci_curvature()
-        curvatures = []
-        curvatures = nx.get_node_attributes(curv.G, 'ricciCurvature')
-        threshold = np.percentile([x for x in curvatures.values()], percentile)
-        curvatures_filtered = dict(filter(lambda e : e[1] < threshold, curvatures.items()))  # [(k, v) for k, v in curvatures.items() if v < threshold]
-        curvatures_sorted = OrderedDict(sorted(curvatures_filtered.items(), key=lambda x: x[1], reverse=False))  # negative curvature are in bridges
-
-        for nodeId, val in curvatures_sorted.items():
-            node = subg.nodes[nodeId]
-            print(f"\t{node['description']} ({val})")
-        selected_nodes = curvatures_sorted.keys()
-        viz_curvature(curv, highlights=selected_nodes)
-
-
 def viz_centrality(subg, centrality, highlights=[]):
     labels = {id: f"{subg.nodes[id]['description']}" for id in highlights}
+    alpha = centrality
     # colors = dict(subg.nodes('state'))
     # le = preprocessing.LabelEncoder()
-    bi_color = ['goldenrod', 'teal']
+    bi_color = ['sandybrown', 'navy']  # https://matplotlib.org/3.1.0/gallery/color/named_colors.html
     colors = {k: bi_color[int(state)] for k, state in subg.nodes('state')}
     # color_codes = le.fit_transform(list(centrality.values()))
     # colors = dict(zip(subg.nodes, color_codes))
     # fancy curvature-enhanced layout
     assert len(colors) == len(subg), f"{len(colors)} colors <> subg with {len(subg)} nodes"
-    curv4display = OllivierRicci(subg.to_undirected(), alpha=0.3, exp_power=0.5, method="Sinkhorn")
+    curv4display = OllivierRicci(subg.to_undirected(), alpha=0.3, exp_power=0.5, method="Sinkhorn", )
     curv4display.compute_ricci_curvature()
     # curv4display.compute_ricci_flow(iterations=5)
-    # some nodes are dropped in curv4display...
+    # some nodes are dropped in curv4display...? or some ids are changed?
+    subg_nodes = dict(subg.nodes())
+    subg_nodeIds = subg_nodes.keys()
+    for id in curv4display.G:
+        assert id in subg_nodeIds
     print(f"curvature lost {len(subg) - len(curv4display.G)}")
     colors = [colors[id] for id in curv4display.G]
     assert len(curv4display.G) == len(colors)
     N = len(curv4display.G)
-    pos = nx.spring_layout(curv4display.G, k=1/(4*N**0.5), weight='weight')
+    pos = nx.spring_layout(curv4display.G, k=1/(4*N**0.5), weight='weight', seed=4)
     nx.draw(
         curv4display.G,
         pos=pos,
@@ -430,26 +427,42 @@ def novelty_detection(community_funct, highlight_funct, threshold, dates, replic
         print(f"{i+1}:\t{graphs[1].nodes[nodeId]['description']}, {accumul[0][nodeId]}, {accumul[1][nodeId]}")
 
 
-def neo2nx():
+# def movie_novelty(start_date="2020-01-01", end_date='2020-10-01', interval=7, threshold=2, path='./movie'):
+#     start_date = datetime.strptime(start_date, "%Y-%m-%d")
+#     end_date = datetime.strptime(end_date, "%Y-%m-%d")
+#     interval = timedelta(interval)
+#     limit_date = start_date
+#     g = full_graph(HYP_AS_NODE(params={'threshold': threshold, 'date': limit_date}))
+#     components = community_sub_graphs(g, funct=nx.weakly_connected_components)
+#     gcc = components[0]
+#     # this should include pub_date as attribute so that data comparison can be done in python
+#     while limit_date < end_date:
+        
+#         gcc = components[0]
+#         viz_centrality(g, {}, {})
+#         limit_date += interval
 
+
+def neo2nx():
     # def community_funct(x): return nx.community.greedy_modularity_communities(x.to_undirected())
     # def community_funct(x): return louvain(x.to_undirected()).communities
     def community_funct(x): return spinglass(x.to_undirected()).communities
     # def community_funct(x): return infomap(x.to_undirected()).communities
     # def community_funct(x): return girvan_newman(x.to_undirected()).communities
     # def community_funct(x): return label_propagation(x.to_undirected()).communities
-    # def community_funct(x): return curvature_communities(x.to_undirected(), iterations=20)
+    # def community_funct(x): return curvature_communities(x.to_undirected(), iterations=50)
     #
     # def highlight_funct(x): return nx.betweenness_centrality(x)
-    # def highlight_funct(x): return nx.load_centrality(x)
-    def highlight_funct(x): return nx.percolation_centrality(x, attribute='state')
+    def highlight_funct(x): return nx.load_centrality(x)
+    # def highlight_funct(x): return nx.percolation_centrality(x, attribute='state')
     # def highlight_funct(x): return nx.constraint(x)
     # def highlight_funct(x): return nx.effective_size(x)
     #
-    #  highlight_funct_e = highlight_funct
-    def highlight_funct_e(x): return nx.load_centrality(x)
-    # def highlight_funct_e(x): return nx.betweenness_centrality(x.to_undirected())
-    # def highlight_funct_e(x): return nx.eigenvector_centrality(x.to_undirected())
+    highlight_funct_e = highlight_funct
+    # def highlight_funct_e(x): return nx.load_centrality(x)
+    # def highlight_funct_e(x): return nx.betweenness_centrality(x)
+    # def highlight_funct_e(x): return nx.eigenvector_centrality(x)
+    # def highlight_funct_e(x): return curvature(x)
 
     threshold = 2
     limit_date = '2020-01-31'
@@ -458,7 +471,7 @@ def neo2nx():
     g_entity_as_nodes = full_graph(ENTITY_AS_NODE(params={'threshold': threshold, 'date': limit_date}))
     print("ENTITY IMPORTANCE")
     print(nx.info(g_entity_as_nodes))
-    automagic(g_entity_as_nodes, community_funct, highlight_funct_e, stats, viz=True)
+    automagic(g_entity_as_nodes, community_funct, highlight_funct_e, stats, viz=False)
 
     # print("NOVELTY")
     # novelty_detection(threshold=2, community_funct=community_funct, highlight_funct=highlight_funct, dates=['2020-02-01', '2020-08-01'], replicates=3)
@@ -466,7 +479,7 @@ def neo2nx():
     g_hyp_as_nodes = full_graph(HYP_AS_NODE(params={'threshold': threshold, 'date': limit_date}))
     print("HYP SIGNIFICANCE")
     print(nx.info(g_hyp_as_nodes))
-    automagic(g_hyp_as_nodes, community_funct, highlight_funct, stats, viz=True)
+    automagic(g_hyp_as_nodes, community_funct, highlight_funct, stats, viz=False)
 
 
 def nx2neo(centrality):
@@ -475,6 +488,7 @@ def nx2neo(centrality):
 
 
 def main():
+    # movie_novelty()
     neo2nx()
 
 
