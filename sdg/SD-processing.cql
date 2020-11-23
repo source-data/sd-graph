@@ -211,7 +211,8 @@ CALL gds.louvain.write(
   {
     nodeQuery: 'MATCH (h:H_Entity {category: "assay"}) RETURN id(h) AS id',
     relationshipQuery: 'MATCH (h1:H_Entity {category: "assay"})-[:related_concept]-(h2:H_Entity {category: "assay"}) RETURN id(h1) AS source, id(h2) AS target',
-    writeProperty: 'assay_concept_id'
+    writeProperty: 'assay_concept_id',
+    concurrency: 4
   }
 );
 
@@ -244,7 +245,7 @@ WITH DISTINCT
 ORDER BY pub_date DESC // most recent first
 WITH DISTINCT doi, COLLECT(pub_date)[0] AS most_recent, COLLECT(abstract)[0] AS abstr, a
 SET a += {pub_date: most_recent, abstract: abstr}
-RETURN COUNT(DISTINCT a);
+RETURN COUNT(DISTINCT a) AS `SDArticles with pub date`;
 
 //Link to authors via Contrib nodes
 MATCH (jats:Article), (sd:SDArticle)
@@ -265,7 +266,7 @@ WITH DISTINCT
   sd,
   au
 MERGE (sd)-[r:has_author]->(au)
-RETURN COUNT(DISTINCT r) AS N_auth_relationships;
+RETURN COUNT(DISTINCT r) AS `SDArticle author relationships`;
 
 
 //create hypotheses summaries at paper level
@@ -298,19 +299,19 @@ RETURN COUNT(DISTINCT h) AS `flagged self-test hypotheses`;
 // Flag possible boring entities, helpful to filter them later
 // Exclusion list based on SourceData normalized and reporter entities
 MATCH (h:H_Entity) SET h.boring = False;
-MATCH (syn:Term)<--(entity:H_Entity)<--(ct:CondTag)
-WHERE 
-  entity.ext_ids <> ""
-WITH DISTINCT entity.name AS name, COLLECT(DISTINCT syn.text) AS synonyms, COLLECT(DISTINCT ct) AS cts, 1.0*COUNT(DISTINCT ct) AS N
+MATCH (:SDCollection {name: "PUBLICSEARCH"})-->(:SDArticle)-->(:SDFigure)-->(:SDPanel)-->(ct:CondTag)-->(h:H_Entity)-->(te:Term)
+WITH DISTINCT h.name AS name, COLLECT(DISTINCT te.text) AS synonyms, COLLECT(DISTINCT ct) AS cts, 1.0*COUNT(DISTINCT ct) AS N
 UNWIND cts as ct
 WITH DISTINCT name, synonyms, N, ct.role as role, 1.0*COUNT(DISTINCT ct) AS N_role
 WITH name, synonyms, role, N, N_role, 100.0*(N_role / N) AS fract
 ORDER BY N DESC, fract DESC
 WITH name, synonyms, N, COLLECT(role)[0] AS dominant_role, COLLECT(fract)[0] AS dom_fract
 WHERE 
-  (dominant_role = "normalizing" OR dominant_role = "reporter")
-  AND
-  dom_fract > 75 AND N > 10.0
+  ((dominant_role = "reporter") AND dom_fract > 75)
+  OR
+  ((dominant_role = "normalizing") AND dom_fract > 80 AND N > 20)
+  OR
+  ((dominant_role = "component") AND dom_fract > 75 AND N > 500)
 WITH COLLECT(name) + synonyms AS all
 UNWIND all as terms
 WITH COLLECT(DISTINCT terms) AS exclusion_list
@@ -336,17 +337,49 @@ RETURN DISTINCT "added weights to hypotheses nodes";
 // hypothesis-as-node network
 MATCH
   (up:H_Entity)-[:Is_Intervention_of]->(h1:Hypothesis)-[:Has_Assayed]->(ah:H_Entity)-[:Is_Intervention_of]->(h2:Hypothesis)-[:Has_Assayed]->(do:H_Entity)
-WHERE (NOT up.boring) AND (NOT ah.boring) AND (NOT do.boring)
+WHERE
+  (NOT up.boring) AND (NOT ah.boring) AND (NOT do.boring) AND
+  h1.n_panels > 2 AND h2.n_panels > 2
 MERGE (h1)-[chain:hyp_chain]->(h2)
 RETURN COUNT(DISTINCT chain) AS `hypothesis chains`;
 
 
-// // hypothesis-as-edge network
+// figure co-occurence network
+// MATCH
+//   (a:SDArticle)-[:has_fig]->(f:SDFigure),
+//   (f)-->(:SDPanel)-->(:CondTag)-->(e1:H_Entity),
+//   (f)-->(:SDPanel)-->(:CondTag)-->(e2:H_Entity)  // WARNING DOES THIS IMPLU e1 <> e2?
+// WHERE
+//    e1 <> e2 AND 
+//    (NOT e1.boring) AND 
+//    (NOT e2.boring) AND
+//    id(e1) > id(e2)  // only one permuation needed since graph is undirected
+// WITH 
+//   e1, e2, a, COUNT(DISTINCT f) AS n_figures
+// WITH 
+//   e1, e2, a, n_figures
+// WHERE 
+//   n_figures >=2  // basic cutoff
+// MERGE 
+//   (e1)-[:in_fig_co]-(co:FigureCoOcurrence)-[:in_fig_co]-(e2)  // undirected
+// MERGE 
+//   (a)-[:HasCo {n_figures: n_figures}]->(co)
+// RETURN 
+//   COUNT(DISTINCT co) AS `figure co-occurences`;
+
+// // add n_articles to HasCo relationships to aid filtering
+// MATCH (a:SDArticle)-[:HasCo]->(co:FigureCoOcurrence)
+// WITH co, COUNT(DISTINCT a) AS n_articles
+// SET co.n_articles = n_articles
+// RETURN COUNT(DISTINCT co) AS `set n_articles attribute`;
+
+
+// hypothesis-as-edge network
 // MATCH
 //   (ih:H_Entity)-[:Is_Intervention_of]->(h:Hypothesis)-[:Has_Assayed]->(ah:H_Entity)
 // WHERE (NOT ih.boring) AND (NOT ah.boring)
 // MERGE (ih)-[tested:Tested]->(ah)
-// RETURN COUNT(tested) AS `hypotheses at entity level`;
+// RETURN COUNT(DISTINCT tested) AS `hypotheses at entity level`;
 
 
 // //transfer hypothesis weight to :Tested links
@@ -359,15 +392,15 @@ RETURN COUNT(DISTINCT chain) AS `hypothesis chains`;
 
 
 //add scale to entities
-
-//MATCH (e:H_Entity {type:"molecule"}) SET e.scale = 1;
-//MATCH (e:H_Entity {type:"gene"}) SET e.scale = 2;
-//MATCH (e:H_Entity {type:"protein"}) SET e.scale = 2;
-//MATCH (e:H_Entity {type:"subcellular"}) SET e.scale = 3;
-//MATCH (e:H_Entity {type:"cell"}) SET e.scale = 4;
-//MATCH (e:H_Entity {type:"tissue"}) SET e.scale = 5;
-//MATCH (e:H_Entity {type:"organism"}) SET e.scale = 6;
-//RETURN "added scales to entities";
+MATCH (e:H_Entity {type:"molecule"}) SET e.scale = 1;
+MATCH (e:H_Entity {type:"gene"}) SET e.scale = 2;
+MATCH (e:H_Entity {type:"protein"}) SET e.scale = 2;
+MATCH (e:H_Entity {type:"geneprod"}) SET e.scale = 2;
+MATCH (e:H_Entity {type:"subcellular"}) SET e.scale = 3;
+MATCH (e:H_Entity {type:"cell"}) SET e.scale = 4;
+MATCH (e:H_Entity {type:"tissue"}) SET e.scale = 5;
+MATCH (e:H_Entity {type:"organism"}) SET e.scale = 6;
+RETURN "added scales to entities";
 
 // resolver nodes to map resource to base url and possibly to id regex pattern (according to identifiers.org)
 // need to provide a recipe to transform in to compact identifier and just use identifiers.org
