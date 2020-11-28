@@ -110,6 +110,14 @@ class Instance:
         node = res['n']
         return node
 
+    def update_node(self, nodeId, properties):
+        q = Query(params={'nodeId': nodeId, 'props': properties})
+        q.code = 'MATCH (n) WHERE id(n) = $nodeId SET n += $props RETURN n;'
+        q.returns = ['r']
+        res = self.query_with_tx_funct(self._tx_funct_single, q)
+        node = res['n']
+        return node
+
     def relationship(self, a, b, r: str, clause="MERGE"):
         # avoid direct code injection
         if clause == 'MERGE':
