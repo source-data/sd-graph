@@ -17,7 +17,7 @@ import QuickAccess from '../components/quick-access/index.vue'
 import Highlights from '../components/highlights/index.vue'
 import Intro from '../layouts/intro.vue'
 
-import { REFEREED_PREPRINTS_TAB, COVID19_HYP_TAB, COVID19_AUTOMAGIC_TAB, FULLTEXT_SEARCH } from '../components/quick-access/tab-names'
+import { REFEREED_PREPRINTS_TAB, BY_AUTO_TOPICS, COVID19_AUTOMAGIC_TAB, FULLTEXT_SEARCH } from '../components/quick-access/tab-names'
 import { serviceSlug2Id } from '../store/by-reviewing-service'
 
 function getStoreNameForCollection (collection, service) {
@@ -26,11 +26,8 @@ function getStoreNameForCollection (collection, service) {
     case 'refereed-preprints':
       storeName = REFEREED_PREPRINTS_TAB
       break
-    case 'covid19':
+    case 'covid19':  // this will eventuall disapper, automagic will be service from collection /all or from new set of collections
       switch (service) {
-        case 'by-hyp':
-          storeName = COVID19_HYP_TAB
-          break
         case 'automagic':
           storeName = COVID19_AUTOMAGIC_TAB
           break
@@ -38,6 +35,9 @@ function getStoreNameForCollection (collection, service) {
       break
     case 'all':
       switch (service) {
+        case 'by-auto-topics':
+          storeName = BY_AUTO_TOPICS
+          break
         case 'search':
           storeName = FULLTEXT_SEARCH
           break
@@ -61,12 +61,12 @@ function initApp (collection, service, $store) {
     case REFEREED_PREPRINTS_TAB:
       initialLoad = REFEREED_PREPRINTS_TAB
       delayedLoad = [
-        COVID19_HYP_TAB,
+        BY_AUTO_TOPICS,
         COVID19_AUTOMAGIC_TAB,
       ]
       break;
-    case COVID19_HYP_TAB:
-      initialLoad = COVID19_HYP_TAB
+    case BY_AUTO_TOPICS:
+      initialLoad = BY_AUTO_TOPICS
       delayedLoad = [
         REFEREED_PREPRINTS_TAB,
         COVID19_AUTOMAGIC_TAB,
@@ -76,13 +76,13 @@ function initApp (collection, service, $store) {
       initialLoad = COVID19_AUTOMAGIC_TAB
       delayedLoad = [
         REFEREED_PREPRINTS_TAB,
-        COVID19_HYP_TAB,
+        BY_AUTO_TOPICS,
       ]
       break;
     case FULLTEXT_SEARCH:
       initialLoad = null
       delayedLoad = [
-        COVID19_HYP_TAB,
+        BY_AUTO_TOPICS,
         REFEREED_PREPRINTS_TAB,
         COVID19_AUTOMAGIC_TAB,
       ]
