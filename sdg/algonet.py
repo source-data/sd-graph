@@ -151,9 +151,8 @@ def name_hypothesis_community():
         for i in range(N):
             d = {keywords[j]: X[i][j] for j in range(M)}
             d = sorted(d.items(), key=lambda e: e[1], reverse=True)
-            n = min(10, len(d))
-            topics = dict(d[:n]).keys()
-            # topics = sorted(topics, key=len, reverse=True)
+            n = min(10, len(d))  #  max 10 topics
+            topics = dict(d[:n]).keys()  # the top10 keywordss
             community_id = community_ids[i]
             entity_names = collections[community_id]['entity_names']
             topics = [t for t in topics if t not in entity_names]
@@ -175,6 +174,7 @@ def name_hypothesis_community():
             'dois': r['dois']
         }
     select_best(corpus, collections)
+    # link SDArticle to autotopics and topics to entities
     return collections
 
 
@@ -216,6 +216,7 @@ def main():
     general_highlights, community_highlights = neo2nx()
     nx2neo(general_highlights, community_highlights)
     collections = name_hypothesis_community()
+
 
 
 

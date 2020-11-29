@@ -217,37 +217,46 @@ RETURN
     returns = ['id', 'papers']
 
 
-class BY_HYP(Query):
+class BY_AUTO_TOPIC(Query):
 
     code = '''
 // Using precomputed Viz nodes
 MATCH
-  (col:VizCollection {name: "by_hyp"})-[:HasSubCol]->(subcol:VizSubCollection),
+  (col:VizCollection {name: "by-auto-topics"})-[:HasSubCol]->(subcol:VizSubCollection),
   (subcol)-[:HasPaper]->(paper:VizPaper),
-  (subcol)-[:HasEntity]->(ctrl_v:VizEntity {role: "controlled_variable"}),
-  (subcol)-[:HasEntity]->(meas_v:VizEntity {role: "measured_variable"})
+  (subcol)-[:HasEntity]->(entity_highlighted:VizEntity {category: "topic_highlight"}),
+  (paper)-[:HasEntity]->(paper_highlight:VizEntity {category: "paper_highlight"})
 WHERE DATETIME(paper.pub_date) > DATETIME($limit_date)
-WITH DISTINCT paper, ctrl_v, meas_v
+WITH DISTINCT 
+  subcol,
+  paper, 
+  topic_highlight,
+  COUNT(DISTINCT topic_highlight) AS N_highlight
+  paper_highlight
 ORDER BY
-  id(ctrl_v) ASC, // deterministic
-  id(meas_v) ASC, // deterministic
+  N_highlight DESC,
   DATETIME(paper.pub_date) DESC
 WITH DISTINCT
   paper{.*, rank: ""} AS paper_j, // JSON serializable
-  {ctrl_v: COLLECT(DISTINCT ctrl_v.text), meas_v: COLLECT(DISTINCT meas_v.text)} AS hyp
+  entity_highlighted.name as entity_highlighted_name
+  subcol.name AS topics
  WITH DISTINCT
-  hyp,
-  COLLECT(paper_j) AS papers
-// assign an id to each hyp-collection of papers
-WITH COLLECT([hyp, papers]) AS all_results
-UNWIND range(0, size(all_results)-1) as i
+  topics,
+  COLLECT(entity_highlighted_name) AS entity_highlighted_names,
+  COLLECT(paper_j) AS paper_collection_j
+// assign an id to each subcollection of papers
+WITH
+  COLLECT({topics: topics_name, highlighted_entities: entity_highlighted_names, papers: paper_collection_j}) AS all
+  COUNT(DISTINCT paper_collection_j) AS N
+UNWIND range(0, N-1) AS i
 RETURN 
   i as id, 
-  all_results[i][0] AS hyp, 
-  all_results[i][1] AS papers
+  all[i]['topics'] AS topics, 
+  all[i]['highlighted_entities'] AS highlighted_entities,
+  all[i]['papers'] AS papers
     '''
     map = {'limit_date': []}
-    returns = ['id', 'hyp', 'papers']
+    returns = ['id', 'topics', 'highlighted_entities', 'papers']
 
 
 class AUTOMAGIC(Query):

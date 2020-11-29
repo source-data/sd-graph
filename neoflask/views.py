@@ -56,12 +56,12 @@ def by_method():
 
 
 # using routing rather than parameters to provide limit_date so that cache.cached() works properly; memoize would need function params
-@app.route('/api/v1/by_hyp/', defaults={'limit_date': '1900-01-01'}, methods=['GET', 'POST'])
-@app.route('/api/v1/by_hyp/<limit_date>', methods=['GET', 'POST'])
+@app.route('/api/v1/by_auto_topics/', defaults={'limit_date': '1900-01-01'}, methods=['GET', 'POST'])
+@app.route('/api/v1/by_auto_topics/<limit_date>', methods=['GET', 'POST'])
 @cache.cached()
 def by_hyp(limit_date):
-    app.logger.info(f"list by hypotheses")
-    return jsonify(ASKNEO.by_hyp(limit_date=limit_date))
+    app.logger.info(f"list by automatic topics")
+    return jsonify(ASKNEO.by_auto_topics(limit_date=limit_date))
 
 
 @app.route('/api/v1/by_reviewing_service/', defaults={'limit_date': '1900-01-01'}, methods=['GET', 'POST'])

@@ -65,188 +65,32 @@ MERGE (paper)-[:HasInfo]->(info)
 RETURN COUNT(DISTINCT paper) AS `papers in the by reviewing service`;
 
 
-// HOT HYP
-
-MATCH (coll:SDCollection)-->(a:SDArticle)-[r:HasH]->(h:Hypothesis)
-WHERE
-  // limit to automated collections and exclude manually curated PUBLICSEARCH from SourceData
-  NOT coll.name = 'PUBLICSEARCH' AND 
-  // start with 'hot' hypotheses
-  h.is_hot AND 
-  // only stuff that detected in 3 panels min
-  r.n_panels > 2
-WITH a, r.n_panels AS N_panels, h
-ORDER BY N_panels DESC
-// identify panels
+// AUTO TOPICS HIGHLIGHTS
 MATCH
-  (a)-->(f:SDFigure)-->(p:SDPanel),
-  (p)-->(ict:CondTag {role: 'intervention'})-->(ih:H_Entity),
-  (p)-->(act:CondTag {role: 'assayed'})-->(ah:H_Entity),
-  (ih)-->(h)-->(ah)
-// reformat panel into something usable for viz
-// {id: id(p), title: f.fig_label + " (panel: " + p.panel_label + ")", text: p.caption, rank: f.fig_label + p.panel_label, panel_id: p.panel_id}
-WITH DISTINCT a, ah, ih, N_panels, {id: id(p), title: f.fig_label + " (panel: " + p.panel_label + ")", text: p.caption, rank: f.fig_label + p.panel_label} AS reformatted_panel
-// aggregate relevant panels
-WITH a, COLLECT(DISTINCT reformatted_panel) AS panel_group, N_panels, ih, ah
-MATCH (a)-->(:SDFigure)-->(:SDPanel)-->(:CondTag)-->(assay:H_Entity {category: "assay"})
-// take only papers with some experimental assay detected, aggregated by pseudo synonyms
-WITH DISTINCT a, panel_group, N_panels, ih, ah, COUNT(DISTINCT assay.concept_name) AS N_assay
-WHERE N_assay > 3
-WITH DISTINCT a, panel_group, N_panels, ih, ah, N_assay
-ORDER BY
-  a.pub_date DESC,
-  N_panels DESC
-WITH DISTINCT COLLECT({article: a, panels: panel_group}) AS article_with_panels, ih, ah
-// limit to 20 hyp
-LIMIT 20
-// generate ordered id
-WITH COLLECT(DISTINCT {article_with_panels: article_with_panels, ctrl_v: ih, meas_v: ah}) AS all
-UNWIND range(0, size(all)-1) as i
-
-///////////////////////////////GENERATE PRECOMPUTED VIZ GRAPH///////////////////////////////
-// unpack it all to create the viz graph
-WITH i, all[i].article_with_panels as article_with_panels, all[i].ctrl_v AS ctrl_v, all[i].meas_v AS meas_v
-UNWIND article_with_panels as item
-WITH item.article.doi AS doi, item.article.pub_date AS pub_date, item.panels AS panels, ctrl_v.name AS ctrl_v_text, meas_v.name AS meas_v_text
-UNWIND panels AS panel
+  (topics:SDAutoTopics)-->(a:SDArticle)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(entity:H_Entity)
+  (topics)-->(highlighted:H_entity)
+WITH DISTINCT
+  topics,
+  a,
+  COLLECT(DISTINCT highlighted) AS highlighted_entities,
+  COLLECT(DISTINCT entity) AS article_entities
 WITH 
-  doi, pub_date, ctrl_v_text, meas_v_text,
-  panel.title AS info_title, panel.text AS info_text, panel.rank AS info_rank, panel.entities as entities
-// id; will need to have constraint on id + query
-MERGE (col:VizCollection {name: "by_hyp"})
-MERGE (subcol:VizSubCollection {name: "hyp_" + ctrl_v_text + ' --> ' + 'meas_v_text'})
-MERGE (paper:VizPaper {doi: doi, pub_date: toString(DATETIME(pub_date))})
+  topics,
+  a,
+  highlighted_entities,
+  apoc.coll.intersection(highlighted_entities, article_entities) AS overlapping_highlihgts
+UNWIND highlighted_entities AS highlighted_entity
+UNWIND overlapping_highlights as overlapping_highlight
+MERGE (col:VizCollection {name: "by-auto-topics"})
+MERGE (subcol:VizSubCollection {name: topics.name})
+MERGE (paper:VizPaper {doi: a.doi, pub_date: toString(DATETIME(a.pub_date))})
 MERGE (col)-[:HasSubCol]->(subcol)
 MERGE (subcol)-[:HasPaper]->(paper)
-MERGE (info:VizInfo {doi: doi, title: info_title, text: info_text, rank: info_rank, info_type: "panel-caption"}) // avoid probelms with NULL and MERGE
-MERGE (paper)-[:HasInfo]->(info)
-MERGE (c:VizEntity {text: ctrl_v_text, role: "controlled_variable"})
-MERGE (m:VizEntity {text: meas_v_text, role: "measured_variable"})
-MERGE (c)-[:HasPotentialEffectOn]->(m)
-MERGE (subcol)-[:HasEntity]->(c)
-MERGE (subcol)-[:HasEntity]->(m)
+MERGE (highlight:VizEntity {text: highlighted_entity.name, category: 'topic_highlight'})
+MERGE (subcol)-[:HasEntity]->(highlight)
+MERGE (overlap:VizEntity {text: overlapping_highlight.name, category: 'paper_highlight'})
+MERGE (paper)-[:HasEntity]->(overlap);
 RETURN DISTINCT "done" AS `papers in the hypothesis set`;
-
-
-// BY HYP ON COVID-19
-
-///////////////////////////////EXCLUSION LIST///////////////////////////////
-//Exclusion list based on SourceData normalized entities
-// MATCH (syn:Term)<--(entity:H_Entity)<--(ct:CondTag)
-// WHERE 
-//   entity.ext_ids <> ""
-// WITH DISTINCT entity.name AS name, COLLECT(DISTINCT syn.text) AS synonyms, COLLECT(DISTINCT ct) AS cts, 1.0*COUNT(DISTINCT ct) AS N
-// UNWIND cts as ct
-// WITH DISTINCT name, synonyms, N, ct.role as role, 1.0*COUNT(DISTINCT ct) AS N_role
-// WITH name, synonyms, role, N, N_role, 100.0*(N_role / N) AS fract
-// ORDER BY N DESC, fract DESC
-// WITH name, synonyms, N, COLLECT(role)[0] AS dominant_role, COLLECT(fract)[0] AS dom_fract
-// WHERE 
-//   (dominant_role = "normalizing" OR dominant_role = "reporter" OR dominant_role = "component")
-//   AND
-//   dom_fract > 75 AND N > 10.0
-// WITH COLLECT(name) + synonyms AS all
-// UNWIND all as terms
-// WITH COLLECT(DISTINCT terms) AS exclusion_list
-
-// ///////////////////////////////CHOOSE SD CURATED FIRST///////////////////////////////
-// //prioritize manually curated papers
-// //MATCH (a:SDArticle)
-// //WHERE toLower(a.journalName) IN ["biorxiv", "medrxiv"]
-// //WITH a, exclusion_list
-// //ORDER BY a.source DESC // manually curated source = 'sdapi' sorted before automatic papers where source = 'eebapi'
-// //WITH DISTINCT a.doi AS doi, COLLECT(a) AS same_paper, exclusion_list
-// //WITH same_paper[0] as a, exclusion_list
-
-// ///////////////////////////////IDENTIFY HYPOTHESES//////////////////////////////////
-// // identify hypotheses as intervention - assayed pairs
-// MATCH
-//   (col:SDCollection {name:"covid19"})-[:has_article]->(a:SDArticle)-->(f:SDFigure)-->(p:SDPanel),
-//   path_1=(p)-->(i:CondTag {role: "intervention"})-->(ctrl:H_Entity)-->(ctrl_term:Term),
-//   path_2=(p)-->(m:CondTag {role: "assayed"})-->(meas:H_Entity)-->(meas_term:Term)
-// WHERE
-//   // trying to avoid trivial same - same pairs (eg typical for siRNA control exp)
-//   ctrl.name <> meas.name // could still be 2 entities normalized differently
-//   AND
-//   // exclude terms that are in the exclusion list
-//   NONE (n IN nodes(path_1) WHERE labels(n)=['Term'] AND (n.text IN exclusion_list))
-//   AND
-//   NONE (n IN nodes(path_2) WHERE labels(n)=['Term'] AND (n.text IN exclusion_list))
-//   AND
-//   // eliminate figure and panels without a caption or label such as graphical abstracts etc
-//   EXISTS(f.fig_label) AND EXISTS(p.panel_label)
-  
-// // make sure figures are ordered by label
-// WITH DISTINCT
-//     a, f, p, ctrl, meas
-// ORDER BY 
-//   f.fig_label ASC, p.panel_label ASC,
-//   id(ctrl) ASC, id(meas) ASC // deterministic order to faciliate aggregation later
-// // aggregate panels to count how many panels have same hypothesis
-// WITH DISTINCT
-//     a, 
-//     // capture relevant info (fig_label) in the format neededed for REST and 
-//     // we need to do it now rather than later because figure-level info is still available at this stage
-//     COLLECT(DISTINCT {id: id(p), title: f.fig_label + " (panel: " + p.panel_label + ")", text: p.caption, rank: f.fig_label + p.panel_label, panel_id: p.panel_id}) AS panel_group, // will need to generate position_idx from sdapi
-//     COUNT(DISTINCT p) AS N_panels,
-//     ctrl.name AS ctrl_name, 
-//     meas.name AS meas_name
-// ORDER BY ctrl_name, meas_name
-// WHERE N_panels > 2 // keep only hypotheses identified in more than one experiment
-// // agreggate hypothesis elements shared across the group of panels
-// WITH a, panel_group, N_panels, COLLECT(DISTINCT ctrl_name) AS ctrl_v, COLLECT(DISTINCT meas_name) AS meas_v
-// // crudly prioritize experimental papers with at least 3 identified assays
-// MATCH (a)-->(:SDFigure)-->(:SDPanel)-->(:CondTag)-->(assay:H_Entity {category: "assay"})
-// WITH DISTINCT a, panel_group, N_panels, {ctrl_v: ctrl_v, meas_v: meas_v} AS hyp, COUNT(DISTINCT assay) AS N_assay
-// ORDER BY
-//   a.pub_date DESC,
-//   N_panels DESC
-// // select the hypotheses detected in the most panels as the dominant hypothesis. Could keep the top 5 instead?
-// WITH a, COLLECT(panel_group)[0] AS selected_panels, COLLECT(hyp)[0] AS dominant, N_assay
-// WHERE N_assay > 3
-// // most recent first
-// WITH a, selected_panels, dominant, N_assay
-// // recover all entities associated with the selected panels for manually curated papers
-// UNWIND selected_panels AS selected_panel
-// MATCH (p:SDPanel)-->(ct:CondTag)
-// WHERE selected_panel.id= id(p)
-// WITH DISTINCT a, selected_panel, COLLECT(DISTINCT ct{.*, source: p.source}) as entities, dominant, N_assay
-// // repackage entities with the respective panels for subsequent display
-// WITH DISTINCT a, COLLECT(DISTINCT selected_panel{.*, entities: entities}) AS selected_panels, dominant, N_assay
-// // assign an id to each hypothesis group
-// WITH dominant, COLLECT({doi: a.doi, info: selected_panels, pub_date: a.pub_date}) AS papers
-// // limit to most recent 20 hyp
-// LIMIT 20
-// // generate ordered id
-// WITH COLLECT([dominant, papers]) AS all_results
-// UNWIND range(0, size(all_results)-1) as id
-
-// ///////////////////////////////GENERATE PRECOMPUTED VIZ GRAPH///////////////////////////////
-// // unpack it all to create the viz graph
-// WITH id, all_results[id][0] as hyp, all_results[id][1] as papers
-// UNWIND papers as paper
-// WITH id, hyp, paper.doi AS doi, paper.info AS info, paper.pub_date AS pub_date
-// UNWIND info AS info_item
-// WITH 
-//   id, hyp, doi, pub_date, 
-//   info_item.title AS info_title, info_item.text AS info_text, info_item.rank AS info_rank, info_item.entities as entities, info_item.panel_id AS info_id
-// // id; will need to have constraint on id + query
-// UNWIND hyp.ctrl_v AS ctrl_v // string
-// UNWIND hyp.meas_v AS meas_v // string
-// UNWIND entities as entity // THIS IS KILLING IT IF entities == []
-// MERGE (col:VizCollection {name: "by_hyp"})
-// MERGE (subcol:VizSubCollection {name: "hyp_" + toString(id)})
-// MERGE (paper:VizPaper {doi: doi, pub_date: toString(DATETIME(pub_date))})
-// MERGE (col)-[:HasSubCol]->(subcol)
-// MERGE (subcol)-[:HasPaper]->(paper)
-// MERGE (info:VizInfo {doi: doi, title: info_title, text: info_text, rank: info_rank, id: info_id, info_type: "panel-caption"}) // avoid probelms with NULL and MERGE
-// MERGE (paper)-[:HasInfo]->(info)
-// MERGE (c:VizEntity {text: ctrl_v, role: "controlled_variable"})
-// MERGE (m:VizEntity {text: meas_v, role: "measured_variable"})
-// MERGE (c)-[:HasPotentialEffectOn]->(m)
-// MERGE (subcol)-[:HasEntity]->(c)
-// MERGE (subcol)-[:HasEntity]->(m)
-// RETURN DISTINCT "done" AS `papers in the hypothesis set`;
 
 
 // AUTOMAGIC
