@@ -48,14 +48,15 @@ WITH
   COLLECT(DISTINCT h.name) AS entity_names,
   h.hypothesis_community AS community_id
 ORDER BY community_id
-MATCH (a:SDArticle)-[r1:HasH]->(hyp:Hypothesis)-[r2]-(h:H_Entity)
+MATCH 
+  (a:SDArticle)-[r1:HasH]->(hyp:Hypothesis)-[r2]-(h:H_Entity)
 WHERE h.hypothesis_community = community_id
 WITH DISTINCT 
   a, 
   community_id,
   entity_names,
   entities, 
-  COUNT(DISTINCT h) AS overlap_size, 
+  COUNT(DISTINCT h) AS overlap_size,  // NEED TO COMPUTE ENRICHMENT AND THRESHOLD BASE ON HYPERGEOM http://metascape.org/blog/?p=122
   SUM(DISTINCT r1.n_panels) AS n_panels
 ORDER BY community_id ASC, overlap_size DESC, n_panels DESC
 RETURN
@@ -87,6 +88,30 @@ SET h.general_centrality = NULL, h.hypothesis_community = NULL, h.community_cent
 RETURN COUNT(h) AS reset_entities
     '''
     returns = ['reset_entities']
+
+
+class DELETE_AUTO_TOPICS(Query):
+    code = '''
+MATCH (a:SDAutoTopics) DETACH DELETE a
+RETURN COUNT(a) AS deleted
+    '''
+    returns = ['deleted']
+
+
+class MERGE_AUTO_TOPICS_COLLECTION(Query):
+    code = '''
+MERGE (autotopics:SDAutoTopics {community_id: $community_id, topics: $topics})
+WITH autotopics
+MATCH (a:SDArticle)
+WHERE a.doi in $dois
+MERGE (autotopics)-[:has_article]->(a)
+WITH autotopics
+MATCH (entity:H_Entity)
+WHERE id(entity) in $entities_ids
+MERGE (autotopics)-[:has_highlighted_entity]->(entity)
+RETURN autotopics
+    '''
+    returns = ['autotopics']
 
 
 def full_graph(q):
@@ -174,8 +199,19 @@ def name_hypothesis_community():
             'dois': r['dois']
         }
     select_best(corpus, collections)
-    # link SDArticle to autotopics and topics to entities
-    return collections
+    # uptdate database
+    deleted = DB.query(DELETE_AUTO_TOPICS())
+    print(f"{deleted[0]['deleted']} nodes deleted")
+    for community_id, collection in collections.items():
+        entities_ids = [entity.id for entity in collection['entities']]
+        q = MERGE_AUTO_TOPICS_COLLECTION(params={
+            'community_id': community_id,
+            'topics': collection['topics'],
+            'entities_ids': entities_ids,
+            'dois': collection['dois']
+        })
+        r = DB.query(q)
+        print(f"create auto topics collection {r[0]['autotopics']['topics']}")
 
 
 def automagic(g, community_funct, highlight_funct):
@@ -215,9 +251,7 @@ def nx2neo(general_highlights, community_highlights):
 def main():
     general_highlights, community_highlights = neo2nx()
     nx2neo(general_highlights, community_highlights)
-    collections = name_hypothesis_community()
-
-
+    name_hypothesis_community()
 
 
 if __name__ == "__main__":

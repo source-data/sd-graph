@@ -10,7 +10,7 @@ WHERE
 MERGE
   (entity_1)-[r:related_concept]-(entity_2)
 RETURN
-  COUNT(DISTINCT r) AS `assay quasi synonyms relationships;
+  COUNT(DISTINCT r) AS `assay quasi synonyms relationships`;
 
 
 // COMMUNITY DETECTION FOR ASSAY QUASI SYNONYMS
@@ -26,7 +26,7 @@ CALL gds.louvain.write(
 
 
 // adding cluster name based on the most generic entity
-MATCH (entity:H_Entity) WHERE EXISTS(entity.concept_name) SET entity.concept_name = NULL, entity.concept_ext_ids=NULL;
+MATCH (entity:H_Entity) WHERE EXISTS(entity.assay_concept_name) SET entity.assay_concept_name = NULL, entity.assay_concept_ext_ids=NULL;
 MATCH (entity:H_Entity {category: "assay"})-[:Has_text]->(te:Term)
 // popularity could be measure as SUM(te.freq_in_panels) or simpler as here as number of linked terms as an indication of how generic an entity name is
 WITH entity, COUNT(DISTINCT te) AS entity_generality
@@ -38,9 +38,8 @@ WITH
   COLLECT(entity)[0] AS most_popular_entity, 
   COLLECT(DISTINCT entity) AS cluster
 UNWIND cluster AS entity
-SET entity.concept_name = most_popular_entity.name, entity.concept_ext_ids = most_popular_entity.ext_ids
-RETURN DISTINCT 
-  COUNT(DISTINCT entity.assay_concept_id) AS `named clusters of assay related concepts`;
+SET entity.assay_concept_name = most_popular_entity.name, entity.assay_concept_ext_ids = most_popular_entity.ext_ids
+RETURN COUNT(DISTINCT entity.assay_concept_id) AS `named clusters of assay related concepts`;
 
 
 // GENEPROD QUASI SYNONYMS
@@ -55,7 +54,7 @@ WHERE
 MERGE
   (entity_1)-[r:related_geneprod]-(entity_2)
 RETURN
-  COUNT(DISTINCT r) AS `geneprod quasi synonyms relationships;
+  COUNT(DISTINCT r) AS `geneprod quasi synonyms relationships`;
 
 
 // COMMUNITY DETECTION FOR GENEPROD QUASI SYNONYMS
@@ -76,13 +75,12 @@ CALL gds.louvain.stream(
   }
 ) YIELD nodeId, communityId, intermediateCommunityIds
 WITH gds.util.asNode(nodeId) AS node, intermediateCommunityIds[0] AS subcommunityId
-SET node.louvain_community_id = subcommunityId
+SET node.geneprod_concept_id = subcommunityId
 // //for testing
 // RETURN COLLECT(DISTINCT node.name) AS subcommunity, subcommunityId, COUNT(node) AS N
 // ORDER BY N DESC
 // LIMIT 100
-RETURN COUNT(DISTINCT subcommunityId) AS `geneprod communities`
-;
+RETURN COUNT(DISTINCT subcommunityId) AS `geneprod communities`;
 
 
 // adding concept geneprod name
