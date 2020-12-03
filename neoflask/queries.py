@@ -129,30 +129,50 @@ WITH DISTINCT
   COUNT(DISTINCT f) AS nb_figures,
   auth,
   review, response, annot
-//ANCHOR VizPaper TO VizCollection and VizSubCollection?
-OPTIONAL MATCH (assay:VizEntity {category: 'assay'})<-[:HasEntity]-(:VizPaper {doi: doi})-[:HasEntity]->(entity:VizEntity {category: 'entity'})
+// adding mentities and exp assays and contribg id (ORCID)
+OPTIONAL MATCH (assay:VizEntity {category: 'assay'})<-[:HasEntity]-(vzp:VizPaper {doi: doi})-[:HasEntity]->(entity:VizEntity {category: 'entity'})
 OPTIONAL MATCH (auth)-->(auth_id:Contrib_id)
 WITH
-  id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title, 
+  id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title,
   auth,
   auth_id.text AS ORCID, 
   nb_figures, review, response, annot,
-  COLLECT(DISTINCT entity.text) AS entities, COLLECT(DISTINCT assay.text) AS assays
-ORDER BY
-    review.review_idx ASC,
-    auth.position_idx ASC
+  COLLECT(DISTINCT entity.text) AS entities,
+  COLLECT(DISTINCT assay.text) AS assays
+OPTIONAL MATCH
+  (col:VizCollection {name: "by-auto-topics"})-->(autotopics:VizSubCollection)-[rel_autotopics_paper]->(vzp:VizPaper {doi: doi})
+WHERE
+  rel_autotopics_paper.overlap_size >= 2
 WITH
-    id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title, auth, ORCID, nb_figures,
-    {reviews: COLLECT(DISTINCT review {.*}), response: response {.*}, annot: annot {.*}} AS review_process,
-    entities, assays
+  id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title,
+  vzp, 
+  auth,
+  ORCID, 
+  nb_figures, review, response, annot,
+  entities, assays,
+  COLLECT(DISTINCT autotopics.topics) AS main_topics
+ORDER BY
+  review.review_idx ASC,
+  auth.position_idx ASC
+WITH
+  id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title, auth, ORCID, nb_figures,
+  {reviews: COLLECT(DISTINCT review {.*}), response: response {.*}, annot: annot {.*}} AS review_process,
+  entities, assays,
+  main_topics
 RETURN DISTINCT 
-    id, doi, version, source, journal, title, abstract, toString(DATETIME(pub_date)) AS pub_date, //standardization of date time format, necessary for Safari
-    journal_doi, published_journal_title, COLLECT(DISTINCT auth {.surname, .given_names, .position_idx, .corresp, orcid: ORCID}) AS authors,
-    nb_figures, review_process,
-    entities, assays
+  id, doi, version, source, journal, title, abstract, toString(DATETIME(pub_date)) AS pub_date, //standardization of date time format, necessary for Safari
+  journal_doi, published_journal_title, COLLECT(DISTINCT auth {.surname, .given_names, .position_idx, .corresp, orcid: ORCID}) AS authors,
+  nb_figures, review_process,
+  entities, assays,
+  main_topics
     '''
     map = {'doi': []}
-    returns = ['id', 'doi', 'version', 'source', 'journal', 'title', 'abstract', 'authors', 'pub_date', 'journal_doi', 'published_journal_title', 'nb_figures', 'review_process', 'entities', 'assays', 'controlled_variables', 'measured_variables']
+    returns = [
+      'id', 'doi', 'version', 'source', 'journal', 'title', 'abstract',
+      'authors', 'pub_date', 'journal_doi', 'published_journal_title',
+      'nb_figures', 'review_process', 'entities', 'assays',
+      'main_topics'
+    ]
 
 
 class FIG_BY_DOI_IDX(Query):
@@ -217,46 +237,54 @@ RETURN
     returns = ['id', 'papers']
 
 
-class BY_AUTO_TOPIC(Query):
+class BY_AUTO_TOPICS(Query):
 
     code = '''
 // Using precomputed Viz nodes
 MATCH
   (col:VizCollection {name: "by-auto-topics"})-[:HasSubCol]->(subcol:VizSubCollection),
-  (subcol)-[:HasPaper]->(paper:VizPaper),
-  (subcol)-[:HasEntity]->(entity_highlighted:VizEntity {category: "topic_highlight"}),
+  (subcol)-[subcol_rel_paper:HasPaper]->(paper:VizPaper),
+  (subcol)-[subcol_rel_entity:HasEntity]->(entity_highlighted:VizEntity {category: "topic_highlight"}),
   (paper)-[:HasEntity]->(paper_highlight:VizEntity {category: "paper_highlight"})
 WHERE DATETIME(paper.pub_date) > DATETIME($limit_date)
 WITH DISTINCT 
   subcol,
+  subcol_rel_paper,
   paper, 
-  topic_highlight,
-  COUNT(DISTINCT topic_highlight) AS N_highlight
+  subcol_rel_entity,
+  entity_highlighted,
   paper_highlight
 ORDER BY
-  N_highlight DESC,
+  subcol_rel_paper.overlap_size DESC,
+  subcol_rel_entity.highlight_score DESC,
   DATETIME(paper.pub_date) DESC
 WITH DISTINCT
   paper{.*, rank: ""} AS paper_j, // JSON serializable
-  entity_highlighted.name as entity_highlighted_name
-  subcol.name AS topics
- WITH DISTINCT
+  entity_highlighted.text as entity_highlighted_name,
+  subcol.name AS topics_name,
+  subcol.topics AS topics
+WITH DISTINCT
+  topics_name,
   topics,
-  COLLECT(entity_highlighted_name) AS entity_highlighted_names,
-  COLLECT(paper_j) AS paper_collection_j
+  COLLECT(DISTINCT entity_highlighted_name) AS entity_highlighted_names,
+  COLLECT(DISTINCT paper_j)[0..10] AS paper_collection_j,
+  COUNT(DISTINCT entity_highlighted_name) AS N_entities
 // assign an id to each subcollection of papers
+ORDER BY
+   N_entities DESC
 WITH
-  COLLECT({topics: topics_name, highlighted_entities: entity_highlighted_names, papers: paper_collection_j}) AS all
+  COLLECT({topics: topics, topics_name: topics_name, entity_highlighted_names: entity_highlighted_names, papers: paper_collection_j}) AS all,
   COUNT(DISTINCT paper_collection_j) AS N
 UNWIND range(0, N-1) AS i
 RETURN 
   i as id, 
-  all[i]['topics'] AS topics, 
-  all[i]['highlighted_entities'] AS highlighted_entities,
-  all[i]['papers'] AS papers
+  all[i].topics AS topics,
+  all[i].topics_name AS topics_name,
+  all[i].entity_highlighted_names AS entity_highlighted_names,
+  all[i].papers AS papers
     '''
     map = {'limit_date': []}
-    returns = ['id', 'topics', 'highlighted_entities', 'papers']
+    returns = ['id', 'topics', 'topics_name', 'entity_highlighted_names', 'papers']
 
 
 class AUTOMAGIC(Query):
@@ -264,21 +292,24 @@ class AUTOMAGIC(Query):
     code = '''
 // using precomputed Viz nodes
 MATCH
-  (col:VizCollection {name: "automagic"})-->(subcol:VizSubCollection {name: "covid19"})-->(paper:VizPaper),
-  (paper:VizPaper)-[:HasPaperRank]->(rank:VizPaperRank {context: "automagic"}),
+  (col:VizCollection {name: "automagic"})-->(subcol:VizSubCollection {name: "recent"})-[rel_to_paper:HasPaper {context: 'automagic'}]->(paper:VizPaper),
   (paper)-[:HasEntity]->(exp_assays:VizEntity {category: "assay"}),
   (paper)-[:HasEntity]->(biol_entities:VizEntity {category: "entity"})
 WHERE DATETIME(paper.pub_date) > DATETIME($limit_date)
 WITH DISTINCT
-  paper, rank.value AS automagic_rank,
-  COLLECT(DISTINCT {text: biol_entities.text}) AS exp_assays,
-  COLLECT(DISTINCT {text: exp_assays.text}) AS biol_entities
+  subcol, 
+  paper,
+  rel_to_paper.rank AS automagic_rank,
+  COLLECT(DISTINCT biol_entities.text) AS biol_entities,
+  COLLECT(DISTINCT exp_assays.text) AS exp_assays
 ORDER BY
-  automagic_rank ASC //rank is rank sum score
+  automagic_rank ASC,
+  DATETIME(paper.pub_date) DESC
+LIMIT 50
 WITH DISTINCT
-  paper{.*, rank: automagic_rank} AS paper_j, // JSON serializable
-  automagic_rank 
-RETURN "covid19" AS id, COLLECT(paper_j) AS papers
+  subcol,
+  paper{.*, rank: automagic_rank, exp_assays:exp_assays, biol_entities: biol_entities} AS paper_j // JSON serializable
+RETURN subcol.name AS id, COLLECT(paper_j) AS papers
     '''
     map = {'limit_date': []}
     returns = ['id', 'papers']
