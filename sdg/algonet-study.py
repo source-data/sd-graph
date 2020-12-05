@@ -186,7 +186,7 @@ WHERE
     AND h.n_panels >= $threshold
     AND (NOT source.concept_name IN split('.,-()abcdefg1234567890', ''))
     AND (NOT target.concept_name IN split('.,-()abcdefg1234567890', ''))
-    AND r.rank <= 5
+    // AND r.rank <= 5
 WITH DISTINCT 
     source, target,
     COLLECT(a.pub_date) AS aggregated_pub_dates,
@@ -314,6 +314,10 @@ def get_stats(q):
 def community_sub_graphs(g, funct):
     communities = funct(g)
     communities_sorted = sorted(communities, key=len, reverse=True)
+    # add community id to g
+    for communityId, community in enumerate(list(communities)):
+        for nodeId in community:
+            g.nodes[nodeId]['communityId'] = communityId
     return [g.subgraph(nbunch) for nbunch in communities_sorted]
 
 
@@ -374,6 +378,9 @@ def list_subgraph_central(
         centrality = funct(subg, **kwargs)
         # elminate nan values
         centrality = {k: v for k, v in centrality.items() if not isnan(v)}
+        # add centrality as attribute for viz
+        for nodeId in subg.nodes():
+            subg.nodes[nodeId]['centrality'] = centrality[nodeId]
         # normalize with -log(freq_in_panels)
         # centrality_normalized = centrality  # OrderedDict()
         # for nodeId, val in centrality.items():
@@ -664,7 +671,7 @@ def neo2nx(viz=False):
     # print("HYP SIGNIFICANCE")
     # print(nx.info(g_hyp_as_nodes))
     # general_highlihgts, community_highlights = automagic(g_hyp_as_nodes, community_funct, highlight_funct, stats, viz=viz)
-    return general_highlights, community_highlights
+    return general_highlights, community_highlights, g_entity_as_nodes
 
 
 def nx2neo(general_highlights, community_highlights):
@@ -688,9 +695,10 @@ def demo_viz():
 
 
 def main():
-    general_highlights, community_highlights = neo2nx(viz=False)
-    nx2neo(general_highlights, community_highlights)
-    name_hypothesis_community(limit_date='2020-11-01')
+    general_highlights, community_highlights, g = neo2nx(viz=False)
+    # nx.write_gml(g, './latest-graph/algonet.gml', stringizer=lambda x: str(x))
+    # nx2neo(general_highlights, community_highlights)
+    # name_hypothesis_community(limit_date='2020-11-01')
 
 
 if __name__ == "__main__":
