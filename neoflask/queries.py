@@ -246,7 +246,9 @@ MATCH
   (subcol)-[subcol_rel_paper:HasPaper]->(paper:VizPaper),
   (subcol)-[subcol_rel_entity:HasEntity]->(entity_highlighted:VizEntity {category: "topic_highlight"}),
   (paper)-[:HasEntity]->(paper_highlight:VizEntity {category: "paper_highlight"})
-WHERE DATETIME(paper.pub_date) > DATETIME($limit_date)
+WHERE
+  (DATETIME(paper.pub_date) > DATETIME($limit_date)) AND 
+  subcol_rel_paper.overlap_size >= 2
 WITH DISTINCT 
   subcol,
   subcol_rel_paper,
@@ -267,7 +269,7 @@ WITH DISTINCT
   topics_name,
   topics,
   COLLECT(DISTINCT entity_highlighted_name) AS entity_highlighted_names,
-  COLLECT(DISTINCT paper_j)[0..10] AS paper_collection_j,
+  COLLECT(DISTINCT paper_j) AS paper_collection_j,
   COUNT(DISTINCT entity_highlighted_name) AS N_entities
 // assign an id to each subcollection of papers
 ORDER BY
