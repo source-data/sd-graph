@@ -115,13 +115,13 @@ MATCH (col:SDCollection)-[:has_article]->(a:SDArticle {journalName: "biorxiv"})-
 WHERE
   //a.doi = "10.1101/2020.06.29.178129" AND  // for testing
   size(name.text) > 1  // exclude embarassing artefacts of the not so AI engine
-WITH
+WITH DISTINCT
   a, p, t, name
 // link to entity network
 MATCH
    (name)<-[:Has_text]-(bridge:H_Entity {category:"assay"})
 // find respective concept id
-WITH
+WITH DISTINCT
   a, p, name,
   COUNT(DISTINCT t) AS freq_in_this_paper,
   bridge.assay_concept_id AS concept_id,
@@ -173,19 +173,19 @@ ORDER BY freq_in_this_paper DESC
 WITH DISTINCT
   a,
   // find most frequently used term in paper for each concept name
-  COLLECT(DISTINCT name.text)[0] AS name_in_this_paper, 
+  COLLECT(DISTINCT name.text)[0] AS name_in_this_paper,
   COUNT(DISTINCT p) AS N_panels,
   // aggregate concepts with same name but different ids due to imperfect community detection
-  COLLECT(DISTINCT name.text) AS syn_in_this_paper, 
-  COLLECT(DISTINCT concept_id) AS all_concept_id, 
-  concept_name 
+  COLLECT(DISTINCT name.text) AS syn_in_this_paper,
+  COLLECT(DISTINCT concept_id) AS all_concept_id,
+  concept_name
 //cutoff to eliminate terms or concept that are only detected once
 WHERE N_panels >= 2
 // build viz graph
 MERGE (paper:VizPaper {doi: a.doi, pub_date: toString(DATETIME(a.pub_date))})
 MERGE (entity:VizEntity {text: name_in_this_paper, category: 'entity'})
 MERGE (paper)-[:HasEntity]->(entity)
-RETURN COUNT(DISTINCT entity) AS `linked geneprod for visualization`; 
+RETURN COUNT(DISTINCT entity) AS `linked geneprod for visualization`;
 
 
 // NON GENEPROD ENTITIES
@@ -266,11 +266,10 @@ WITH
   //preprint_list_of_lists,
   //size(preprint_list_of_lists) AS N
 UNWIND range(0, N-1) as i
-// multilpe preprints with same N_assayss can have the same rank (tie)
+// multilpe preprints with same N_assays can have the same rank (tie)
 //UNWIND preprint_list_of_lists[i] AS preprint
 WITH
   COLLECT({rank: i, preprint: preprint_list[i]}) AS ranked_by_assays
-
 // rank by entities
 MATCH (coll:SDCollection)-->(a:SDArticle {journalName:'biorxiv'})
 WHERE
@@ -370,7 +369,6 @@ WITH DISTINCT
 WITH DISTINCT
   ranked_by_assays, ranked_by_entities, ranked_by_topics,
   COLLECT(DISTINCT {rank: 0, preprint: [viza,  reviewers]}) AS ranked_by_peerreview
-
 //Sum of ranks for preprints present in both lists
 WITH
   ranked_by_assays + ranked_by_entities + ranked_by_topics + ranked_by_peerreview AS ranked_items,
