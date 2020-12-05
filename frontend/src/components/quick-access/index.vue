@@ -5,10 +5,10 @@
       v-tab(to="/refereed-preprints")
         v-icon(class="px-1") mdi-book-open-variant
         | Refereed Preprints
-      v-tab(to="/all/by-auto-topics")
+      v-tab(to="/all/auto-topics")
         v-icon(class="px-1") mdi-help-circle-outline
-        | COVID-19 hypotheses
-      v-tab(to="/covid19/automagic")
+        | By topics
+      v-tab(to="/all/automagic")
         v-icon(class="px-1") mdi-auto-fix
         | Automagic COVID-19 selection
       v-tab(to="/all/search")
@@ -16,9 +16,9 @@
         | Search preprints
       v-tab-item(value="/refereed-preprints")
         QuickAccessByReviewingService
-      v-tab-item(value="/all/by-auto-topics")
-        QuickAccessByAutoTopics(@change="onChangeByHyp")
-      v-tab-item(value="/covid19/automagic")
+      v-tab-item(value="/all/auto-topics")
+        QuickAccessByAutoTopics(@change="onChangeByAutoTopics")
+      v-tab-item(value="/all/automagic")
         QuickAccessByAutomagic
       v-tab-item(value="/all/search")
         QuickAccessSearchBar(@submit="onSubmitSearch")
@@ -27,11 +27,9 @@
 <script>
 import QuickAccessByReviewingService from './by-reviewing-service.vue'
 import QuickAccessByAutomagic from './by-automagic.vue'
-// import QuickAccessByMethod from './by-method.vue'
-// import QuickAccessByMol from './by-mol.vue'
 import QuickAccessByAutoTopics from './by-auto-topics.vue'
 import QuickAccessSearchBar from './search-bar.vue'
-import { REFEREED_PREPRINTS_TAB, BY_AUTO_TOPICS, COVID19_AUTOMAGIC_TAB, FULLTEXT_SEARCH } from '../../components/quick-access/tab-names'
+import { REFEREED_PREPRINTSB, AUTO_TOPICS, AUTOMAGIC, FULLTEXT_SEARCH } from '../../components/quick-access/tab-names'
 import { mapState } from 'vuex'
 
 export default {
@@ -53,15 +51,15 @@ export default {
         () => {this.$store.dispatch('highlights/listByCurrent', 'fulltextSearch')}
       )
     },
-    onChangeByHyp (selectedItemId) {
-      this.$store.commit('byAutoTopics/showRecord', { id: selectedItemId })
+    onChangeByAutoTopics (selectedItemIds) {
+      this.$store.commit('byAutoTopics/showRecords', { ids: selectedItemIds })
       this.$store.dispatch('highlights/listByCurrent', "byAutoTopics")
     },
   },
   computed: {
     ...mapState('highlights', ['loadingRecords']),
     tabs () {
-      return { REFEREED_PREPRINTS_TAB, BY_AUTO_TOPICS, COVID19_AUTOMAGIC_TAB, FULLTEXT_SEARCH }
+      return {REFEREED_PREPRINTSB, AUTO_TOPICS, AUTOMAGIC, FULLTEXT_SEARCH}
     }
   }
 }

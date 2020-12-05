@@ -23,7 +23,7 @@ export default {
     /* *************************************************************************
     * RECORDS
     */
-   addRecords (state, records) {
+    addRecords (state, records) {
       state.records = records
     },
     /* *************************************************************************
