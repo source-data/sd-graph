@@ -116,30 +116,28 @@ WHERE
   //a.doi = "10.1101/2020.06.29.178129" AND  // for testing
   size(name.text) > 1  // exclude embarassing artefacts of the not so AI engine
 WITH
-  a, t, name
+  a, p, t, name
 // link to entity network
 MATCH
    (name)<-[:Has_text]-(bridge:H_Entity {category:"assay"})
 // find respective concept id
 WITH
-  a,
-  name,
+  a, p, name,
   COUNT(DISTINCT t) AS freq_in_this_paper,
   bridge.assay_concept_id AS concept_id,
   bridge.assay_concept_name AS concept_name
-WITH a, name, freq_in_this_paper, concept_id, concept_name
+WITH a, p, name, freq_in_this_paper, concept_id, concept_name
 ORDER BY freq_in_this_paper DESC
-// find most frequently used term in paper for each concept
 WITH DISTINCT
-// aggregate concepts with same name but different ids due to imperfect community detection
-// RETURN  DISTINCT // for testing
+  // find most frequently used term in paper for each concept
   a, COLLECT(DISTINCT name.text)[0] AS name_in_this_paper, 
-  SUM(freq_in_this_paper) AS aggregated_freq, 
+  COUNT(DISTINCT p) AS N_panels,
+  // aggregate concepts with same name but different ids due to imperfect community detection
   COLLECT(DISTINCT name.text) AS syn_in_this_paper, 
   COLLECT(DISTINCT concept_id) AS all_concept_id, 
   concept_name 
-//cutoff to eliminate terms that map to a single concept and are only detected once
-WHERE aggregated_freq >= 5
+//cutoff to eliminate terms or concept that are only detected once
+WHERE N_panels >= 2
 // build viz graph
 MERGE (paper:VizPaper {doi: a.doi, pub_date: toString(DATETIME(a.pub_date))})
 MERGE (entity:VizEntity {text: name_in_this_paper, category: 'assay'})
@@ -155,9 +153,9 @@ WHERE
   // a.doi = "10.1101/2020.06.29.178129" AND  // for testing
   entity.category = 'entity' AND
   (entity.type = "gene" OR entity.type = "protein" OR entity.type = "geneprod") AND
-  size(name.text) > 1 OR toLower(name.text) = "s"  // exclude embarassing artefacts of the not so AI engine but keep spike S SARS protein
-WITH
-  a, t, name, entity
+  (size(name.text) > 1 OR name.text = "s" )  // exclude embarassing artefacts of the not so AI engine but keep spike S SARS protein
+WITH DISTINCT
+  a, p, t, name, entity
 // link to entity network
 MATCH
   (name)<-[:Has_text]-(bridge:H_Entity {category:"entity"})
@@ -165,30 +163,29 @@ WHERE
   // geneprod as protein or genes
   bridge.type = "gene" OR bridge.type = "protein" OR bridge.type = "geneprod" 
 // find respective concept id
-WITH
-  a,
-  name,
+WITH DISTINCT
+  a, p, name,
   COUNT(DISTINCT t) AS freq_in_this_paper,
   bridge.geneprod_concept_id AS concept_id,
   bridge.geneprod_concept_name AS concept_name
-WITH a, name, freq_in_this_paper, concept_id, concept_name
+WITH a, p, name, freq_in_this_paper, concept_id, concept_name
 ORDER BY freq_in_this_paper DESC
-// find most frequently used term in paper for each concept
 WITH DISTINCT
-// aggregate concepts with same name but different ids due to imperfect community detection
-  a, COLLECT(DISTINCT name.text)[0] AS name_in_this_paper, 
-  SUM(freq_in_this_paper) AS aggregated_freq, 
+  a,
+  // find most frequently used term in paper for each concept name
+  COLLECT(DISTINCT name.text)[0] AS name_in_this_paper, 
+  COUNT(DISTINCT p) AS N_panels,
+  // aggregate concepts with same name but different ids due to imperfect community detection
   COLLECT(DISTINCT name.text) AS syn_in_this_paper, 
   COLLECT(DISTINCT concept_id) AS all_concept_id, 
   concept_name 
-//cutoff to eliminate terms that map to a single concept and are only detected once
-WHERE aggregated_freq >= 5
+//cutoff to eliminate terms or concept that are only detected once
+WHERE N_panels >= 2
 // build viz graph
 MERGE (paper:VizPaper {doi: a.doi, pub_date: toString(DATETIME(a.pub_date))})
 MERGE (entity:VizEntity {text: name_in_this_paper, category: 'entity'})
 MERGE (paper)-[:HasEntity]->(entity)
 RETURN COUNT(DISTINCT entity) AS `linked geneprod for visualization`; 
-
 
 
 // NON GENEPROD ENTITIES
@@ -245,7 +242,7 @@ WHERE
   DATETIME(a.pub_date) > (DATETIME() - duration({months: 3}))
 WITH
   a.doi AS doi
-// IMPORTANT: when ties, preprint will still be ordered by pub date...  
+// IMPORTANT: when in a tie, preprints will still be ordered by pub date
 ORDER BY DATETIME(a.pub_date) DESC
 MATCH 
   (viza:VizPaper {doi: doi})-[:HasEntity]->(assay:VizEntity {category: 'assay'})
