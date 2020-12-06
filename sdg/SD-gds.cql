@@ -1,4 +1,3 @@
-
 // ASSAY QUASI SYNONYMS
 // H_Entity - Term - H_Entity network for quasi-synonyms
 MATCH
@@ -48,8 +47,8 @@ MATCH
   (entity_1:H_Entity)-[:Has_text]->(bridge:Term)<-[:Has_text]-(entity_2:H_Entity)
 WHERE
   id(entity_1) > id(entity_2) AND
-  (entity_1.type = "gene" OR entity_1.type='protein' OR entity_1.type='geneprod') AND 
-  (entity_2.type = "gene" OR entity_2.type='protein' OR entity_2.type='geneprod')
+  entity_1.type IN ["gene", 'protein', 'geneprod'] AND 
+  entity_2.type IN ["gene", 'protein', 'geneprod']
   // TODO: and usage of this term compared to all terms for this entity is > 10%
 MERGE
   (entity_1)-[r:related_geneprod]-(entity_2)
@@ -63,13 +62,13 @@ CALL gds.louvain.stream(
   {
     nodeQuery: 
       'MATCH (h:H_Entity)
-       WHERE (h.type = "gene" OR h.type="protein" OR h.type="geneprod")
+       WHERE (h.type IN ["gene", "protein", "geneprod"]
        RETURN id(h) AS id',
     relationshipQuery: 
     'MATCH (h1:H_Entity)-[:related_geneprod]-(h2:H_Entity)
     WHERE
-      (h1.type = "gene" OR h1.type="protein" OR h1.type="geneprod") AND 
-      (h2.type = "gene" OR h2.type="protein" OR h2.type="geneprod")
+      h1.type IN ["gene", "protein", "geneprod"] AND 
+      h2.type IN ["gene", "protein", "geneprod"]
     RETURN id(h1) AS source, id(h2) AS target',
     includeIntermediateCommunities: True
   }
@@ -86,7 +85,7 @@ RETURN COUNT(DISTINCT subcommunityId) AS `geneprod communities`;
 // adding concept geneprod name
 MATCH (entity:H_Entity) SET entity.geneprod_concept_name = NULL;
 MATCH (entity:H_Entity)-[:Has_text]->(term:Term)
-WHERE (entity.type = "gene" OR entity.type='protein' OR entity.type='geneprod')
+WHERE (entity.type IN ["gene" , 'protein', 'geneprod']
 WITH entity, term
 ORDER BY term.freq_in_panel  DESC
 WITH
@@ -95,7 +94,7 @@ WITH
   COLLECT(DISTINCT entity) AS cluster
 UNWIND cluster AS entity
 SET entity.geneprod_concept_name = most_popular_term.text //, entity.geneprod_concept_ext_ids = 
-RETURN DISTINCT 
+RETURN DISTINCT
   COUNT(DISTINCT entity.geneprod_concept_name) AS `named clusters of geneprod related concepts`;
 
 
@@ -104,9 +103,9 @@ MATCH
   (art:SDArticle)-->(f1:SDFigure)-->(p1:SDPanel)-->(i1:CondTag)-[h1:H]->(a1:CondTag)<--(p1),
   (i1)-->(ih:H_Entity), (a1)-->(ah:H_Entity)
 // RETURN art,ih,ah,COLLECT(f1),COLLECT(p1),COLLECT(i1),COLLECT(a1),COUNT(DISTINCT p1) AS N_p,COUNT(DISTINCT f1) AS N_f ORDER BY N_p DESC LIMIT 1
-WITH art,ih,ah, COUNT(DISTINCT(p1)) AS N_p, COUNT(DISTINCT(f1)) AS N_f
-  MERGE (ih)-[:Is_Intervention_of]->(h:Hypothesis)-[:Has_Assayed]->(ah)
-  MERGE (art)-[:HasH {n_panels:N_p, n_figures:N_f}]->(h)
+WITH art, ih, ah, COUNT(DISTINCT(p1)) AS N_p, COUNT(DISTINCT(f1)) AS N_f
+MERGE (ih)-[:Is_Intervention_of]->(h:Hypothesis)-[:Has_Assayed]->(ah)
+MERGE (art)-[:HasH {n_panels: N_p, n_figures: N_f}]->(h)
 RETURN COUNT(DISTINCT h) AS `hypotheses at paper level`;
 
 
@@ -163,40 +162,40 @@ RETURN DISTINCT "added weights to hypotheses nodes";
 
 
 // hypothesis-as-node network
-MATCH
-  (up:H_Entity)-[:Is_Intervention_of]->(h1:Hypothesis)-[:Has_Assayed]->(ah:H_Entity)-[:Is_Intervention_of]->(h2:Hypothesis)-[:Has_Assayed]->(do:H_Entity)
-WHERE
-  (NOT up.boring) AND (NOT ah.boring) AND (NOT do.boring) AND
-  h1.n_panels > 2 AND h2.n_panels > 2
-MERGE (h1)-[chain:hyp_chain]->(h2)
-RETURN COUNT(DISTINCT chain) AS `hypothesis chains`;
+// MATCH
+//   (up:H_Entity)-[:Is_Intervention_of]->(h1:Hypothesis)-[:Has_Assayed]->(ah:H_Entity)-[:Is_Intervention_of]->(h2:Hypothesis)-[:Has_Assayed]->(do:H_Entity)
+// WHERE
+//   (NOT up.boring) AND (NOT ah.boring) AND (NOT do.boring) AND
+//   h1.n_panels > 2 AND h2.n_panels > 2
+// MERGE (h1)-[chain:hyp_chain]->(h2)
+// RETURN COUNT(DISTINCT chain) AS `hypothesis chains`;
 
 
 // concept-as-node network
-MATCH (co:Concept {type: "geneproduct"}) DETACH DELETE co;
-MATCH
-  (up:H_Entity)-[:Is_Intervention_of]->(h:Hypothesis)-[:Has_Assayed]->(do:H_Entity)
-WHERE
-  (NOT up.boring) AND 
-  (NOT do.boring) AND
-  h.n_panels > 2 AND
-  EXISTS(up.geneprod_concept_id) AND 
-  EXISTS(up.geneprod_concept_id) AND
-  up.geneprod_concept_id <> do.geneprod_concept_id
-WITH DISTINCT
-  up.geneprod_concept_id AS up_concept_id,
-  up.geneprod_concept_name AS up_concept_name,
-  do.geneprod_concept_id AS do_concept_id,
-  do.geneprod_concept_name AS do_concept_name,
-  SUM(h.n_panels) AS sum_n_panels,
-  COLLECT(DISTINCT h) AS hypotheses
-MERGE (co_up:Concept {type: "geneproduct", concept_id: up_concept_id, concept_name: up_concept_name})
-MERGE (co_do:Concept {type: "geneproduct", concept_id: do_concept_id, concept_name: do_concept_name})
-MERGE (co_up)-[r:concept_test {sum_n_panels: sum_n_panels}]->(co_do)
-WITH DISTINCT co_up, co_do, hypotheses, r
-UNWIND hypotheses AS h
-MERGE (co_up)-[:intervention_concept]->(h)-[:assay_concept]->(co_do)
-RETURN COUNT(DISTINCT r) AS `concept-to-concept relationships`;
+// MATCH (co:Concept {type: "geneproduct"}) DETACH DELETE co;
+// MATCH
+//   (up:H_Entity)-[:Is_Intervention_of]->(h:Hypothesis)-[:Has_Assayed]->(do:H_Entity)
+// WHERE
+//   (NOT up.boring) AND 
+//   (NOT do.boring) AND
+//   h.n_panels > 2 AND
+//   EXISTS(up.geneprod_concept_id) AND 
+//   EXISTS(up.geneprod_concept_id) AND
+//   up.geneprod_concept_id <> do.geneprod_concept_id
+// WITH DISTINCT
+//   up.geneprod_concept_id AS up_concept_id,
+//   up.geneprod_concept_name AS up_concept_name,
+//   do.geneprod_concept_id AS do_concept_id,
+//   do.geneprod_concept_name AS do_concept_name,
+//   SUM(h.n_panels) AS sum_n_panels,
+//   COLLECT(DISTINCT h) AS hypotheses
+// MERGE (co_up:Concept {type: "geneproduct", concept_id: up_concept_id, concept_name: up_concept_name})
+// MERGE (co_do:Concept {type: "geneproduct", concept_id: do_concept_id, concept_name: do_concept_name})
+// MERGE (co_up)-[r:concept_test {sum_n_panels: sum_n_panels}]->(co_do)
+// WITH DISTINCT co_up, co_do, hypotheses, r
+// UNWIND hypotheses AS h
+// MERGE (co_up)-[:intervention_concept]->(h)-[:assay_concept]->(co_do)
+// RETURN COUNT(DISTINCT r) AS `concept-to-concept relationships`;
 
 
 // for each paper, rank dominant hypotheses

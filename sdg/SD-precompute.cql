@@ -2,7 +2,7 @@
 
 RETURN "purging viz graph" as `preparation step`;
 // PURGE PRECOMPUTED
-
+:begin
 MATCH (n:VizCollection) DETACH DELETE n;
 MATCH (n:VizSubCollection) DETACH DELETE n;
 MATCH (n:VizPaper) DETACH DELETE n;
@@ -11,62 +11,54 @@ MATCH (n:VizEntity) DETACH DELETE n;
 MATCH (n:VizReviewDate) DETACH DELETE n;
 MATCH (n:VizPaperRank) DETACH DELETE n;
 RETURN "purge" as `completed`;
+:commit
+
+// VizPaper for biorxiv preprints
+:begin
+MATCH (a:SDArticle)
+WHERE a.journalName = 'biorxiv'
+MERGE (preprint:VizPaper {doi: a.doi, pub_date: toString(DATETIME(a.pub_date))})
+RETURN COUNT(preprint) AS `biorxiv preprints vizPapers`;
+:commit
 
 // BY REVIEWING SERVICE
-
+:begin
 UNWIND [{name: 'review commons', rank: 0}, {name: 'peerage of science', rank: 1}, {name: 'embo press', rank: 2}, {name: 'elife', rank:3}] AS reviewing
 MATCH (a:Article)
 OPTIONAL MATCH (a)-[r:HasReview]->(review:Review {reviewed_by: reviewing.name})
 OPTIONAL MATCH (a)-[:HasAnnot]->(annot:PeerReviewMaterial {reviewed_by: reviewing.name})
 WITH DISTINCT
-    reviewing, a, review, annot
+    reviewing, a.doi AS doi, review, annot
 WHERE 
-    EXISTS(review.text) OR EXISTS(annot.text)
-WITH DISTINCT reviewing, a, review, annot, a.version AS version
-ORDER BY version DESC
-// keep only the most recent version of the article
-WITH DISTINCT reviewing, COLLECT(DISTINCT a)[0] AS most_recent, review, annot
-// get the figures
-MATCH (most_recent)-->(f:Fig) // even prelim entries from source: "biorxiv_crossref" have empty figures instead of NULL
-// eliminate figures without a caption such as graphical abstracts etc
-WHERE EXISTS(f.caption) AND EXISTS(f.label)
-//identify the most recent peer review date from review or from peer review material
-WITH DISTINCT
-    reviewing, most_recent, f,
-    COLLECT(DISTINCT toString(DATETIME(review.posting_date))) + COLLECT(DISTINCT toString(DATETIME(annot.posting_date))) AS peer_review_dates
+    EXISTS(review.reviewed_by) OR EXISTS(annot.reviewed_by)
+WITH DISTINCT 
+  reviewing, doi, 
+  COLLECT(DISTINCT DATETIME(review.posting_date)) + COLLECT(DISTINCT DATETIME(annot.posting_date)) AS peer_review_dates
 UNWIND peer_review_dates AS peer_review_date
 // remove duplicate and sort to hvae most recent peer review date first
 WITH DISTINCT
-    reviewing, most_recent, f, peer_review_date
+    reviewing, doi, peer_review_date
 ORDER BY peer_review_date DESC
 // keep most recent peer review date
 WITH DISTINCT
-    reviewing, most_recent, f, COLLECT(DISTINCT peer_review_date)[0] AS review_date
-// retrieve now the actual peer reviews
-OPTIONAL MATCH (most_recent)-[:HasReview]->(review:Review {reviewed_by: reviewing.name})
-OPTIONAL MATCH (most_recent)-[:HasAnnot]->(annot:PeerReviewMaterial {reviewed_by: reviewing.name})
-WITH DISTINCT
-    reviewing, review_date, most_recent.doi AS doi, most_recent.publication_date AS pub_date, 
-    f.label AS fig_label, f.caption AS caption, f.position_idx AS position_idx
+    reviewing, doi, COLLECT(DISTINCT peer_review_date)[0] AS earliest_review_date
+MATCH
+  (paper:VizPaper {doi: doi})
+WITH
+  reviewing, doi, paper, paper.pub_date AS pub_date, earliest_review_date
 ORDER BY
-    reviewing.rank ASC, pub_date DESC, position_idx ASC
-// TODO: replace id: reviewing.name and query by a VizCollection and VizSubCollection?
+    reviewing.rank ASC, pub_date DESC
 MERGE (col:VizCollection {name: "refereed-preprints"})
 MERGE (subcol:VizSubCollection {name: reviewing.name})
-// VizPaper needs all field required for sorting, filtering and ranking
-MERGE (paper:VizPaper {doi: doi, pub_date: pub_date})
-MERGE (revdate:VizReviewDate {date: review_date})
+MERGE (revdate:VizReviewDate {date: earliest_review_date})
 MERGE (paper)-[:HasReviewDate]->(revdate)
 MERGE (col)-[:HasSubCol]->(subcol)
 MERGE (subcol)-[:HasPaper]->(paper)
-MERGE (info:VizInfo {doi: doi, title: fig_label, text: caption, rank: position_idx, id: position_idx, info_type: "fig-caption"}) // MERGE cannot be used if properties are NULL; this is why prelim entries are linked to empty figs
-MERGE (paper)-[:HasInfo]->(info)
-// SHOULD THE REVIEWS BE INCLUDED AS VizReview ?
-//RETURN paper, info;
 RETURN COUNT(DISTINCT paper) AS `papers in the by reviewing service`;
-
+:commit
 
 // AUTO TOPICS HIGHLIGHTS
+:begin
 MATCH
   (topics_collection:SDAutoTopics)-->(highlighted:H_Entity)
 WITH
@@ -77,116 +69,130 @@ MATCH
 WITH DISTINCT
   topics_collection,
   highlighted_entities,
-  a,
+  a.doi AS doi,
   COLLECT(DISTINCT entity) AS article_entities,
   COUNT(DISTINCT entity) AS N_entities
 WITH 
   topics_collection,
   apoc.text.join(topics_collection.topics, ', ') AS topics_name,
-  a,
+  doi,
   highlighted_entities,
-  apoc.coll.intersection(highlighted_entities, article_entities) AS overlapping_highlights,
-  N_entities
+  apoc.coll.intersection(highlighted_entities, article_entities) AS overlapping_highlights
 WITH
   topics_collection,
   topics_name,
-  a,
+  doi,
   highlighted_entities,
   overlapping_highlights,
-  toFloat(size(overlapping_highlights)) / N_entities AS enrichment,
   size(overlapping_highlights) AS N_overlap
+MATCH
+  (paper:VizPaper {doi: doi})
+WITH
+  topics_collection,
+  topics_name,
+  paper,
+  highlighted_entities,
+  overlapping_highlights,
+  N_overlap
 UNWIND highlighted_entities AS highlighted_entity
 UNWIND overlapping_highlights as overlapping_highlight
 MERGE (col:VizCollection {name: "by-auto-topics"})
 MERGE (subcol:VizSubCollection {topics: topics_collection.topics, name: topics_name})
-MERGE (paper:VizPaper {doi: a.doi, pub_date: toString(DATETIME(a.pub_date))})  //similar VizPaper created by automagic or refereed preprints
 MERGE (col)-[:HasSubCol]->(subcol)
-MERGE (subcol)-[:HasPaper {enrichment: enrichment, overlap_size: N_overlap}]->(paper)
+MERGE (subcol)-[:HasPaper {overlap_size: N_overlap}]->(paper)
 MERGE (highlight:VizEntity {text: highlighted_entity.name, category: 'topic_highlight'})
 MERGE (subcol)-[:HasEntity {highlight_score: highlighted_entity.community_centrality}]->(highlight)
 MERGE (overlap:VizEntity {text: overlapping_highlight.name, category: 'paper_highlight'})
 MERGE (paper)-[:HasEntity]->(overlap)
 RETURN COUNT(DISTINCT paper) AS `papers in the auto topics set`;
-
+:commit
 
 // LINK EXP ASSAYS
-MATCH (col:SDCollection)-[:has_article]->(a:SDArticle {journalName: "biorxiv"})-[:has_fig]->(f:SDFigure),
-(f)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity {category: "assay"})-[:Has_text]->(name:Term)
+:begin
+MATCH
+  (a:SDArticle)-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity)-[:Has_text]->(name:Term)
 WHERE
+  a.journalName = "biorxiv" AND
   //a.doi = "10.1101/2020.06.29.178129" AND  // for testing
+  entity.category = "assay" AND
+  t.category = "assay" AND
   size(name.text) > 1  // exclude embarassing artefacts of the not so AI engine
-WITH DISTINCT
-  a, p, t, name
+WITH
+  // keep only necessary fields and ndoe ids to minimze memory requirements
+  a.doi AS doi, id(p) AS panel_id, id(t) AS t_id, name
 // link to entity network
 MATCH
-   (name)<-[:Has_text]-(bridge:H_Entity {category:"assay"})
+   (name)<-[:Has_text]-(bridge:H_Entity)
+WHERE
+  bridge.category = "assay"
 // find respective concept id
-WITH DISTINCT
-  a, p, name,
-  COUNT(DISTINCT t) AS freq_in_this_paper,
-  bridge.assay_concept_id AS concept_id,
+WITH
+  doi, panel_id, name,
+  COUNT(DISTINCT t_id) AS freq_in_this_paper,
   bridge.assay_concept_name AS concept_name
-WITH a, p, name, freq_in_this_paper, concept_id, concept_name
 ORDER BY freq_in_this_paper DESC
 WITH DISTINCT
   // find most frequently used term in paper for each concept
-  a, COLLECT(DISTINCT name.text)[0] AS name_in_this_paper, 
-  COUNT(DISTINCT p) AS N_panels,
+  doi, 
+  COLLECT(DISTINCT name.text)[0] AS name_in_this_paper, 
+  COUNT(DISTINCT panel_id) AS N_panels,
   // aggregate concepts with same name but different ids due to imperfect community detection
-  COLLECT(DISTINCT name.text) AS syn_in_this_paper, 
-  COLLECT(DISTINCT concept_id) AS all_concept_id, 
   concept_name 
 //cutoff to eliminate terms or concept that are only detected once
 WHERE N_panels >= 2
 // build viz graph
-MERGE (paper:VizPaper {doi: a.doi, pub_date: toString(DATETIME(a.pub_date))})
+MATCH
+  (paper:VizPaper {doi: doi})
+WITH
+  paper, name_in_this_paper
 MERGE (entity:VizEntity {text: name_in_this_paper, category: 'assay'})
 MERGE (paper)-[:HasEntity]->(entity)
 RETURN COUNT(DISTINCT entity) AS `linked assays for visualization`; 
-
+:commit
 
 // LINK GENEPROD
-MATCH
-  (col:SDCollection)-[:has_article]->(a:SDArticle {journalName: "biorxiv"})-[:has_fig]->(f:SDFigure),
-  (f)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity)-[:Has_text]->(name:Term)
+:begin
+MATCH 
+  (a:SDArticle)-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity)-[:Has_text]->(name:Term)
 WHERE
+  a.journalName = "biorxiv" AND
   // a.doi = "10.1101/2020.06.29.178129" AND  // for testing
-  entity.category = 'entity' AND
-  (entity.type = "gene" OR entity.type = "protein" OR entity.type = "geneprod") AND
+  entity.type IN ["gene", "protein", "geneprod"] AND
+  t.type IN ["gene", "protein", "geneprod"]
+WITH
+  // keep only necessary fields and ndoe ids to minimze memory requirements
+  a.doi AS doi, id(p) AS panel_id, id(t) AS t_id, name, entity
+WHERE
   (size(name.text) > 1 OR name.text = "s" )  // exclude embarassing artefacts of the not so AI engine but keep spike S SARS protein
-WITH DISTINCT
-  a, p, t, name, entity
 // link to entity network
 MATCH
-  (name)<-[:Has_text]-(bridge:H_Entity {category:"entity"})
+  (name)<-[:Has_text]-(bridge:H_Entity)
 WHERE
-  // geneprod as protein or genes
-  bridge.type = "gene" OR bridge.type = "protein" OR bridge.type = "geneprod" 
+  // geneprod or  protein or genes
+  bridge.type IN ["gene", "protein", "geneprod"]
 // find respective concept id
-WITH DISTINCT
-  a, p, name,
-  COUNT(DISTINCT t) AS freq_in_this_paper,
-  bridge.geneprod_concept_id AS concept_id,
+WITH
+  doi, panel_id, name,
+  COUNT(DISTINCT t_id) AS freq_in_this_paper,
   bridge.geneprod_concept_name AS concept_name
-WITH a, p, name, freq_in_this_paper, concept_id, concept_name
 ORDER BY freq_in_this_paper DESC
-WITH DISTINCT
-  a,
+WITH
+  doi,
   // find most frequently used term in paper for each concept name
   COLLECT(DISTINCT name.text)[0] AS name_in_this_paper,
-  COUNT(DISTINCT p) AS N_panels,
-  // aggregate concepts with same name but different ids due to imperfect community detection
-  COLLECT(DISTINCT name.text) AS syn_in_this_paper,
-  COLLECT(DISTINCT concept_id) AS all_concept_id,
+  COUNT(DISTINCT panel_id) AS N_panels,
   concept_name
 //cutoff to eliminate terms or concept that are only detected once
 WHERE N_panels >= 2
 // build viz graph
-MERGE (paper:VizPaper {doi: a.doi, pub_date: toString(DATETIME(a.pub_date))})
+MATCH
+  (paper:VizPaper {doi: doi})
+WITH
+  paper, name_in_this_paper
 MERGE (entity:VizEntity {text: name_in_this_paper, category: 'entity'})
 MERGE (paper)-[:HasEntity]->(entity)
 RETURN COUNT(DISTINCT entity) AS `linked geneprod for visualization`;
-
+:commit
 
 // NON GENEPROD ENTITIES
 // MATCH (col:SDCollection)-[:has_article]->(a:SDArticle {journalName: "biorxiv"})-[:has_fig]->(f:SDFigure),
@@ -236,6 +242,7 @@ RETURN COUNT(DISTINCT entity) AS `linked geneprod for visualization`;
 // AUTOMAGIC
 // sum of ranks for recent papers
 // rank by assay
+:begin
 MATCH (coll:SDCollection)-->(a:SDArticle {journalName:'biorxiv'})
 // recent papers
 WHERE
@@ -397,3 +404,4 @@ MERGE (recent:VizSubCollection {name: 'recent'})
 MERGE (automagic)-[:HasSubCol]->(recent)
 MERGE (recent)-[:HasPaper {rank: rank_sum, context: 'automagic'}]->(preprint)
 RETURN COUNT(DISTINCT preprint) AS `papers in the automagic set`;
+:commit

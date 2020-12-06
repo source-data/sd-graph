@@ -1,7 +1,8 @@
 //indices and constraints
 //create
 CREATE INDEX sdarticle_doi IF NOT EXISTS FOR (n:SDArticle) ON (n.doi);
-CREATE INDEX sdtga_text IF NOT EXISTS FOR (n:SDTag) ON (n.text);
+CREATE INDEX sdarticle_journalname IF NOT EXISTS FOR (n:SDArticle) ON (n.journalName);
+CREATE INDEX sdtag_text IF NOT EXISTS FOR (n:SDTag) ON (n.text);
 CREATE INDEX sdtag_ext_ids IF NOT EXISTS FOR (n:SDTag) ON (n.ext_ids);
 CREATE INDEX sdtag_type IF NOT EXISTS FOR (n:SDTag) ON (n.type);
 CREATE INDEX sdtag_role IF NOT EXISTS FOR (n:SDTag) ON (n.role);
@@ -10,11 +11,19 @@ CREATE INDEX sdtag_norm_text IF NOT EXISTS FOR (n:SDTag) ON (n.norm_text);
 CREATE INDEX condtag_ext_ids IF NOT EXISTS FOR (n:CondTag) ON (n.ext_ids);
 CREATE INDEX condtag_text IF NOT EXISTS FOR (n:CondTag) ON (n.text);
 CREATE INDEX condtag_ext_tax_names IF NOT EXISTS FOR (n:CondTag) ON (n.ext_tax_names);
-CREATE INDEX h_entity_ext_ids IF NOT EXISTS FOR (n:H_Entity) ON (n.ext_ids);
-CREATE INDEX h_entity_typ IF NOT EXISTS FOR (n:H_Entity) ON (n.type);
 CREATE INDEX condtag_category IF NOT EXISTS FOR (n:CondTag) ON (n.category);
 CREATE INDEX condtag_name IF NOT EXISTS FOR (n:CondTag) ON (n.name);
+CREATE INDEX h_entity_ext_ids IF NOT EXISTS FOR (n:H_Entity) ON (n.ext_ids);
+CREATE INDEX h_entity_type IF NOT EXISTS FOR (n:H_Entity) ON (n.type);
+CREATE INDEX h_category IF NOT EXISTS FOR (n:H_Entity) ON (n.category);
+CREATE INDEX h_entity_assay_concept_id IF NOT EXISTS FOR (h:H_Entity) ON (h.geneprod_concept_id);
+CREATE INDEX h_entity_assay_concept_name IF NOT EXISTS FOR (h:H_Entity) ON (h.assay_concept_name);
+CREATE INDEX h_entity_geneprod_concept_id IF NOT EXISTS FOR (h:H_Entity) ON (h.assay_concept_id);
+CREATE INDEX h_entity_geneprod_concept_name IF NOT EXISTS FOR (h:H_Entity) ON (h.geneprod_concept_name);
+CREATE INDEX review_reviewed_by IF NOT EXISTS FOR (n:Review) ON (n.reviewed_by);
+CREATE INDEX peer_review_material_reviewed_by IF NOT EXISTS FOR (n:PeerReviewMaterial) ON (n.reviewed_by);
 CREATE INDEX vizpaper_doi IF NOT EXISTS FOR (n:VizPaper) ON (n.doi);
+CREATE INDEX vizentity_text_category IF NOT EXISTS FOR (n:VizEntity) ON (n.text, n.category);
 
 
 //Full text indexing
