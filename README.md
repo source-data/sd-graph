@@ -41,6 +41,7 @@ docker-compose run --rm flask python -m sdg.sdneo refereed-preprints --api eebap
 cat sdg/SD-processing.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>  # generate merged graph
 cat sdg/SD-precompute.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>  # precompute the graph used by front end
 docker-compose run --rm flask python -m twitter.update --limit-date 2020-07-01  # --GO_LIVE  to go live with Twitter updates
+cat sdg/audit.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>
 # visit http:/localhost:8080
 ```
 

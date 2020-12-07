@@ -45,7 +45,7 @@
                 p {{ review.highlight }}
                 b Click on tab to read full review.
             div(v-else)
-              span.peer_review_material
+              span
                 v-icon(small class="px-1" color="indigo lighten-3") mdi-text-box-check-outline
                 |   Reviewed by
                 |
@@ -154,23 +154,24 @@ export default {
     },
     info () {
       return this.article.info
-        // .panel_ids.map((panel_id) => {
-        //   return {
-        //     id: panel_id,
-        //     img_url: `https://api.sourcedata.io//file.php?panel_id=${panel_id}`,
-        //     url: `https://search.sourcedata.io/panel/${panel_id}`,
-        //   }
-        // })
     },
   },
 }
 </script>
 
 <style scoped>
-  .scroll {
-    max-height: 500px;
-    overflow: auto;
+
+
+  .md-content {
+    font-family:'Courier New', Courier, monospace;
+    font-size: 14px;
+    max-height:800px;
+    overflow: scroll;
   }
+  .md-content img {
+    max-height: 60px;
+  }
+
   .fig-img {
     max-width: 300px;
     max-height: 300px;

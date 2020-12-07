@@ -2,16 +2,14 @@
 
 RETURN "purging viz graph" as `preparation step`;
 // PURGE PRECOMPUTED
-MATCH (n:VizCollection)-[r]-() DELETE r;
-MATCH (n:VizSubCollection)-[r]-() DELETE r;
-MATCH (n:VizPaper)-[r]-() DELETE r;
-MATCH (n:VizInfo)-[r]-() DELETE r;
-MATCH (n:VizEntity)-[r]-() DELETE r;
-MATCH (n:VizCollection) DELETE n;
-MATCH (n:VizSubCollection) DELETE n;
-MATCH (n:VizPaper) DELETE n;
-MATCH (n:VizInfo) DELETE n;
-MATCH (n:VizEntity) DELETE n;
+
+MATCH (n:VizCollection) DETACH DELETE n;
+MATCH (n:VizSubCollection) DETACH DELETE n;
+MATCH (n:VizPaper) DETACH DELETE n;
+MATCH (n:VizInfo) DETACH DELETE n;
+MATCH (n:VizEntity) DETACH DELETE n;
+MATCH (n:VizReviewDate) DETACH DELETE n;
+MATCH (n:VizPaperRank) DETACH DELETE n;
 RETURN "purge" as `completed`;
 
 // BY REVIEWING SERVICE
