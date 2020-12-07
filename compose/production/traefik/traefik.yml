@@ -53,6 +53,14 @@ http:
           #    - csrf
           #  service: flask
 
+    sourcedata-to-embo:
+      rule: "Host(`eeb.sourcedata.io`)"
+      entryPoints:
+        - web
+        - web-secure
+      middlewares:
+        - redirect-to-embo
+      service: noop@internal
     vuejs-router:
       rule: "Host(`0.0.0.0`) || Host(`eeb.embo.org`) || Host(`eeb-dev.embo.org`) "
       # priority: 1
@@ -87,7 +95,15 @@ http:
         certResolver: letsencrypt
 
 
+    # traefik-dashboard:
+    #   rule: "Host(`eeb.embo.org`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
+    #   service: api@internal
   middlewares:
+    redirect-to-embo:
+      redirectRegex:
+        regex: "https?://eeb.sourcedata.io/(.*)"
+        replacement: "http://eeb.embo.org/${1}"
+        # permanent: true
     redirect:
       # https://docs.traefik.io/master/middlewares/redirectscheme/
       redirectScheme:
@@ -126,8 +142,9 @@ providers:
   file:
     filename: /etc/traefik/traefik.yml
     watch: true
-#api:
+# api:
 #  insecure: true # for web UI debugging
 #  debug: true
+#  dashboard: true
 #log:
 #  level: DEBUG
