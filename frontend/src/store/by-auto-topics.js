@@ -18,35 +18,21 @@ export default {
   },
   getters: {
     records (state) {
-      return Object.values(state.records)
+      return Object.values(state.records)  // so that component can iterate on an array instead of an object
     },
     currentRecord (state) {
       let intersection = []
       let ids = [...state.currentRecordIds]
+      console.debug('ids', ids)
       if (ids.length > 0) {
         intersection = [...state.records[ids[0]].papers]
-        const papers = state.records[ids[0]].papers
-          const dois = papers.reduce(
-            (acc, p) => {return [p.doi, ...acc]},
-            []
-          )
-        console.debug(`dois[${ids[0]}]:`, dois)
         ids.shift()
         while (ids.length > 0) {
           const papers = state.records[ids[0]].papers
-          const dois = papers.reduce(
-            (acc, p) => {return [p.doi, ...acc]},
-            []
-          )
-          console.debug(`dois[${ids[0]}]:`, dois)
           intersection = [...intersection].filter(x => papers.includes(x))
           ids.shift()
         }
       }
-      const intersect_doi = intersection.reduce(
-        (acc, p) => {return [p.doi, ...acc]}, []
-      )
-      console.debug('intersection dois', intersect_doi)
       const result = {papers: intersection}
       return result
     },
@@ -95,7 +81,6 @@ export default {
       return httpClient.get(url)
         .then((response) => {
           const records = response.data
-          console.debug("auto topics response.data", records)
           commit('addRecords', records)
           commit('initCurrentRecord')
         })

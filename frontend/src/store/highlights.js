@@ -56,7 +56,6 @@ export default {
           .reduce(most_recent, new Date('2000-01-01'))
         },
         rank: (r) => {
-          console.log("r for rank", r)
           return parseInt(r.rank)
         }
       }
@@ -92,7 +91,6 @@ export default {
     listByCurrent({ commit, rootGetters }, module) {
       commit('setIsLoading')
       const current = rootGetters[[module, 'currentRecord'].join('/')]
-      console.debug("in highlight js current", current)
       const loadComplete = rootGetters[[module, 'isLoaded'].join('/')]
       if (!loadComplete || !('papers' in current)) {
         commit('setNotLoading')

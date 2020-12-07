@@ -85,6 +85,7 @@ WITH
   highlighted_entities,
   overlapping_highlights,
   size(overlapping_highlights) AS N_overlap
+WHERE N_overlap >= 2
 MATCH
   (paper:VizPaper {doi: doi})
 WITH
@@ -193,6 +194,7 @@ MERGE (entity:VizEntity {text: name_in_this_paper, category: 'entity'})
 MERGE (paper)-[:HasEntity]->(entity)
 RETURN COUNT(DISTINCT entity) AS `linked geneprod for visualization`;
 :commit
+
 
 // NON GENEPROD ENTITIES
 // MATCH (col:SDCollection)-[:has_article]->(a:SDArticle {journalName: "biorxiv"})-[:has_fig]->(f:SDFigure),

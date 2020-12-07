@@ -12,8 +12,9 @@
         v-container
           v-row(no-gutters)
             v-col(:cols="4"
-              v-for="(item, index) in autoTopicsList" 
-              :key="item.id")
+              v-for="item in autoTopicsList" 
+              :key="item.id"
+            )
               v-item(v-slot="{active, toggle}").pointer
                 div(@click="toggle").pa-2
                   h4 {{item.topics.slice(0, 3).join(', ')}}
@@ -40,8 +41,8 @@ export default {
     },
   },
   methods: {
-    onChange(selectedItemId) {
-      this.$emit('change', selectedItemId)
+    onChange(selectedItemsIds) {
+      this.$emit('change', selectedItemsIds)
     },
   },
 }

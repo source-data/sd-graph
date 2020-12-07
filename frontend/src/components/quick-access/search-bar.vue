@@ -1,14 +1,23 @@
 <template lang="pug">
   v-card(class="pa-5" outlined)
-    p Search titles, abstract, figure legends,author name, doi
-    v-text-field(
-      v-model="query"
-      outlined
-      clearable
-      placeholder="keywords, authors, doi"
-      append-outer-icon="mdi-magnify"
-      @keyup.enter="onSubmit"
-    )
+    v-card-title Search titles, abstract, figure legends,author name, doi
+    v-card-text
+      v-container
+        v-row()
+          v-col()
+            v-text-field(
+              v-model="query"
+              outlined
+              clearable
+              placeholder="keywords, authors, doi"
+              prepend-icon="mdi-magnify"
+              @keyup.enter="onSubmit"
+            )
+          v-col()
+            v-btn(
+              @click="onSubmit"
+              color="primary"
+            ) Search
 </template>
 
 <script>
@@ -21,7 +30,6 @@ export default {
   },
   methods: {
     onSubmit()  {
-      console.log("submitting", this.query)
       this.$emit('submit', this.query)
     },
   }
