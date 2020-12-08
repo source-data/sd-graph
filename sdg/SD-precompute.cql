@@ -1,7 +1,11 @@
 // PRECOMPUTE RESULTS
 
-RETURN "purging viz graph" as `preparation step`;
+// BUILDING A SIMPLIFIED PRECOMPUTED PREFILTERED GRAPH THAT CAN BE QUICKLY QUERIED
+// WITH COLLECTIONS, SUBCOLLECTIONS, PAPERS AND LINKED ENTITIES
+
+
 // PURGE PRECOMPUTED
+RETURN "purging viz graph" as `preparation step`;
 :begin
 MATCH (n:VizCollection) DETACH DELETE n;
 MATCH (n:VizSubCollection) DETACH DELETE n;
@@ -10,8 +14,8 @@ MATCH (n:VizInfo) DETACH DELETE n;
 MATCH (n:VizEntity) DETACH DELETE n;
 MATCH (n:VizReviewDate) DETACH DELETE n;
 MATCH (n:VizPaperRank) DETACH DELETE n;
-RETURN "purge" as `completed`;
 :commit
+RETURN "purge" as `completed`;
 
 // VizPaper for biorxiv preprints
 :begin
@@ -57,56 +61,6 @@ MERGE (subcol)-[:HasPaper]->(paper)
 RETURN COUNT(DISTINCT paper) AS `papers in the by reviewing service`;
 :commit
 
-// AUTO TOPICS HIGHLIGHTS
-:begin
-MATCH
-  (topics_collection:SDAutoTopics)-->(highlighted:H_Entity)
-WITH
-  topics_collection,
-  COLLECT(DISTINCT highlighted) AS highlighted_entities
-MATCH
-  (topics_collection)-->(a:SDArticle)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(entity:H_Entity)
-WITH DISTINCT
-  topics_collection,
-  highlighted_entities,
-  a.doi AS doi,
-  COLLECT(DISTINCT entity) AS article_entities,
-  COUNT(DISTINCT entity) AS N_entities
-WITH 
-  topics_collection,
-  apoc.text.join(topics_collection.topics, ', ') AS topics_name,
-  doi,
-  highlighted_entities,
-  apoc.coll.intersection(highlighted_entities, article_entities) AS overlapping_highlights
-WITH
-  topics_collection,
-  topics_name,
-  doi,
-  highlighted_entities,
-  overlapping_highlights,
-  size(overlapping_highlights) AS N_overlap
-WHERE N_overlap >= 2
-MATCH
-  (paper:VizPaper {doi: doi})
-WITH
-  topics_collection,
-  topics_name,
-  paper,
-  highlighted_entities,
-  overlapping_highlights,
-  N_overlap
-UNWIND highlighted_entities AS highlighted_entity
-UNWIND overlapping_highlights as overlapping_highlight
-MERGE (col:VizCollection {name: "by-auto-topics"})
-MERGE (subcol:VizSubCollection {topics: topics_collection.topics, name: topics_name})
-MERGE (col)-[:HasSubCol]->(subcol)
-MERGE (subcol)-[:HasPaper {overlap_size: N_overlap}]->(paper)
-MERGE (highlight:VizEntity {text: highlighted_entity.name, category: 'topic_highlight'})
-MERGE (subcol)-[:HasEntity {highlight_score: highlighted_entity.community_centrality}]->(highlight)
-MERGE (overlap:VizEntity {text: overlapping_highlight.name, category: 'paper_highlight'})
-MERGE (paper)-[:HasEntity]->(overlap)
-RETURN COUNT(DISTINCT paper) AS `papers in the auto topics set`;
-:commit
 
 // LINK EXP ASSAYS
 :begin
@@ -148,8 +102,9 @@ WITH
   paper, name_in_this_paper
 MERGE (entity:VizEntity {text: name_in_this_paper, category: 'assay'})
 MERGE (paper)-[:HasEntity]->(entity)
-RETURN COUNT(DISTINCT entity) AS `linked assays for visualization`; 
+RETURN COUNT(DISTINCT entity) AS `linked assays for visualization`;
 :commit
+
 
 // LINK GENEPROD
 :begin
@@ -241,6 +196,61 @@ RETURN COUNT(DISTINCT entity) AS `linked geneprod for visualization`;
 // RETURN COUNT(DISTINCT entity) AS `linked entities for visualization`;
 
 
+// AUTO TOPICS HIGHLIGHTS
+:begin
+// create VizCollection and VizSubCollection and attach VizEntity
+MATCH
+  (topics_collection:SDAutoTopics)
+WITH
+  topics_collection,
+  id(topics_collection) AS topic_id,
+  apoc.text.join(topics_collection.topics, ', ') AS topics_name
+MERGE (subcol:VizSubCollection {topics: topics_collection.topics, name: topics_name, topic_id: topic_id})
+WITH
+  topics_collection,
+  subcol
+MATCH
+  (topics_collection)-->(highlighted_topic_entity:H_Entity)
+MERGE (highlight:VizEntity {text: highlighted_topic_entity.name, category: 'entity'})
+MERGE (subcol)-[:HasEntity {highlight_score: highlighted_topic_entity.community_centrality}]->(highlight)
+MERGE (col:VizCollection {name: 'by-auto-topics'})-[:HasSubCol]->(subcol)
+RETURN COUNT(DISTINCT highlight) AS `highlighted topic entities`;
+:commit
+
+:begin
+MATCH (vizsubcol:VizSubCollection), (sdcol:SDAutoTopics)
+WHERE  vizsubcol.topic_id = id(sdcol)
+WITH
+  vizsubcol, sdcol
+MATCH (sdcol)-->(a:SDArticle)
+WITH
+ vizsubcol, a.doi AS doi
+MATCH
+ (vzp:VizPaper {doi: doi})
+//highlight entities that overlap between paper and topic highlights
+WITH
+  vizsubcol, vzp
+MATCH
+  (vzp:VizPaper)-[:HasEntity]->(overlapping_entity:VizEntity {category: 'entity'})<-[:HasEntity]-(vizsubcol)
+WITH
+  vizsubcol, vzp, 
+  COLLECT(DISTINCT overlapping_entity) AS overlapping_highlights,
+  COUNT(DISTINCT overlapping_entity) AS N_overlap
+WHERE
+  N_overlap >= 2
+WITH
+  vizsubcol, vzp,
+  overlapping_highlights,
+  N_overlap
+UNWIND overlapping_highlights AS paper_topic_highlight
+WITH
+  vizsubcol, vzp, paper_topic_highlight, N_overlap
+MERGE (vzp)-[highlight_rel:HasEntityHighlight]->(paper_topic_highlight)
+MERGE (vizsubcol)-[r:HasPaper {overlap_size: N_overlap}]->(vzp)
+RETURN COUNT(DISTINCT r) AS `papers linked to highlighted topics`;
+:commit
+
+
 // AUTOMAGIC
 // sum of ranks for recent papers
 // rank by assay
@@ -279,6 +289,7 @@ UNWIND range(0, N-1) as i
 //UNWIND preprint_list_of_lists[i] AS preprint
 WITH
   COLLECT({rank: i, preprint: preprint_list[i]}) AS ranked_by_assays
+
 // rank by entities
 MATCH (coll:SDCollection)-->(a:SDArticle {journalName:'biorxiv'})
 WHERE

@@ -129,31 +129,32 @@ WITH DISTINCT
   COUNT(DISTINCT f) AS nb_figures,
   auth,
   review, response, annot
-// adding entities and exp assays and contribg id (ORCID)
-OPTIONAL MATCH (assay:VizEntity {category: 'assay'})<-[:HasEntity]-(vzp:VizPaper {doi: doi})-[:HasEntity]->(entity:VizEntity {category: 'entity'})
 OPTIONAL MATCH (auth)-->(auth_id:Contrib_id)
+OPTIONAL MATCH
+  (col:VizCollection {name: "by-auto-topics"})-->(autotopics:VizSubCollection)-[rel_autotopics_paper]->(vzp:VizPaper {doi: doi})-[:HasEntityHighlight]->(highlight:VizEntity {category: 'entity'})
 WITH
   id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title,
   auth,
   auth_id.text AS ORCID, 
   nb_figures, review, response, annot,
-  COLLECT(DISTINCT entity.text) AS entities,
-  COLLECT(DISTINCT assay.text) AS assays
+  vzp,
+  COLLECT(DISTINCT autotopics.topics) AS main_topics,
+  COLLECT(DISTINCT highlight.text) AS highlighted_entities
 OPTIONAL MATCH
-  (col:VizCollection {name: "by-auto-topics"})-->(autotopics:VizSubCollection)-[rel_autotopics_paper]->(vzp:VizPaper {doi: doi})
+  (vzp:VizPaper {doi: doi})-[:HasEntity]->(assay:VizEntity {category: 'assay'})
 OPTIONAL MATCH
-  (vzp)-[paper_to_entity_rel:HasEntity]->(highlight:VizEntity {category: 'paper_highlight'})
+  (vzp)-[:HasEntity]->(entity:VizEntity {category: 'entity'})
 WHERE
-  rel_autotopics_paper.overlap_size >= 2
+  // don't duplicated entities if they are in the topic highlight set
+  NOT entity.text IN highlighted_entities
 WITH
   id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title,
-  vzp, 
   auth,
   ORCID, 
   nb_figures, review, response, annot,
-  entities, assays,
-  COLLECT(DISTINCT autotopics.topics) AS main_topics,
-  COLLECT(DISTINCT highlight.text) AS highlighted_entities
+  main_topics, highlighted_entities,
+  COLLECT(DISTINCT assay.text) AS entities,
+  COLLECT(DISTINCT entity.text) AS assays
 ORDER BY
   review.review_idx ASC,
   auth.position_idx ASC
@@ -247,11 +248,11 @@ class BY_AUTO_TOPICS(Query):
 MATCH
   (col:VizCollection {name: "by-auto-topics"})-[:HasSubCol]->(subcol:VizSubCollection),
   (subcol)-[subcol_rel_paper:HasPaper]->(paper:VizPaper),
-  (subcol)-[subcol_rel_entity:HasEntity]->(entity_highlighted:VizEntity {category: "topic_highlight"})
-  //(paper)-[:HasEntity]->(paper_highlight:VizEntity {category: "paper_highlight"})
+  (subcol)-[subcol_rel_entity:HasEntity]->(entity_highlighted:VizEntity {category: "entity"})
 WHERE
   (DATETIME(paper.pub_date) > DATETIME($limit_date))
 WITH
+  id(subcol) AS topic_id,
   subcol.name AS topics_name,
   subcol_rel_paper,
   paper.pub_date AS pub_date,
@@ -265,6 +266,7 @@ ORDER BY
   subcol_rel_entity.highlight_score DESC,
   DATETIME(pub_date) DESC
 WITH
+  topic_id,
   topics_name,
   topics,
   COLLECT(DISTINCT entity_highlighted_name) AS entity_highlighted_names,
@@ -275,7 +277,7 @@ ORDER BY
    N_entities DESC
 WITH
   COLLECT({topics: topics, topics_name: topics_name, entity_highlighted_names: entity_highlighted_names, papers: paper_collection_j}) AS all,
-  COUNT(DISTINCT paper_collection_j) AS N
+  COUNT(DISTINCT topic_id) AS N
 UNWIND range(0, N-1) AS id
 RETURN 
   id,
