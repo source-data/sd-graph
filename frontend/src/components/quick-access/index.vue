@@ -17,7 +17,7 @@
       v-tab-item(value="/refereed-preprints")
         QuickAccessByReviewingService
       v-tab-item(value="/all/auto-topics")
-        QuickAccessByAutoTopics(@change="onChangeByAutoTopics")
+        QuickAccessByAutoTopics(@change="onChangeByAutoTopics" @changeOperator="onChangeOperator")
       v-tab-item(value="/all/automagic")
         QuickAccessByAutomagic
       v-tab-item(value="/all/search")
@@ -55,6 +55,10 @@ export default {
       this.$store.commit('byAutoTopics/showRecords', { ids: selectedItemIds })
       this.$store.dispatch('highlights/listByCurrent', "byAutoTopics")
     },
+    onChangeOperator (value) {
+      this.$store.commit('byAutoTopics/changeOperator', {'operator': value})
+      this.$store.dispatch('highlights/listByCurrent', "byAutoTopics")
+    }
   },
   computed: {
     ...mapState('highlights', ['loadingRecords']),

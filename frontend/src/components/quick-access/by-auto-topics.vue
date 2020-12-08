@@ -1,14 +1,15 @@
 <template lang="pug">
   v-card(class="pa-5" outlined)
     v-card-title Highlighted topics
+    v-card-subtitle Topics and key entities were identified in an unsupervised way based on the structure of a knowledge graph automatically derived from figure legends.
     v-card-text 
-      p Topics and key entities were identified in an unsupervised way based on the structure of a knowledge graph automatically derived from figure legends.
-      i <b>Tip</b>: selecting 2 or more topics will select papers that belong to all selected (AND operation)
+      i <b>Tip</b>: select 'multi-selection as overlap (AND)' below to find studies identified in multiple categories
+      
       v-item-group(
         v-model="selectedTopics"
         @change="onChange"
+        :multiple="(operator !== 'single')"
         mandatory
-        multiple
         active-class="blue-grey lighten-5 teal--text text--darken-1"
       )
         v-container
@@ -22,6 +23,14 @@
                   h4 {{item.topics.slice(0, 3).join(', ')}}
                   small
                     i {{ item.entity_highlighted_names.join(', ') }}
+        v-radio-group(
+          row
+          v-model="operator"
+          @change="onChangeOperator"
+        )
+          v-radio(value='single' label='single selection')
+          v-radio(value='and' label='multi-selection as overlap (AND)')
+          v-radio(value='or' label='multi-slection as union (OR)')
 </template>
 
 <script>
@@ -31,7 +40,8 @@ export default {
   data () {
     return {
       // default value
-      selectedTopics: [0]
+      selectedTopics: 0,
+      operator: 'single'
     }
   },
   computed: {
@@ -45,6 +55,10 @@ export default {
   methods: {
     onChange(selectedItemsIds) {
       this.$emit('change', selectedItemsIds)
+    },
+    onChangeOperator(value) {
+      if (value === 'single') {this.selectedTopics = this.selectedTopics[0]}
+      this.$emit('changeOperator', value)
     }
   },
 }
