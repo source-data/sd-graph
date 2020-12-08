@@ -1,7 +1,9 @@
 <template lang="pug">
   v-card(class="pa-5" outlined)
-    v-card-title Topics and key entities
-    v-card-text Topics and key entities were identified in an unsupervised way based on the structure of a knowledge graph automatically derived from figure legends.
+    v-card-title Highlighted topics
+    v-card-text 
+      p Topics and key entities were identified in an unsupervised way based on the structure of a knowledge graph automatically derived from figure legends.
+      i <b>Tip</b>: selecting 2 or more topics will select papers that belong to all selected (AND operation)
       v-item-group(
         v-model="selectedTopics"
         @change="onChange"
@@ -43,7 +45,7 @@ export default {
   methods: {
     onChange(selectedItemsIds) {
       this.$emit('change', selectedItemsIds)
-    },
+    }
   },
 }
 </script>

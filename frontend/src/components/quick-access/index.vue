@@ -7,10 +7,10 @@
         | Refereed Preprints
       v-tab(to="/all/auto-topics")
         v-icon(class="px-1") mdi-help-circle-outline
-        | By topics
+        | Highlighted topics
       v-tab(to="/all/automagic")
         v-icon(class="px-1") mdi-auto-fix
-        | Automagic COVID-19 selection
+        | Automagic selection
       v-tab(to="/all/search")
         v-icon(class="px-1") mdi-text-box-search-outline
         | Search preprints
