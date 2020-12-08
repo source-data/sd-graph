@@ -4,14 +4,6 @@ export default {
   namespaced: true,
   state: {
     records: {},
-    // entity_highlighted_names: Array(16)
-    // 0: doi: "10.1101/2020.08.12.247460"
-    // pub_date: "2020-08-12T00:00:00Z"
-    // rank: ""
-    // id: 1
-    // papers: (...)
-    // topics: Array(7)
-    // topics_name: "tumor, breast, endothelial, lung, kinase, oncogenic, phosphorylation"
     currentRecordIds: [],
     loadingRecords: false,
     loadComplete: false,
@@ -23,13 +15,13 @@ export default {
     currentRecord (state) {
       let intersection = []
       let ids = [...state.currentRecordIds]
-      console.debug('ids', ids)
       if (ids.length > 0) {
         intersection = [...state.records[ids[0]].papers]
         ids.shift()
         while (ids.length > 0) {
           const papers = state.records[ids[0]].papers
-          intersection = [...intersection].filter(x => papers.includes(x))
+          const papers_doi = papers.map(p => p.doi)
+          intersection = [...intersection].filter(x => papers_doi.includes(x.doi))
           ids.shift()
         }
       }
