@@ -25,6 +25,9 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
 RUN addgroup --system flask \
     && adduser --system --ingroup flask flask
 
+RUN pip install cmake \
+  && pip install cython
+
 # Requirements are installed here to ensure they will be cached.
 COPY ./requirements /requirements
 RUN pip install --no-cache-dir -r /requirements/production.txt \
