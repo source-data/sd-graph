@@ -1,9 +1,9 @@
 /////PROCESSING THE GRAPH//////
 
 
-CREATE CONSTRAINT ON (h:H_Entity) ASSERT h.combo_id IS UNIQUE;
+CREATE CONSTRAINT h_entity_id IF NOT EXISTS ON (h:H_Entity) ASSERT h.combo_id IS UNIQUE;
 //CREATE CONSTRAINT ON (h:H_Entity) ASSERT (h.ext_id, h.type, h.category, h.name) IS NODE KEY; //only neo4j Enterprise!
-CREATE CONSTRAINT ON (te:Term) ASSERT te.text IS UNIQUE;
+CREATE CONSTRAINT term_text_ IF NOT EXISTS ON (te:Term) ASSERT te.text IS UNIQUE;
 
 // purge processed nodes
 // prelimin solution before proper combined keys are implemented that will allow using MERGE instead of CREATE cond Tags
@@ -178,6 +178,7 @@ MERGE (te:Term {text: text})
 MERGE (hyb)-[r:Has_text]->(te)
 RETURN COUNT(r) AS `unique terms`;
 
+
 // Compute popularity of terms
 MATCH (sd:SDArticle)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(h:H_Entity)-->(t:Term)
 WITH t, COUNT(DISTINCT p) AS freq
@@ -187,48 +188,22 @@ RETURN COUNT (t) as `tags with popularity frequency added`;
 
 //infer tested hypotheses at condensed tag level
 MATCH 
-   (p:SDPanel)-->(intervention:CondTag {role: "intervention"}),
-   (p:SDPanel)-->(assayed:CondTag {role: "assayed"})
+  (p:SDPanel)-->(intervention:CondTag {role: "intervention"}),
+  (p:SDPanel)-->(assayed:CondTag {role: "assayed"})
 MERGE (intervention)-[r:H]->(assayed)
 RETURN COUNT(r) AS `hypotheses at cond tag level`;
 
-// quasi synonyms
-// H_Entity - Term - H_Entity network for quasi-synonyms
-MATCH
-    (entity_1:H_Entity)-[:Has_text]->(bridge:Term)<-[:Has_text]-(entity_2:H_Entity)
-WHERE
-    entity_1 <> entity_2 AND
-    entity_1.category = "assay" AND entity_2.category = "assay"
-MERGE
-    (entity_1)-[r:related_concept]-(entity_2)
-RETURN
-COUNT(r);
 
-// COMMUNITY DETECTION
-CALL algo.louvain(
-  'MATCH (h:H_Entity {category: "assay"}) RETURN id(h) AS id',
-  'MATCH (h1:H_Entity {category: "assay"})-[:related_concept]-(h2:H_Entity) RETURN id(h1) AS source, id(h2) AS target',
-  {graph: 'cypher',
-   writeProperty: 'assay_concept_id'
-  }
-);
-
-// adding cluster name
-MATCH (entity:H_Entity {category: "assay"})-[:Has_text]->(te:Term)
-WITH entity, COUNT(DISTINCT te) AS entity_popularity
-ORDER BY entity_popularity DESC
-WITH
-  entity.assay_concept_id AS concept_id, 
-  COUNT(DISTINCT entity) AS size, 
-  COLLECT(entity)[0] AS most_popular_entity, 
-  COLLECT(DISTINCT entity) AS cluster
-UNWIND cluster AS entity
-SET entity.concept_name = most_popular_entity.name, entity.concept_ext_ids = most_popular_entity.ext_ids
-RETURN DISTINCT 
-  // most_popular_entity.concept_name,
-  // most_popular_entity.concept_ext_ids,
-  // concept_id, size, 
-  COUNT(DISTINCT entity.assay_concept_id) AS `clusters of assay related concepts`;
+//add scale to entities
+MATCH (e:H_Entity {type:"molecule"}) SET e.scale = 1;
+MATCH (e:H_Entity {type:"gene"}) SET e.scale = 2;
+MATCH (e:H_Entity {type:"protein"}) SET e.scale = 2;
+MATCH (e:H_Entity {type:"geneprod"}) SET e.scale = 2;
+MATCH (e:H_Entity {type:"subcellular"}) SET e.scale = 3;
+MATCH (e:H_Entity {type:"cell"}) SET e.scale = 4;
+MATCH (e:H_Entity {type:"tissue"}) SET e.scale = 5;
+MATCH (e:H_Entity {type:"organism"}) SET e.scale = 6;
+RETURN "added scales to entities";
 
 
 //copy publication date and abstract from jats articles to SDArticles
@@ -242,7 +217,7 @@ WITH DISTINCT
 ORDER BY pub_date DESC // most recent first
 WITH DISTINCT doi, COLLECT(pub_date)[0] AS most_recent, COLLECT(abstract)[0] AS abstr, a
 SET a += {pub_date: most_recent, abstract: abstr}
-RETURN COUNT(DISTINCT a);
+RETURN COUNT(DISTINCT a) AS `SDArticles with pub date`;
 
 
 //Link to authors via Contrib nodes
@@ -264,66 +239,4 @@ WITH DISTINCT
   sd,
   au
 MERGE (sd)-[r:has_author]->(au)
-RETURN COUNT(DISTINCT r) AS N_auth_relationships;
-
-
-//create hypotheses summaries at paper level
-
-//MATCH 
-//    (art:SDArticle)-->(f1:SDFigure)-->(p1:SDPanel)-->(i1:CondTag)-[h1:H]->(a1:CondTag)<--(p1),
-//    (i1)-->(ih:H_Entity), (a1)-->(ah:H_Entity)
-//RETURN art,ih,ah,COLLECT(f1),COLLECT(p1),COLLECT(i1),COLLECT(a1),COUNT(DISTINCT p1) AS N_p,COUNT(DISTINCT f1) AS N_f ORDER BY N_p DESC LIMIT 1
-//WITH art,ih,ah, COUNT(DISTINCT(p1)) AS N_p, COUNT(DISTINCT(f1)) AS N_f
-//    MERGE (ih)-[:Is_Intervention_of]->(h:Hypothesis)-[:Has_Assayed]->(ah)
-//    MERGE (art)-[:HasH {n_panels:N_p,n_figures:N_f}]->(h)
-//RETURN COUNT(DISTINCT h) AS `hypotheses at paper level`;
-
-//ad weight to hypotheses
-
-//MATCH 
-//   (art:SDArticle)-[rel:HasH]->(h:Hypothesis)
-//WITH h, COUNT(DISTINCT art) AS N
-//SET h.N = N;
-//RETURN "added weight to hypotheses";
-
-//link entities with hypothesis links
-
-//MATCH
-//   (ih:H_Entity)-[:Is_Intervention_of]->(h:Hypothesis)-[:Has_Assayed]->(ah:H_Entity)
-//MERGE (ih)-[tested:Tested]->(ah)
-//RETURN COUNT(tested) AS `hypotheses at entity level`;
-
-//transfer hypothesis weight to :Tested links
-
-//MATCH (i:H_Entity)-->(h:Hypothesis)-->(a:H_Entity), (i)-[r:Tested]->(a)
-//SET r.N = h.N;
-//RETURN "transferred hypothesis weight to :Tested links";
-
-//add scale to entities
-
-//MATCH (e:H_Entity {type:"molecule"}) SET e.scale = 1;
-//MATCH (e:H_Entity {type:"gene"}) SET e.scale = 2;
-//MATCH (e:H_Entity {type:"protein"}) SET e.scale = 2;
-//MATCH (e:H_Entity {type:"subcellular"}) SET e.scale = 3;
-//MATCH (e:H_Entity {type:"cell"}) SET e.scale = 4;
-//MATCH (e:H_Entity {type:"tissue"}) SET e.scale = 5;
-//MATCH (e:H_Entity {type:"organism"}) SET e.scale = 6;
-//RETURN "added scales to entities";
-
-// resolver nodes to map resource to base url and possibly to id regex pattern (according to identifiers.org)
-// need to provide a recipe to transform in to compact identifier and just use identifiers.org
-// MERGE(:Resolver {name: "NCBI gene", url: "http://www.ncbi.nlm.nih.gov/gene/"}); // 59272
-// MERGE(:Resolver {name: "NCBI taxon", url: "http://www.ncbi.nlm.nih.gov/taxonomy/"}); // 10090
-// MERGE(:Resolver {name: "OBI", url: "https://bioportal.bioontology.org/ontologies/OBI/?p=classes&conceptid=http://purl.obolibrary.org/obo/", about: "http://purl.obolibrary.org/obo/"}); // OBI_0000445
-// MERGE(:Resolver {name: "Uberon", url: "http://purl.bioontology.org/ontology/UBERON/"}); // UBERON:0000955
-// MERGE(:Resolver {name: "CVCL", url: "https://identifiers.org/cellosaurus:"}); // CVCL_0574
-// MERGE(:Resolver {name: "BAO", url: "http://bioportal.bioontology.org/ontologies/BAO/bao:", about: "http://www.bioassayontology.org/bao#"}); // BAO_0000134
-// MERGE(:Resolver {name: "Gene Ontology", url: "http://purl.bioontology.org/ontology/GO/"}); // GO:0071735
-// MERGE(:Resolver {name: "CL", url: "http://purl.bioontology.org/ontology/CL/"}); // CL:0000583
-// MERGE(:Resolver {name: "Uniprot", url: "https://www.uniprot.org/uniprot/"}); // P0DTC2
-// MERGE(:Resolver {name: "ChEBI", url: "http://www.ebi.ac.uk/chebi/searchId.do?chebiId="}); // CHEBI:29687
-// MERGE(:Resolver {name: "Disease ontology", url: "http://purl.bioontology.org/ontology/DOID/"}); // DOID:2801
-
-
-//Link H_Entity to ontologies
-
+RETURN COUNT(DISTINCT r) AS `SDArticle author relationships`;

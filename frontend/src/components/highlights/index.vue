@@ -7,10 +7,22 @@
       h1 {{ records.length }} articles found:
     h1(v-if="records.length == 0 && !loadingRecords") No results
     v-container(:class="{'highlights-loading': loadingRecords}")
-      v-row(v-for="article in records" :key="article.id")
+      v-row(justify="center")
+        v-pagination(
+          v-model="pageNumber"
+          :length="pageCount"
+          :total-visible="10"
+        )
+      v-row(v-for="article in paginatedRecords" :key="article.id")
         v-col
           HighlightedListItem(:article="article")
       br
+      v-row(justify="center")
+        v-pagination(
+          v-model="pageNumber"
+          :length="pageCount"
+          :total-visible="10"
+        )
 </template>
 
 <script>
@@ -19,12 +31,28 @@ import { mapGetters, mapState } from 'vuex'
 
 
 export default {
+  data() {
+    return {
+      pageNumber: 1,
+      pageSize: 10
+    }
+  },
   components: {
     HighlightedListItem,
   },
   computed: {
     ...mapGetters('highlights', ['records']),
-    ...mapState('highlights', ['loadingRecords'])
+    ...mapState('highlights', ['loadingRecords']),
+    pageCount() {
+      let l = this.records.length,
+          s = this.pageSize
+      return Math.ceil(l / s)
+    },
+    paginatedRecords(){
+      const start = (this.pageNumber - 1) * this.pageSize,
+            end = start + this.pageSize;
+      return this.records.slice(start, end);
+}
   },
 }
 </script>

@@ -56,12 +56,12 @@ def by_method():
 
 
 # using routing rather than parameters to provide limit_date so that cache.cached() works properly; memoize would need function params
-@app.route('/api/v1/by_hyp/', defaults={'limit_date': '1900-01-01'}, methods=['GET', 'POST'])
-@app.route('/api/v1/by_hyp/<limit_date>', methods=['GET', 'POST'])
+@app.route('/api/v1/by_auto_topics/', defaults={'limit_date': '1900-01-01'}, methods=['GET', 'POST'])
+@app.route('/api/v1/by_auto_topics/<limit_date>', methods=['GET', 'POST'])
 @cache.cached()
 def by_hyp(limit_date):
-    app.logger.info(f"list by hypotheses")
-    return jsonify(ASKNEO.by_hyp(limit_date=limit_date))
+    app.logger.info(f"list by automatic topics")
+    return jsonify(ASKNEO.by_auto_topics(limit_date=limit_date))
 
 
 @app.route('/api/v1/by_reviewing_service/', defaults={'limit_date': '1900-01-01'}, methods=['GET', 'POST'])
@@ -88,7 +88,7 @@ def by_doi(doi: str):
 
 
 @app.route('/api/v1/dois/', methods=['POST'])
-@cross_origin(origin='*',headers=['Content-Type','Authorization'])
+@cross_origin(origin='*', headers=['Content-Type','Authorization'])
 def by_dois():
     dois = request.json['dois']
     app.logger.info(f"search dois:{dois}")
@@ -146,3 +146,17 @@ def covid19():
 @cache.cached()
 def refereed_preprints():
     return jsonify(ASKNEO.refereed_preprints(request))
+
+
+@app.route('/api/v1/subjects', methods=['GET', 'POST'])
+@cache.cached()
+def subjects():
+    app.logger.info(f"subjects names")
+    return jsonify(ASKNEO.subjects(request))
+
+
+@app.route('/api/v1/collection/<subject>', methods=['GET', 'POST'])
+@cache.cached()
+def subject_collection(subject: str):
+    app.logger.info(f"collection '{subject}'")
+    return jsonify(ASKNEO.subject_collection(subject))

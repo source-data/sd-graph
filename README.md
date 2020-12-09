@@ -33,12 +33,15 @@ docker run --rm -it -v ~/.aws:/root/.aws --mount type=bind,source=<volume>/biorx
 aws s3 sync --request-payer requester --exclude "*" --include "*.meca" s3://biorxiv-src-monthly/Current_Content/July_2020 <path-to-biorxiv-archive>/biorxiv/Current_content/July_2020/
  # update meca archives; sync to folder outside of docker build scope
 cat neotools/purge_prelim.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p  # remove prelim articles obtained from the CrossRef and bioRxiv APIs
-docker-compose run --rm flask python -m neotools.rxiv2neo data/<path_to_meca_archives> --type meca  # import full text biorxiv preprints
+docker-compose run --rm flask python -m neotools.rxiv2neo biorxiv/<path_to_meca_archives> --type meca   # import full text biorxiv preprints
 docker-compose run --rm flask python -m peerreview.neohypo  # import peer reviews from hypothesis
 docker-compose run --rm flask python -m peerreview.published  # updates publication status
 docker-compose run --rm flask python -m sdg.sdneo covid19 --api eebapi  # smarttag specified collection of preprints
 docker-compose run --rm flask python -m sdg.sdneo refereed-preprints --api eebapi  # smarttag specified collection of preprints
+docker-compose run --rm flask python -m sdg.sdneo subject-collections --api eebapi  # smarttag all bioRxiv subject collections
 cat sdg/SD-processing.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>  # generate merged graph
+cat sdg/SD-gds.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>  # graph data science algo
+docker-compose run --rm flask python -m sdg.algonet  # finds named topics and entity highlights
 cat sdg/SD-precompute.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>  # precompute the graph used by front end
 docker-compose run --rm flask python -m twitter.update --limit-date 2020-07-01  # --GO_LIVE  to go live with Twitter updates
 cat sdg/audit.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>
@@ -53,7 +56,7 @@ Inspired by https://serverfault.com/questions/835092/how-do-you-perform-a-dump-o
 docker-compose down
 
 # dump the contents of your database using a temporary container
-docker run --rm --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data -it neo4j:3.5 bin/neo4j-admin dump --database=graph.db --to=data/graph.db.dump.`date +%Y-%m-%d-%H.%M.%S`
+docker run --rm --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data -it neo4j:4.1 bin/neo4j-admin dump --database=neo4j --to=data/neo4j.db.dump.`date +%Y-%m-%d-%H.%M.%S`
 ```
 
 ## How to load content into the neo4j database
@@ -63,25 +66,17 @@ docker run --rm --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/
 docker-compose down
 
 # load the contents of your database using a temporary container
-docker run --rm --name neo4j-load --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data -it neo4j:3.5 bin/neo4j-admin load --database=graph.db --from=data/<dump_filename> # --force # ADDING --force WILL OVERWRITE EXISTING DB!
+$ docker run --rm --name neo4j-load --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data --mount type=bind,source=$PWD,target=/app -it neo4j:4.1 bin/neo4j-admin load --database=neo4j --from=/app/<dump_filename>
+ # --force # ADDING --force WILL OVERWRITE EXISTING DB!
 # if there is no pre-existing graph.db, then the option --force needs to me ommitted to avoid "command failed: unable to load database: NoSuchFileException"
-
 ```
 
-## How to restore a neo4j dump in production
-You have to `scp` your dump to ~/sd-graph/graph.dump
 
-```bash
-scp data/neo4j-data/graph.db.dump.2020-06-06-17.54.42 covid19-1:~/sd-graph/graph.dump
-```
-
-and then `ssh` into the server and run
+## How to dump in production
 
 ```bash
 # Make sure you dont have your neo4j running:
 docker-compose down
-
-docker rm --force neo4j-dump # just in case
 
 # dump the contents of your database using a temporary container
 docker run --rm \
@@ -90,27 +85,8 @@ docker run --rm \
     --mount type=bind,source=$PWD,target=/app \
     --mount type=volume,source=sd-graph_production_neo4j_data,target=/data \
     -it neo4j:3.5 \
-    bin/neo4j-admin load --from=/app/graph.dump --database=graph.db --force
+    bin/neo4j-admin dump --to=/app/graph.dump.`date +%Y-%m-%d-%H.%M.%S` --database=graph.db
 
-# remove the container
-docker rm --force neo4j-dump
-```
-
-Finally launch the service again
-
-```
-docker-compose -f production.yml up -d --remove-orphans
-```
-
-#### snippet to restore `download` db in your local computer
-```bash
-docker run --rm \
-    --name neo4j-dump \
-    --env-file .env \
-    --mount type=bind,source=$PWD,target=/app \
-    --mount type=bind,source=$PWD/data/neo4j-data,target=/data \
-    -it neo4j:3.5 \
-    bin/neo4j-admin load --from=/app/download --database=graph.db --force
 ```
 
 
@@ -143,14 +119,15 @@ wget https://oc.embl.de/index.php/s/<token>/download
 # build docker
 docker-compose -f production.yml build
 
-# load the database with the dump
+# force load the database with the dump
+# THIS WILL OVERWRITE THE EXISTING DB
 docker run --rm \
  --name neo4j-load \
  --env-file .env \
  --mount type=bind,source=$PWD,target=/app \
  --mount type=volume,source=sd-graph_production_neo4j_data,target=/data \
  -it neo4j:3.5 \
- bin/neo4j-admin load --from=/app/download --database=graph.db --force
+ bin/neo4j-admin load --from=/app/download --database=graph.db --force  # WILL OVERWRITE!
 
 # start the services
 docker-compose -f production.yml up -d --remove-orphans

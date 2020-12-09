@@ -147,6 +147,8 @@ class Hypothelink:
     def run(self, group_ids):
         for group_id in group_ids:
             hypo_rows = self.get_annot_from_hypo(group_id)
+            # neo_rows def get_annot_from_neo(self, group_id: str):
+            # diff: +add and -remove to sync
             for row in hypo_rows:
                 peer_review_node = self.hypo2node(row)
                 peer_review_node.update_properties({'reviewed_by': GROUP_IDS[group_id]})

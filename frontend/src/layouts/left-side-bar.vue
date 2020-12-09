@@ -1,5 +1,6 @@
 <template lang="pug">
-  v-navigation-drawer(app clipped)
+  v-navigation-drawer(app clipped permanent
+        expand-on-hover)
     v-list(nav)
       router-link(to="/" active-class="is-active")
         v-list-item(index="0")
@@ -15,18 +16,21 @@
       v-list-item(index="3" disabled)
         v-icon(dense class="pa-1") mdi-email-open-outline
         span Contact
-    div(v-if="db_stats && !isCollapsed" style="padding:10px")
-      v-divider
-      small Database stats:
-        p
+    //- div(v-if="db_stats && !isCollapsed" style="padding:10px")
+    v-divider
+    v-list()
+      v-list-item()
+        v-icon(dense) mdi-database-outline
+        //- small Database stats:
+        small
           code {{ db_stats.biorxiv_preprints || 0 }}
           |  bioRxiv preprints loaded.
-        p
-          code {{ db_stats.refereed_preprints || 0 }}
-          |  refereed preprints highlighted.
-        p
-          code {{db_stats.autoannotated_preprints || 0 }}
-          |  COVID-19 preprints annotated automatically.
+        //- p
+        //-   code {{ db_stats.refereed_preprints || 0 }}
+        //-   |  refereed preprints highlighted.
+        //- p
+        //-   code {{db_stats.autoannotated_preprints || 0 }}
+        //-   |  COVID-19 preprints annotated automatically.
 
 
 

@@ -83,7 +83,7 @@ class Instance:
         def tx_funct(tx, code, params):
             results = tx.run(code, params)
             found_one = results.single() is not None
-            summary = results.summary()
+            summary = results.consume()
             notifications = summary.notifications
             if notifications:
                 print(f"WARNING: {notifications} when checking for existence.")
@@ -106,6 +106,14 @@ class Instance:
         q = Query()
         q.code = f"{cl} (n: {label} {{ {properties_str} }}) RETURN n;"
         q.returns = ['n']
+        res = self.query_with_tx_funct(self._tx_funct_single, q)
+        node = res['n']
+        return node
+
+    def update_node(self, nodeId, properties):
+        q = Query(params={'nodeId': nodeId, 'props': properties})
+        q.code = 'MATCH (n) WHERE id(n) = $nodeId SET n += $props RETURN n;'
+        q.returns = ['r']
         res = self.query_with_tx_funct(self._tx_funct_single, q)
         node = res['n']
         return node

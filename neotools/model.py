@@ -74,6 +74,18 @@ def get_caption(e: Element):
 # )
 
 
+# <article-categories>
+# <subj-group subj-group-type="author-type">
+# <subject>Regular Article</subject>
+# </subj-group>
+# <subj-group subj-group-type="heading">
+# <subject>New Results</subject>
+# </subj-group>
+# <subj-group subj-group-type="hwp-journal-coll">
+# <subject>Microbiology</subject>
+# </subj-group>
+# </article-categories>
+
 JATS_GRAPH_MODEL = {
     'XPath': 'article',
     'properties': {
@@ -109,6 +121,10 @@ JATS_GRAPH_MODEL = {
                 'graphic': ('graphic', get_attr_factory('{http://www.w3.org/1999/xlink}href')),
             },
         },
+        'has_subject': {
+            'XPath': 'front/article-meta/article-categories/subj-group[@subj-group-type="hwp-journal-coll"]/subject',
+            'properties': {}  # text property by default
+        }
     }
 }
 

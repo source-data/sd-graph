@@ -1,4 +1,4 @@
-FROM python:3.7-slim-buster
+FROM python:3.7-buster
 
 ENV PYTHONUNBUFFERED 1
 ENV DOCKERIZE_VERSION v0.6.1
@@ -14,6 +14,8 @@ RUN apt-get update \
   && apt-get install -y openssl wget \
   # install git to install requirements that are only published in GitHub
   && apt-get install -y git \
+  && apt-get install -y x11-apps \
+  && apt-get install -y python3-tk \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
@@ -26,6 +28,8 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
 
 # Requirements are installed here to ensure they will be cached.
 COPY requirements/ requirements
+RUN pip install cmake \
+  && pip install cython
 RUN pip install -r requirements/base.txt
 
 COPY ./compose/production/flask/entrypoint /entrypoint

@@ -89,15 +89,20 @@
             v-card-text
               p(class="text--primary") {{ article.abstract }}
         v-col
-          v-expansion-panels(multiple v-model="activeCards" )
-            v-expansion-panel(v-if="article.assays.length > 0" :key="0")
-              v-expansion-panel-header Assays & Methods
-              v-expansion-panel-content
-                v-chip(v-for="(item, index) in article.assays" small outlined :key="`assay-text-${index}`").blue-grey--text {{ item }}
-            v-expansion-panel(v-if="article.entities.length > 0" :key="1")
-              v-expansion-panel-header Entities
-              v-expansion-panel-content
-                v-chip(v-for="(item, index) in article.entities" small outlined :key="`entities-text-${index}`").amber--text.text--darken-3 {{ item }}
+          v-card(v-if="article.assays.length > 0")
+            v-card-title From the figures
+            v-card-text
+                v-list-item
+                  v-chip-group(v-if="article.main_topics.length > 0" :key="0" column)
+                    v-chip(v-for="(item, index) in article.main_topics" small outlined :key="`topics-${index}`").purple--text {{ item.slice(0,3).join(", ") }}
+                  v-chip-group(v-if="article.highlighted_entities.length > 0" :key="1" column)
+                    v-chip(v-for="(item, index) in article.highlighted_entities" small outlined :key="`highlighted-entities-${index}`").red--text {{ item }}
+                  v-chip-group(v-if="article.entities.length > 0" :key="2" column)
+                    v-chip(v-for="(item, index) in article.entities" small outlined :key="`entities-${index}`").orange--text {{ item }}
+                  v-chip-group(v-if="article.assays.length > 0" :key="3" column)
+                    v-chip(v-for="(item, index) in article.assays" small outlined :key="`assays-${index}`").green--text {{ item }}
+          v-card(v-else)
+            v-card-subtitle Figure not yet processed
 </template>
 
 <script>
@@ -110,7 +115,7 @@ export default {
   },
   data() {
     return {
-      activeCards: [0,1],
+      activeCards: [0,1,2],
     }
   },
   methods: {

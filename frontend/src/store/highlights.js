@@ -92,7 +92,7 @@ export default {
       commit('setIsLoading')
       const current = rootGetters[[module, 'currentRecord'].join('/')]
       const loadComplete = rootGetters[[module, 'isLoaded'].join('/')]
-      if (!loadComplete || ! ('papers' in current)) {
+      if (!loadComplete || !('papers' in current)) {
         commit('setNotLoading')
         commit('addRecords', [])
         return

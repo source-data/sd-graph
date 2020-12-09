@@ -3,9 +3,10 @@ from neotools.db import Instance, Query
 from .queries import (
     STATS, BY_DOI, FIG_BY_DOI_IDX, PANEL_BY_NEO_ID,
     REVIEW_PROCESS_BY_DOI, BY_REVIEWING_SERVICE,
-    BY_HYP, AUTOMAGIC,
+    BY_AUTO_TOPICS, AUTOMAGIC,
     LUCENE_SEARCH, SEARCH_DOI,
     COVID19, REFEREED_PREPRINTS,
+    COLLECTION_NAMES, SUBJECT_COLLECTIONS,
 )
 
 
@@ -95,19 +96,14 @@ class Engine:
         query.params = param_from_request(id, query)
         return self.ask_neo(query)
 
-    def by_hyp(self, limit_date: str) -> Dict:
-        query = BY_HYP()
+    def by_auto_topics(self, limit_date: str) -> Dict:
+        query = BY_AUTO_TOPICS()
         query.params = param_from_request(limit_date, query)
         return self.ask_neo(query)
 
     def automagic(self, limit_date: str) -> Dict:
         query = AUTOMAGIC()
         query.params = param_from_request(limit_date, query)
-        return self.ask_neo(query)
-
-    def panel_summary(self, panel_id: str) -> Dict:
-        query = PANEL_SUMMARY()
-        query.params = param_from_request(panel_id, query)
         return self.ask_neo(query)
 
     def search(self, query: str) -> Dict:
@@ -131,5 +127,15 @@ class Engine:
 
     def refereed_preprints(self, request) -> Dict:
         query = REFEREED_PREPRINTS()
+        query.params = param_from_request(request, query)
+        return self.ask_neo(query)
+
+    def subjects(self, request) -> Dict:
+        query = COLLECTION_NAMES()
+        query.params = param_from_request(request, query)
+        return self.ask_neo(query)
+
+    def subject_collection(self, request) -> Dict:
+        query = SUBJECT_COLLECTIONS()
         query.params = param_from_request(request, query)
         return self.ask_neo(query)
