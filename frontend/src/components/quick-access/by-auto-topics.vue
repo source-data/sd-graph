@@ -74,7 +74,7 @@ export default {
     onChangeOperator() {
       if (this.operator === 'single' && Array.isArray(this.selectedTopics)) { // transition from multiple selection to single selection
         this.selectedTopics = this.selectedTopics[0]
-      } else if (this.operator !== 'single') { // transition from single selectoin to multiple
+      } else if (this.operator !== 'single' && !Array.isArray(this.selectedTopics)) { // transition from single selectoin to multiple
         this.selectedTopics = [this.selectedTopics]
       }
       this.$emit('changeOperator', this.operator)
