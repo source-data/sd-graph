@@ -153,8 +153,8 @@ WITH
   ORCID, 
   nb_figures, review, response, annot,
   main_topics, highlighted_entities,
-  COLLECT(DISTINCT assay.text) AS entities,
-  COLLECT(DISTINCT entity.text) AS assays
+  COLLECT(DISTINCT assay.text) AS assays,
+  COLLECT(DISTINCT entity.text) AS entities
 ORDER BY
   review.review_idx ASC,
   auth.position_idx ASC
