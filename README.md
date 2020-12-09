@@ -126,8 +126,8 @@ docker run --rm \
  --env-file .env \
  --mount type=bind,source=$PWD,target=/app \
  --mount type=volume,source=sd-graph_production_neo4j_data,target=/data \
- -it neo4j:3.5 \
- bin/neo4j-admin load --from=/app/download --database=graph.db --force  # WILL OVERWRITE!
+ -it neo4j:4.1 \
+ bin/neo4j-admin load --from=/app/download --database=neo4j --force  # WILL OVERWRITE!
 
 # start the services
 docker-compose -f production.yml up -d --remove-orphans
