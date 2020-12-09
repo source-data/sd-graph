@@ -56,7 +56,7 @@ update_local_neo4j() {
     # RUN THIS ONLY MANUALLY
     # remove indices from automatic steps
     log "defining indices"
-    cat sdg/SD-indices.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
+    cat sdg/SD-indices.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
   }
 
   update_fulltext_biorxiv() {
@@ -68,26 +68,26 @@ update_local_neo4j() {
     # docker run --rm -it -v ~/.aws:/root/.aws --mount type=bind,source=/raid/lemberge/sd-graph/biorxiv/Current_Content/July_2020,target=/root/Current_Content/July_2020 amazon/aws-cli s3 sync --request-payer requester --exclude "*" --include "*.meca" s3://biorxiv-src-monthly/Current_Content/July_2020 ./Current_Content/July_2020 --dryrun
 
     log "remove prelim articles obtained from the CrossRef and bioRxiv APIs"
-    cat neotools/purge_prelim.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
+    cat neotools/purge_prelim.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
 
     log "import full text biorxiv preprints"
     # this is missing the July_2020
     #docker-compose run --rm -v /usb01/shared/biorxiv-src-monthly:/biorxiv-src-monthly flask python -m neotools.rxiv2neo /biorxiv-src-monthly/July_2020 --type meca
     local PREVIOUS_MONTH=`date --date='-1 month' +%B` # Biorxiv only publishes monthly updates when the month is over, meaning the 1st of September we get access to August content
     local CURRENT_YEAR=`date +%Y`
-    docker-compose run --rm -v /usb01/shared/biorxiv-src-monthly:/biorxiv-src-monthly flask python -m neotools.rxiv2neo /biorxiv-src-monthly/"$PREVIOUS_MONTH"_"$CURRENT_YEAR" --type meca
+    docker-compose -f docker-compose.deploy.yml run --rm -v /usb01/shared/biorxiv-src-monthly:/biorxiv-src-monthly flask python -m neotools.rxiv2neo /biorxiv-src-monthly/"$CURRENT_MONTH"_"$CURRENT_YEAR" --type meca
   }
 
   import_peer_reviews_from_hypo() {
     # daily
     log "import peer reviews from hypothesis & complete our db with biorxiv prelim api if our meca-fulltext-db missed one"
-    docker-compose run --rm flask python -m peerreview.neohypo
+    docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.neohypo
   }
 
   mark_peer_reviews_as_published() {
     # weekly
     log "updates publication status (find out if a preprint has been published in a journal)"
-    docker-compose run --rm flask python -m peerreview.published # maybe run only once a week?
+    docker-compose  -f docker-compose.deploy.yml run --rm flask python -m peerreview.published # maybe run only once a week?
   }
 
   smarttag() {
