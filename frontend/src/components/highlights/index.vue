@@ -49,7 +49,6 @@ export default {
       return Math.ceil(l / s)
     },
     paginatedRecords(){
-      
       const start = (this.pageNumber - 1) * this.pageSize,
             end = start + this.pageSize;
       return this.records.slice(start, end);

@@ -28,7 +28,7 @@
                 div(@click="toggle").pa-2
                   h4 {{item.topics.slice(0, 3).join(', ')}}
                   small
-                    i {{ item.entity_highlighted_names.join(', ') }}
+                    i {{ item.entity_highlighted_names.slice(0,10).join(', ') }}
         v-radio-group(
           row
           v-model="operator"
@@ -64,7 +64,7 @@ export default {
       'records',
     ]),
     autoTopicsList () {
-      return this.records.slice(0,12)
+      return this.records.slice(0,15)
     },
   },
   methods: {
