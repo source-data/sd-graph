@@ -73,7 +73,6 @@ export default {
       this.$emit('change', selectedItemsIds)
     },
     onChangeOperator() {
-     
       if (this.operator === 'single' && this.previous_operator !== 'single') { // transition from multiple selection to single selection
         this.selectedTopics = this.selectedTopics[0]
       } else if (this.operator !== 'single' && this.previous_operator == 'single') { // transition from single selectoin to multiple
