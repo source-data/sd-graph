@@ -40,7 +40,9 @@ export default {
             union = [...union, ...state.records[id].papers]
           }
         )
-        result = {papers: union}
+        let no_duplicates = new Set(union)
+        no_duplicates = Array.from(no_duplicates)
+        result = {papers: no_duplicates}
       }
       return result
     },
