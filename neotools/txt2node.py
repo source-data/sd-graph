@@ -151,7 +151,10 @@ class JSONNode:
     """
 
     def __init__(self, element: Dict, graph_model: Dict, position_idx: int = 0):
-        self.label = cleanup_name(graph_model['path']['type']).capitalize()
+        if callable(graph_model['path']['type']):
+            self.label = cleanup_name(graph_model['path']['type'](element))
+        else:
+            self.label = cleanup_name(graph_model['path']['type']).capitalize()
         print(f"parsing {self.label} {position_idx}                               ", end="\r")
         recipe_for_properties = graph_model.get('properties', None)
         properties = {}
