@@ -105,7 +105,8 @@ SOURCES = {
     'RRC19': '10.1162',
 }
 
-class PeerReviewFinder:
+
+class CrossRefReviewFinder:
 
     MODELS = {
         '10.1162': CROSSREF_PEERREVIEW_GRAPH_MODEL,
@@ -122,6 +123,8 @@ class PeerReviewFinder:
                 peer_review_node = JSONNode(item, self.MODELS[source_prefix])
                 print(peer_review_node)
                 # rev_neo_node = self.db.node(peer_review_node, clause="MERGE")
+                # self.add_prelim_article(peer_review_node)
+         # self.make_relationships()
 
 
 class PCIFinder:
@@ -145,6 +148,8 @@ class PCIFinder:
                 #     import pdb; pdb.set_trace()
                 print(peer_review_node)
                 # rev_neo_node = self.db.node(peer_review_node, clause="MERGE")
+                # self.add_prelim_article(peer_review_node)
+        # self.make_relationships()
 
 
 if __name__ == '__main__':
