@@ -1,7 +1,10 @@
 <template lang="pug">
   v-card(class="pa-5")
     v-card-title Discover preprints with one of these methods
-    v-tabs(v-model="activeTab_")
+    v-tabs(
+      v-model="activeTab_"
+      @change="onTabChange"
+    )
       v-tab(to="/refereed-preprints")
         v-icon(class="px-1") mdi-book-open-variant
         | Refereed Preprints
@@ -46,6 +49,9 @@ export default {
     }
   },
   methods: {
+    onTabChange(tab) {
+      this.$store.commit('highlights/updateSelectedTab', tab)
+    },
     onSubmitSearch(term) {
       this.$store.dispatch('fulltextSearch/search', term).then(
         () => {this.$store.dispatch('highlights/listByCurrent', 'fulltextSearch')}
