@@ -8,6 +8,12 @@ export default {
     selectedTab: undefined,
     sortBy: 'posting_date',
     sortDirection: 'desc',
+    page: {
+      '/all/auto-topics': 1,
+      '/refereed-preprints': 1, 
+      '/all/automagic': 1, 
+      '/all/search': 1
+    }
   },
   getters: {
     records (state) {
@@ -21,11 +27,20 @@ export default {
     },
     getSortDirection (state) {
       return state.sortDirection
+    },
+    currentPage(state) {
+      return state.page[state.selectedTab]
     }
   },
   mutations: {
     updateSelectedTab (state, selectedTab) {
       state.selectedTab = selectedTab
+    },
+    updateCurrentPage (state, page) {
+      const tab = state.selectedTab
+      // using spreading instead of direct assignment to trigger reactivity 
+      // see https://vuex.vuejs.org/guide/mutations.html#mutations-follow-vue-s-reactivity-rules
+      state.page = {...state.page, [tab]: page}
     },
     /* *************************************************************************
     * RECORDS

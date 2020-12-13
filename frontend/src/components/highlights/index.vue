@@ -33,8 +33,7 @@ import { mapGetters, mapState } from 'vuex'
 export default {
   data() {
     return {
-      pageNumber: 1,
-      pageSize: 10
+      pageSize: 10,
     }
   },
   components: {
@@ -42,7 +41,15 @@ export default {
   },
   computed: {
     ...mapGetters('highlights', ['records']),
-    ...mapState('highlights', ['loadingRecords']),
+    ...mapState('highlights', ['loadingRecords']), 
+    pageNumber: {
+      get() {
+        return this.$store.getters['highlights/currentPage']
+      },
+      set(page) {
+        this.$store.commit('highlights/updateCurrentPage', page)
+      } 
+    },
     pageCount() {
       let l = this.records.length,
           s = this.pageSize
@@ -52,8 +59,11 @@ export default {
       const start = (this.pageNumber - 1) * this.pageSize,
             end = start + this.pageSize;
       return this.records.slice(start, end);
-}
+    }
   },
+  beforeUpdated() {
+    console.debug("beforeUpdated", this.pageNumber)
+  }
 }
 </script>
 

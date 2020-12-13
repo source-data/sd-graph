@@ -56,7 +56,8 @@ export default {
     return {
       // default value
       selectedTopics: 0,
-      operator: 'single'
+      operator: 'single',
+      previous_operator: 'single'
     }
   },
   computed: {
@@ -72,11 +73,12 @@ export default {
       this.$emit('change', selectedItemsIds)
     },
     onChangeOperator() {
-      if (this.operator === 'single' && Array.isArray(this.selectedTopics)) { // transition from multiple selection to single selection
+      if (this.operator === 'single' && this.previous_operator !== 'single') { // transition from multiple selection to single selection
         this.selectedTopics = this.selectedTopics[0]
-      } else if (this.operator !== 'single' && !Array.isArray(this.selectedTopics)) { // transition from single selectoin to multiple
+      } else if (this.operator !== 'single' && this.previous_operator == 'single') { // transition from single selectoin to multiple
         this.selectedTopics = [this.selectedTopics]
       }
+      this.previous_operator = this.operator
       this.$emit('changeOperator', this.operator)
     }
   },
