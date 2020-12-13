@@ -27,10 +27,21 @@ RETURN COUNT(preprint) AS `biorxiv preprints vizPapers`;
 
 // BY REVIEWING SERVICE
 :begin
-UNWIND [{name: 'review commons', rank: 0}, {name: 'peerage of science', rank: 1}, {name: 'embo press', rank: 2}, {name: 'elife', rank:3}] AS reviewing
+UNWIND [
+  {name: 'review commons', rank: 0},
+  {name: 'peerage of science', rank: 1}, 
+  {name: 'embo press', rank: 2},
+  {name: 'elife', rank:3},
+  {name: 'Peer Community In', rank: 4},
+  {name: 'MIT Press - Journals', rank: 5}
+] AS reviewing
 MATCH (a:Article)
-OPTIONAL MATCH (a)-[r:HasReview]->(review:Review {reviewed_by: reviewing.name})
-OPTIONAL MATCH (a)-[:HasAnnot]->(annot:PeerReviewMaterial {reviewed_by: reviewing.name})
+OPTIONAL MATCH (a)-[r:HasReview]->(review:Review)
+WHERE
+  review.reviewed_by STARTS WITH reviewing.name
+OPTIONAL MATCH (a)-[:HasAnnot]->(annot:PeerReviewMaterial)
+WHERE
+  annot.reviewed_by STARTS WITH reviewing.name
 WITH DISTINCT
     reviewing, a.doi AS doi, review, annot
 WHERE 

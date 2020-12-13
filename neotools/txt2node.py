@@ -154,7 +154,9 @@ class JSONNode:
         if callable(graph_model['path']['type']):
             self.label = cleanup_name(graph_model['path']['type'](element))
         else:
-            self.label = cleanup_name(graph_model['path']['type']).capitalize()
+            label = cleanup_name(graph_model['path']['type'])
+            # only first letter only to keep camel case; .capitalize()  puts everyghin lower case except first char
+            self.label = label[0].upper() + label[1:]
         print(f"parsing {self.label} {position_idx}                               ", end="\r")
         recipe_for_properties = graph_model.get('properties', None)
         properties = {}

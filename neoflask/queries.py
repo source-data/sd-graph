@@ -160,7 +160,7 @@ ORDER BY
   auth.position_idx ASC
 WITH
   id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title, auth, ORCID, nb_figures,
-  {reviews: COLLECT(DISTINCT review {.*}), response: response {.*}, annot: annot {.*}} AS review_process,
+  {reviews: COLLECT(DISTINCT review {.*}), response: response {.*}, annot: COLLECT(DISTINCT annot {.*})} AS review_process,
   entities, assays,
   main_topics, highlighted_entities
 RETURN DISTINCT 

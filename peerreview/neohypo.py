@@ -119,7 +119,7 @@ class ReviewCommonsResponseNode(PeerReviewNode):
 
 class CrossRefReviewNode(JSONNode):
 
-    template = Template('''This study has been evaluated by _$reviewed_by.\n\n$highlight\n\nRead evaluation $review_idx: https://doi.org/$review_doi''')
+    template = Template('''This study has been evaluated by _${reviewed_by}_.\n\n__${highlight}__\n\nRead evaluation $review_idx: https://doi.org/$review_doi''')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -145,9 +145,11 @@ class BioRxiv(API):
         super().__init__()
 
     def details(self, doi: str) -> Dict:
-        url = f'https://api.biorxiv.org/detail/{doi}'
-        response = self.rest2data(url)
-        # TODO: test if response not empty first
+        url_biorxiv = f'https://api.biorxiv.org/details/biorxiv/{doi}'
+        response = self.rest2data(url_biorxiv)
+        if not response['messages'][0]['status'] == 'ok':
+            url_medrxiv = f'https://api.biorxiv.org/details/medrxiv/{doi}'
+            response = self.rest2data(url_medrxiv)
         if response['messages'][0]['status'] == 'ok':
             response = response['collection'][0]
         else:
@@ -164,7 +166,7 @@ class CrossRefDOI(API):
 
 
 class CrossRefPeerReview(API):
- 
+
     def __init__(self):
         self.session_retry = self.requests_retry_session(
             retries=5,
@@ -230,22 +232,24 @@ class PeerReviewFinder:
     def run(self):
         raise NotImplementedError
 
-    def add_prelim_article(self, peer_review_node):
+    def add_prelim_article(self, doi):
         # exists?
-        doi = peer_review_node.related_doi
         q = MATCH_DOI(params={'doi': doi})
         if not self.db.exists(q):
             # fetch metadata from bioRxiv and CrossRef
-            data_biorxiv = self.biorxiv.details(doi)
             data = self.crossref_doi.details(doi)
-            if data and data_biorxiv:
-                data['abstract'] = data_biorxiv['abstract']  # abstract in bioRxiv is plain text while CrossRef has jats namespaced formatting tags
+            if data:
+                data_biorxiv = self.biorxiv.details(doi)
+                if data_biorxiv:
+                    data['abstract'] = data_biorxiv['abstract']  # abstract in bioRxiv is plain text while CrossRef has jats namespaced formatting tags
+                else:
+                    print(f"problem with biorxiv obtaining abstract from doi: {doi}")
                 prelim = JSONNode(data, CROSSREF_PREPRINT_API_GRAPH_MODEL)
                 prelim.properties['version'] = data_biorxiv['version']
                 # add nodes to database
                 build_neo_graph(prelim, 'biorxiv_crossref', self.db)
             else:
-                print(f"problem with doi={doi}")
+                print(f"problem with crossref to get preprint with doi={doi}")
 
     def make_relationships(self):
         N_rev = self.db.query(LINK_REVIEWS())
@@ -271,7 +275,7 @@ class Hypothelink(PeerReviewFinder):
                 peer_review_neo = self.db.node(peer_review_node, clause="MERGE")
                 print(f"loaded {peer_review_node.label} for {peer_review_node.properties['related_article_doi']}")
                 # check if article node missing and add temporary one with source='biorxiv_crossref'
-                self.add_prelim_article(peer_review_node)
+                self.add_prelim_article(peer_review_node.related_doi)
         self.make_relationships()
 
     @staticmethod
@@ -336,13 +340,13 @@ class CrossRefReviewFinder(PeerReviewFinder):
             if is_cross_ref_review(item, target_prefixes):
                 peer_review_node = CrossRefReviewNode(item, self.MODELS[source_prefix])
                 print(peer_review_node)
-                # rev_neo_node = self.db.node(peer_review_node, clause="MERGE")
-                # self.add_prelim_article(peer_review_node)
-        # self.make_relationships()
+                build_neo_graph(peer_review_node, 'cross_ref', self.db)
+                self.add_prelim_article(peer_review_node.properties['related_article_doi'])
+        self.make_relationships()
 
 
 if __name__ == '__main__':
-    parser = ArgumentParser(description="Upload peer review material using CrossRef.")
+    parser = ArgumentParser(description="Upload peer review material using CrossRef. Identifies reviews produced by source on papers/preprints published by target.")
     parser.add_argument('source', default='', help='Name of the reviewing service (source) to scan.')
     parser.add_argument('-T', '--target', default='biorxiv', help='DOI prefix of the published reviewed papers (target).')
     parser.add_argument('-L', '--limit', default='', help='Limit the number of results for debugging')
