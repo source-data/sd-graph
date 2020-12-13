@@ -62,7 +62,7 @@ CALL gds.louvain.stream(
   {
     nodeQuery: 
       'MATCH (h:H_Entity)
-       WHERE (h.type IN ["gene", "protein", "geneprod"]
+       WHERE h.type IN ["gene", "protein", "geneprod"]
        RETURN id(h) AS id',
     relationshipQuery: 
     'MATCH (h1:H_Entity)-[:related_geneprod]-(h2:H_Entity)
