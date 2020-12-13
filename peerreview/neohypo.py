@@ -1,4 +1,7 @@
 import re
+import math
+import time
+from string import Template
 from argparse import ArgumentParser
 from typing import Dict
 from neotools.utils import progress
@@ -114,6 +117,29 @@ class ReviewCommonsResponseNode(PeerReviewNode):
         self.label = 'Response'
 
 
+class CrossRefReviewNode(JSONNode):
+
+    template = Template('''This study has been evaluated by _$reviewed_by.\n\n$highlight\n\nRead evaluation $review_idx: https://doi.org/$review_doi''')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.generate_text_content()
+
+    def generate_text_content(self):
+        review_doi = self.properties.get('doi')
+        reviewed_by = self.properties.get('reviewed_by')
+        highlight = self.properties.get('highlight')
+        review_idx = self.properties.get('review_idx', '')
+        review_idx = f"(#{review_idx})" if review_idx else ''
+        text = self.template.substitute({
+            'reviewed_by': reviewed_by,
+            'review_idx': review_idx,
+            'review_doi': review_doi,
+            'highlight': highlight,
+        })
+        self.properties['text'] = text
+
+
 class BioRxiv(API):
     def __init__(self):
         super().__init__()
@@ -130,8 +156,6 @@ class BioRxiv(API):
 
 
 class CrossRefDOI(API):
-    def __init__(self):
-        super().__init__()
 
     def details(self, doi: str) -> Dict:
         url = f'https://doi.org/{doi}'
@@ -140,56 +164,57 @@ class CrossRefDOI(API):
 
 
 class CrossRefPeerReview(API):
+ 
     def __init__(self):
-        super().__init__()
+        self.session_retry = self.requests_retry_session(
+            retries=5,
+            backoff_factor=1.0,
+        )
+        self.session_retry.headers.update({
+            "Accept": "application/json",
+            "From": "thomas.lemberger@embo.org"
+        })
 
-    def details(self, prefix: str) -> Dict:
-        url_summary = f'https://api.crossref.org/prefixes/{prefix}/works?filter=type:peer-review&rows=0'
-        summary_results = self.rest2data(url_summary)
+    def details(self, prefix: str, type_filter: str, limit: int) -> Dict:
+        url_summary = f'https://api.crossref.org/prefixes/{prefix}/works'
+        params = {
+            'rows': 0
+        }
+        if type_filter:
+            # CrossRef API does not accept empty values for filter parameter
+            params['filter'] = type_filter
+        summary_results = self.rest2data(url_summary, params)
         if summary_results['status'] == 'ok':
             total_results = summary_results['message']['total-results']
-            items_per_page = 1000
-            offset = 0
-            pages = math.ceil(total_results / items_per_page)
+            limit = limit if limit else total_results
+            items_per_page = min(1000, limit)
             items = []
             check = 0
-            print(f"total_results, items_per_page, pages:", total_results, items_per_page, pages)
-            for offset in range(0, items_per_page * pages, items_per_page):
-                progress(offset + items_per_page, total_results, f"offset={offset} with {items_per_page} items per page over {pages} pages")
-                url = f'https://api.crossref.org/prefixes/{prefix}/works?filter=type:peer-review&rows={items_per_page}&offset={offset}'
-                response = self.rest2data(url)
-                new_items = response['message']['items']
-                items += new_items
-                check += len(new_items)
-            assert check == total_results
-        else:
-            import pdb; pdb.set_trace()
-        return items
-
-
-class CrossRefWorks(API):
-    def __init__(self):
-        super().__init__()
-
-    def details(self, prefix: str) -> Dict:
-        url_summary = f'https://api.crossref.org/prefixes/{prefix}/works?rows=0'
-        summary_results = self.rest2data(url_summary)
-        if summary_results['status'] == 'ok':
-            total_results = summary_results['message']['total-results']
-            items_per_page = 1000
-            offset = 0
-            pages = math.ceil(total_results / items_per_page)
-            items = []
-            check = 0
-            print(f"total_results, items_per_page, pages:", total_results, items_per_page, pages)
-            for offset in range(0, items_per_page * pages, items_per_page):
-                progress(offset + items_per_page, total_results, f"offset={offset} with {items_per_page} items per page over {pages} pages")
-                url = f'https://api.crossref.org/prefixes/{prefix}/works?rows={items_per_page}&offset={offset}'
-                response = self.rest2data(url)
-                new_items = response['message']['items']
-                items += new_items
-                check += len(new_items)
-            assert check == total_results
+            print(f"total_results:", total_results)
+            # deep paggin with cursor https://github.com/CrossRef/rest-api-doc#result-controls
+            cursor = "*"
+            params = {'rows': items_per_page}
+            if type_filter:
+                # CrossRef API does not accept empty values for filter parameter
+                params['filter'] = type_filter
+            url = f'https://api.crossref.org/prefixes/{prefix}/works'
+            while cursor:
+                progress(len(items), total_results, f"{len(items)} / {total_results}")
+                params['cursor'] = cursor
+                response = self.rest2data(url, params)
+                if response.get('status') == 'ok':
+                    new_items = response['message']['items']
+                    items += new_items
+                    check += len(new_items)
+                    if (len(new_items) < items_per_page) or (check >= limit):  # the end has been reached
+                        cursor = ''
+                    else:
+                        cursor = response['message']['next-cursor']
+                else:
+                    print(response)
+                    cursor = ''
+                time.sleep(1.0)
+            assert check == total_results or check <= limit
         else:
             import pdb; pdb.set_trace()
         return items
@@ -200,6 +225,7 @@ class PeerReviewFinder:
     def __init__(self, db):
         self.db = db
         self.biorxiv = BioRxiv()
+        self.crossref_doi = CrossRefDOI()
 
     def run(self):
         raise NotImplementedError
@@ -211,7 +237,7 @@ class PeerReviewFinder:
         if not self.db.exists(q):
             # fetch metadata from bioRxiv and CrossRef
             data_biorxiv = self.biorxiv.details(doi)
-            data = self.crossref.details(doi)
+            data = self.crossref_doi.details(doi)
             if data and data_biorxiv:
                 data['abstract'] = data_biorxiv['abstract']  # abstract in bioRxiv is plain text while CrossRef has jats namespaced formatting tags
                 prelim = JSONNode(data, CROSSREF_PREPRINT_API_GRAPH_MODEL)
@@ -233,7 +259,6 @@ class Hypothelink(PeerReviewFinder):
     def __init__(self, db, hypo):
         super()._init__(db)
         self.hypo = hypo
-        self.crossref = CrossRefDOI()
 
     def run(self, group_ids):
         for group_id in group_ids:
@@ -297,37 +322,19 @@ class CrossRefReviewFinder(PeerReviewFinder):
 
     MODELS = {
         '10.1162': CROSSREF_PEERREVIEW_GRAPH_MODEL,
-    }
-
-    def __init__(self, db):
-        super().__init__()
-
-    def run(self, source_prefix, target_prefixes):
-        items = self.crossref.details(source_prefix)
-        for item in items:
-            if is_cross_ref_review(item, target_prefixes):
-                peer_review_node = JSONNode(item, self.MODELS[source_prefix])
-                print(peer_review_node)
-                # rev_neo_node = self.db.node(peer_review_node, clause="MERGE")
-                # self.add_prelim_article(peer_review_node)
-        # self.make_relationships()
-
-
-class PCIFinder(PeerReviewFinder):
-
-    MODELS = {
         '10.24072': CROSSREF_PCI_REVIEW_GRAPH_MODEL,
+        '10.7554': CROSSREF_PEERREVIEW_GRAPH_MODEL,
     }
 
     def __init__(self, db):
-        super().__init__()
-        self.crossrefworks = CrossRefWorks()
+        super().__init__(db)
+        self.crossref_peer_review = CrossRefPeerReview()
 
-    def run(self, source_prefix, target_prefixes):
-        items = self.crossrefworks.details(source_prefix)
+    def run(self, source_prefix, target_prefixes, type_filter, limit):
+        items = self.crossref_peer_review.details(source_prefix, type_filter, limit)
         for item in items:
             if is_cross_ref_review(item, target_prefixes):
-                peer_review_node = JSONNode(item, self.MODELS[source_prefix])
+                peer_review_node = CrossRefReviewNode(item, self.MODELS[source_prefix])
                 print(peer_review_node)
                 # rev_neo_node = self.db.node(peer_review_node, clause="MERGE")
                 # self.add_prelim_article(peer_review_node)
@@ -336,25 +343,29 @@ class PCIFinder(PeerReviewFinder):
 
 if __name__ == '__main__':
     parser = ArgumentParser(description="Upload peer review material using CrossRef.")
-    parser.add_argument('-S', '--source', default='', help='Name of the reviewing service (source) to scan.')
-    parser.add_argument('-T', '--targets', default=['10.1101'], help='DOI prefix of the published reviewed papers (target).')
+    parser.add_argument('source', default='', help='Name of the reviewing service (source) to scan.')
+    parser.add_argument('-T', '--target', default='biorxiv', help='DOI prefix of the published reviewed papers (target).')
+    parser.add_argument('-L', '--limit', default='', help='Limit the number of results for debugging')
     args = parser.parse_args()
     source = args.source
-    target_prefixes = args.targets.lower
-    source_prefix = SOURCES[source.lower]
-
+    limit = args.limit
+    limit = int(limit) if limit else None
     SOURCE_PREFIXES = {
         'pci': '10.24072',
         'rrc19': '10.1162',
+        'elife': '10.7554',
     }
     TARGET_PREFIXES = {
-        'biorxiv': '10.1101'
+        'biorxiv': '10.1101',
+        'elife': '10.7554',
     }
+    source_prefix = SOURCE_PREFIXES[source.lower()]
+    target_prefixes = [TARGET_PREFIXES[args.target.lower()]]
     if source == 'pci':
-        PCIFinder(DB).run(SOURCE_PREFIXES[source], TARGET_PREFIXES[[arget])
-    elif source == 'rrc19':
-        PeerReviewFinder(DB).run(SOURCE_PREFIXES[source], TARGET_PREFIXES[target])
+        CrossRefReviewFinder(DB).run(source_prefix, target_prefixes, type_filter='', limit=limit)
+    elif source == 'rrc19' or source == 'elife':
+        CrossRefReviewFinder(DB).run(source_prefix, target_prefixes, type_filter='type:peer-review', limit=limit)
     elif source in ['review commonse', 'elife', 'embo press', 'peerage of science']:
         Hypothelink(DB, HYPO).run(HYPO_GROUP_IDS)
-    else
+    else:
         print("no model yet for this source")
