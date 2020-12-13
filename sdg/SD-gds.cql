@@ -62,7 +62,7 @@ CALL gds.louvain.stream(
   {
     nodeQuery: 
       'MATCH (h:H_Entity)
-       WHERE (h.type IN ["gene", "protein", "geneprod"]
+       WHERE h.type IN ["gene", "protein", "geneprod"]
        RETURN id(h) AS id',
     relationshipQuery: 
     'MATCH (h1:H_Entity)-[:related_geneprod]-(h2:H_Entity)
@@ -85,7 +85,7 @@ RETURN COUNT(DISTINCT subcommunityId) AS `geneprod communities`;
 // adding concept geneprod name
 MATCH (entity:H_Entity) SET entity.geneprod_concept_name = NULL;
 MATCH (entity:H_Entity)-[:Has_text]->(term:Term)
-WHERE (entity.type IN ["gene" , 'protein', 'geneprod']
+WHERE entity.type IN ["gene" , 'protein', 'geneprod']
 WITH entity, term
 ORDER BY term.freq_in_panel  DESC
 WITH
