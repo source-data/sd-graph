@@ -62,16 +62,18 @@
               |   Response to the Reviewers
           v-expansion-panel-content
             p(v-html="mdRender(article.review_process.response.text)").md-content
-        v-expansion-panel(v-if="article.review_process.annot")
+        //- v-expansion-panel(v-if="article.review_process.annot")
+        //- CHECK annot
+        v-expansion-panel(v-for="annot in article.review_process.annot")
           v-expansion-panel-header
             span
               v-icon(small class="px-1" color="indigo lighten-3") mdi-text-box-check-outline
               |  Reviewed by
-              i  {{ serviceId2Name(article.review_process.annot.reviewed_by) }}
+              i  {{ serviceId2Name(annot.reviewed_by) }}
               |  | Review Process File
-              | ({{ displayDate(article.review_process.annot.posting_date) }})
+              | ({{ displayDate(annot.posting_date) }})
           v-expansion-panel-content
-            p(v-html="mdRender(article.review_process.annot.text)").md-content
+            p(v-html="mdRender(annot.text)").md-content
       v-expansion-panels(v-if="article.journal_doi")
         .v-expansion-panel
           .v-expansion-panel-header
@@ -89,7 +91,7 @@
             v-card-text
               p(class="text--primary") {{ article.abstract }}
         v-col
-          v-card(v-if="article.assays.length > 0")
+          v-card(v-if="(article.assays.length > 0) || (article.entities.length > 0)")
             v-card-title From the figures
             v-card-text
                 v-list-item

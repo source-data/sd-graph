@@ -20,17 +20,28 @@ RETURN "purge" as `completed`;
 // VizPaper for biorxiv preprints
 :begin
 MATCH (a:SDArticle)
-WHERE a.journalName = 'biorxiv'
+WHERE a.journalName IN ['biorxiv', 'medrxiv']
 MERGE (preprint:VizPaper {doi: a.doi, pub_date: toString(DATETIME(a.pub_date))})
-RETURN COUNT(preprint) AS `biorxiv preprints vizPapers`;
+RETURN COUNT(preprint) AS `biorxiv/medrxiv preprints vizPapers`;
 :commit
 
 // BY REVIEWING SERVICE
 :begin
-UNWIND [{name: 'review commons', rank: 0}, {name: 'peerage of science', rank: 1}, {name: 'embo press', rank: 2}, {name: 'elife', rank:3}] AS reviewing
+UNWIND [
+  {name: 'review commons', rank: 0},
+  {name: 'peerage of science', rank: 1}, 
+  {name: 'embo press', rank: 2},
+  {name: 'elife', rank:3},
+  {name: 'Peer Community In', rank: 4},
+  {name: 'MIT Press - Journals', rank: 5}
+] AS reviewing
 MATCH (a:Article)
-OPTIONAL MATCH (a)-[r:HasReview]->(review:Review {reviewed_by: reviewing.name})
-OPTIONAL MATCH (a)-[:HasAnnot]->(annot:PeerReviewMaterial {reviewed_by: reviewing.name})
+OPTIONAL MATCH (a)-[r:HasReview]->(review:Review)
+WHERE
+  review.reviewed_by STARTS WITH reviewing.name
+OPTIONAL MATCH (a)-[:HasAnnot]->(annot:PeerReviewMaterial)
+WHERE
+  annot.reviewed_by STARTS WITH reviewing.name
 WITH DISTINCT
     reviewing, a.doi AS doi, review, annot
 WHERE 
@@ -67,7 +78,7 @@ RETURN COUNT(DISTINCT paper) AS `papers in the by reviewing service`;
 MATCH
   (a:SDArticle)-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity)-[:Has_text]->(name:Term)
 WHERE
-  a.journalName = "biorxiv" AND
+  a.journalName IN ['biorxiv', 'medrxiv'] AND
   //a.doi = "10.1101/2020.06.29.178129" AND  // for testing
   entity.category = "assay" AND
   t.category = "assay" AND
@@ -111,7 +122,7 @@ RETURN COUNT(DISTINCT entity) AS `linked assays for visualization`;
 MATCH 
   (a:SDArticle)-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity)-[:Has_text]->(name:Term)
 WHERE
-  a.journalName = "biorxiv" AND
+  a.journalName IN ['biorxiv', 'medrxiv'] AND
   // a.doi = "10.1101/2020.06.29.178129" AND  // for testing
   entity.type IN ["gene", "protein", "geneprod"] AND
   t.type IN ["gene", "protein", "geneprod"]
@@ -255,9 +266,10 @@ RETURN COUNT(DISTINCT r) AS `papers linked to highlighted topics`;
 // sum of ranks for recent papers
 // rank by assay
 :begin
-MATCH (coll:SDCollection)-->(a:SDArticle {journalName:'biorxiv'})
+MATCH (a:SDArticle)
 // recent papers
 WHERE
+  a.journalName IN ['biorxiv', 'medrxiv'] AND
   DATETIME(a.pub_date) > (DATETIME() - duration({months: 3}))
 WITH
   a.doi AS doi
@@ -291,8 +303,9 @@ WITH
   COLLECT({rank: i, preprint: preprint_list[i]}) AS ranked_by_assays
 
 // rank by entities
-MATCH (coll:SDCollection)-->(a:SDArticle {journalName:'biorxiv'})
+MATCH (a:SDArticle)
 WHERE
+  a.journalName IN ['biorxiv', 'medrxiv'] AND
   DATETIME(a.pub_date) > (DATETIME() - duration({months: 3}))
 WITH
   ranked_by_assays,
@@ -329,9 +342,10 @@ WITH
   COLLECT({rank: i, preprint: preprint_list[i]}) AS ranked_by_entities
 
 // rank by multi topics
-MATCH (coll:SDCollection)-->(a:SDArticle {journalName:'biorxiv'})
+MATCH (a:SDArticle)
 // recent papers
 WHERE
+  a.journalName IN ['biorxiv', 'medrxiv'] AND
   DATETIME(a.pub_date) > (DATETIME() - duration({months: 3}))
 WITH
   ranked_by_assays, ranked_by_entities,

@@ -8,7 +8,7 @@
         color="blue-grey darken-2"
         hide-on-scroll
         fade-img-on-scroll
-        scroll-threshold="300"
+        scroll-threshold="80"
         src="../assets/EEB_HP_Banner.svg"
       )
         Banner

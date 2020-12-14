@@ -23,7 +23,7 @@
         v-icon(dense) mdi-database-outline
         //- small Database stats:
         small
-          code {{ db_stats.biorxiv_preprints || 0 }}
+          code {{ db_stats.preprints || 0 }}
           |  bioRxiv preprints loaded.
         //- p
         //-   code {{ db_stats.refereed_preprints || 0 }}

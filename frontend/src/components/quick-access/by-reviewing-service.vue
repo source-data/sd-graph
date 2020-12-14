@@ -43,9 +43,10 @@ export default {
   computed: {
     ...mapGetters('byReviewingService', ['records']),
     reviewingList () {
-      return this.records.map(
+      const ids =  this.records.map(
         (r) => {return r.id}
       ).sort().reverse()
+      return ids
     },
     selectedReviewingServiceDescription () {
       return getReviewingServiceDescription(this.selectedRev)

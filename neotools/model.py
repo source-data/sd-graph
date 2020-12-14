@@ -1,3 +1,4 @@
+import re
 from lxml.etree import Element
 from neotools.utils import inner_text
 from datetime import date
@@ -240,6 +241,101 @@ CROSSREF_PREPRINT_API_GRAPH_MODEL = {
                 'caption': lambda d: d.get('caption', ''),
                 'title': lambda d: d.get('title', ''),
                 'graphic': lambda d: d.get('graphic', ''),
+            },
+        }
+    }
+}
+
+
+RESPONSE_REGEX_RRC19 = re.compile(r'^review (\d):', re.IGNORECASE)
+
+
+def get_review_idx_from_title(d):
+    m = RESPONSE_REGEX_RRC19.match(d['title'][0])
+    if m:
+        idx = m.group(1)
+    else:
+        idx = ''
+    return idx
+
+
+def get_type(d):
+    node_type = 'Unknown'
+    info = d.get('review', '')
+    if info:
+        type_info = info.get('type','')
+        if type_info == 'author-comment':
+            node_type = 'Response'
+        elif type_info == 'editor-report':
+            node_type = 'PeerReviewMaterial' 
+        elif type_info == 'referee-report':
+            node_type = 'Review'
+        else:
+            node_type = 'PeerReviewMaterial'
+    return node_type
+
+
+CROSSREF_PEERREVIEW_GRAPH_MODEL = {
+    'path': {
+        'type': lambda d: get_type(d),
+        'funct': lambda d: d['article']
+    },
+    'properties': {
+        'doi': lambda d: d['DOI'],
+        'reviewed_by': lambda d: d['publisher'],
+        'posting_date': lambda d: date(*d['published-print']['date-parts'][0]).isoformat(),  # journal: d['ublished-online']['date-parts']
+        'highlight': lambda d: d['title'][0],
+        'related_article_doi': lambda d: d['relation']['is-review-of'][0]['id'],
+        'review_idx': lambda d: get_review_idx_from_title(d),
+        'text': lambda x: '',
+    },
+    'children': {
+        'has_licence': {
+            'path': {
+                'type': 'licence',
+                'funct': lambda d: d.get('license', [])
+            },
+            'properties': {
+                'url': lambda d: d.get('URL', '')
+            },
+        }
+    }
+}
+
+
+def get_posting_date(d):
+    published = d.get('published-online', {}).get('date-parts', [])
+    if published:
+        return date(*published[0]).isoformat()
+    published = d.get('published-print', {}).get('date-parts', [])
+    if published:
+        return date(*published[0]).isoformat()
+    else:
+        return ''
+
+
+CROSSREF_PCI_REVIEW_GRAPH_MODEL = {
+    'path': {
+        'type': 'PeerReviewMaterial',
+        'funct': lambda d: d['article']
+    },
+    'properties': {
+        'doi': lambda d: d['DOI'],
+        'reviewed_by': lambda d: d['container-title'][0],
+        'posting_date': lambda d: get_posting_date(d),
+        'highlight': lambda d: d['title'][0],
+        'related_article_doi': lambda d: d['relation']['is-review-of'][0]['id'],
+        'review_idx': lambda d: '0',
+        'text': lambda d: ''
+    },
+    'children': {
+        'has_licence': {
+            'path': {
+                'type': 'licence',
+                'funct': lambda d: d.get('license', []),
+            },
+            'properties': {
+                'url': lambda d: d.get('URL', ''),
             },
         }
     }

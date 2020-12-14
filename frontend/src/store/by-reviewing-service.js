@@ -7,6 +7,9 @@ const _serviceId2Slug = {
   'elife': 'elife',
   'embo press': 'embo-press',
   'peerage of science': 'peerage-of-science',
+  'MIT Press - Journals': 'rrc19',
+  'Peer Community In': 'peer-community-in'
+
 }
 
 const _serviceSlug2Id = Object.keys(_serviceId2Slug).reduce((acc, serviceId) => {
@@ -21,6 +24,8 @@ const _serviceId2Name = {
   'elife': 'eLife',
   'embo press': 'EMBO Press',
   'peerage of science': 'Peerage of Science',
+  'mit press - journals': 'Rapid Reviews: COVID-19',
+  'peer community in': "Peer Community In",
 }
 
 export function serviceId2Slug (serviceId) {
@@ -48,6 +53,10 @@ export function getReviewingServiceDescription (serviceName) {
       return '<p>Learn more about <i>EMBO Press</i> Transparent Review at <a target="_blank" href="https://www.embopress.org/policies">https://embopress.org</a></p>'
     case 'peerage-of-science':
       return '<p>Learn more about <i>Peerage of Science</i> at <a target="_blank" href="https://www.peerageofscience.org/">https://peerageofscience.org/</a></p>'
+    case 'rrc19':
+      return '<p>Learn more about <i>Rapid Reviews: COVID-19</i> at <a target="_blank" href="https://rapidreviewscovid19.mitpress.mit.edu/">https://rapidreviewscovid19.mitpress.mit.edu/</a></p>'
+    case 'peer-community-in':
+      return '<p>Learn more about <i>Peer Community In</i> at <a target="_blank" href="https://peercommunityin.org/">https://peercommunityin.org/</a></p>'
     default: 
       break;
   }
