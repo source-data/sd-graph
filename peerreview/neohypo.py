@@ -367,9 +367,9 @@ if __name__ == '__main__':
     target_prefixes = [TARGET_PREFIXES[args.target.lower()]]
     if source == 'pci':
         CrossRefReviewFinder(DB).run(source_prefix, target_prefixes, type_filter='', limit=limit)
-    elif source == 'rrc19' or source == 'elife':
+    elif source == 'rrc19':
         CrossRefReviewFinder(DB).run(source_prefix, target_prefixes, type_filter='type:peer-review', limit=limit)
-    elif source in ['review commonse', 'elife', 'embo press', 'peerage of science']:
+    elif source == 'hypothesis':
         Hypothelink(DB, HYPO).run(HYPO_GROUP_IDS)
     else:
         print("no model yet for this source")
