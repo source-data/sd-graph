@@ -131,19 +131,18 @@ WITH DISTINCT
   review, response, annot
 OPTIONAL MATCH (auth)-->(auth_id:Contrib_id)
 OPTIONAL MATCH
-  (col:VizCollection {name: "by-auto-topics"})-->(autotopics:VizSubCollection)-[rel_autotopics_paper]->(vzp:VizPaper {doi: doi})-[:HasEntityHighlight]->(highlight:VizEntity {category: 'entity'})
+  (col:VizCollection {name: "by-auto-topics"})-->(autotopics:VizSubCollection)-[rel_autotopics_paper]->(:VizPaper {doi: doi})-[:HasEntityHighlight]->(highlight:VizEntity {category: 'entity'})
 WITH
   id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title,
   auth,
   auth_id.text AS ORCID, 
   nb_figures, review, response, annot,
-  vzp,
   COLLECT(DISTINCT autotopics.topics) AS main_topics,
   COLLECT(DISTINCT highlight.text) AS highlighted_entities
 OPTIONAL MATCH
   (vzp:VizPaper {doi: doi})-[:HasEntity]->(assay:VizEntity {category: 'assay'})
 OPTIONAL MATCH
-  (vzp)-[:HasEntity]->(entity:VizEntity {category: 'entity'})
+  (vzp:VizPaper {doi: doi})-[:HasEntity]->(entity:VizEntity {category: 'entity'})
 WHERE
   // don't duplicated entities if they are in the topic highlight set
   NOT entity.text IN highlighted_entities
