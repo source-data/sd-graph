@@ -20,7 +20,7 @@ export default new Vuex.Store({
   state: {
     stats: {
       autoannotated_preprints: undefined,
-      biorxiv_preprints: undefined,
+      preprints: undefined,
       refereed_preprints: undefined,
     },
     loadingRecords: false,
@@ -49,7 +49,7 @@ export default new Vuex.Store({
           const resp = response.data[0]
           const stats = {
             autoannotated_preprints: resp.autoannotated_preprints,
-            biorxiv_preprints: resp.biorxiv_preprints,
+            preprints: resp.preprints,
             refereed_preprints: resp.refereed_preprints,
           }
           commit('setStats', stats)
