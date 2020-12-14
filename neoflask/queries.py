@@ -63,7 +63,7 @@ WITH
   a.version AS version,
   a.doi AS doi,
   a.journalName as journal,
-  {reviews: COLLECT(DISTINCT review {.*}), response: response {.*}, annot: annot {.*}} AS review_process
+  {reviews: COLLECT(DISTINCT review {.*}), response: response {.*}, annot: COLLECT(DISTINCT annot {.*})} AS review_process
 WHERE
   review_process.reviews <> [] OR EXISTS(review_process.annot)
 RETURN id, pub_date, title, abstract, version, doi, journal, review_process
@@ -157,6 +157,7 @@ WITH
   COLLECT(DISTINCT entity.text) AS entities
 ORDER BY
   review.review_idx ASC,
+  annot.review_idx ASC, 
   auth.position_idx ASC
 WITH
   id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title, auth, ORCID, nb_figures,
@@ -326,7 +327,7 @@ class LUCENE_SEARCH(Query):
 WITH $query AS query
 CALL db.index.fulltext.queryNodes("title", query) YIELD node, score
 WITH node, score, query
-WHERE node.journalName = "biorxiv"
+WHERE node.journalName IN ["biorxiv", "medrxiv"]
 WITH
 // weight 4x for results on title
   node.doi AS doi, node.title AS text, 1 * score AS weighted_score, "title" AS source, query
@@ -341,7 +342,7 @@ UNION
 WITH $query AS query
 CALL db.index.fulltext.queryNodes("abstract", query) YIELD node, score
 WITH node, score, query
-WHERE node.journalName = "biorxiv"
+WHERE node.journalName IN ["biorxiv", "medrxiv"]
 WITH
 // weight 2x for results on abstract
   node.doi AS doi, node.title as text, 1 * score AS weighted_score, "abstract" as source, query
@@ -355,7 +356,8 @@ UNION
 //CALL db.index.fulltext.createNodeIndex("caption",["SDPanel"], ["caption"]);
 WITH $query AS query
 CALL db.index.fulltext.queryNodes("caption", query) YIELD node, score
-MATCH (article:SDArticle {journalName: "biorxiv"})-[:has_figure]->(f:SDFigure)-[:has_panel]->(node)
+MATCH (article:SDArticle)-[:has_figure]->(f:SDFigure)-[:has_panel]->(node)
+WHERE node.journalName IN ["biorxiv", "medrxiv"]
 WITH DISTINCT
 // weight 1 for caption
   article.doi as doi, node.caption as text, 1 * score AS weighted_score, "caption" AS source, query
@@ -383,7 +385,8 @@ UNION
 //CALL db.index.fulltext.createNodeIndex("name",["Contrib"], ["surname", "given_names"]);
 WITH $query AS query
 CALL db.index.fulltext.queryNodes("name", query) YIELD node, score
-MATCH (article:SDArticle {journalName: "biorxiv"})-->(author:Contrib)
+MATCH (article:SDArticle)-->(author:Contrib)
+WHERE node.journalName IN ["biorxiv", "medrxiv"]
 WHERE author.surname = node.surname AND author.given_names = node.given_names
 WITH DISTINCT
 //weight 4x for results on authors
@@ -412,12 +415,12 @@ RETURN
 class STATS(Query):
     code = '''
 MATCH (a:Article)
-WHERE toLower(a.journal_title) = 'biorxiv'
-WITH COUNT(DISTINCT a.doi) AS biorxiv_preprints
+WHERE toLower(a.journal_title) IN ["biorxiv", "medrxiv"]
+WITH COUNT(DISTINCT a.doi) AS preprints
 MATCH (:VizCollection {name: "refereed-preprints"})-[:HasSubCol]->(:VizSubCollection)-[:HasPaper]->(a:VizPaper)
-WITH COUNT(DISTINCT a.doi) AS refereed_preprints, biorxiv_preprints
+WITH COUNT(DISTINCT a.doi) AS refereed_preprints, preprints
 MATCH (a:SDArticle {source: "eebapi"})
-WITH COUNT(DISTINCT a.doi) AS autoannotated_preprints, refereed_preprints, biorxiv_preprints
-RETURN biorxiv_preprints, refereed_preprints, autoannotated_preprints
+WITH COUNT(DISTINCT a.doi) AS autoannotated_preprints, refereed_preprints, preprints
+RETURN preprints, refereed_preprints, autoannotated_preprints
     '''
-    returns = ['biorxiv_preprints', 'refereed_preprints', 'autoannotated_preprints']
+    returns = ['preprints', 'refereed_preprints', 'autoannotated_preprints']
