@@ -2,9 +2,6 @@
   v-container()
     v-row
       v-col
-        Intro
-    v-row
-      v-col
         QuickAccess
     v-row
       v-col
