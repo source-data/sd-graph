@@ -261,7 +261,7 @@ class PeerReviewFinder:
 class Hypothelink(PeerReviewFinder):
 
     def __init__(self, db, hypo):
-        super()._init__(db)
+        super().__init__(db)
         self.hypo = hypo
 
     def run(self, group_ids):
