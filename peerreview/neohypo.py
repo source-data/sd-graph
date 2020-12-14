@@ -352,6 +352,7 @@ if __name__ == '__main__':
     parser.add_argument('-L', '--limit', default='', help='Limit the number of results for debugging')
     args = parser.parse_args()
     source = args.source
+    target = args.target
     limit = args.limit
     limit = int(limit) if limit else None
     SOURCE_PREFIXES = {
@@ -363,12 +364,10 @@ if __name__ == '__main__':
         'biorxiv': '10.1101',
         'elife': '10.7554',
     }
-    source_prefix = SOURCE_PREFIXES[source.lower()]
-    target_prefixes = [TARGET_PREFIXES[args.target.lower()]]
     if source == 'pci':
-        CrossRefReviewFinder(DB).run(source_prefix, target_prefixes, type_filter='', limit=limit)
+        CrossRefReviewFinder(DB).run(SOURCE_PREFIXES[source.lower()], [TARGET_PREFIXES[target.lower()]], type_filter='', limit=limit)
     elif source == 'rrc19':
-        CrossRefReviewFinder(DB).run(source_prefix, target_prefixes, type_filter='type:peer-review', limit=limit)
+        CrossRefReviewFinder(DB).run(SOURCE_PREFIXES[source.lower()], [TARGET_PREFIXES[target.lower()]], type_filter='type:peer-review', limit=limit)
     elif source == 'hypothesis':
         Hypothelink(DB, HYPO).run(HYPO_GROUP_IDS)
     else:
