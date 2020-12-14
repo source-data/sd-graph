@@ -63,7 +63,7 @@ update_local_neo4j() {
     # run monthly
 
     log "updating meca archives"
-    aws s3 sync --request-payer requester --exclude "*" --include "*.meca" s3://biorxiv-src-monthly/Current_Content /usb01/shared/biorxiv-src-monthly
+    aws s3 sync --request-payer requester --exclude "*" --include "*.meca" s3://biorxiv-src-monthly/Current_Content /mnt/usb01/shared/biorxiv-src-monthly
     # alternative using docker
     # docker run --rm -it -v ~/.aws:/root/.aws --mount type=bind,source=/raid/lemberge/sd-graph/biorxiv/Current_Content/July_2020,target=/root/Current_Content/July_2020 amazon/aws-cli s3 sync --request-payer requester --exclude "*" --include "*.meca" s3://biorxiv-src-monthly/Current_Content/July_2020 ./Current_Content/July_2020 --dryrun
 

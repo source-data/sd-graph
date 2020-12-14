@@ -21,7 +21,21 @@ docker-compose down --volumes # to clean the content of the volumes
 ```
 
 This can solve some issues, for example if you run `build` with a wrong config file.
+#### First time setup:
 
+```bash
+docker-compose build
+docker-compose up
+```
+
+Before you import any dump you need to make sure that Neo4j creates the layout for the databases. You can do that by running:
+
+```
+docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p THE_SOURCEDATA_USER_PASSWORD
+```
+
+
+#### Updating the database contents
 Normally you need this:
 ```bash
 docker-compose  build
@@ -60,6 +74,8 @@ docker run --rm --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/
 ```
 
 ## How to load content into the neo4j database
+
+And then you can you load the download db dump with:
 
 ```bash
 # Make sure you dont have your neo4j running:

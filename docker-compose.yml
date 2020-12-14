@@ -15,7 +15,7 @@ services:
     volumes:
       - .:/app
       - ./log:/log
-      # - ${BIORXIV_PATH}:/app/biorxiv # to be provided in .env
+      - ${BIORXIV_PATH}:/app/biorxiv # to be provided in .env
       - /tmp/.X11-unix:/tmp/.X11-unix
       - /tmp:/tmp
     environment:
