@@ -92,12 +92,18 @@ def by_doi(doi: str):
 def by_dois():
     dois = request.json['dois']
     app.logger.info(f"search dois:{dois}")
-    cache_key = str(hash(frozenset(dois)))
-    data = cache.get(cache_key)
-    if data is None:
-        data = [ASKNEO.by_doi(doi=doi)[0] for doi in dois]
-        cache.add(cache_key, data)
-    return jsonify(data)
+    response = []
+    for doi in dois:
+        cache_key = f'/api/v1/dois/{doi}'
+        doi_data = cache.get(cache_key)
+        if doi_data is None:
+            app.logger.info(f"\t\t cache miss: {doi}")
+            doi_data = ASKNEO.by_doi(doi=doi)[0]
+            cache.add(cache_key, doi_data)
+        else:
+            app.logger.info(f"\t\t  cache hit: {doi}")
+        response.append(doi_data)
+    return jsonify(response)
 
 @app.route('/api/v1/review/<path:doi>', methods=['GET', 'POST'])
 @cache.cached()
