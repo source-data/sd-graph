@@ -32,7 +32,7 @@ import QuickAccessByReviewingService from './by-reviewing-service.vue'
 import QuickAccessByAutomagic from './by-automagic.vue'
 import QuickAccessByAutoTopics from './by-auto-topics.vue'
 import QuickAccessSearchBar from './search-bar.vue'
-import { REFEREED_PREPRINTSB, AUTO_TOPICS, AUTOMAGIC, FULLTEXT_SEARCH } from '../../components/quick-access/tab-names'
+import { REFEREED_PREPRINTS, AUTO_TOPICS, AUTOMAGIC, FULLTEXT_SEARCH } from '../../components/quick-access/tab-names'
 import { mapState } from 'vuex'
 
 export default {
@@ -49,8 +49,23 @@ export default {
     }
   },
   methods: {
-    onTabChange(tab) {
-      this.$store.commit('highlights/updateSelectedTab', tab)
+    onTabChange(tabUrl) {
+      let tabName = undefined
+      switch (tabUrl) {
+        case '/refereed-preprints':
+          tabName = REFEREED_PREPRINTS
+          break
+        case '/all/auto-topics':
+          tabName = AUTO_TOPICS
+          break
+        case '/all/automagic':
+          tabName = AUTOMAGIC
+          break
+        case '/all/search':
+          tabName = FULLTEXT_SEARCH
+          break
+      }
+      this.$store.commit('highlights/updateSelectedTab', tabName)
     },
     onSubmitSearch(term) {
       this.$store.dispatch('fulltextSearch/search', term).then(
@@ -68,9 +83,6 @@ export default {
   },
   computed: {
     ...mapState('highlights', ['loadingRecords']),
-    tabs () {
-      return {REFEREED_PREPRINTSB, AUTO_TOPICS, AUTOMAGIC, FULLTEXT_SEARCH}
-    }
   }
 }
 </script>
