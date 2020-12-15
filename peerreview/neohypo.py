@@ -119,7 +119,7 @@ class ReviewCommonsResponseNode(PeerReviewNode):
 
 class CrossRefReviewNode(JSONNode):
 
-    template = Template('''This study has been evaluated by _${reviewed_by}_.\n\n__${highlight}__\n\nRead evaluation $review_idx: https://doi.org/$review_doi''')
+    template = Template('''This study has been evaluated by _${reviewed_by}_.\n\n__${highlight}__\n\nRead the evaluation $review_idx: https://doi.org/$review_doi''')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
