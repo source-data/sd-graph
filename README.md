@@ -48,9 +48,10 @@ aws s3 sync --request-payer requester --exclude "*" --include "*.meca" s3://bior
  # update meca archives; sync to folder outside of docker build scope
 cat neotools/purge_prelim.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p  # remove prelim articles obtained from the CrossRef and bioRxiv APIs
 docker-compose run --rm flask python -m neotools.rxiv2neo biorxiv/<path_to_meca_archives> --type meca   # import full text biorxiv preprints
-docker-compose run --rm flask python -m peerreview.neohypo  # import peer reviews from hypothesis
+docker-compose run --rm flask python -m peerreview.neohypo hypothesis  # import peer reviews from hypothesis
+docker-compose run --rm flask python -m peerreview.neohypo rrc19  # import peer reviews from rapid reviews: covid-19
+docker-compose run --rm flask python -m peerreview.neohypo pci  # import peer reviews from peer community in
 docker-compose run --rm flask python -m peerreview.published  # updates publication status
-docker-compose run --rm flask python -m sdg.sdneo covid19 --api eebapi  # smarttag specified collection of preprints
 docker-compose run --rm flask python -m sdg.sdneo refereed-preprints --api eebapi  # smarttag specified collection of preprints
 docker-compose run --rm flask python -m sdg.sdneo subject-collections --api eebapi  # smarttag all bioRxiv subject collections
 cat sdg/SD-processing.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>  # generate merged graph
