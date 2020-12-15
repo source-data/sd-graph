@@ -1,4 +1,5 @@
 import httpClient from '../lib/http'
+import { REFEREED_PREPRINTS, AUTO_TOPICS, AUTOMAGIC, FULLTEXT_SEARCH } from '../components/quick-access/tab-names'
 
 export default {
   namespaced: true,
@@ -9,10 +10,10 @@ export default {
     sortBy: 'posting_date',
     sortDirection: 'desc',
     page: {
-      '/all/auto-topics': 1,
-      '/refereed-preprints': 1, 
-      '/all/automagic': 1, 
-      '/all/search': 1
+      [AUTO_TOPICS]: 1,
+      [REFEREED_PREPRINTS]: 1,
+      [AUTOMAGIC]: 1,
+      [FULLTEXT_SEARCH]: 1
     }
   },
   getters: {
@@ -38,7 +39,7 @@ export default {
     },
     updateCurrentPage (state, page) {
       const tab = state.selectedTab
-      // using spreading instead of direct assignment to trigger reactivity 
+      // using spreading instead of direct assignment to trigger reactivity
       // see https://vuex.vuejs.org/guide/mutations.html#mutations-follow-vue-s-reactivity-rules
       state.page = {...state.page, [tab]: page}
     },
