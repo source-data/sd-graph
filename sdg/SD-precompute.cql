@@ -449,7 +449,6 @@ RETURN COUNT(DISTINCT preprint) AS `papers in the automagic set`;
 :begin
 MATCH (preprint:Article)-[:IsVizPaper]-(vzp:VizPaper)
 // EXPLAIN MATCH (preprint:Article {doi: "10.1101/2020.04.19.049254"})
-WHERE vzp.doi = preprint.doi
 OPTIONAL MATCH (vzp)-[:HasReviewDate]->(revdate)
 WITH DISTINCT
   preprint, vzp, preprint.version AS version,
@@ -459,6 +458,7 @@ WITH
   COLLECT(preprint)[0] AS a, vzp,
   revdate
 WITH DISTINCT
+  vzp,
   id(a) AS id,
   a.doi AS doi,
   a.version AS version, 
@@ -471,7 +471,7 @@ WITH DISTINCT
   toString(DATETIME(a.publication_date)) AS pub_date, // standardization of date time format, necessary for Safari
   toString(DATETIME(revdate.date)) AS review_date
 OPTIONAL MATCH
-  (col:VizCollection {name: "by-auto-topics"})-->(autotopics:VizSubCollection)-[rel_autotopics_paper]->(:VizPaper {doi: doi})-[:HasEntityHighlight]->(highlight:VizEntity {category: 'entity'})
+  (col:VizCollection {name: "by-auto-topics"})-->(autotopics:VizSubCollection)-[rel_autotopics_paper]->(vzp)-[:HasEntityHighlight]->(highlight:VizEntity {category: 'entity'})
 WITH
   id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title,
   review_date,
@@ -495,11 +495,6 @@ WITH DISTINCT
   review_date, 
   entities, assays,
   main_topics, highlighted_entities
-WITH
-  id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title, 
-  review_date, 
-  entities, assays,
-  highlighted_entities
 MERGE (item:VizPaperDetail {id: id})
 SET item += {
   doi: doi, 
@@ -514,6 +509,8 @@ SET item += {
   published_journal_title: published_journal_title, 
   entities: entities, 
   assays: assays,
+  main_topics: main_topics,
   highlighted_entities: highlighted_entities
-};
+}
+RETURN COUNT(item) AS `pre-packaged paper details`;
 :commit
