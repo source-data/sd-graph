@@ -260,18 +260,17 @@ def get_review_idx_from_title(d):
 
 
 def get_type(d):
-    node_type = 'Unknown'
+    node_type = 'PeerReviewMaterial'
     info = d.get('review', '')
     if info:
-        type_info = info.get('type','')
+        type_info = info.get('type', '')
         if type_info == 'author-comment':
             node_type = 'Response'
         elif type_info == 'editor-report':
-            node_type = 'PeerReviewMaterial' 
+            node_type = 'PeerReviewMaterial'
         elif type_info == 'referee-report':
             node_type = 'Review'
-        else:
-            node_type = 'PeerReviewMaterial'
+        elif d.get('publisher') in ['MIT Press - Journals']
     return node_type
 
 

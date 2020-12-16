@@ -103,6 +103,60 @@ ORDER BY DATETIME(pub_date) DESC, score DESC
 class BY_DOI(Query):
 
     code = '''
+MATCH (item:VizPaperDetail {doi: $doi}), (a:Article {doi: $doi})
+OPTIONAL MATCH (a)-[r:HasReview]->(review:Review)
+OPTIONAL MATCH (a)-[:HasResponse]->(response:Response)
+OPTIONAL MATCH (a)-[:HasAnnot]->(annot:PeerReviewMaterial)
+OPTIONAL MATCH (a)-->(auth:Contrib)
+WITH
+  item,
+  auth,
+  review, response, annot
+OPTIONAL MATCH (auth)-->(auth_id:Contrib_id)
+WITH
+  item,
+  auth,
+  auth_id.text AS ORCID,
+  review, response, annot
+ORDER BY
+  review.review_idx ASC,
+  annot.review_idx ASC, 
+  auth.position_idx ASC
+WITH
+  item,
+  {reviews: COLLECT(DISTINCT review {.*}), response: response {.*}, annot: COLLECT(DISTINCT annot {.*})} AS review_process,
+  COLLECT(DISTINCT auth {.surname, .given_names, .position_idx, .corresp, orcid: ORCID}) AS authors
+RETURN
+  item.id AS id,
+  item.doi  AS doi, 
+  item.version  AS version, 
+  item.source  AS source, 
+  item.journal  AS journal, 
+  item.title  AS title, 
+  item.abstract  AS abstract, 
+  item.pub_date  AS pub_date,
+  item.review_date  AS review_date,
+  item.journal_doi  AS journal_doi, 
+  item.published_journal_title  AS published_journal_title, 
+  authors,
+  review_process,
+  item.entities  AS entities, 
+  item.assays  AS assays,
+  item.main_topics  AS main_topics, 
+  item.highlighted_entities  AS highlighted_entities
+  '''
+    map = {'doi': []}
+    returns = [
+        'id', 'doi', 'version', 'source', 'journal', 'title', 'abstract',
+        'authors', 'pub_date', 'journal_doi', 'published_journal_title',
+        'review_process', 'entities', 'assays',
+        'main_topics', 'highlighted_entities'
+    ]
+
+
+class BY_DOI_obsolete(Query):
+
+    code = '''
 //by doi
 //
 MATCH (preprint:Article {doi: $doi})

@@ -22,8 +22,19 @@ RETURN "purge" as `completed`;
 MATCH (a:SDArticle)
 WHERE a.journalName IN ['biorxiv', 'medrxiv']
 MERGE (preprint:VizPaper {doi: a.doi, pub_date: toString(DATETIME(a.pub_date))})
+MERGE (a)-[:IsVizPaper]-(preprint)
 RETURN COUNT(preprint) AS `biorxiv/medrxiv preprints vizPapers`;
 :commit
+
+// for convenience
+:begin
+MATCH (preprint:Article), (vzp:VizPaper)
+// EXPLAIN MATCH (preprint:Article {doi: "10.1101/2020.04.19.049254"})
+WHERE 
+    vzp.doi = preprint.doi
+MERGE (preprint)-[:IsVizPaper]-(vzp)
+:commit
+
 
 // BY REVIEWING SERVICE
 :begin
@@ -375,14 +386,12 @@ WITH
 // rank by presence of peer reviews
 MATCH
   (col:VizCollection {name: "refereed-preprints"})-->(sub:VizSubCollection)-->(a:VizPaper)
-
 // recent papers
 WHERE
   DATETIME(a.pub_date) > (DATETIME() - duration({months: 3}))
 WITH DISTINCT
   ranked_by_assays, ranked_by_entities, ranked_by_topics,
   a.doi as doi
-    
 MATCH
   (viza:VizPaper {doi: doi})
 OPTIONAL MATCH
@@ -403,6 +412,8 @@ WITH DISTINCT
 WITH DISTINCT
   ranked_by_assays, ranked_by_entities, ranked_by_topics,
   COLLECT(DISTINCT {rank: 0, preprint: [viza,  reviewers]}) AS ranked_by_peerreview
+
+
 //Sum of ranks for preprints present in both lists
 WITH
   ranked_by_assays + ranked_by_entities + ranked_by_topics + ranked_by_peerreview AS ranked_items,
@@ -432,3 +443,76 @@ MERGE (automagic)-[:HasSubCol]->(recent)
 MERGE (recent)-[:HasPaper {rank: rank_sum, context: 'automagic'}]->(preprint)
 RETURN COUNT(DISTINCT preprint) AS `papers in the automagic set`;
 :commit
+
+
+//pre-packed preprint items to minimize db queries when returning paper details from API with method /doi
+:begin
+MATCH (preprint:Article)-[:IsVizPaper]-(vzp:VizPaper)
+// EXPLAIN MATCH (preprint:Article {doi: "10.1101/2020.04.19.049254"})
+WHERE vzp.doi = preprint.doi
+OPTIONAL MATCH (vzp)-[:HasReviewDate]->(revdate)
+WITH DISTINCT
+  preprint, vzp, preprint.version AS version,
+  revdate
+ORDER BY version DESC
+WITH
+  COLLECT(preprint)[0] AS a, vzp,
+  revdate
+WITH DISTINCT
+  id(a) AS id,
+  a.doi AS doi,
+  a.version AS version, 
+  a.source AS source,
+  a.journal_title AS journal, // this is the preprint server
+  a.title AS title,
+  a.abstract AS abstract,
+  a.journal_doi AS journal_doi,
+  a.published_journal_title AS published_journal_title, // this is the journal of final publication
+  toString(DATETIME(a.publication_date)) AS pub_date, // standardization of date time format, necessary for Safari
+  toString(DATETIME(revdate.date)) AS review_date
+OPTIONAL MATCH
+  (col:VizCollection {name: "by-auto-topics"})-->(autotopics:VizSubCollection)-[rel_autotopics_paper]->(:VizPaper {doi: doi})-[:HasEntityHighlight]->(highlight:VizEntity {category: 'entity'})
+WITH
+  id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title,
+  review_date,
+  COLLECT(DISTINCT autotopics.name) AS main_topics,
+  COLLECT(DISTINCT highlight.text) AS highlighted_entities
+OPTIONAL MATCH
+  (vzp:VizPaper {doi: doi})-[:HasEntity]->(assay:VizEntity {category: 'assay'})
+OPTIONAL MATCH
+  (vzp:VizPaper {doi: doi})-[:HasEntity]->(entity:VizEntity {category: 'entity'})
+WHERE
+  // don't duplicated entities if they are in the topic highlight set
+  NOT entity.text IN highlighted_entities
+WITH
+  id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title,
+  review_date,
+  main_topics, highlighted_entities,
+  COLLECT(DISTINCT assay.text) AS assays,
+  COLLECT(DISTINCT entity.text) AS entities
+WITH DISTINCT
+  id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title,
+  review_date, 
+  entities, assays,
+  main_topics, highlighted_entities
+WITH
+  id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title, 
+  review_date, 
+  entities, assays,
+  highlighted_entities
+MERGE (item:VizPaperDetail {id: id})
+SET item += {
+  doi: doi, 
+  version: version, 
+  source: source, 
+  journal: journal, 
+  title: title, 
+  abstract: abstract, 
+  pub_date: pub_date,
+  review_date: review_date,
+  journal_doi: journal_doi, 
+  published_journal_title: published_journal_title, 
+  entities: entities, 
+  assays: assays,
+  highlighted_entities: highlighted_entities
+}

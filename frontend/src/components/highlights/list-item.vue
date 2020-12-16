@@ -95,13 +95,13 @@
             v-card-title From the figures
             v-card-text
                 v-list-item
-                  v-chip-group(v-if="article.main_topics.length > 0" :key="0" column)
+                  v-chip-group(v-if="article.main_topics && article.main_topics.length > 0" :key="0" column)
                     v-chip(v-for="(item, index) in article.main_topics" small outlined :key="`topics-${index}`").purple--text {{ item.slice(0,3).join(", ") }}
-                  v-chip-group(v-if="article.highlighted_entities.length > 0" :key="1" column)
+                  v-chip-group(v-if="article.highlighted_entities.length  && article.highlighted_entities.length > 0" :key="1" column)
                     v-chip(v-for="(item, index) in article.highlighted_entities" small outlined :key="`highlighted-entities-${index}`").red--text {{ item }}
-                  v-chip-group(v-if="article.entities.length > 0" :key="2" column)
+                  v-chip-group(v-if="article.entities && article.entities.length > 0" :key="2" column)
                     v-chip(v-for="(item, index) in article.entities" small outlined :key="`entities-${index}`").orange--text {{ item }}
-                  v-chip-group(v-if="article.assays.length > 0" :key="3" column)
+                  v-chip-group(v-if="article.assays && article.assays.length > 0" :key="3" column)
                     v-chip(v-for="(item, index) in article.assays" small outlined :key="`assays-${index}`").green--text {{ item }}
           v-card(v-else)
             v-card-subtitle Figure not yet processed
@@ -134,6 +134,7 @@ export default {
         return month + ' ' + day + ', ' + year
     },
     mdRender(md_text) {
+      console.debug("md_text", md_text)
       const md = new MarkdownIt({
           html: true,
           linkify: true,
