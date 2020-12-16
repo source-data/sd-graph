@@ -9,20 +9,6 @@
             router-link(v-for="id in reviewingList" :key="serviceId2Slug(id)" :to="{ path: `/refereed-preprints/${serviceId2Slug(id)}` }")
               v-btn(small :value="serviceId2Slug(id)") {{ serviceId2Name(id) }}
           div(v-html="selectedReviewingServiceDescription").pt-3
-        v-col
-          p Sort by:
-          v-btn-toggle(v-model="sortBy" @change="sortRecords")
-            v-btn(x-small outlined value="pub_date")
-              | preprint date
-            v-btn(x-small outlined value="posting_date")
-              | reviewing date
-        v-col
-          p Order:
-          v-btn-toggle(v-model="sortDirection" @change="sortRecords" mandatory)
-            v-btn(x-small icon value="desc")
-              v-icon(dense) mdi-sort-descending
-            v-btn(x-small icon value="asc")
-              v-icon(dense) mdi-sort-ascending
 </template>
 
 <script>
@@ -33,8 +19,6 @@ export default {
   data () {
     return {
       selectedRev: undefined,
-      sortBy: 'posting_date',
-      sortDirection: 'desc',
     }
   },
   mounted () {
@@ -53,11 +37,6 @@ export default {
     }
   },
   methods: {
-    sortRecords() {
-      this.$store.commit('highlights/setSortBy', {value: this.sortBy})
-      this.$store.commit('highlights/setSortDirection', {value: this.sortDirection})
-      this.$store.commit('highlights/sortRecords')
-    },
     onSelect (selectedItemId) {
       this.$emit('change', selectedItemId)
     },

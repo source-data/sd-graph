@@ -7,17 +7,33 @@
       h1 {{ records.length }} articles found:
     h1(v-if="records.length == 0 && !loadingRecords") No results
     v-container(:class="{'highlights-loading': loadingRecords}")
-      v-row(justify="center")
-        v-pagination(
-          v-model="pageNumber"
-          :length="pageCount"
-          :total-visible="10"
-        )
+      v-row
+        v-col(cols=6)
+          v-pagination(
+            v-model="pageNumber"
+            :length="pageCount"
+            :total-visible="10"
+          )
+        v-col(cols=2) Sort by:
+        v-col()
+          v-btn-toggle(v-model="sortBy" @change="sortRecords")
+            v-btn(x-small outlined value="pub_date")
+              | preprint date
+            v-btn(x-small outlined value="posting_date")
+              | review posting date
+        v-col()
+          v-btn-toggle(v-model="sortDirection" @change="sortRecords" mandatory)
+            v-btn(x-small icon value="desc")
+              v-icon(dense) mdi-sort-descending
+            v-btn(x-small icon value="asc")
+              v-icon(dense) mdi-sort-ascending
+    v-container
       v-row(v-for="article in paginatedRecords" :key="article.id")
         v-col
           HighlightedListItem(:article="article")
       br
       v-row(justify="center")
+        v-col(cols=6)
         v-pagination(
           v-model="pageNumber"
           :length="pageCount"
@@ -33,7 +49,9 @@ import { mapGetters, mapState } from 'vuex'
 export default {
   data() {
     return {
-      pageSize: 10,
+      pageSize: 10,      
+      sortBy: 'posting_date',
+      sortDirection: 'desc',
     }
   },
   components: {
@@ -61,9 +79,14 @@ export default {
       return this.records.slice(start, end);
     }
   },
-  beforeUpdated() {
-    console.debug("beforeUpdated", this.pageNumber)
+  methods: {
+    sortRecords() {
+      this.$store.commit('highlights/setSortBy', {value: this.sortBy})
+      this.$store.commit('highlights/setSortDirection', {value: this.sortDirection})
+      this.$store.commit('highlights/sortRecords')
+    },
   }
+  
 }
 </script>
 

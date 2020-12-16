@@ -134,7 +134,6 @@ export default {
         return month + ' ' + day + ', ' + year
     },
     mdRender(md_text) {
-      console.debug("md_text", md_text)
       const md = new MarkdownIt({
           html: true,
           linkify: true,
