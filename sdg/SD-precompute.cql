@@ -32,7 +32,7 @@ MATCH (preprint:Article), (vzp:VizPaper)
 // EXPLAIN MATCH (preprint:Article {doi: "10.1101/2020.04.19.049254"})
 WHERE 
     vzp.doi = preprint.doi
-MERGE (preprint)-[:IsVizPaper]-(vzp)
+MERGE (preprint)-[:IsVizPaper]-(vzp);
 :commit
 
 
@@ -515,4 +515,5 @@ SET item += {
   entities: entities, 
   assays: assays,
   highlighted_entities: highlighted_entities
-}
+};
+:commit
