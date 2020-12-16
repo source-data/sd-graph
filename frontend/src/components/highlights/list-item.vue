@@ -91,12 +91,12 @@
             v-card-text
               p(class="text--primary") {{ article.abstract }}
         v-col
-          v-card(v-if="(article.assays.length > 0) || (article.entities.length > 0)")
+          v-card(v-if="(article.assays.length > 0) || (article.entities.length > 0) || article.highlighted_entities.length > 0")
             v-card-title From the figures
             v-card-text
                 v-list-item
                   v-chip-group(v-if="article.main_topics && article.main_topics.length > 0" :key="0" column)
-                    v-chip(v-for="(item, index) in article.main_topics" small outlined :key="`topics-${index}`").purple--text {{ item.slice(0,3).join(", ") }}
+                    v-chip(v-for="(item, index) in article.main_topics" small outlined :key="`topics-${index}`").purple--text {{ item }}
                   v-chip-group(v-if="article.highlighted_entities.length  && article.highlighted_entities.length > 0" :key="1" column)
                     v-chip(v-for="(item, index) in article.highlighted_entities" small outlined :key="`highlighted-entities-${index}`").red--text {{ item }}
                   v-chip-group(v-if="article.entities && article.entities.length > 0" :key="2" column)

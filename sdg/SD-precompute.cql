@@ -475,7 +475,7 @@ OPTIONAL MATCH
 WITH
   id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title,
   review_date,
-  COLLECT(DISTINCT autotopics.name) AS main_topics,
+  COLLECT(DISTINCT apoc.text.join(autotopics.topics[0..3],', ')) AS main_topics,
   COLLECT(DISTINCT highlight.text) AS highlighted_entities
 OPTIONAL MATCH
   (vzp:VizPaper {doi: doi})-[:HasEntity]->(assay:VizEntity {category: 'assay'})
@@ -487,7 +487,8 @@ WHERE
 WITH
   id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title,
   review_date,
-  main_topics, highlighted_entities,
+  main_topics,
+  highlighted_entities,
   COLLECT(DISTINCT assay.text) AS assays,
   COLLECT(DISTINCT entity.text) AS entities
 WITH DISTINCT

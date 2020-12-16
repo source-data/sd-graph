@@ -32,7 +32,7 @@
         v-col
           HighlightedListItem(:article="article")
       br
-      v-row(justify="center")
+      v-row(justify="start")
         v-col(cols=6)
         v-pagination(
           v-model="pageNumber"
