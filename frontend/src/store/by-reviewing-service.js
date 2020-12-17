@@ -17,15 +17,25 @@ const _serviceSlug2Id = Object.keys(_serviceId2Slug).reduce((acc, serviceId) => 
   return {...acc, [serviceSlug]: serviceId}
 }, {})
 
-const _serviceId2Name = {
-  'biorxiv': 'bioRxiv',
-  'medrxiv': 'medRxiv',
-  'review commons': 'Review Commons',
-  'elife': 'eLife',
-  'embo press': 'EMBO Press',
-  'peerage of science': 'Peerage of Science',
-  'mit press - journals': 'Rapid Reviews: COVID-19',
-  'peer community in': "Peer Community In",
+
+function _serviceId2Name (id) {
+  if (id === 'biorxiv') {
+    return 'bioRxiv' 
+  } else if (id === 'medrxiv') {
+    return 'medRxiv'
+  } else if (id === 'review commons') {
+    return 'Review Commons'
+  } else if (id === 'elife') {
+    return 'eLife'
+  } else if (id === 'embo press') {
+    return 'EMBO Press'
+  } else if (id === 'peerage of science') {
+    return 'Peerage of Science' 
+  } else if (id === 'MIT Press - Journals') {
+    return 'Rapid Reviews: COVID-19'
+  } else if (/Peer Community In/.test(id)) {
+    return 'Peer Community In'
+  }
 }
 
 export function serviceId2Slug (serviceId) {
@@ -36,7 +46,7 @@ export function serviceSlug2Id (serviceSlug) {
 }
 
 export function serviceId2Name (serviceId) {
-  return _serviceId2Name[serviceId.toLowerCase()]
+  return _serviceId2Name(serviceId)
 }
 
 export function getReviewingServiceDescription (serviceName) {
