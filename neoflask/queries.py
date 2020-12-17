@@ -385,8 +385,7 @@ UNION
 WITH $query AS query
 CALL db.index.fulltext.queryNodes("name", query) YIELD node, score
 MATCH (article:SDArticle)-->(author:Contrib)
-WHERE node.journalName IN ["biorxiv", "medrxiv"]
-WHERE author.surname = node.surname AND author.given_names = node.given_names
+WHERE node.journalName IN ["biorxiv", "medrxiv"] AND author.surname = node.surname AND author.given_names = node.given_names
 WITH DISTINCT
 //weight 4x for results on authors
   article.doi as doi, node.surname as text, 1 * score AS weighted_score, "author list" AS source, query
