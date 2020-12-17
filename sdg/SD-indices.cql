@@ -25,6 +25,7 @@ CREATE INDEX peer_review_material_reviewed_by IF NOT EXISTS FOR (n:PeerReviewMat
 CREATE INDEX vizpaper_doi IF NOT EXISTS FOR (n:VizPaper) ON (n.doi);
 CREATE INDEX vizentity_category IF NOT EXISTS FOR (n:VizEntity) ON (n.category);
 CREATE INDEX vizentity_text_category IF NOT EXISTS FOR (n:VizEntity) ON (n.text, n.category);
+CREATE INDEX vizpaperdetails_doi IF NOT EXISTS FOR (n:VizPaperDetail) ON (n.doi);
 
 
 //Full text indexing
