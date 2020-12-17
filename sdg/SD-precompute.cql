@@ -22,19 +22,8 @@ RETURN "purge" as `completed`;
 MATCH (a:SDArticle)
 WHERE a.journalName IN ['biorxiv', 'medrxiv']
 MERGE (preprint:VizPaper {doi: a.doi, pub_date: toString(DATETIME(a.pub_date))})
-MERGE (a)-[:IsVizPaper]-(preprint)
 RETURN COUNT(preprint) AS `biorxiv/medrxiv preprints vizPapers`;
 :commit
-
-// for convenience
-:begin
-MATCH (preprint:Article), (vzp:VizPaper)
-// EXPLAIN MATCH (preprint:Article {doi: "10.1101/2020.04.19.049254"})
-WHERE 
-    vzp.doi = preprint.doi
-MERGE (preprint)-[:IsVizPaper]-(vzp);
-:commit
-
 
 // BY REVIEWING SERVICE
 :begin
@@ -447,7 +436,8 @@ RETURN COUNT(DISTINCT preprint) AS `papers in the automagic set`;
 
 //pre-packed preprint items to minimize db queries when returning paper details from API with method /doi
 :begin
-MATCH (preprint:Article)-[:IsVizPaper]-(vzp:VizPaper)
+MATCH (vzp:VizPaper)
+OPTIONAL MATCH (preprint:Article {doi: vzp.doi})
 // EXPLAIN MATCH (preprint:Article {doi: "10.1101/2020.04.19.049254"})
 OPTIONAL MATCH (vzp)-[:HasReviewDate]->(revdate)
 WITH DISTINCT

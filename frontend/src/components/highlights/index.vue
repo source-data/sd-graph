@@ -31,13 +31,12 @@
       v-row(v-for="article in paginatedRecords" :key="article.id")
         v-col
           HighlightedListItem(:article="article")
-      br
       v-row(justify="start")
         v-col(cols=6)
-        v-pagination(
-          v-model="pageNumber"
-          :length="pageCount"
-          :total-visible="10"
+          v-pagination(
+            v-model="pageNumber"
+            :length="pageCount"
+            :total-visible="10"
         )
 </template>
 
