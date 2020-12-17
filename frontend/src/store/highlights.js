@@ -133,6 +133,8 @@ export default {
 function preProcessRecord (record, current) {
   return Object.assign({}, record, {
     id: record.doi,
+    // eliminate this; info specific to sub application is copied to papers to display
+    // should be provided by /api/v1/doi and offer universal sorting methods.
     rank: current.papers.find(a => a.doi === record.doi).rank
   })
 }
