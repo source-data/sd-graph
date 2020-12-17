@@ -91,7 +91,7 @@
             v-card-text
               p(class="text--primary") {{ article.abstract }}
         v-col
-          v-card(v-if="(article.assays.length > 0) || (article.entities.length > 0)")
+          v-card(v-if="(article.assays.length > 0) || (article.entities.length > 0) || (article.highlighted_entities.length > 0)")
             v-card-title From the figures
             v-card-text
                 v-list-item
