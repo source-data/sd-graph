@@ -126,7 +126,7 @@ WITH DISTINCT
   a.abstract AS abstract,
   a.journal_doi AS journal_doi,
   a.published_journal_title AS published_journal_title, // this is the journal of final publication
-  DATETIME(a.publication_date) AS pub_date, // pub date as preprint!
+  DATETIME(a.publication_date) AS pub_date, // pub date as preprint! 
   auth,
   vzp, revdate.date AS revdate,
   review, response, annot
@@ -169,7 +169,7 @@ WITH
   entities, assays,
   main_topics, highlighted_entities
 RETURN DISTINCT 
-  id, doi, version, source, journal, title, abstract, pub_date, //standardization of date time format, necessary for Safari
+  id, doi, version, source, journal, title, abstract, pub_date,
   journal_doi, published_journal_title, COLLECT(DISTINCT auth {.surname, .given_names, .position_idx, .corresp, orcid: ORCID}) AS authors,
   review_process,
   revdate,

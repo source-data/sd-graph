@@ -16,7 +16,7 @@
         b {{ displayDate(article.pub_date) }}
         |  on
         |
-        i {{ serviceId2Name(article.journal) }}
+        i {{ article.journal }}
       p
         b doi:
         a(:href="href(article.doi)" target="_blank" rel="noopener")

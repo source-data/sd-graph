@@ -88,7 +88,6 @@ def by_doi(doi: str):
 
 
 @app.route('/api/v1/dois/', methods=['POST'])
-@cross_origin(origin='*', headers=['Content-Type','Authorization'])
 def by_dois():
     dois = request.json['dois']
     app.logger.info(f"search dois:{dois}")
@@ -104,6 +103,7 @@ def by_dois():
             app.logger.info(f"\t\t  cache hit: {doi}")
         response.append(doi_data)
     return jsonify(response)
+
 
 @app.route('/api/v1/review/<path:doi>', methods=['GET', 'POST'])
 @cache.cached()
