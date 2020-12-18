@@ -65,7 +65,7 @@ ORDER BY
     reviewing.rank ASC, pub_date DESC
 MERGE (col:VizCollection {name: "refereed-preprints"})
 MERGE (subcol:VizSubCollection {name: reviewing.name})
-MERGE (revdate:VizReviewDate {date: earliest_review_date})
+MERGE (revdate:VizReviewDate {date: toString(earliest_review_date)})
 MERGE (paper)-[:HasReviewDate]->(revdate)
 MERGE (col)-[:HasSubCol]->(subcol)
 MERGE (subcol)-[:HasPaper]->(paper)
@@ -374,21 +374,18 @@ WITH
 
 // rank by presence of peer reviews
 MATCH
-  (col:VizCollection {name: "refereed-preprints"})-->(sub:VizSubCollection)-->(a:VizPaper)
+  (col:VizCollection {name: "refereed-preprints"})-->(sub:VizSubCollection)-->(viza:VizPaper)
 
 // recent papers
 WHERE
-  DATETIME(a.pub_date) > (DATETIME() - duration({months: 3}))
+  DATETIME(viza.pub_date) > (DATETIME() - duration({months: 3}))
 WITH DISTINCT
   ranked_by_assays, ranked_by_entities, ranked_by_topics,
-  a.doi as doi
-    
-MATCH
-  (viza:VizPaper {doi: doi})
+  viza
 OPTIONAL MATCH
-  (:Article {doi: doi})-[:HasReview]->(review:Review)
+  (:Article {doi: viza.doi})-[:HasReview]->(review:Review)
 OPTIONAL MATCH
-  (:Article {doi: doi})-[:HasAnnot]->(annot:PeerReviewMaterial)
+  (:Article {doi: viza.doi})-[:HasAnnot]->(annot:PeerReviewMaterial)
 WITH DISTINCT
   ranked_by_assays, ranked_by_entities, ranked_by_topics,
   viza,

@@ -1,5 +1,6 @@
 //indices and constraints
 //create
+CREATE INDEX article_doi IF NOT EXISTS FOR (n:Article) ON (n.doi);
 CREATE INDEX sdarticle_doi IF NOT EXISTS FOR (n:SDArticle) ON (n.doi);
 CREATE INDEX sdarticle_journalname IF NOT EXISTS FOR (n:SDArticle) ON (n.journalName);
 CREATE INDEX sdtag_text IF NOT EXISTS FOR (n:SDTag) ON (n.text);

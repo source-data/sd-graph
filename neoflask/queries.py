@@ -110,11 +110,12 @@ MATCH (preprint:Article {doi: $doi})
 WITH preprint, preprint.version AS version
 ORDER BY version DESC
 WITH COLLECT(preprint)[0] AS a
-OPTIONAL MATCH (a)-->(f:Fig)
 OPTIONAL MATCH (a)-[r:HasReview]->(review:Review)
 OPTIONAL MATCH (a)-[:HasResponse]->(response:Response)
 OPTIONAL MATCH (a)-[:HasAnnot]->(annot:PeerReviewMaterial)
 OPTIONAL MATCH (a)-->(auth:Contrib)
+OPTIONAL MATCH (vzp:VizPaper {doi: $doi})
+OPTIONAL MATCH (vzp)-[:HasReviewDate]->(revdate:VizReviewDate)
 WITH DISTINCT
   id(a) AS id,
   a.doi AS doi,
@@ -125,48 +126,53 @@ WITH DISTINCT
   a.abstract AS abstract,
   a.journal_doi AS journal_doi,
   a.published_journal_title AS published_journal_title, // this is the journal of final publication
-  toString(DATETIME(a.publication_date)) AS pub_date, // pub date as preprint!
-  COUNT(DISTINCT f) AS nb_figures,
+  DATETIME(a.publication_date) AS pub_date, // pub date as preprint!
   auth,
+  vzp, revdate.date AS revdate,
   review, response, annot
-OPTIONAL MATCH (auth)-->(auth_id:Contrib_id)
+OPTIONAL MATCH (auth)-[:has_orcid]->(auth_id:Contrib_id)
 OPTIONAL MATCH
-  (col:VizCollection {name: "by-auto-topics"})-->(autotopics:VizSubCollection)-[rel_autotopics_paper]->(:VizPaper {doi: doi})-[:HasEntityHighlight]->(highlight:VizEntity {category: 'entity'})
+  (col:VizCollection {name: "by-auto-topics"})-->(autotopics:VizSubCollection)-[rel_autotopics_paper]->(vzp)-[:HasEntityHighlight]->(highlight:VizEntity {category: 'entity'})
 WITH
   id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title,
   auth,
-  auth_id.text AS ORCID, 
-  nb_figures, review, response, annot,
+  auth_id.text AS ORCID,
+  vzp, revdate,
+  review, response, annot,
   COLLECT(DISTINCT autotopics.topics) AS main_topics,
   COLLECT(DISTINCT highlight.text) AS highlighted_entities
 OPTIONAL MATCH
-  (vzp:VizPaper {doi: doi})-[:HasEntity]->(assay:VizEntity {category: 'assay'})
+  (vzp)-[:HasEntity]->(assay:VizEntity {category: 'assay'})
 OPTIONAL MATCH
-  (vzp:VizPaper {doi: doi})-[:HasEntity]->(entity:VizEntity {category: 'entity'})
+  (vzp)-[:HasEntity]->(entity:VizEntity {category: 'entity'})
 WHERE
   // don't duplicated entities if they are in the topic highlight set
   NOT entity.text IN highlighted_entities
 WITH
   id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title,
   auth,
-  ORCID, 
-  nb_figures, review, response, annot,
+  ORCID,
+  vzp, revdate,
+  review, response, annot,
   main_topics, highlighted_entities,
   COLLECT(DISTINCT assay.text) AS assays,
   COLLECT(DISTINCT entity.text) AS entities
 ORDER BY
+  pub_date DESC,
   review.review_idx ASC,
-  annot.review_idx ASC, 
+  annot.review_idx ASC,
   auth.position_idx ASC
 WITH
-  id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title, auth, ORCID, nb_figures,
+  id, doi, version, source, journal, title, abstract, toString(pub_date) AS pub_date, journal_doi, published_journal_title, auth, ORCID,
   {reviews: COLLECT(DISTINCT review {.*}), response: response {.*}, annot: COLLECT(DISTINCT annot {.*})} AS review_process,
+  revdate,
   entities, assays,
   main_topics, highlighted_entities
 RETURN DISTINCT 
-  id, doi, version, source, journal, title, abstract, toString(DATETIME(pub_date)) AS pub_date, //standardization of date time format, necessary for Safari
+  id, doi, version, source, journal, title, abstract, pub_date, //standardization of date time format, necessary for Safari
   journal_doi, published_journal_title, COLLECT(DISTINCT auth {.surname, .given_names, .position_idx, .corresp, orcid: ORCID}) AS authors,
-  nb_figures, review_process,
+  review_process,
+  revdate,
   entities, assays,
   main_topics, highlighted_entities
     '''
@@ -174,7 +180,7 @@ RETURN DISTINCT
     returns = [
       'id', 'doi', 'version', 'source', 'journal', 'title', 'abstract',
       'authors', 'pub_date', 'journal_doi', 'published_journal_title',
-      'nb_figures', 'review_process', 'entities', 'assays',
+      'revdate', 'review_process', 'entities', 'assays',
       'main_topics', 'highlighted_entities'
     ]
 
