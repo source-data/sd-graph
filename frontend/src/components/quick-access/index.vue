@@ -75,10 +75,12 @@ export default {
     onChangeByAutoTopics (selectedItemIds) {
       this.$store.commit('byAutoTopics/showRecords', { ids: selectedItemIds })
       this.$store.dispatch('highlights/listByCurrent', "byAutoTopics")
+      this.$store.commit('highlights/updateCurrentPage', 1) // reset pagination if we are navigating to a different sub-app
     },
     onChangeOperator (value) {
       this.$store.commit('byAutoTopics/changeOperator', {'operator': value})
       this.$store.dispatch('highlights/listByCurrent', "byAutoTopics")
+      this.$store.commit('highlights/updateCurrentPage', 1) // reset pagination if we are navigating to a different sub-app
     }
   },
   computed: {
