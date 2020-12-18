@@ -51,21 +51,28 @@ export default {
   methods: {
     onTabChange(tabUrl) {
       let tabName = undefined
+      let defaultSortBy = undefined
       switch (tabUrl) {
         case '/refereed-preprints':
           tabName = REFEREED_PREPRINTS
+          defaultSortBy = 'posting_date'
           break
         case '/all/auto-topics':
           tabName = AUTO_TOPICS
+          defaultSortBy = 'pub_date'
           break
         case '/all/automagic':
           tabName = AUTOMAGIC
+          defaultSortBy = 'pub_date'
           break
         case '/all/search':
           tabName = FULLTEXT_SEARCH
+          defaultSortBy = 'pub_date'
           break
       }
       this.$store.commit('highlights/updateSelectedTab', tabName)
+      this.$store.commit('highlights/setSortBy', {value: defaultSortBy})
+      this.$store.commit('highlights/setSortDirection', {value: 'desc'})
     },
     onSubmitSearch(term) {
       this.$store.dispatch('fulltextSearch/search', term).then(

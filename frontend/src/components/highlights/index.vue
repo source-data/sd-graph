@@ -17,12 +17,12 @@
             :length="pageCount"
             :total-visible="10"
           )
-        v-col(cols=1 v-if="selectedTab == REFEREED_PREPRINTS")
+        v-col(cols=1 v-if="selectedTab == refereedPreprintsTabName")
           .text-right 
             small.text-right Sort by:
         v-col(cols=2 v-else)
            small.text-right Sort direction:
-        v-col(cols=3 v-if="selectedTab == REFEREED_PREPRINTS" )
+        v-col(cols=3 v-if="selectedTab == refereedPreprintsTabName" )
           v-btn-toggle(v-model="sortBy" @change="sortRecords")
             v-btn(x-small outlined value="pub_date")
               | preprint date
@@ -59,7 +59,6 @@ export default {
   data() {
     return {
       pageSize: 10,
-      sortDirection: 'desc',
     }
   },
   components: {
@@ -88,6 +87,22 @@ export default {
       const start = (this.pageNumber - 1) * this.pageSize,
             end = start + this.pageSize;
       return this.records.slice(start, end);
+    },
+    sortBy: {
+      get() {
+        return this.$store.getters['highlights/getSortBy']
+      },
+      set(value) {
+        this.$store.commit('highlights/setSortBy', {value: value})
+      }
+    },
+    sortDirection: {
+      get() { 
+        return this.$store.getters['highlights/getSortDirection']
+      },
+      set(value) {
+        this.$store.commit('highlights/setSortDirection', {value: value})
+      }
     }
   },
   methods: {
@@ -97,9 +112,6 @@ export default {
       this.$store.commit('highlights/sortRecords')
     },
   },
-  beforeUpdated() {
-    console.debug("beforeUpdated", this.pageNumber)
-  }
 }
 </script>
 

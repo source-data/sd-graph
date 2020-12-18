@@ -6,12 +6,3 @@
 </template>
 
 <script>
-
-export default {
-  beforeMount(){
-    this.$store.commit('highlights/setSortBy', {value: 'rank'})
-    this.$store.commit('highlights/setSortDirection', {value: 'asc'})
-    this.$store.commit('highlights/sortRecords')
-  }
-}
-</script>
