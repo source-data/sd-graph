@@ -131,6 +131,7 @@ export default {
     if (to.params.collection === 'refereed-preprints' && to.params.service !== from.params.service) {
       const serviceId = serviceSlug2Id(to.params.service)
       this.$store.commit('byReviewingService/showRecord', { id: serviceId })
+      this.$store.commit('highlights/updateCurrentPage', 1) // reset pagination if we are navigating to a different sub-app
     }
     const storeName = getStoreNameForCollection(to.params.collection, to.params.service)
     this.$store.dispatch('highlights/listByCurrent', storeName)

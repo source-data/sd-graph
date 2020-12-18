@@ -2,15 +2,15 @@
   v-card(class="pa-5" outlined)
     v-card-title Highlighted topics
     v-card-subtitle Topics and key entities were identified and labeled in an unsupervised way based on the structure of a knowledge graph automatically derived from figure legends.
-    v-card-text 
+    v-card-text
       p
        b Tip:
        |
-       | select 
+       | select
        i 'show results as the intersection between topics (AND)'
        |
        | below to find studies identified in multiple categories
-      
+
       v-item-group(
         v-model="selectedTopics"
         @change="onChange"
@@ -21,11 +21,11 @@
         v-container
           v-row(no-gutters)
             v-col(:cols="4"
-              v-for="item in autoTopicsList" 
+              v-for="item in autoTopicsList"
               :key="item.id"
             )
-              v-item(v-slot="{active, toggle}").pointer
-                div(@click="toggle").pa-2
+              v-item(v-slot="{active, toggle}" :disabled="loadingRecords").pointer
+                div(@click="()=>{!loadingRecords && toggle()}").pa-2
                   h4 {{item.topics.slice(0, 3).join(', ')}}
                   small
                     i {{ item.entity_highlighted_names.slice(0,10).join(', ') }}
@@ -49,7 +49,7 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { mapGetters, mapState } from 'vuex'
 
 export default {
   data () {
@@ -61,6 +61,7 @@ export default {
     }
   },
   computed: {
+    ...mapState('highlights', ['loadingRecords']),
     ...mapGetters('byAutoTopics', [
       'records',
     ]),

@@ -7,13 +7,13 @@
           p Reviewing services:
           v-btn-toggle(v-model="selectedRev" mandatory)
             router-link(v-for="id in reviewingList" :key="serviceId2Slug(id)" :to="{ path: `/refereed-preprints/${serviceId2Slug(id)}` }")
-              v-btn(small :value="serviceId2Slug(id)") {{ serviceId2Name(id) }}
+              v-btn(small :value="serviceId2Slug(id)" :disabled="loadingRecords") {{ serviceId2Name(id) }}
           div(v-html="selectedReviewingServiceDescription").pt-3
 
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { mapGetters, mapState } from 'vuex'
 import { serviceId2Slug, serviceId2Name, getReviewingServiceDescription } from '../../store/by-reviewing-service'
 
 export default {
@@ -26,6 +26,7 @@ export default {
     this.selectedRev = this.$route.params.service
   },
   computed: {
+    ...mapState('highlights', ['loadingRecords']),
     ...mapGetters('byReviewingService', ['records']),
     reviewingList () {
       const ids =  this.records.map(
