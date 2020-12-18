@@ -60,20 +60,10 @@ export default {
       // default direction is ascending unless specified as 'desc'
       // computable sort metric defined by applying funct to the sorting property
       // note Date('2020-01-01') < Date('2020-01-02')
-      const most_recent = (d1, d2) => {
-        if (d1 > d2) {return d1}
-        else {return d2}
-      }
       const sortMethod = {
         pub_date: (r) => new Date(r.pub_date),
-        posting_date: (r) => {
-          return r.review_process.reviews
-          .map(review => new Date(review.posting_date))
-          .reduce(most_recent, new Date('2000-01-01'))
-        },
-        rank: (r) => {
-          return parseInt(r.rank)
-        }
+        posting_date: (r) => new Date(r.revdate),
+        rank: (r) => parseInt(r.rank),
       }
       const sort_metric = sortMethod[state.sortBy]
       const sign = state.sortDirection == 'desc' ? -1 : 1
@@ -82,14 +72,14 @@ export default {
         )
       const recordsById = {}
       sortedRecords.forEach((record) => {
-          recordsById[record.id] = record
+          recordsById[record.doi] = record
         })
       state.records = recordsById
     },
     addRecords (state, records) {
       const recordsById = {}
       records.forEach((record) => {
-        recordsById[record.id] = record
+        recordsById[record.doi] = record
       })
       state.records = recordsById
     },
@@ -117,9 +107,7 @@ export default {
           dois: current.papers.map(c => c.doi),
         })
         .then((response) => {
-          const records = response.data.reduce((acc, article) => {
-            return [preProcessRecord(article, current), ...acc]
-          }, [])
+          const records = response.data
           commit('addRecords', records)
         })
         .finally(() => {
@@ -128,13 +116,4 @@ export default {
         })
     },
   }
-}
-
-function preProcessRecord (record, current) {
-  return Object.assign({}, record, {
-    id: record.doi,
-    // eliminate this; info specific to sub application is copied to papers to display
-    // should be provided by /api/v1/doi and offer universal sorting methods.
-    rank: current.papers.find(a => a.doi === record.doi).rank
-  })
 }
