@@ -27,7 +27,7 @@ def create_sitemap(dois):
     add_url(root, loc=f"{BASE_URL}/refereed-preprints/embo-press", lastmod=dt, changefreq="monthly", priority="1.0")
     add_url(root, loc=f"{BASE_URL}/refereed-preprints/elife", lastmod=dt, changefreq="monthly", priority="1.0")
     add_url(root, loc=f"{BASE_URL}/refereed-preprints/rrc19", lastmod=dt, changefreq="monthly", priority="1.0")
-    add_url(root, loc=f"{BASE_URL}/refereed-preprints/peer-community-in", lastmod=dt, changefreq="monthly", priority="1.0"
+    add_url(root, loc=f"{BASE_URL}/refereed-preprints/peer-community-in", lastmod=dt, changefreq="monthly", priority="1.0")
     add_url(root, loc=f"{BASE_URL}/all/auto-topics", lastmod=dt, changefreq="monthly", priority="1.0")
     add_url(root, loc=f"{BASE_URL}/all/automagic", lastmod=dt, changefreq="monthly", priority="1.0")
 
