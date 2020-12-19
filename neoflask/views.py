@@ -10,6 +10,28 @@ app.url_map.converters['escape_lucene'] = LuceneQueryConverter
 ASKNEO = Engine(DB)
 
 
+def get_all_dois():
+    refereed_preprints = ASKNEO.by_reviewing_service(limit_date='1900-01-01')
+    by_auto_topics = ASKNEO.by_auto_topics(limit_date='1900-01-01')
+    automagic = ASKNEO.automagic(limit_date='1900-01-01')
+    app.logger.info(automagic)
+    dois = []
+    for collection in refereed_preprints:
+        papers = collection['papers']
+        new_dois = [paper['doi'] for paper in papers]
+        dois += new_dois
+    for collection in by_auto_topics:
+        papers = collection['papers']
+        new_dois = [paper['doi'] for paper in papers]
+        dois += new_dois
+    for collection in automagic:
+        papers = collection['papers']
+        new_dois = [paper['doi'] for paper in papers]
+        dois += new_dois
+    dois = set(dois)  # remove duplicates
+    return dois
+
+
 @app.route('/')
 def root():
     return render_template('index.html')
@@ -19,16 +41,14 @@ def root():
 # def doc():
 #     return render_template('doc.html', name='me')
 
+
 @app.route('/sitemap.xml', methods=['GET'])
 @cache.cached()
 def sitemap():
     """
-    Generate dynamically a sitemap urls for both refereed preprints and covid19 collections.
+    Generate dynamically a sitemap.
     """
-    refereed_preprints = ASKNEO.refereed_preprints(request)
-    covid19 = ASKNEO.covid19(request)
-    dois = [preprint['doi'] for preprint in refereed_preprints + covid19]
-    dois = set(dois)  # remove duplicates
+    dois = get_all_dois()
     app.logger.info(f"generating sitemap with {len(dois)} links.")
     sitemap = create_sitemap(dois)
     return Response(sitemap, mimetype='text/xml')
@@ -39,20 +59,6 @@ def sitemap():
 def stats():
     app.logger.info(f"show db stats")
     return jsonify(ASKNEO.stats(request))
-
-
-# @app.route('/api/v1/by_molecule', methods=['GET', 'POST'])
-# @cache.cached()
-# def by_molecule():
-#     app.logger.info(f"list by molecule")
-#     return jsonify(ASKNEO.by_molecule(request))
-
-
-@app.route('/api/v1/by_method', methods=['GET', 'POST'])
-@cache.cached()
-def by_method():
-    app.logger.info(f"list by method")
-    return jsonify(ASKNEO.by_method(request))
 
 
 # using routing rather than parameters to provide limit_date so that cache.cached() works properly; memoize would need function params

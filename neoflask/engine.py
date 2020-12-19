@@ -66,11 +66,6 @@ class Engine:
         query.params = param_from_request(request, query)
         return self.ask_neo(query)
 
-    def by_method(self, request) -> Dict:
-        query = BY_METHOD()
-        query.params = param_from_request(request, query)
-        return self.ask_neo(query)
-
     def by_reviewing_service(self, limit_date: str) -> Dict:
         query = BY_REVIEWING_SERVICE()
         query.params = param_from_request(limit_date, query)
