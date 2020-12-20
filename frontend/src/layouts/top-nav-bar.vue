@@ -12,13 +12,13 @@
         src="../assets/EEB_HP_Banner.svg"
       )
         Banner
-        div(style="height: 100%; width: 100%").d-flex.align-end
-          div(style="width: 100%").d-flex.align-center
-            div.mr-auto
-              a(href="https://embo.org" target="_blank" rel="noopener")
+        v-container(fluid).fill-height.align-end.pa-0
+          v-row.align-center.pa-0
+            .mr-auto
+              a(href="https://embo.org" target="_blank" rel="noopener").pa-2
                 img(src="../assets/EEB_E_LOGO.png" alt="EMBO Logo").logo-EMBO
             .d-flex
-              a(href="https://embopress.org").pa-2
+              a(href="https://embopress.org" target="_blank" rel="noopener").pa-2
                 img(src="../assets/EEB_EP_LOGO.png" alt="EMBO Press Logo").logo-EP
               a(href="https://sourcedata.io" target="_blank" rel="noopener").pa-2
                 img(src="../assets/EEB_SD_LOGO.png" alt="SourceData Logo")

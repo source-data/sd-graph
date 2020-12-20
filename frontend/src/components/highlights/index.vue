@@ -31,9 +31,9 @@
               | reviewing date
         v-col(cols=1 v-if="selectedTab !== automagicTabName")
           v-btn-toggle(v-model="sortDirection" @change="sortRecords" mandatory)
-            v-btn(x-small icon value="desc")
+            v-btn(x-small icon aria-label="descending" value="desc")
               v-icon(dense) mdi-sort-descending
-            v-btn(x-small icon value="asc")
+            v-btn(x-small icon aria-label="ascending" value="asc")
               v-icon(dense) mdi-sort-ascending
       v-row(v-for="article in paginatedRecords" :key="article.id")
         v-col
