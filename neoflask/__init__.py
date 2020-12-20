@@ -11,6 +11,7 @@ load_dotenv()
 NEO_URI = os.getenv('NEO_URI')
 NEO_USERNAME = os.getenv("NEO_USERNAME")
 NEO_PASSWORD = os.getenv("NEO_PASSWORD")
+EEB_PUBLIC_API = os.getenv("EEB_PUBLIC_API")
 
 app = Flask(__name__)
 

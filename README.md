@@ -58,6 +58,7 @@ cat sdg/SD-processing.cql | docker-compose run --rm neo4j cypher-shell -a bolt:/
 cat sdg/SD-gds.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>  # graph data science algo
 docker-compose run --rm flask python -m sdg.algonet  # finds named topics and entity highlights
 cat sdg/SD-precompute.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>  # precompute the graph used by front end
+docker-compose run --rm flask python -m neoflask.cache_warm_up  # warm up cache
 docker-compose run --rm flask python -m twitter.update --limit-date 2020-07-01  # --GO_LIVE  to go live with Twitter updates
 cat sdg/audit.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>
 # visit http:/localhost:8080
@@ -87,7 +88,7 @@ In development:
 
 ```bash
 # load the contents of your database using a temporary container
-$ docker run --rm --name neo4j-load --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data --mount type=bind,source=$PWD,target=/app -it neo4j:4.1 bin/neo4j-admin load --database=neo4j --from=/app/<dump_filename>
+docker run --rm --name neo4j-load --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data --mount type=bind,source=$PWD,target=/app -it neo4j:4.1 bin/neo4j-admin load --database=neo4j --from=/app/<dump_filename>
  # --force # ADDING --force WILL OVERWRITE EXISTING DB!
 # if there is no pre-existing graph.db, then the option --force needs to me ommitted to avoid "command failed: unable to load database: NoSuchFileException"
 ```
@@ -164,6 +165,7 @@ docker run --rm \
 
 # start the services
 docker-compose -f production.yml up -d --remove-orphans
+docker-compose -f production.yml run --rm flask python -m neoflask.cache_warm_up  # warm up cache
 ```
 
 

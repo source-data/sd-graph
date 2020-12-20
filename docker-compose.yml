@@ -2,6 +2,8 @@ version: '3'
 volumes:
   local_neo4j_data: {}
   local_neo4j_logs: {}
+  local_redis_data: {}
+
 
 services:
   flask:
@@ -15,7 +17,7 @@ services:
     volumes:
       - .:/app
       - ./log:/log
-      - ${BIORXIV_PATH}:/app/biorxiv # to be provided in .env
+      # - ${BIORXIV_PATH}:/app/biorxiv # to be provided in .env
       - /tmp/.X11-unix:/tmp/.X11-unix
       - /tmp:/tmp
     environment:
@@ -30,9 +32,9 @@ services:
     command: /start
 
   neo4j:
-    image: neo4j:4.1 # 3.5.11
+    image: neo4j:4.1
     environment:
-      - NEO4JLABS_PLUGINS=["apoc", "graph-data-science"] # "graph-algorithms"]
+      - NEO4JLABS_PLUGINS=["apoc", "graph-data-science"]
     ulimits:
       nofile:
         soft: 40000

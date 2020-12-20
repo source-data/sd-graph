@@ -89,14 +89,15 @@ def automagic(limit_date):
 @app.route('/api/v1/doi/<path:doi>', methods=['GET', 'POST'])
 @cache.cached()
 def by_doi(doi: str):
-    app.logger.info(f"search doi:{doi}")
+    app.logger.info(f"search doi: {doi}")
     return jsonify(ASKNEO.by_doi(doi=doi))
 
 
 @app.route('/api/v1/dois/', methods=['POST'])
 def by_dois():
+    print(request)
     dois = request.json['dois']
-    app.logger.info(f"search dois:{dois}")
+    app.logger.info(f"search dois: {dois}")
     response = []
     for doi in dois:
         cache_key = f'/api/v1/dois/{doi}'
