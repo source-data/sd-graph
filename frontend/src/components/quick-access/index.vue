@@ -63,7 +63,7 @@ export default {
           break
         case '/all/automagic':
           tabName = AUTOMAGIC
-          defaultSortBy = 'pub_date'
+          defaultSortBy = 'rank'
           break
         case '/all/search':
           tabName = FULLTEXT_SEARCH

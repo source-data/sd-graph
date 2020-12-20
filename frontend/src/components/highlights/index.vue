@@ -20,8 +20,8 @@
         v-col(cols=1 v-if="selectedTab == refereedPreprintsTabName")
           .text-right 
             small.text-right Sort by:
-        v-col(cols=2 v-else)
-           small.text-right Sort direction:
+        v-col(cols=2 v-else-if="selectedTab !== automagicTabName")
+          small.text-right Sort direction:
         v-col(cols=3 v-if="selectedTab == refereedPreprintsTabName" )
           v-btn-toggle(v-model="sortBy" @change="sortRecords")
             v-btn(x-small outlined value="pub_date")
@@ -29,7 +29,7 @@
             v-btn(
               x-small outlined value="posting_date")
               | reviewing date
-        v-col(cols=1)
+        v-col(cols=1 v-if="selectedTab !== automagicTabName")
           v-btn-toggle(v-model="sortDirection" @change="sortRecords" mandatory)
             v-btn(x-small icon value="desc")
               v-icon(dense) mdi-sort-descending
@@ -51,7 +51,7 @@
 
 <script>
 import HighlightedListItem from './list-item.vue'
-import { REFEREED_PREPRINTS } from '../quick-access/tab-names'
+import { REFEREED_PREPRINTS, AUTOMAGIC, AUTO_TOPICS } from '../quick-access/tab-names'
 import { mapGetters, mapState } from 'vuex'
 
 
@@ -67,9 +67,9 @@ export default {
   computed: {
     ...mapGetters('highlights', ['records', 'selectedTab']),
     ...mapState('highlights', ['loadingRecords']),
-    refereedPreprintsTabName () {
-      return REFEREED_PREPRINTS
-    },
+    refereedPreprintsTabName () {return REFEREED_PREPRINTS},
+    automagicTabName () {return AUTOMAGIC},
+    autotopcisTabName () {return AUTO_TOPICS},
     pageNumber: {
       get() {
         return this.$store.getters['highlights/currentPage']
