@@ -2,13 +2,13 @@
   v-card(class="pa-5" outlined)
     v-card-title Preprints linked to peer reviews
     v-card-text
-      v-row
-        v-col
-          p Reviewing services:
-          v-btn-toggle(v-model="selectedRev" mandatory)
-            router-link(v-for="id in reviewingList" :key="serviceId2Slug(id)" :to="{ path: `/refereed-preprints/${serviceId2Slug(id)}` }")
-              v-btn(small :value="serviceId2Slug(id)" :disabled="loadingRecords") {{ serviceId2Name(id) }}
-          div(v-html="selectedReviewingServiceDescription").pt-3
+      v-btn-toggle(v-model="selectedRev" mandatory)
+        v-container.pa-0
+          v-row(v-for="i in 2" :key="`row-${i}`" justify="space-between")
+            v-col(v-for="j in 3" :key="`col-${j}`")
+              router-link(:to="{ path: `/refereed-preprints/${serviceId2Slug(reviewingListId(i, j))}` }")
+                v-btn(:value="serviceId2Slug(reviewingListId(i, j))" :disabled="loadingRecords") {{ serviceId2Name(reviewingListId(i, j)) }}
+      div(v-html="selectedReviewingServiceDescription").pt-3
 
 </template>
 
@@ -41,6 +41,9 @@ export default {
   methods: {
     onSelect (selectedItemId) {
       this.$emit('change', selectedItemId)
+    },
+    reviewingListId(i, j) {
+      return this.reviewingList[(i-1)*3 + (j-1)]
     },
     serviceId2Slug,
     serviceId2Name,
