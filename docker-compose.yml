@@ -2,7 +2,6 @@ version: '3'
 volumes:
   local_neo4j_data: {}
   local_neo4j_logs: {}
-  local_redis_data: {}
 
 
 services:

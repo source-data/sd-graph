@@ -5,13 +5,9 @@ from neotools.utils import progress
 
 def cache_warm_up(base_url):
 
-    def get_all_dois():
-        
-        return dois
-
     print(f"waming up cache using {EEB_PUBLIC_API}:")
     dois = []
-    # warm up ths stats method
+    # warm up the stats method
     url = base_url + 'stats'
     r = requests.get(url)
     print(f"method /stats warmed up: {r.status_code == 200}")
@@ -23,7 +19,7 @@ def cache_warm_up(base_url):
             collections = r.json()
             N_collections = len(collections)
             for i, collection in enumerate(collections):
-                progress(i, N_collections, f"{collection['id']}")
+                progress(i, N_collections, f"{method}{collection['id']}                    ")
                 papers = collection['papers']
                 new_dois = [paper['doi'] for paper in papers]
                 # warm up of the multiple doi method
@@ -36,12 +32,12 @@ def cache_warm_up(base_url):
     print(f"\nfetched {N_dois} unique dois.")
     successes = 0
     for i, doi in enumerate(dois):
-        progress(i, N_dois, f"{doi}")
+        progress(i, N_dois, f"{doi}                       ")
         # warm up of the individual doi method
         doi_url = EEB_PUBLIC_API + "doi/{doi}"
         r = requests.get(doi_url)
         successes += 1 if r.status_code == 200 else 0
-    print(f"\ncache warmed up with {successes} out of {N_dois} dois.")
+    print(f"\ncache warmed up with {successes} out of {N_dois} dois.\n")
 
 
 def main():
