@@ -7,7 +7,7 @@
     <meta name="Description" content="Early Evidence Base (EEB) is an experimental platform that combines artificial intelligence with human expert peer-review to aggregate and organize results posted in preprints.">
     <link rel="icon" href="<%= BASE_URL %>favicon.ico">
     <title>Early Evidence Base | EMBO</title>
-    <% if (process.env.USE_GOOGLE_ANALYTICS === 'true') { %>
+    <% if (process.env.VUE_APP_USE_GOOGLE_ANALYTICS === 'true') { %>
       <!-- Global site tag (gtag.js) - Google Analytics -->
       <script async src="https://www.googletagmanager.com/gtag/js?id=UA-170212212-1"></script>
       <script>
@@ -29,6 +29,7 @@
       <p>Please enable JavaScript to access the site.</p>
     </noscript>
     <div id="app"></div>
+
     <!-- built files will be auto injected -->
   </body>
 </html>
