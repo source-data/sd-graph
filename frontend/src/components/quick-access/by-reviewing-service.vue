@@ -1,38 +1,37 @@
 <template lang="pug">
-  v-card(outlined).pa-5
-    v-card-title Preprints linked to peer reviews
-    v-card-text
-      v-container
-        v-row()
-          v-col(cols=7)
-            v-btn-toggle(v-model="selectedRev" mandatory)
-              v-container.pa-0
-                v-row(v-for="i in 2" :key="`row-${i}`" justify="space-between")
-                  v-col(v-for="j in 3" :key="`col-${j}`")
-                    router-link(:to="{ path: `/refereed-preprints/${serviceId2Slug(reviewingListId(i, j))}` }")
-                      v-badge(
-                          content="123"
-                          overlap
-                        )
-                        v-btn(:value="serviceId2Slug(reviewingListId(i, j))" :disabled="loadingRecords")
-                          | {{ serviceId2Name(reviewingListId(i, j)) }}
-          v-col(cols=5)
-            //- p {{ selectedReviewingServiceDescription(selectedRev) }}
-            InfoCardsReviewServiceSummary(
-              service_name="Review Commons",
-              url="sdfksdl",
-              evaluation_type='peer_review',
-              certification=true,
-              auhor_driven=false,
-              journal_independent=true,
-            )
+  v-container
+      v-row(align="center")
+        v-col(cols=7)
+          v-card(outlined).pa-5
+            v-card-title Preprints linked to reviews
+            v-card-text
+              v-btn-toggle(v-model="selectedRev" mandatory)
+                v-container.pa-0
+                  v-row(v-for="i in 3" :key="`row-${i}`" justify="space-between")
+                    v-col(v-for="j in 2" :key="`col-${j}`")
+                      router-link(:to="{ path: `/refereed-preprints/${serviceId2Slug(reviewingListId(i, j))}` }")
+                        v-badge(
+                            dot
+                            overlap
+                          )
+                          v-btn(:value="serviceId2Slug(reviewingListId(i, j))" :disabled="loadingRecords")
+                            | {{ serviceId2Name(reviewingListId(i, j)) }}
+        v-col(v-if="selectedRev")
+          InfoCardsReviewServiceSummary(
+            :service_name="serviceSlug2Props(selectedRev).service_name",
+            :url="serviceSlug2Props(selectedRev).url",
+            :evaluation_type="serviceSlug2Props(selectedRev).evaluation_type",
+            :certification="serviceSlug2Props(selectedRev).certification", 
+            :author_driven="serviceSlug2Props(selectedRev).author_driven",
+            :journal_independent="serviceSlug2Props(selectedRev).journal_independent",
+          )
 
 </template>
 
 <script>
 
 import { mapGetters, mapState } from 'vuex'
-import { serviceId2Slug, serviceId2Name, getReviewingServiceDescription, } from '../../store/by-reviewing-service'
+import { serviceId2Slug, serviceId2Name, serviceSlug2Props } from '../../store/by-reviewing-service'
 import InfoCardsReviewServiceSummary from './info-cards/review-service-summary.vue'
 
 
@@ -45,7 +44,7 @@ export default {
       selectedRev: undefined,
     }
   },
-  mounted () {
+  beforeMount () {
     this.selectedRev = this.$route.params.service
   },
   computed: {
@@ -63,14 +62,11 @@ export default {
       this.$emit('change', selectedItemId)
     },
     reviewingListId(i, j) {
-      return this.reviewingList[(i-1)*3 + (j-1)]
+      return this.reviewingList[(i-1)*2 + (j-1)]
     },
     serviceId2Slug,
     serviceId2Name,
-    selectedReviewingServiceDescription (serviceSlug) {
-      console.debug("spread", getReviewingServiceDescription(serviceSlug))
-      return getReviewingServiceDescription(serviceSlug)
-    }
+    serviceSlug2Props,
   },
 }
 </script>

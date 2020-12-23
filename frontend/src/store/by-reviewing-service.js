@@ -9,7 +9,6 @@ const _serviceId2Slug = {
   'peerage of science': 'peerage-of-science',
   'MIT Press - Journals': 'rrc19',
   'Peer Community In': 'peer-community-in'
-
 }
 
 const _serviceSlug2Id = Object.keys(_serviceId2Slug).reduce((acc, serviceId) => {
@@ -38,6 +37,58 @@ function _serviceId2Name (id) {
   }
 }
 
+
+const _properties = {
+  'review-commons': {
+    service_name: "Review Commons",
+    url: "https://reviewcommons.org",
+    evaluation_type: "formal_peer_review",  // formal peer review | commentary
+    certification: false, 
+    author_driven: true,
+    journal_independent: true,
+  },
+  elife: {
+    service_name: "eLife",
+    url: "http://elifesci.org/preprint-review",
+    evaluation_type: "formal_peer_review",  // formal peer review | commentary
+    certification: true, 
+    author_driven: true,
+    journal_independent: false,
+  },
+  'embo-press': {
+    service_name: "EMBO Press",
+    url: "https://www.embopress.org/policies",
+    evaluation_type: "formal_peer_review",  // formal peer review | commentary
+    certification: true, 
+    author_driven: true,
+    journal_independent: false,
+  },
+  'peerage-of-science': {
+    service_name: "Peerage of Science",
+    url: "https://www.peerageofscience.org/",
+    evaluation_type: "formal_peer_review",  // formal peer review | commentary
+    certification: false, 
+    author_driven: true,
+    journal_independent: true,
+  },
+  rrc19: {
+    service_name: "Rapid Reviews: COVID-19",
+    url: "https://rapidreviewscovid19.mitpress.mit.edu/",
+    evaluation_type: "formal_peer_review",  // formal peer review | commentary
+    certification: true, 
+    author_driven: false,
+    journal_independent: false,
+  },
+  'peer-community-in': {
+    service_name: "Peer Community In",
+    url: "https://peercommunityin.org/",
+    evaluation_type: "formal_peer_review",  // formal peer review | commentary
+    certification: true, 
+    author_driven: true,
+    journal_independent: true,
+  }
+}
+
 export function serviceId2Slug (serviceId) {
   return _serviceId2Slug[serviceId]
 }
@@ -54,58 +105,8 @@ export function serviceSlug2name(serviceSlug) {
 }
 
 // this should come from backend
-export function getReviewingServiceDescription (serviceSlug) {
-  const properties = {
-    'review-commons': {
-      service_name: "Review Commons",
-      url: "https://reviewcommons.org",
-      evaluation_type: "peer_review",  // formal peer review | commentary
-      certification: false, 
-      author_driven: true,
-      journal_independent: true,
-    },
-    elife: {
-      service_name: "eLife",
-      url: "http://elifesci.org/preprint-review",
-      evaluation_type: "elife",  // formal peer review | commentary
-      certification: true, 
-      author_driven: true,
-      journal_independent: false,
-    },
-    'embo-press': {
-      service_name: "EMBO Press",
-      url: "https://www.embopress.org/policies",
-      evaluation_type: "peer_review",  // formal peer review | commentary
-      certification: true, 
-      author_driven: true,
-      journal_independent: false,
-    },
-    'peerage-of-science': {
-      service_name: "Peerage of Science",
-      url: "https://www.peerageofscience.org/",
-      evaluation_type: "peer_review",  // formal peer review | commentary
-      certification: false, 
-      author_driven: true,
-      journal_independent: true,
-    },
-    rrc19: {
-      service_name: "Rapid Reviews: COVID-19",
-      url: "https://rapidreviewscovid19.mitpress.mit.edu/",
-      evaluation_type: "peer_review",  // formal peer review | commentary
-      certification: true, 
-      author_driven: false,
-      journal_independent: false,
-    },
-    'peer-community-in': {
-      service_name: "Peer Community In",
-      url: "https://peercommunityin.org/",
-      evaluation_type: "peer_review",  // formal peer review | commentary
-      certification: true, 
-      author_driven: true,
-      journal_independent: true,
-    }
-  }
-  return properties[serviceSlug]
+export function serviceSlug2Props (serviceSlug) {
+  return _properties[serviceSlug]
 }
 
 
