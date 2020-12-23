@@ -4,7 +4,7 @@
     v-card-text
       v-container
         v-row()
-          v-col(cols=7).red
+          v-col(cols=7)
             v-btn-toggle(v-model="selectedRev" mandatory)
               v-container.pa-0
                 v-row(v-for="i in 2" :key="`row-${i}`" justify="space-between")
@@ -16,9 +16,8 @@
                         )
                         v-btn(:value="serviceId2Slug(reviewingListId(i, j))" :disabled="loadingRecords")
                           | {{ serviceId2Name(reviewingListId(i, j)) }}
-          v-col(cols=5).blue
+          v-col(cols=5)
             //- p {{ selectedReviewingServiceDescription(selectedRev) }}
-            Test
             InfoCardsReviewServiceSummary(
               service_name="Review Commons",
               url="sdfksdl",
@@ -34,13 +33,12 @@
 
 import { mapGetters, mapState } from 'vuex'
 import { serviceId2Slug, serviceId2Name, getReviewingServiceDescription, } from '../../store/by-reviewing-service'
-import { InfoCardsReviewServiceSummary } from './info-cards/review-service-summary.vue'
-import { Test } from './test'
+import InfoCardsReviewServiceSummary from './info-cards/review-service-summary.vue'
+
 
 export default {
   components: {
     InfoCardsReviewServiceSummary,
-    Test,
   },
   data () {
     return {

@@ -2,14 +2,6 @@
   v-card(class="pa-5")
     v-card-title Discover preprints with one of these methods
     v-card-text
-      InfoCardsReviewServiceSummary(
-        service_name="Review Commons",
-        url="https://reviewcommons.org",
-        evaluation_type='peer_review',
-        certification=false,
-        auhor_driven=false,
-        journal_independent=true,
-      ).purple
       v-tabs(
         v-model="activeTab_"
         @change="onTabChange"
