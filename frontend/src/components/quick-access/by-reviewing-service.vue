@@ -1,22 +1,47 @@
 <template lang="pug">
-  v-card(class="pa-5" outlined)
+  v-card(outlined).pa-5
     v-card-title Preprints linked to peer reviews
     v-card-text
-      v-btn-toggle(v-model="selectedRev" mandatory)
-        v-container.pa-0
-          v-row(v-for="i in 2" :key="`row-${i}`" justify="space-between")
-            v-col(v-for="j in 3" :key="`col-${j}`")
-              router-link(:to="{ path: `/refereed-preprints/${serviceId2Slug(reviewingListId(i, j))}` }")
-                v-btn(:value="serviceId2Slug(reviewingListId(i, j))" :disabled="loadingRecords") {{ serviceId2Name(reviewingListId(i, j)) }}
-      div(v-html="selectedReviewingServiceDescription").pt-3
+      v-container
+        v-row()
+          v-col(cols=7).red
+            v-btn-toggle(v-model="selectedRev" mandatory)
+              v-container.pa-0
+                v-row(v-for="i in 2" :key="`row-${i}`" justify="space-between")
+                  v-col(v-for="j in 3" :key="`col-${j}`")
+                    router-link(:to="{ path: `/refereed-preprints/${serviceId2Slug(reviewingListId(i, j))}` }")
+                      v-badge(
+                          content="123"
+                          overlap
+                        )
+                        v-btn(:value="serviceId2Slug(reviewingListId(i, j))" :disabled="loadingRecords")
+                          | {{ serviceId2Name(reviewingListId(i, j)) }}
+          v-col(cols=5).blue
+            //- p {{ selectedReviewingServiceDescription(selectedRev) }}
+            Test
+            InfoCardsReviewServiceSummary(
+              service_name="Review Commons",
+              url="sdfksdl",
+              evaluation_type='peer_review',
+              certification=true,
+              auhor_driven=false,
+              journal_independent=true,
+            )
 
 </template>
 
 <script>
+
 import { mapGetters, mapState } from 'vuex'
-import { serviceId2Slug, serviceId2Name, getReviewingServiceDescription } from '../../store/by-reviewing-service'
+import { serviceId2Slug, serviceId2Name, getReviewingServiceDescription, } from '../../store/by-reviewing-service'
+import { InfoCardsReviewServiceSummary } from './info-cards/review-service-summary.vue'
+import { Test } from './test'
 
 export default {
+  components: {
+    InfoCardsReviewServiceSummary,
+    Test,
+  },
   data () {
     return {
       selectedRev: undefined,
@@ -34,9 +59,6 @@ export default {
       ).sort().reverse()
       return ids
     },
-    selectedReviewingServiceDescription () {
-      return getReviewingServiceDescription(this.selectedRev)
-    }
   },
   methods: {
     onSelect (selectedItemId) {
@@ -47,6 +69,10 @@ export default {
     },
     serviceId2Slug,
     serviceId2Name,
+    selectedReviewingServiceDescription (serviceSlug) {
+      console.debug("spread", getReviewingServiceDescription(serviceSlug))
+      return getReviewingServiceDescription(serviceSlug)
+    }
   },
 }
 </script>
