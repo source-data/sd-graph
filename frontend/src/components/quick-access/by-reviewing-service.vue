@@ -3,19 +3,32 @@
       v-row(align="center")
         v-col(cols=7)
           v-card(outlined).pa-5
-            v-card-title Preprints linked to reviews
+            v-card-title Preprints linked to formal reviews
             v-card-text
               v-btn-toggle(v-model="selectedRev" mandatory)
                 v-container.pa-0
                   v-row(v-for="i in 3" :key="`row-${i}`" justify="space-between")
                     v-col(v-for="j in 2" :key="`col-${j}`")
                       router-link(:to="{ path: `/refereed-preprints/${serviceId2Slug(reviewingListId(i, j))}` }")
-                        v-badge(
-                            dot
-                            overlap
+                        span().v-badge.v-badge--dot
+                          //- v-badge(dot overlap)
+                          v-btn(
+                            :value="serviceId2Slug(reviewingListId(i, j))" :disabled="loadingRecords"
                           )
-                          v-btn(:value="serviceId2Slug(reviewingListId(i, j))" :disabled="loadingRecords")
                             | {{ serviceId2Name(reviewingListId(i, j)) }}
+                          span.v-badge__wrapper
+                            //- span(
+                            //-   v-if="serviceSlug2Props(serviceId2Slug(reviewingListId(i, j))).evaluation_type === 'formal_peer_review'"
+                            //-   style="inset: auto auto calc(100% - 5px) calc(100% - 38px);").v-badge__badge.blue.darken-5
+                            span(
+                              v-if="serviceSlug2Props(serviceId2Slug(reviewingListId(i, j))).journal_independent"
+                              style="inset: auto auto calc(100% - 5px) calc(100% - 28px);").v-badge__badge.lime.darken-5
+                            span(
+                              v-if="serviceSlug2Props(serviceId2Slug(reviewingListId(i, j))).certification"
+                              style="inset: auto auto calc(100% - 5px) calc(100% - 18px);").v-badge__badge.amber.darken-2
+                            span(
+                              v-if="serviceSlug2Props(serviceId2Slug(reviewingListId(i, j))).author_driven"
+                              style="inset: auto auto calc(100% - 5px) calc(100% - 8px);").v-badge__badge.purple
         v-col(v-if="selectedRev")
           InfoCardsReviewServiceSummary(
             :service_name="serviceSlug2Props(selectedRev).service_name",

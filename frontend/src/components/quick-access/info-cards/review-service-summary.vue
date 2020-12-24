@@ -1,26 +1,28 @@
 <template lang="pug">
-  div
-    h4 About: {{ service_name }}
-    p
+  v-card(outlined)
+    v-card-title
+      span(slot)
+        | About: <i>{{ service_name }}</i>
+    v-card-subtitle
       a(href:url) {{ url }}
-    p
+    v-card-text
       ul
+        //- li
+        //-   span(slot).blue--text Formal peer review:
+        //-   | &nbsp;
+        //-   b {{ (evaluation_type == "formal_peer_review") ? "Yes" : "No" }}
         li
-          | Type of evaluation:
-          |
-          b {{ (evaluation_type == "formal_peer_review") ? "Formal peer review" : "Commenting" }}
+          span(v-if="journal_independent").lime--text.text--darken-4
+            | Journal-independent: <b>Yes</b>
+          span(v-else) Journal-independent: No
         li
-          | Journal-independent:
-          |
-          b {{ journal_independent ? "Yes" : "No" }}
+          span(v-if="certification").amber--text.text--darken-4
+            | Post-review certification: <b>Yes</b>
+          span(v-else) Post-review certification: No
         li
-          | Post-review certification:
-          |
-          b {{ certification ? "Makes editorial decisons/recommendations" : "No editorial decisions" }}
-        li
-          | Reviewed content:
-          |
-          b {{ author_driven ? "Author-driven submissions." :  "Author-independent curation" }}
+          span(v-if="author_driven").purple--text.text-darken-2
+            | Author driven submissions: <b>Yes</b>
+          span(v-else) Author-driven submissions: No
 </template>
 
 <script>
