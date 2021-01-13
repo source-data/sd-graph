@@ -42,7 +42,7 @@ const _properties = {
   'review-commons': {
     service_name: "Review Commons",
     url: "https://reviewcommons.org",
-    evaluation_type: "formal_peer_review",  // formal peer review | commentary
+    evaluation_type: "formal_peer_review",
     certification: false, 
     author_driven: true,
     journal_independent: true,
@@ -50,7 +50,7 @@ const _properties = {
   elife: {
     service_name: "eLife",
     url: "http://elifesci.org/preprint-review",
-    evaluation_type: "formal_peer_review",  // formal peer review | commentary
+    evaluation_type: "formal_peer_review",
     certification: true, 
     author_driven: true,
     journal_independent: false,
@@ -58,7 +58,7 @@ const _properties = {
   'embo-press': {
     service_name: "EMBO Press",
     url: "https://www.embopress.org/policies",
-    evaluation_type: "formal_peer_review",  // formal peer review | commentary
+    evaluation_type: "formal_peer_review",
     certification: true, 
     author_driven: true,
     journal_independent: false,
@@ -66,7 +66,7 @@ const _properties = {
   'peerage-of-science': {
     service_name: "Peerage of Science",
     url: "https://www.peerageofscience.org/",
-    evaluation_type: "formal_peer_review",  // formal peer review | commentary
+    evaluation_type: "formal_peer_review",
     certification: false, 
     author_driven: true,
     journal_independent: true,
@@ -74,7 +74,7 @@ const _properties = {
   rrc19: {
     service_name: "Rapid Reviews: COVID-19",
     url: "https://rapidreviewscovid19.mitpress.mit.edu/",
-    evaluation_type: "formal_peer_review",  // formal peer review | commentary
+    evaluation_type: "formal_peer_review",
     certification: true, 
     author_driven: false,
     journal_independent: false,

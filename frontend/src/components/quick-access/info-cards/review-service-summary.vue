@@ -7,22 +7,18 @@
       a(href:url) {{ url }}
     v-card-text
       ul
-        //- li
-        //-   span(slot).blue--text Formal peer review:
-        //-   | &nbsp;
-        //-   b {{ (evaluation_type == "formal_peer_review") ? "Yes" : "No" }}
         li
           span(v-if="journal_independent").lime--text.text--darken-4
             | Journal-independent: <b>Yes</b>
-          span(v-else) Journal-independent: No
+          span(v-else).grey--text Journal-independent: No
         li
           span(v-if="certification").amber--text.text--darken-4
             | Post-review certification: <b>Yes</b>
-          span(v-else) Post-review certification: No
+          span(v-else).grey--text Post-review certification: No
         li
           span(v-if="author_driven").purple--text.text-darken-2
             | Author driven submissions: <b>Yes</b>
-          span(v-else) Author-driven submissions: No
+          span(v-else).grey--text Author-driven submissions: No
 </template>
 
 <script>
