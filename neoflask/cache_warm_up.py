@@ -34,15 +34,16 @@ def cache_warm_up(base_url):
     for i, doi in enumerate(dois):
         progress(i, N_dois, f"{doi}                       ")
         # warm up of the individual doi method
-        doi_url = EEB_PUBLIC_API + "doi/{doi}"
+        doi_url = base_url + "doi/{doi}"
         r = requests.get(doi_url)
         successes += 1 if r.status_code == 200 else 0
     print(f"\ncache warmed up with {successes} out of {N_dois} dois.\n")
 
 
-def main():
-    cache_warm_up(EEB_PUBLIC_API)
 
 
 if __name__ == '__main__':
-    main()
+    parser = ArgumentParser(description='Loading meca or CORD-19 archives into neo4j.')
+    parser.add_argument('base_url', default=EEB_PUBLIC_API,help='Host address to be warmed up')
+    args = parser.parse_args()
+    cache_warm_up(args.base_url)

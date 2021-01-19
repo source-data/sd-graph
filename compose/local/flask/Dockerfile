@@ -1,4 +1,5 @@
-FROM python:3.7-buster
+#FROM python:3.7-buster Use buster for Matplotlib and tkinter
+FROM python:3.7-slim-buster
 
 ENV PYTHONUNBUFFERED 1
 ENV DOCKERIZE_VERSION v0.6.1

@@ -88,7 +88,7 @@ In development:
 
 ```bash
 # load the contents of your database using a temporary container
-docker run --rm --name neo4j-load --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data --mount type=bind,source=$PWD,target=/app -it neo4j:4.1 bin/neo4j-admin load --database=neo4j --from=/app/<dump_filename>
+docker run --rm --name neo4j-load --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data --mount type=bind,source=$PWD/dumps,target=/dumps -it neo4j:4.1 bin/neo4j-admin load --database=neo4j --from=/dumps/<dump_filename>
  # --force # ADDING --force WILL OVERWRITE EXISTING DB!
 # if there is no pre-existing graph.db, then the option --force needs to me ommitted to avoid "command failed: unable to load database: NoSuchFileException"
 ```
@@ -99,10 +99,10 @@ In production:
 docker run --rm \
     --name neo4j-dump \
     --env-file .env \
-    --mount type=bind,source=$PWD,target=/app \
+    --mount type=bind,source=$PWD/dumps,target=/dumps \
     --mount type=volume,source=sd-graph_production_neo4j_data,target=/data \
     -it neo4j:4.1 \
-    bin/neo4j-admin load --database=neo4j --from=/app/<dump_filename>
+    bin/neo4j-admin load --database=neo4j --from=/dumps/<dump_filename>
 ```
 
 
@@ -110,16 +110,18 @@ docker run --rm \
 
 ```bash
 # Make sure you dont have your neo4j running:
-docker-compose down
+docker-compose -f production.yml down
 
+sudo mkdir dumps
+sudo chown 7474:7474 dumps
 # dump the contents of your database using a temporary container
 docker run --rm \
     --name neo4j-dump \
     --env-file .env \
-    --mount type=bind,source=$PWD,target=/app \
+    --mount type=bind,source=$PWD/dumps/,target=/dumps \
     --mount type=volume,source=sd-graph_production_neo4j_data,target=/data \
-    -it neo4j:3.5 \
-    bin/neo4j-admin dump --to=/app/graph.dump.`date +%Y-%m-%d-%H.%M.%S` --database=graph.db
+    -it neo4j:4.1 \
+    bin/neo4j-admin dump --to=/dumps/neo4j.`date +%Y-%m-%d-%H.%M.%S` --database=neo4j
 
 ```
 

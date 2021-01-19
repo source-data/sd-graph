@@ -63,9 +63,7 @@ update_local_neo4j() {
     # run monthly
 
     log "updating meca archives"
-    aws s3 sync --request-payer requester --exclude "*" --include "*.meca" s3://biorxiv-src-monthly/Current_Content /mnt/usb01/shared/biorxiv-src-monthly
-    # alternative using docker
-    # docker run --rm -it -v ~/.aws:/root/.aws --mount type=bind,source=/raid/lemberge/sd-graph/biorxiv/Current_Content/July_2020,target=/root/Current_Content/July_2020 amazon/aws-cli s3 sync --request-payer requester --exclude "*" --include "*.meca" s3://biorxiv-src-monthly/Current_Content/July_2020 ./Current_Content/July_2020 --dryrun
+    aws s3 sync --request-payer requester --exclude "*" --include "*.meca" s3://biorxiv-src-monthly/Current_Content $BIORXIV_PATH #/mnt/usb01/shared/biorxiv-src-monthly
 
     log "remove prelim articles obtained from the CrossRef and bioRxiv APIs"
     cat neotools/purge_prelim.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
@@ -74,72 +72,80 @@ update_local_neo4j() {
     # this is missing the July_2020
     #docker-compose run --rm -v /usb01/shared/biorxiv-src-monthly:/biorxiv-src-monthly flask python -m neotools.rxiv2neo /biorxiv-src-monthly/July_2020 --type meca
     local PREVIOUS_MONTH=`date --date='-1 month' +%B` # Biorxiv only publishes monthly updates when the month is over, meaning the 1st of September we get access to August content
-    local CURRENT_YEAR=`date +%Y`
-    docker-compose -f docker-compose.deploy.yml run --rm -v /usb01/shared/biorxiv-src-monthly:/biorxiv-src-monthly flask python -m neotools.rxiv2neo /biorxiv-src-monthly/"$CURRENT_MONTH"_"$CURRENT_YEAR" --type meca
+    local YEAR=`date --date='-1 month' +%Y` # Biorxiv only publishes monthly updates when the month is over, meaning the 1st of September we get access to August content
+    docker-compose -f docker-compose.deploy.yml run --rm flask python -m neotools.rxiv2neo /app/biorxiv/"$PREVIOUS_MONTH"_"$YEAR" --type meca
   }
 
-  import_peer_reviews_from_hypo() {
+  import_peer_reviews() {
     # daily
-    log "import peer reviews from hypothesis & complete our db with biorxiv prelim api if our meca-fulltext-db missed one"
-    docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.neohypo
+    log "import peer reviews from peer-review databases & complete our db with biorxiv prelim api if our meca-fulltext-db missed one"
+    docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.neohypo hypothesis
+    docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.neohypo rc19
+    docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.neohypo pci
   }
 
   mark_peer_reviews_as_published() {
     # weekly
     log "updates publication status (find out if a preprint has been published in a journal)"
-    docker-compose  -f docker-compose.deploy.yml run --rm flask python -m peerreview.published # maybe run only once a week?
+    docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.published # maybe run only once a week?
   }
 
   smarttag() {
     # daily
-    log "smarttag specified collection of preprints"
-    docker-compose run --rm flask python -m sdg.sdneo covid19 --api eebapi
 
     log "smarttag specified collection of preprints"
-    docker-compose run --rm flask python -m sdg.sdneo refereed-preprints --api eebapi
+    docker-compose -f docker-compose.deploy.yml run --rm flask python -m sdg.sdneo subject-collections --api eebapi
+    docker-compose -f docker-compose.deploy.yml run --rm flask python -m sdg.sdneo refereed-preprints --api eebapi
   }
 
   import_SD() {
-    # monthly
+    # manually
     log "import source data public data. Logging to `log/sdg.sdneo-publicsearch.log`"
-    docker-compose run --rm flask python -m sdg.sdneo PUBLICSEARCH --api sdapi
+    docker-compose -f docker-compose.deploy.yml run --rm flask python -m sdg.sdneo PUBLICSEARCH --api sdapi
   }
 
   merge_and_precompute_graph() {
     # daily
     log "generate merged graph"
-    cat sdg/SD-processing.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
+    cat sdg/SD-processing.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
+
+
+    log "neo4j graph data science"
+    cat sdg/SD-gds.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
+
+    log "advanced graph data science"
+    docker-compose -f docker-compose.deploy.yml run --rm flask python -m sdg.algonet
 
     log "precompute the graph used by front end"
-    cat sdg/SD-precompute.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
+    cat sdg/SD-precompute.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
   }
 
 
   log "starting docker"
-  docker-compose build
-  docker-compose up -d
+  docker-compose -f docker-compose.deploy.yml build
+  docker-compose -f docker-compose.deploy.yml up -d
 
   local PERIODICITY=$1
   case $PERIODICITY in
     "monthly")
       log "Running monthly update"
       update_fulltext_biorxiv # monthly
-      import_peer_reviews_from_hypo # daily
+      import_peer_reviews # daily
       mark_peer_reviews_as_published # weekly
       smarttag # daily
-      import_SD # monthly
+      # import_SD # monthly
       merge_and_precompute_graph # daily
       ;;
     "weekly")
       log "Running weekly update, it's Monday!"
-      import_peer_reviews_from_hypo # daily
+      import_peer_reviews # daily
       mark_peer_reviews_as_published # weekly
       smarttag # daily
       merge_and_precompute_graph # daily
       ;;
     "daily")
       log "Running daily update"
-      import_peer_reviews_from_hypo # daily
+      import_peer_reviews # daily
       smarttag # daily
       merge_and_precompute_graph # daily
       ;;
@@ -152,7 +158,7 @@ update_local_neo4j() {
 
 publish_on_twitter(){
   log "publishing on twitter"
-  docker-compose run --rm flask python -m twitter.update --limit-date 2020-07-01 # --GO_LIVE to go live with Twitter updates
+  docker-compose -f docker-compose.deploy.yml run --rm flask python -m twitter.update --limit-date 2020-07-01 # --GO_LIVE to go live with Twitter updates
 }
 
 
@@ -162,7 +168,7 @@ dump_local_neo4j(){
   log "  * stopping docker-compose"
 
   # Make sure you dont have your neo4j running:
-  docker-compose down
+  docker-compose -f docker-compose.deploy.yml down
 
   # rotate backup once before we dump, just in case some old files are still there
   rotate_backup
@@ -172,10 +178,10 @@ dump_local_neo4j(){
 
   log "  * dumping to data/neo4j-data/dumps/$DUMP_NAME"
   # dump the contents of your database using a temporary container
-  docker run --rm --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data neo4j:3.5 bin/neo4j-admin dump --database=graph.db --to=data/dumps/$DUMP_NAME
+  docker run --rm --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data neo4j:4.1 bin/neo4j-admin dump --database=neo4j --to=data/dumps/$DUMP_NAME
 
   log "  * restarting docker-compose"
-  docker-compose up -d
+  docker-compose -f docker-compose.deploy.yml up -d
   log "[dumping neo4j] - done"
 }
 
@@ -214,15 +220,7 @@ rotate_backup(){
 cache_warmup(){
   local HOST=$1
   local SERVER_ADDRESS="https://$HOST"
-  log "Cache warmup:"
-  log "   * $SERVER_ADDRESS/api/v1/automagic/"
-  curl $SERVER_ADDRESS/api/v1/automagic/ > /dev/null 2>&1
-  log "   * $SERVER_ADDRESS/api/v1/by_hyp/"
-  curl $SERVER_ADDRESS/api/v1/by_hyp/ > /dev/null 2>&1
-  log "   * $SERVER_ADDRESS/api/v1/by_reviewing_service/"
-  curl $SERVER_ADDRESS/api/v1/by_reviewing_service/ > /dev/null 2>&1
-  log "   * $SERVER_ADDRESS/api/v1/stats"
-  curl $SERVER_ADDRESS/api/v1/stats > /dev/null 2>&1
+  docker-compose -f docker-compose.deploy.yml run --rm flask python -m neoflask.cache_warm_up $SERVER_ADDRESS
 }
 
 main() {
@@ -302,7 +300,7 @@ main() {
 
   load_dotenv
   update_local_neo4j $PERIODICITY
-  NEO4J_DUMP_NAME="graph.db.dump"
+  NEO4J_DUMP_NAME="neo4j.dump"
   dump_local_neo4j $NEO4J_DUMP_NAME
   # deploy_database_to_staging data/neo4j-data/$NEO4J_DUMP_NAME
   deploy_database $REMOTE_HOST data/neo4j-data/dumps/$NEO4J_DUMP_NAME
