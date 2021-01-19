@@ -9,7 +9,6 @@ const _serviceId2Slug = {
   'peerage of science': 'peerage-of-science',
   'MIT Press - Journals': 'rrc19',
   'Peer Community In': 'peer-community-in'
-
 }
 
 const _serviceSlug2Id = Object.keys(_serviceId2Slug).reduce((acc, serviceId) => {
@@ -38,6 +37,58 @@ function _serviceId2Name (id) {
   }
 }
 
+
+const _properties = {
+  'review-commons': {
+    service_name: "Review Commons",
+    url: "https://reviewcommons.org",
+    evaluation_type: "formal_peer_review",
+    certification: false, 
+    author_driven: true,
+    journal_independent: true,
+  },
+  elife: {
+    service_name: "eLife",
+    url: "http://elifesci.org/preprint-review",
+    evaluation_type: "formal_peer_review",
+    certification: true, 
+    author_driven: true,
+    journal_independent: false,
+  },
+  'embo-press': {
+    service_name: "EMBO Press",
+    url: "https://www.embopress.org/policies",
+    evaluation_type: "formal_peer_review",
+    certification: true, 
+    author_driven: true,
+    journal_independent: false,
+  },
+  'peerage-of-science': {
+    service_name: "Peerage of Science",
+    url: "https://www.peerageofscience.org/",
+    evaluation_type: "formal_peer_review",
+    certification: false, 
+    author_driven: true,
+    journal_independent: true,
+  },
+  rrc19: {
+    service_name: "Rapid Reviews: COVID-19",
+    url: "https://rapidreviewscovid19.mitpress.mit.edu/",
+    evaluation_type: "formal_peer_review",
+    certification: true, 
+    author_driven: false,
+    journal_independent: false,
+  },
+  'peer-community-in': {
+    service_name: "Peer Community In",
+    url: "https://peercommunityin.org/",
+    evaluation_type: "formal_peer_review",  // formal peer review | commentary
+    certification: true, 
+    author_driven: true,
+    journal_independent: true,
+  }
+}
+
 export function serviceId2Slug (serviceId) {
   return _serviceId2Slug[serviceId]
 }
@@ -49,27 +100,13 @@ export function serviceId2Name (serviceId) {
   return _serviceId2Name(serviceId)
 }
 
-export function getReviewingServiceDescription (serviceName) {
-  switch (serviceName) {
-    case 'review-commons':
-      return '<p>Learn more about <i>Review Commons</i> at <a target="_blank" href="https://reviewcommons.org">https://reviewcommons.org</a></p>'
-    case 'biorxiv':
-      return '<p>Learn more about <i>bioRxiv</i> at <a target="_blank" href="https://www.biorxiv.org/">https://biorxiv.org/</a></p>'
-    case 'medrxiv':
-      return '<p>Learn more about <i>medRxiv</i> at <a target="_blank" href="https://www.medRxiv.org/">https://medRxiv.org/</a></p>'
-    case 'elife':
-      return '<p>Learn more about <i>eLife</i> Preprint Review at <a target="_blank" href="http://elifesci.org/preprint-review">http://elifesci.org/preprint-review</a></p>'
-    case 'embo-press':
-      return '<p>Learn more about <i>EMBO Press</i> Transparent Review at <a target="_blank" href="https://www.embopress.org/policies">https://embopress.org</a></p>'
-    case 'peerage-of-science':
-      return '<p>Learn more about <i>Peerage of Science</i> at <a target="_blank" href="https://www.peerageofscience.org/">https://peerageofscience.org/</a></p>'
-    case 'rrc19':
-      return '<p>Learn more about <i>Rapid Reviews: COVID-19</i> at <a target="_blank" href="https://rapidreviewscovid19.mitpress.mit.edu/">https://rapidreviewscovid19.mitpress.mit.edu/</a></p>'
-    case 'peer-community-in':
-      return '<p>Learn more about <i>Peer Community In</i> at <a target="_blank" href="https://peercommunityin.org/">https://peercommunityin.org/</a></p>'
-    default: 
-      break;
-  }
+export function serviceSlug2name(serviceSlug) {
+  return _serviceId2Name(_serviceSlug2Id[serviceSlug])
+}
+
+// this should come from backend
+export function serviceSlug2Props (serviceSlug) {
+  return _properties[serviceSlug]
 }
 
 
