@@ -6,7 +6,7 @@ redis==3.5.2
 Flask-DotEnv==0.1.1
 python-dotenv==0.10.1
 lxml==4.5.0
-requests==2.23.
+requests==2.23.0
 pandas==1.0.3
 tweepy==3.8.0
 networkx==2.5
