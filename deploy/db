@@ -173,12 +173,12 @@ dump_local_neo4j(){
   # rotate backup once before we dump, just in case some old files are still there
   rotate_backup
 
-  log "  * setting right permissions to dir: data/neo4j-data/dumps"
-  sudo chown systemd-resolve:systemd-journal data/neo4j-data/dumps
+  log "  * setting right permissions to dir: dumps"
+  sudo chown 7474:7474 dumps
 
-  log "  * dumping to data/neo4j-data/dumps/$DUMP_NAME"
+  log "  * dumping to dumps/$DUMP_NAME"
   # dump the contents of your database using a temporary container
-  docker run --rm --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data neo4j:4.1 bin/neo4j-admin dump --database=neo4j --to=data/dumps/$DUMP_NAME
+  docker run --rm --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data --mount type=bind,source=$PWD/dumps,target=/dumps neo4j:4.1 bin/neo4j-admin dump --database=neo4j --to=/dumps/$DUMP_NAME
 
   log "  * restarting docker-compose"
   docker-compose -f docker-compose.deploy.yml up -d
@@ -206,12 +206,12 @@ deploy_database(){
 rotate_backup(){
   # you may need to add something like this to your sudoers file
   #
-  #     eeb ALL=(root) NOPASSWD: /bin/chown -R eeb\:eeb data/neo4j-data/dumps
-  #     eeb ALL=(root) NOPASSWD: /bin/chown systemd-resolve\:systemd-journal data/neo4j-data/dumps
+  #     eeb ALL=(root) NOPASSWD: /bin/chown -R eeb\:eeb dumps
+  #     eeb ALL=(root) NOPASSWD: /bin/chown 7474\:7474 dumps
 
 
   log "make sure all previously dumped databases files belong to our user"
-  sudo /bin/chown -R `whoami`:`whoami` data/neo4j-data/dumps
+  sudo /bin/chown -R `whoami`:`whoami` dumps
 
   log "  * rotating backups"
   logrotate deploy/__db__/logrotate-graph.db.dump.conf --state deploy/__db__/logrotate.state --force
@@ -219,7 +219,7 @@ rotate_backup(){
 
 cache_warmup(){
   local HOST=$1
-  local SERVER_ADDRESS="https://$HOST"
+  local SERVER_ADDRESS="https://$HOST/api/v1/"
   docker-compose -f docker-compose.deploy.yml run --rm flask python -m neoflask.cache_warm_up $SERVER_ADDRESS
 }
 
@@ -302,8 +302,7 @@ main() {
   update_local_neo4j $PERIODICITY
   NEO4J_DUMP_NAME="neo4j.dump"
   dump_local_neo4j $NEO4J_DUMP_NAME
-  # deploy_database_to_staging data/neo4j-data/$NEO4J_DUMP_NAME
-  deploy_database $REMOTE_HOST data/neo4j-data/dumps/$NEO4J_DUMP_NAME
+  deploy_database $REMOTE_HOST dumps/$NEO4J_DUMP_NAME
   rotate_backup
   cache_warmup $REMOTE_HOST
 
