@@ -14,7 +14,6 @@ infomap==1.2.1
 scikit-learn==0.23.2
 cdlib==0.1.9
 python-igraph==0.8.3
-GraphRicciCurvature==0.5.2
 wurlitzer==2.0.1
 
 -e git+https://github.com/source-data/ai.git#egg=ai
