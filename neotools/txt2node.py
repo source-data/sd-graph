@@ -47,8 +47,8 @@ class XMLNode:
         namespaces (Dict): the dictionary of namespaces with their prefix
 
     Attributes:
-        label (str): the node label
-        properties (Dict): the properties of the node
+        label (str): the node label. Hyphens are substituted for underscores.
+        properties (Dict): the properties of the node. Hyphens are substituted for underscores
         children (Dict): dictionary of childrens, where keys are relationship and value are the subgraph models
 
     """
