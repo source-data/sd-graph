@@ -166,7 +166,7 @@ class API:
             if response.status_code == 200:
                 data = response.json()
             else:
-                print(f"WARNING: could not loading json object with {url} ({response.status_code})")
+                print(f"WARNING: failed loading json object with {url} ({response.status_code})")
         except Exception as e:
             print("server query failed")
             print(type(e), e)
