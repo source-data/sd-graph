@@ -184,11 +184,11 @@ class CrossRefPeerReview(API):
             # CrossRef API does not accept empty values for filter parameter
             params['filter'] = type_filter
         summary_results = self.rest2data(url_summary, params)
+        items = []
         if summary_results.get('status') == 'ok':
             total_results = summary_results['message']['total-results']
             limit = limit if limit else total_results
             items_per_page = min(1000, limit)
-            items = []
             check = 0
             print(f"total_results:", total_results)
             # deep paggin with cursor https://github.com/CrossRef/rest-api-doc#result-controls
