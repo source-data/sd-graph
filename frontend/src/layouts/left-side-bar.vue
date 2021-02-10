@@ -25,7 +25,9 @@
         //- small Database stats:
         small
           code {{ db_stats.preprints || 0 }}
-          |  bioRxiv preprints loaded.
+          |  bioRxiv preprints loaded (last update: 
+          code {{lastUpdate}}
+          | )
 
 
 </template>
@@ -41,6 +43,13 @@ export default {
     isCollapsed () {
       const mediaQuery = window.matchMedia( "(min-width: 812px)" );
       return !mediaQuery.matches
+    },
+    lastUpdate() {
+      const date = new Date(this.db_stats.last_updated)
+      const yyyy = date.getFullYear()
+      const mm = date.getMonth()
+      const dd = date.getDate()
+      return `${yyyy}-${mm}-${dd}`
     },
   },
 }
