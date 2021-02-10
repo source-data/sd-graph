@@ -1,9 +1,9 @@
-~/sd-graph/data/neo4j-data/dumps/graph.db.dump {
-    rotate 10
+~/sd-graph/dumps/neo4j.dump {
+    rotate 30
     nocompress
     daily
-    #dateext
-    #dateformat .%Y-%m-%d
+    dateext
+    dateformat .%Y-%m-%d-%H.%M.%S
     #extension .tar.gz
     missingok
 }

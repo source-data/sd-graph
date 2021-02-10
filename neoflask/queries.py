@@ -418,13 +418,12 @@ RETURN
 
 class STATS(Query):
     code = '''
-MATCH (a:Article)
-WHERE toLower(a.journal_title) IN ["biorxiv", "medrxiv"]
-WITH COUNT(DISTINCT a.doi) AS preprints
-MATCH (:VizCollection {name: "refereed-preprints"})-[:HasSubCol]->(:VizSubCollection)-[:HasPaper]->(a:VizPaper)
-WITH COUNT(DISTINCT a.doi) AS refereed_preprints, preprints
-MATCH (a:SDArticle {source: "eebapi"})
-WITH COUNT(DISTINCT a.doi) AS autoannotated_preprints, refereed_preprints, preprints
-RETURN preprints, refereed_preprints, autoannotated_preprints
+MATCH (h:UpdateStatus)
+RETURN
+  h.current_total_nodes AS total_nodes,
+  h.current_num_preprints AS preprints,
+  h.current_num_refereed_preprints AS refereed_preprints,
+  h.current_num_autoannotated_preprints AS autoannotated_preprints,
+  h.update_completed AS last_updated
     '''
-    returns = ['preprints', 'refereed_preprints', 'autoannotated_preprints']
+    returns = ['total_nodes', 'preprints', 'refereed_preprints', 'autoannotated_preprints', 'last_updated']

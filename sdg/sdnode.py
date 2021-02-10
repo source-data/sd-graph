@@ -140,7 +140,7 @@ class API:
 
     @staticmethod
     def requests_retry_session(
-        retries=3,
+        retries=4,
         backoff_factor=0.3,
         status_forcelist=(500, 502, 504),
         session=None,
@@ -163,14 +163,12 @@ class API:
         data = dict()
         try:
             response = self.session_retry.get(url, params=params, timeout=30)
-            try:
+            if response.status_code == 200:
                 data = response.json()
-            except Exception as e:
-                print(f"WARNING: problem with loading json object with {url}")
-                print(type(e), e)
-                print(response.json())
+            else:
+                print(f"WARNING: failed loading json object with {url} ({response.status_code})")
         except Exception as e:
-            print("failed to get response from server")
+            print("server query failed")
             print(type(e), e)
         finally:
             if data:

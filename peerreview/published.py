@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from neotools.utils import progress
-from peerreview.neohypo import BioRxiv, CrossRef
+from peerreview.neohypo import BioRxiv, CrossRefDOI
 from . import DB
 from .queries import (
     NotYetPublished, UpdatePublicationStatus,
@@ -12,7 +12,7 @@ class PublicationUpdate:
     def __init__(self, db):
         self.db = db
         self.biorxiv = BioRxiv()
-        self.crossref = CrossRef()
+        self.crossref = CrossRefDOI()
 
     def get_not_published(self, limit_date: str):
         results = self.db.query(NotYetPublished(params={'limit_date': limit_date}))

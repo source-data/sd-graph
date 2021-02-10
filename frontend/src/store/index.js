@@ -51,6 +51,7 @@ export default new Vuex.Store({
             autoannotated_preprints: resp.autoannotated_preprints,
             preprints: resp.preprints,
             refereed_preprints: resp.refereed_preprints,
+            last_updated: resp.last_updated,
           }
           commit('setStats', stats)
         })

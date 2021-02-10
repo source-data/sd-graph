@@ -144,14 +144,12 @@ class BioRxiv(API):
     def __init__(self):
         super().__init__()
 
-    def details(self, doi: str) -> Dict:
-        url_biorxiv = f'https://api.biorxiv.org/details/biorxiv/{doi}'
-        response = self.rest2data(url_biorxiv)
-        if not response['messages'][0]['status'] == 'ok':
-            url_medrxiv = f'https://api.biorxiv.org/details/medrxiv/{doi}'
-            response = self.rest2data(url_medrxiv)
-        if response['messages'][0]['status'] == 'ok':
-            response = response['collection'][0]
+    def details(self, doi: str, biorxiv_medrxiv: str = 'biorxiv') -> Dict:
+        url = f'https://api.biorxiv.org/details/{biorxiv_medrxiv}/{doi}'
+        response = self.rest2data(url)
+        if response.get('messages', []):
+            if response['messages'][0].get('status', '') == 'ok':
+                response = response.get('collection', [])[0]
         else:
             response = {}
         return response
@@ -186,11 +184,11 @@ class CrossRefPeerReview(API):
             # CrossRef API does not accept empty values for filter parameter
             params['filter'] = type_filter
         summary_results = self.rest2data(url_summary, params)
-        if summary_results['status'] == 'ok':
+        items = []
+        if summary_results.get('status') == 'ok':
             total_results = summary_results['message']['total-results']
             limit = limit if limit else total_results
             items_per_page = min(1000, limit)
-            items = []
             check = 0
             print(f"total_results:", total_results)
             # deep paggin with cursor https://github.com/CrossRef/rest-api-doc#result-controls
@@ -217,8 +215,6 @@ class CrossRefPeerReview(API):
                     cursor = ''
                 time.sleep(1.0)
             assert check == total_results or check <= limit
-        else:
-            import pdb; pdb.set_trace()
         return items
 
 
@@ -239,14 +235,15 @@ class PeerReviewFinder:
             # fetch metadata from bioRxiv and CrossRef
             data = self.crossref_doi.details(doi)
             if data:
-                data_biorxiv = self.biorxiv.details(doi)
+                prelim = JSONNode(data, CROSSREF_PREPRINT_API_GRAPH_MODEL)
+                # using biorxiv api here because abstract is plain text while CrossRef has jats namespaced formatting tags
+                biorxiv_medrxiv = prelim.properties['journal_title']
+                data_biorxiv = self.biorxiv.details(doi, biorxiv_medrxiv.lower())
                 if data_biorxiv:
-                    data['abstract'] = data_biorxiv['abstract']  # abstract in bioRxiv is plain text while CrossRef has jats namespaced formatting tags
+                    prelim.properties['abstract'] = data_biorxiv['abstract']
+                    prelim.properties['version'] = data_biorxiv['version']
                 else:
                     print(f"problem with biorxiv obtaining abstract from doi: {doi}")
-                prelim = JSONNode(data, CROSSREF_PREPRINT_API_GRAPH_MODEL)
-                prelim.properties['version'] = data_biorxiv['version']
-                # add nodes to database
                 build_neo_graph(prelim, 'biorxiv_crossref', self.db)
             else:
                 print(f"problem with crossref to get preprint with doi={doi}")
@@ -272,7 +269,7 @@ class Hypothelink(PeerReviewFinder):
             for row in hypo_rows:
                 peer_review_node = self.hypo2node(row)
                 peer_review_node.update_properties({'reviewed_by': HYPO_GROUP_IDS[group_id]})
-                peer_review_neo = self.db.node(peer_review_node, clause="MERGE")
+                self.db.node(peer_review_node, clause="MERGE")
                 print(f"loaded {peer_review_node.label} for {peer_review_node.properties['related_article_doi']}")
                 # check if article node missing and add temporary one with source='biorxiv_crossref'
                 self.add_prelim_article(peer_review_node.related_doi)

@@ -1,5 +1,6 @@
 import argparse
 import requests
+import re
 from typing import List
 from .sdnode import (
     API,
@@ -155,7 +156,7 @@ class SDAPI(API):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser( description="interace to the SourceData API" )
-    parser.add_argument('collections', nargs="?", default="PUBLICSEARCH", help="Takes the name of a collection (try \"PUBLICSEARCH\") nd returns the list of papers")
+    parser.add_argument('collection', nargs="?", default="PUBLICSEARCH", help="Takes the name of a collection (try \"PUBLICSEARCH\") nd returns the list of papers")
     parser.add_argument('-L', '--listing', action="store_true", help="List of articles in the collection.") 
     parser.add_argument('-D', '--doi', default='', help="Takes a doi and return article information")
     parser.add_argument('-F', '--figure', default='', help="Takes the figure index and returns the figure legend for the figure in the paper specified with the --doi option") 
