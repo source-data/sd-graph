@@ -129,7 +129,7 @@ update_local_neo4j() {
   update_close() {
     # always run at the end of a db update
     log "closing the update"
-    cat sdg/update_open.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
+    cat sdg/update_close.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
   }
 
 
