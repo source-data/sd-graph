@@ -45,6 +45,7 @@ docker-compose run --rm flask python -m sdg.sdneo PUBLICSEARCH --api sdapi  # im
 docker run --rm -it -v ~/.aws:/root/.aws --mount type=bind,source=<volume>/biorxiv/Current_Content/July_2020,target=/root/Current_Content/July_2020 amazon/aws-cli s3 sync --request-payer requester --exclude "*" --include "*.meca" s3://biorxiv-src-monthly/Current_Content/July_2020 ./Current_Content/July_2020/ --dryrun
 
 aws s3 sync --request-payer requester --exclude "*" --include "*.meca" s3://biorxiv-src-monthly/Current_Content/July_2020 <path-to-biorxiv-archive>/biorxiv/Current_content/July_2020/
+cat sdg/update_open.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>  # generate merged graph
  # update meca archives; sync to folder outside of docker build scope
 cat neotools/purge_prelim.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p  # remove prelim articles obtained from the CrossRef and bioRxiv APIs
 docker-compose run --rm flask python -m neotools.rxiv2neo biorxiv/<path_to_meca_archives> --type meca   # import full text biorxiv preprints
@@ -61,6 +62,7 @@ cat sdg/SD-precompute.cql | docker-compose run --rm neo4j cypher-shell -a bolt:/
 docker-compose run --rm flask python -m neoflask.cache_warm_up  # warm up cache
 docker-compose run --rm flask python -m twitter.update --limit-date 2020-07-01  # --GO_LIVE  to go live with Twitter updates
 cat sdg/audit.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>
+cat sdg/update_close.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p <NEO4J_PASSWORD>  # generate merged graph
 # visit http:/localhost:8080
 ```
 
