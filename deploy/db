@@ -188,7 +188,7 @@ dump_local_neo4j(){
 deploy_database(){
   local SERVER_ADDRESS="ec2-user@$1"
   local NEO4J_DUMP_LOCAL_PATH=$2
-  local NEO4J_DUMP_REMOTE_PATH="/home/ec2-user/sd-graph/graph.dump"
+  local NEO4J_DUMP_REMOTE_PATH="/home/ec2-user/sd-graph/neo4j.dump"
 
   log "[deploy database] - $SERVER_ADDRESS"
 
@@ -236,17 +236,22 @@ main() {
         if [[ "$1" != *=* ]]; then shift; fi
         LOG_FILE="${1#*=}"
         ;;
+      --periodicity*|-p*)
+        if [[ "$1" != *=* ]]; then shift; fi
+        PERIODICITY="${1#*=}"
+        ;;
       --help|-h)
         echo "--------------------------------------------------------------------------------------"
         echo "deploy db"
         echo "--------------------------------------------------------------------------------------"
         echo ""
-        echo "deploy/db --stage_name STAGE_NAME [--log_file 'PATH/TO/LOG/FILE']"
+        echo "deploy/db --stage_name STAGE_NAME [--periodicity PERIODICITY] [--log_file 'PATH/TO/LOG/FILE']"
         echo ""
         echo "Options:"
-        echo "  --help | -h"
-        echo "  --stage_name | -s (staging|production)"
-        echo "  --log_file | -l 'quoted/path/to/file.log'"
+        echo "  --help        | -h"
+        echo "  --stage_name  | -s (staging|production)"
+        echo "  --periodicity | -p (daily|weekly|monthly)"
+        echo "  --log_file    | -l 'quoted/path/to/file.log'"
         echo ""
         echo "example of usage:"
         echo "  deploy/db --stage_name staging --log_file '/home/eeb/logs/deploydb.log'"
@@ -274,15 +279,20 @@ main() {
       ;;
   esac
 
-  local DAY_OF_THE_MONTH=$(date +%d)
-  local DAY_OF_THE_WEEK=$(date +%u) # 1(monday), 2 (tuesday), ... 7(sunday)
-  local MONDAY=1
-  if [[ $DAY_OF_THE_MONTH -eq 1 ]]; then
-    PERIODICITY="monthly"
-  elif [[ $DAY_OF_THE_WEEK -eq $MONDAY ]]; then
-    PERIODICITY="weekly"
-  else
-    PERIODICITY="daily"
+  if [ -z "$PERIODICITY" ]; then
+    echo "setting periodicity"
+
+    local DAY_OF_THE_MONTH=$(date +%d)
+    local DAY_OF_THE_WEEK=$(date +%u) # 1(monday), 2 (tuesday), ... 7(sunday)
+    local MONDAY=1
+    if [ $DAY_OF_THE_MONTH -eq 1 ]; then
+      PERIODICITY="monthly"
+    elif [[ $DAY_OF_THE_WEEK -eq $MONDAY ]]; then
+      PERIODICITY="weekly"
+    else
+      PERIODICITY="daily"
+    fi
+    echo "perodicity is $PERIODICITY"
   fi
 
 
