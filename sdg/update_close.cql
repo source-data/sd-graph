@@ -13,5 +13,5 @@ SET
   h.current_num_preprints = num_preprints,
   h.current_num_refereed_preprints = num_refereed_preprints,
   h.current_num_autoannotated_preprints = num_autoannotated_preprints,
-  h.update_completed = toString(DATETIME());
+  h.update_completed = toString(DATETIME())
 RETURN h.update_completed as `time of update completion`;
