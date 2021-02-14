@@ -173,3 +173,24 @@ def subjects():
 def subject_collection(subject: str):
     app.logger.info(f"collection '{subject}'")
     return jsonify(ASKNEO.subject_collection(subject))
+
+
+@app.route('/api/v1/docmap/doi/<path:doi>', methods=['GET', 'POST'])
+@cache.cached()
+def docmap_paper_doi(doi: str):
+    app.logger.info(f"docmap for paper doi '{doi}")
+    return jsonify(ASKNEO.docmap_paper_doi(doi))
+
+
+@app.route('/api/v1/docmap/peer_review_service/<path:url>', methods=['GET', 'POST'])
+@cache.cached()
+def docmap_peer_review_service(url: str):
+    app.logger.info(f"docmap for peer review service '{url}")
+    return jsonify(ASKNEO.docmap_service(url))
+
+
+@app.route('/api/v1/docmap/review_id/<int:id>', methods=['GET', 'POST'])
+@cache.cached()
+def docmap_peer_review_document(id: int):
+    app.logger.info(f"docmap for peer review service '{id}")
+    return jsonify(ASKNEO.docmap_peer_review_document(id))

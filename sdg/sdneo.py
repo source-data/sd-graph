@@ -1,4 +1,5 @@
 import argparse
+import re
 from typing import List
 from .queries import SDARTICLE_LOADING_STATUS, DELETE_TREE, SET_STATUS, COLLECTION_NAMES
 from . import DB, logger
@@ -30,14 +31,17 @@ class SDNeo:
         def filter_existing_complete_articles(doi_list: List[str]):
             filtered_list = []
             for doi in doi_list:
-                results = self.db.query(SDARTICLE_LOADING_STATUS(params={'doi': doi}))  # 'complete' | 'partial' | 'absent'
-                if results:
-                    if results[0]['status'] == 'partial':
-                        self.db.query(DELETE_TREE(params={'doi': doi}))
-                        print(f"deleted tree for {doi}")
-                        filtered_list.append(doi)
+                if not re.match('^10.\d{4,9}/[-._;()/:A-Z0-9]+$', doi, flags=re.IGNORECASE):
+                    print(f"WARNING: {doi} is not a doi. Ignored.")
                 else:
-                    filtered_list.append(doi)
+                    results = self.db.query(SDARTICLE_LOADING_STATUS(params={'doi': doi}))  # 'complete' | 'partial' | 'absent'
+                    if results:
+                        if results[0]['status'] == 'partial':
+                            self.db.query(DELETE_TREE(params={'doi': doi}))
+                            print(f"deleted tree for {doi}")
+                            filtered_list.append(doi)
+                    else:
+                        filtered_list.append(doi)
             return filtered_list
 
         filtered_doi_list = filter_existing_complete_articles(doi_list)
