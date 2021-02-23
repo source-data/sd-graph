@@ -150,6 +150,8 @@ class BioRxiv(API):
         if response.get('messages', []):
             if response['messages'][0].get('status', '') == 'ok':
                 response = response.get('collection', [])[0]
+            else:
+                response = {}
         else:
             response = {}
         return response
@@ -240,7 +242,7 @@ class PeerReviewFinder:
                 biorxiv_medrxiv = prelim.properties['journal_title']
                 data_biorxiv = self.biorxiv.details(doi, biorxiv_medrxiv.lower())
                 if data_biorxiv:
-                    prelim.properties['abstract'] = data_biorxiv['abstract']
+                    prelim.properties['abstract'] = data_biorxiv.get('abstract','abstract not available')
                     prelim.properties['version'] = data_biorxiv['version']
                 else:
                     print(f"problem with biorxiv obtaining abstract from doi: {doi}")
