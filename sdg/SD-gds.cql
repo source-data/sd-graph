@@ -62,6 +62,7 @@ RETURN
 :commit
 
 // COMMUNITY DETECTION FOR GENEPROD QUASI SYNONYMS
+:begin
 MATCH (h:H_Entity) SET h.geneprod_concept_id = Null;
 CALL gds.louvain.stream(
   {
@@ -85,9 +86,10 @@ SET node.geneprod_concept_id = subcommunityId
 // ORDER BY N DESC
 // LIMIT 100
 RETURN COUNT(DISTINCT subcommunityId) AS `geneprod communities`;
-
+:commit
 
 // adding concept geneprod name
+:begin
 MATCH (entity:H_Entity) SET entity.geneprod_concept_name = NULL;
 MATCH (entity:H_Entity)-[:Has_text]->(term:Term)
 WHERE entity.type IN ["gene" , 'protein', 'geneprod']
@@ -101,9 +103,10 @@ UNWIND cluster AS entity
 SET entity.geneprod_concept_name = most_popular_term.text //, entity.geneprod_concept_ext_ids = 
 RETURN DISTINCT
   COUNT(DISTINCT entity.geneprod_concept_name) AS `named clusters of geneprod related concepts`;
-
+:commit
 
 //create hypotheses summaries at paper level
+:begin
 MATCH 
   (art:SDArticle)-->(f1:SDFigure)-->(p1:SDPanel)-->(i1:CondTag)-[h1:H]->(a1:CondTag)<--(p1),
   (i1)-->(ih:H_Entity), (a1)-->(ah:H_Entity)
@@ -112,14 +115,16 @@ WITH art, ih, ah, COUNT(DISTINCT(p1)) AS N_p, COUNT(DISTINCT(f1)) AS N_f
 MERGE (ih)-[:Is_Intervention_of]->(h:Hypothesis)-[:Has_Assayed]->(ah)
 MERGE (art)-[:HasH {n_panels: N_p, n_figures: N_f}]->(h)
 RETURN COUNT(DISTINCT h) AS `hypotheses at paper level`;
-
+:commit
 
 // add text descr to hypothesis
+:begin
 MATCH (ih:H_Entity)-[:Is_Intervention_of]->(h:Hypothesis)-[:Has_Assayed]->(ah:H_Entity) 
 SET h.description = ih.name + " --> " + ah.name;
-
+:commit
 
 // flag possible self-test hypotheses
+:begin
 MATCH (h:Hypothesis) SET h.self_test = False;
 MATCH
   (ih:H_Entity)-[:Is_Intervention_of]->(h:Hypothesis)-[:Has_Assayed]->(ah:H_Entity),
@@ -128,10 +133,11 @@ WITH h, ah, same
 MATCH (ah)-->(same)
 SET h.self_test = True
 RETURN COUNT(DISTINCT h) AS `flagged self-test hypotheses`;
-
+:commit
 
 // Flag possible boring entities, helpful to filter them later
 // Exclusion list based on SourceData normalized and reporter entities
+:begin
 MATCH (h:H_Entity) SET h.boring = False;
 MATCH (:SDCollection {name: "PUBLICSEARCH"})-->(:SDArticle)-->(:SDFigure)-->(:SDPanel)-->(ct:CondTag)-->(h:H_Entity)-->(te:Term)
 WITH DISTINCT h.name AS name, COLLECT(DISTINCT te.text) AS synonyms, COLLECT(DISTINCT ct) AS cts, 1.0*COUNT(DISTINCT ct) AS N
@@ -150,9 +156,10 @@ WITH COLLECT(name) AS all
 UNWIND apoc.coll.toSet(all) as excluded_term
 MATCH (h:H_Entity)-->(te:Term {text: excluded_term})
 SET h.boring = True;
-
+:commit
 
 //Add weight to hypotheses nodes
+:begin
 MATCH (a:SDArticle)-[h:HasH]->(hyp:Hypothesis)
 WITH 
   hyp, 
@@ -164,7 +171,7 @@ SET
   hyp.n_figures = sum_n_figures,
   hyp.n_articles = n_articles
 RETURN DISTINCT "added weights to hypotheses nodes";
-
+:commit
 
 // hypothesis-as-node network
 // MATCH
