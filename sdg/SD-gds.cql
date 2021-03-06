@@ -1,5 +1,6 @@
 // ASSAY QUASI SYNONYMS
 // H_Entity - Term - H_Entity network for quasi-synonyms
+:begin
 MATCH
   (entity_1:H_Entity)-[:Has_text]->(bridge:Term)<-[:Has_text]-(entity_2:H_Entity)
 WHERE
@@ -10,9 +11,10 @@ MERGE
   (entity_1)-[r:related_concept]-(entity_2)
 RETURN
   COUNT(DISTINCT r) AS `assay quasi synonyms relationships`;
-
+:commit
 
 // COMMUNITY DETECTION FOR ASSAY QUASI SYNONYMS
+:begin
 MATCH (h:H_Entity) SET h.assay_concept_id = Null;
 CALL gds.louvain.write(
   {
@@ -22,9 +24,11 @@ CALL gds.louvain.write(
     concurrency: 4
   }
 );
+:commit
 
 
 // adding cluster name based on the most generic entity
+:begin
 MATCH (entity:H_Entity) WHERE EXISTS(entity.assay_concept_name) SET entity.assay_concept_name = NULL, entity.assay_concept_ext_ids=NULL;
 MATCH (entity:H_Entity {category: "assay"})-[:Has_text]->(te:Term)
 // popularity could be measure as SUM(te.freq_in_panels) or simpler as here as number of linked terms as an indication of how generic an entity name is
@@ -39,10 +43,11 @@ WITH
 UNWIND cluster AS entity
 SET entity.assay_concept_name = most_popular_entity.name, entity.assay_concept_ext_ids = most_popular_entity.ext_ids
 RETURN COUNT(DISTINCT entity.assay_concept_id) AS `named clusters of assay related concepts`;
-
+:commit
 
 // GENEPROD QUASI SYNONYMS
 // H_Entity - Term - H_Entity network for quasi-synonyms
+:begin
 MATCH
   (entity_1:H_Entity)-[:Has_text]->(bridge:Term)<-[:Has_text]-(entity_2:H_Entity)
 WHERE
@@ -54,7 +59,7 @@ MERGE
   (entity_1)-[r:related_geneprod]-(entity_2)
 RETURN
   COUNT(DISTINCT r) AS `geneprod quasi synonyms relationships`;
-
+:commit
 
 // COMMUNITY DETECTION FOR GENEPROD QUASI SYNONYMS
 MATCH (h:H_Entity) SET h.geneprod_concept_id = Null;
