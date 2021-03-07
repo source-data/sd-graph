@@ -16,6 +16,8 @@ RETURN
 // COMMUNITY DETECTION FOR ASSAY QUASI SYNONYMS
 :begin
 MATCH (h:H_Entity) SET h.assay_concept_id = Null;
+:commit
+:begin
 CALL gds.louvain.write(
   {
     nodeQuery: 'MATCH (h:H_Entity {category: "assay"}) RETURN id(h) AS id',
@@ -64,6 +66,8 @@ RETURN
 // COMMUNITY DETECTION FOR GENEPROD QUASI SYNONYMS
 :begin
 MATCH (h:H_Entity) SET h.geneprod_concept_id = Null;
+:commit
+:begin
 CALL gds.louvain.stream(
   {
     nodeQuery: 
