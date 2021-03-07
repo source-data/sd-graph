@@ -130,6 +130,8 @@ SET h.description = ih.name + " --> " + ah.name;
 // flag possible self-test hypotheses
 :begin
 MATCH (h:Hypothesis) SET h.self_test = False;
+:commit
+:begin
 MATCH
   (ih:H_Entity)-[:Is_Intervention_of]->(h:Hypothesis)-[:Has_Assayed]->(ah:H_Entity),
   (ih)-->(same:Term)
@@ -143,6 +145,8 @@ RETURN COUNT(DISTINCT h) AS `flagged self-test hypotheses`;
 // Exclusion list based on SourceData normalized and reporter entities
 :begin
 MATCH (h:H_Entity) SET h.boring = False;
+:commit
+:begin
 MATCH (:SDCollection {name: "PUBLICSEARCH"})-->(:SDArticle)-->(:SDFigure)-->(:SDPanel)-->(ct:CondTag)-->(h:H_Entity)-->(te:Term)
 WITH DISTINCT h.name AS name, COLLECT(DISTINCT te.text) AS synonyms, COLLECT(DISTINCT ct) AS cts, 1.0*COUNT(DISTINCT ct) AS N
 UNWIND cts as ct
