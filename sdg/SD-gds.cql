@@ -32,6 +32,8 @@ CALL gds.louvain.write(
 // adding cluster name based on the most generic entity
 :begin
 MATCH (entity:H_Entity) WHERE EXISTS(entity.assay_concept_name) SET entity.assay_concept_name = NULL, entity.assay_concept_ext_ids=NULL;
+:commit
+:begin
 MATCH (entity:H_Entity {category: "assay"})-[:Has_text]->(te:Term)
 // popularity could be measure as SUM(te.freq_in_panels) or simpler as here as number of linked terms as an indication of how generic an entity name is
 WITH entity, COUNT(DISTINCT te) AS entity_generality
@@ -95,6 +97,8 @@ RETURN COUNT(DISTINCT subcommunityId) AS `geneprod communities`;
 // adding concept geneprod name
 :begin
 MATCH (entity:H_Entity) SET entity.geneprod_concept_name = NULL;
+:commit
+:begin
 MATCH (entity:H_Entity)-[:Has_text]->(term:Term)
 WHERE entity.type IN ["gene" , 'protein', 'geneprod']
 WITH entity, term
