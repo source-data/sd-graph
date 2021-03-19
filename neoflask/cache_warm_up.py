@@ -22,14 +22,16 @@ def cache_warm_up(base_url):
             collections = response.json()
             N_collections = len(collections)
             for i, collection in enumerate(collections):
-                progress(i, N_collections, f"{method}{collection['id']}                    ")
                 papers = collection['papers']
                 new_dois = [paper['doi'] for paper in papers]
+                progress(i, N_collections, f"{method}{collection['id']} {len(new_dois)} dois              ")
                 # warm up of the multiple doi method
                 multi_dois_url = base_url + "dois/"
                 r = requests.post(multi_dois_url, json={'dois': new_dois}, verify=False)
                 if r.status_code == 200:
                     dois += new_dois
+                else:
+                    print(f"Problem with {method}{collection['id']}! Status code: {r.status_code}")
     dois = set(dois)  # remove duplicates
     N_dois = len(dois)
     print(f"\nfetched {N_dois} unique dois.")
