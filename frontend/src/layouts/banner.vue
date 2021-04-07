@@ -3,7 +3,7 @@
     router-link(to="/"  active-class="is-active")
       .text-xl-h2.text-lg-h2.text-md-h3.text-sm-h4.text-h5.pointer.banner-title 
         b Early Evidence Base
-        .text-xl-h4.text-lg-h4.text-md-h5.text-sm-h6.text-h6.pointer.banner-subtitle Accessing early scientific findings
+        .text-xl-h4.text-lg-h4.text-md-h5.text-sm-h5.text-h6.pointer.banner-subtitle Navigating and Assessing Preprints
 </template>
 
 <style lang="scss" scoped>
