@@ -17,6 +17,7 @@ docker run --rm \
 
 # echo '  * [remote] cleaning up'
 # docker rm --force neo4j-dumps
+mv neo4j.dump ../
 
 echo '  * [remote] starting docker'
 docker-compose -f production.yml up -d

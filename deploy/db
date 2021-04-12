@@ -86,7 +86,7 @@ update_local_neo4j() {
     # daily
     log "import peer reviews from peer-review databases & complete our db with biorxiv prelim api if our meca-fulltext-db missed one"
     docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.neohypo hypothesis
-    docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.neohypo rc19
+    docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.neohypo rrc19
     docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.neohypo pci
   }
 

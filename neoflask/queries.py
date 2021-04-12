@@ -110,6 +110,7 @@ MATCH (preprint:Article {doi: $doi})
 WITH preprint, preprint.version AS version
 ORDER BY version DESC
 WITH COLLECT(preprint)[0] AS a
+OPTIONAL MATCH (a)-->(f:Fig)
 OPTIONAL MATCH (a)-[r:HasReview]->(review:Review)
 OPTIONAL MATCH (a)-[:HasResponse]->(response:Response)
 OPTIONAL MATCH (a)-[:HasAnnot]->(annot:PeerReviewMaterial)
@@ -127,6 +128,7 @@ WITH DISTINCT
   a.journal_doi AS journal_doi,
   a.published_journal_title AS published_journal_title, // this is the journal of final publication
   DATETIME(a.publication_date) AS pub_date, // pub date as preprint! 
+  COUNT(DISTINCT f) AS nb_figures,
   auth,
   vzp, revdate.date AS revdate,
   review, response, annot
@@ -135,7 +137,7 @@ OPTIONAL MATCH
   (col:VizCollection {name: "by-auto-topics"})-->(autotopics:VizSubCollection)-[rel_autotopics_paper]->(vzp)-[:HasEntityHighlight]->(highlight:VizEntity {category: 'entity'})
 WITH
   id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title,
-  auth,
+  nb_figures, auth,
   auth_id.text AS ORCID,
   vzp, revdate,
   review, response, annot,
@@ -150,7 +152,7 @@ WHERE
   NOT entity.text IN highlighted_entities
 WITH
   id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title,
-  auth,
+  nb_figures, auth,
   ORCID,
   vzp, revdate,
   review, response, annot,
@@ -163,13 +165,13 @@ ORDER BY
   annot.review_idx ASC,
   auth.position_idx ASC
 WITH
-  id, doi, version, source, journal, title, abstract, toString(pub_date) AS pub_date, journal_doi, published_journal_title, auth, ORCID,
+  id, doi, version, source, journal, title, abstract, toString(pub_date) AS pub_date, journal_doi, published_journal_title, nb_figures, auth, ORCID,
   {reviews: COLLECT(DISTINCT review {.*}), response: response {.*}, annot: COLLECT(DISTINCT annot {.*})} AS review_process,
   revdate,
   entities, assays,
   main_topics, highlighted_entities
 RETURN DISTINCT 
-  id, doi, version, source, journal, title, abstract, pub_date,
+  id, doi, version, source, journal, title, abstract, pub_date, nb_figures,
   journal_doi, published_journal_title, COLLECT(DISTINCT auth {.surname, .given_names, .position_idx, .corresp, orcid: ORCID}) AS authors,
   review_process,
   revdate,
@@ -179,7 +181,7 @@ RETURN DISTINCT
     map = {'doi': []}
     returns = [
       'id', 'doi', 'version', 'source', 'journal', 'title', 'abstract',
-      'authors', 'pub_date', 'journal_doi', 'published_journal_title',
+      'authors', 'pub_date', 'journal_doi', 'published_journal_title', 'nb_figures',
       'revdate', 'review_process', 'entities', 'assays',
       'main_topics', 'highlighted_entities'
     ]

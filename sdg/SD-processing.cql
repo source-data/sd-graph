@@ -16,15 +16,15 @@ RETURN COUNT(DISTINCT ct) AS `deleted CondTag`;
 MATCH (ct:CondTag)
 RETURN COUNT(ct) AS `remaining CondTag`;
 :commit
-:begin
-MATCH (h:H_Entity)-[r]-()
-DETACH DELETE h
-RETURN COUNT(DISTINCT h) AS `deleted H_Entity`;
-:commit
-:begin
-MATCH (h:H_Entity)
-RETURN COUNT(h) AS `remaining H_Entity`;
-:commit
+// :begin
+// MATCH (h:H_Entity)-[r]-()
+// DETACH DELETE h
+// RETURN COUNT(DISTINCT h) AS `deleted H_Entity`;
+// :commit
+// :begin
+// MATCH (h:H_Entity)
+// RETURN COUNT(h) AS `remaining H_Entity`;
+// :commit
 :begin
 MATCH (t:Term)
 DETACH DELETE t
