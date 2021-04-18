@@ -44,7 +44,6 @@ RETURN
     a.score AS score
 ORDER BY DATETIME(pub_date) DESC, score DESC
     '''
-    map = {}
     returns = ['id', 'pub_date', 'title', 'abstract', 'version', 'doi', 'journal', 'score']
 
 
@@ -96,7 +95,7 @@ RETURN
   a.score AS score
 ORDER BY DATETIME(pub_date) DESC, score DESC
     '''
-    map = {'subject': []}
+    map = {'subject': {'req_param': 'subject', 'default': ''}}
     returns = ['id', 'pub_date', 'title', 'abstract', 'version', 'doi', 'journal', 'score']
 
 
@@ -178,7 +177,7 @@ RETURN DISTINCT
   entities, assays,
   main_topics, highlighted_entities
     '''
-    map = {'doi': []}
+    map = {'doi': {'req_param': 'doi', 'default': ''}}
     returns = [
       'id', 'doi', 'version', 'source', 'journal', 'title', 'abstract',
       'authors', 'pub_date', 'journal_doi', 'published_journal_title', 'nb_figures',
@@ -203,7 +202,10 @@ RETURN
     f.position_idx AS fig_idx
 ORDER BY version DESC, fig_idx ASC
     '''
-    map = {'doi': ['doi', ''], 'position_idx': ['position_idx', '']}
+    map = {
+      'doi': {'req_param': 'doi', 'default':''},
+      'position_idx': {'req_param': 'position_idx', 'default': ''}
+    }
     returns = ['doi', 'version', 'title', 'fig_title', 'fig_label', 'caption', 'fig_idx']
 
 
@@ -215,7 +217,7 @@ WHERE id(p) = $id
 RETURN p.caption AS caption, COLLECT(DISTINCT h) AS tags
     '''
     returns = ['caption', 'tags']
-    map = {'id': []}
+    map = {'id': {'req_param': 'id', 'default': ''}}
 
 
 class REVIEW_PROCESS_BY_DOI(Query):
@@ -226,10 +228,222 @@ OPTIONAL MATCH (a)-[:HasResponse]->(response:Response)
 OPTIONAL MATCH (a)-[:HasAnnot]->(annot:PeerReviewMaterial)
 WITH a, review, response, annot
 ORDER BY review.review_idx ASC
-RETURN a.doi as doi, {reviews: COLLECT(DISTINCT review {.*}), response: response {.*}, annot: annot {.*}} AS review_process
+RETURN a.doi as doi, {reviews: COLLECT(DISTINCT review {.*, id: id(review)}), response: response {.*, id: id(response)}, annot: annot {.*, id: id(annot)}} AS review_process
   '''
-    map = {'doi': []}
+    map = {'doi': {'req_param': 'doi', 'default': ''}}
     returns = ['doi', 'review_process']
+
+
+class DOCMAP_BY_DOI(Query):
+
+    code = '''
+MATCH (rs:ReviewingService)
+//WHERE
+//  rs.name in ['review commons', 'embo press']
+MATCH (a:Article)
+WHERE a.doi = $doi // "10.1101/2020.06.02.130047"  // example for debugging
+// collect the reviews when they exist
+MATCH (a)-[r]->(review {reviewed_by: rs.name})
+// mixed review process files are linked via HasAnnot relationships
+// properly identify reviews are linked via HasReview relationshops
+WHERE type(r)="HasReview" OR type(r)="HasAnnot"
+// build the DocMap for the review
+WITH
+  rs, a,
+  {
+    contentType: "review",
+    id: id(review),
+    content: $root + "api/v1/review_material/" + id(review),
+    provider: $root,
+    isReviewOf: [
+        {
+            contentType: a.article_type,
+            content: "https://www.biorxiv.org/content/" + a.doi,
+            doi: a.doi
+        }
+    ],
+    asserter: rs.url,
+    assertedOn: review.posting_date,
+    createdOn: review.posting_date,
+    completedOn: review.posting_date,
+    review_number: toInteger(review.review_idx),
+    contributors: [
+        "anonymous"
+    ]
+  } AS review
+// order the reviews so that they are properly listed
+ORDER BY
+  review.review_idx
+// aggregate the reviews in the ref_report array
+WITH
+  rs, a,
+  DATE(DATETIME(review.assertedOn)) AS rev_date,
+  COLLECT(review) AS ref_reports
+// fetch responses when they exist
+OPTIONAL MATCH (a)-[:HasResponse]->(resp:Response {reviewed_by: rs.name})
+// the response has the authors of the paper as Contrib
+WITH
+  rs, a, rev_date, ref_reports, resp
+OPTIONAL MATCH (a)-->(auth:Contrib)
+WITH
+  rs, a, auth, rev_date, ref_reports, resp
+OPTIONAL MATCH (auth)-[:has_orcid]->(auth_id:Contrib_id)
+WITH
+  rs, a, rev_date, ref_reports, resp,
+  auth,
+  auth_id.text AS ORCID
+ORDER BY 
+  auth.position_idx ASC
+WITH
+  rs, a, rev_date, ref_reports, resp,
+  COLLECT(DISTINCT auth {.surname, .given_names, .position_idx, orcid: ORCID}) AS authors
+// build the DocMap for the response
+WITH
+  rs, a, rev_date, ref_reports,
+  DATE(DATETIME(resp.posting_date)) AS resp_date,
+  CASE resp
+    WHEN NULL THEN NULL // don't assemble a DocMap is there is no response
+    ELSE {
+      contentType: "response",
+      id: id(resp),
+      content: $root + "api/v1/review_material/" + id(resp),
+      provider: $root,
+      asserter: rs.url,
+      assertedOn: resp.posting_date,
+      // createdOn: resp.posting_date,
+      // completedOn: resp.posting_date,
+      contributors: authors
+    }
+  END AS resp
+// aggregate the review rounds based on identical posting date
+WITH
+  a,
+  rs, ref_reports, resp,
+  apoc.coll.toSet([rev_date, resp_date]) AS unique_dates // can contain NULL when no separate response available
+// to get unique non null dates
+UNWIND unique_dates AS date  
+WITH DISTINCT
+   a,
+   rs, ref_reports, resp,
+   date
+WHERE
+  date IS NOT NULL
+WITH
+  a,
+  {
+      contentType: "review-round",
+      provider: $root,
+      asserter: rs.url,
+      //   content: // not implemented
+      policy: rs.peer_review_policy,
+      reviews: ref_reports,
+      response: resp,
+      assertedOn: toString(date)
+  } AS review_round,
+  date
+ORDER BY
+  date ASC
+WITH
+  a, COLLECT(review_round) AS review_process
+RETURN
+  {
+      contentType: "review-process",
+      permalink: $root + "api/v1/docmap/doi/" + a.doi,
+      provider: $root,
+      asserter: $root,    
+      assertedOn: toString(DATETIME()),
+      isReviewOf: [
+        {
+            contentType: a.article_type,
+            content: "https://www.biorxiv.org/content/" + a.doi,
+            doi: a.doi
+        }
+      ],
+      reviewRounds: review_process
+  } as docmap
+    '''
+    map = {
+      'doi': {'req_param': 'doi', 'default': ''},
+      'root': {'req_param': 'root', 'default': 'https://eeb.embo.org'}
+    }
+    returns = ['docmap']
+
+
+class REVIEW_MATERIAL_BY_ID(Query):
+    code = '''
+MATCH (r)
+WHERE
+   id(r) = $id AND labels(r)[0] IN ['Review', 'Response', 'PeerReviewMaterial']
+WITH
+   r, id(r) AS id, labels(r)[0] As content_type,
+   r.related_article_doi as doi,
+   r.posting_date as posting_date,
+   r.text AS content
+MATCH
+   (rs:ReviewingService {name: r.reviewed_by})
+WITH
+  r, id, doi, posting_date, content_type, content,
+  CASE content_type
+    WHEN 'Review' THEN
+      {
+        contentType: "review",
+        id: id,
+        content: content,
+        provider: $root,
+        relatedArticle: [
+            {
+                content: "https://www.biorxiv.org/content/" + doi,
+                doi: doi
+            }
+        ],
+        asserter: rs.url,
+        assertedOn: posting_date,
+        createdOn: posting_date,
+        completedOn: posting_date,
+        review_number: r.review_idx,
+        contributors: [
+            "anonymous"
+        ]
+      }
+    WHEN 'Response' THEN
+      {
+        contentType: "response",
+        id: id,
+        relatedArticle: [
+            {
+                content: "https://www.biorxiv.org/content/" + doi,
+                doi: doi
+            }
+        ],
+        content: content,
+        provider: $root,
+        asserter: rs.url,
+        assertedOn: r.posting_date
+      }
+    WHEN 'PeerReviewMaterial' THEN
+      {
+          contentType: "peer-review-material",
+          id: id,
+          relatedArticle: [
+              {
+                  content: "https://www.biorxiv.org/content/" + doi,
+                  doi: doi
+              }
+          ],
+          content: content,
+          provider: $root,
+          asserter: rs.url,
+          assertedOn: posting_date
+        }
+    ELSE {}
+  END AS docmap
+RETURN docmap
+    '''
+    map = {
+      'id': {'req_param': 'node_id', 'default': ''},
+      'root': {'req_param': 'root', 'default': 'https://eeb.embo.org'}
+    }
+    returns = ['docmap']
 
 
 class BY_REVIEWING_SERVICE(Query):
@@ -245,7 +459,7 @@ RETURN
     subcol.name AS id,
     COLLECT(DISTINCT paper_j) as papers
   '''
-    map = {'limit_date': []}
+    map = {'limit_date': {'req_param': 'limit_date', 'default':'1900-01-01'}}
     returns = ['id', 'papers']
 
 
@@ -294,7 +508,7 @@ RETURN
   all[id].entity_highlighted_names AS entity_highlighted_names,
   all[id].papers AS papers
     '''
-    map = {'limit_date': []}
+    map = {'limit_date': {'req_param': 'limit_date', 'default':'1900-01-01'}}
     returns = ['id', 'topics', 'topics_name', 'entity_highlighted_names', 'papers']
 
 
@@ -322,7 +536,7 @@ WITH DISTINCT
   paper{.*, rank: automagic_rank, exp_assays:exp_assays, biol_entities: biol_entities} AS paper_j // JSON serializable
 RETURN subcol.name AS id, COLLECT(paper_j) AS papers
     '''
-    map = {'limit_date': []}
+    map = {'limit_date': {'req_param': 'limit_date', 'default':'1900-01-01'}}
     returns = ['id', 'papers']
 
 
@@ -402,20 +616,20 @@ RETURN
   doi, [{title: $query + " found in " + source, text: text, entities: []}] AS info, weighted_score, source, query
 LIMIT 20
 '''
-    map = {'query': []}
+    map = {'query': {'req_param': 'search_string', 'default': ''}}
     returns = ['doi', 'info', 'score', 'source', 'query']
 
 
 class SEARCH_DOI(Query):
-  code = '''
+    code = '''
 WITH $query AS query
 MATCH (article:SDArticle)
 WHERE article.doi = query
 RETURN
   article.doi AS doi, [{title: 'doi match', text: article.doi, entities:[]}] AS info, 10.0 AS score, 'doi' AS source, query
-  '''
-  map = {'query': []}
-  returns = ['doi', 'info', 'score', 'source', 'query']
+    '''
+    map = {'query': {'req_param': 'search_string', 'default': ''}}
+    returns = ['doi', 'info', 'score', 'source', 'query']
 
 
 class STATS(Query):

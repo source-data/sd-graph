@@ -1,20 +1,29 @@
-from flask import request, render_template, jsonify, Response
+from flask import request, render_template, jsonify, Response, url_for
 from .engine import Engine
 from .sitemap import create_sitemap
 from . import DB, app, cache
 from .converter import LuceneQueryConverter
-from flask_cors import cross_origin
+from .queries import (
+    STATS, BY_DOI, FIG_BY_DOI_IDX,
+    REVIEW_PROCESS_BY_DOI, REVIEW_MATERIAL_BY_ID,
+    DOCMAP_BY_DOI, BY_REVIEWING_SERVICE,
+    BY_AUTO_TOPICS, AUTOMAGIC,
+    LUCENE_SEARCH, SEARCH_DOI,
+    COVID19, REFEREED_PREPRINTS,
+    COLLECTION_NAMES, SUBJECT_COLLECTIONS,
+)
 
 app.url_map.converters['escape_lucene'] = LuceneQueryConverter
 
-ASKNEO = Engine(DB)
+NEOENGINE = Engine(DB)
 
 
 def get_all_dois():
-    refereed_preprints = ASKNEO.by_reviewing_service(limit_date='1900-01-01')
-    by_auto_topics = ASKNEO.by_auto_topics(limit_date='1900-01-01')
-    automagic = ASKNEO.automagic(limit_date='1900-01-01')
-    app.logger.info(automagic)
+
+    refereed_preprints = NEOENGINE.ask_neo(REFEREED_PREPRINTS(), limit_date='1900-01-01')
+    by_auto_topics = NEOENGINE.ask_neo(BY_AUTO_TOPICS(), limit_date='1900-01-01')
+    automagic = NEOENGINE.ask_neo(AUTOMAGIC(), limit_date='1900-01-01')
+    app.logger.info("gathering all dois")
     dois = []
     for collection in refereed_preprints:
         papers = collection['papers']
@@ -58,7 +67,7 @@ def sitemap():
 @cache.cached()
 def stats():
     app.logger.info(f"show db stats")
-    return jsonify(ASKNEO.stats(request))
+    return jsonify(NEOENGINE.ask_neo(STATS()))
 
 
 # using routing rather than parameters to provide limit_date so that cache.cached() works properly; memoize would need function params
@@ -67,7 +76,7 @@ def stats():
 @cache.cached()
 def by_hyp(limit_date):
     app.logger.info(f"list by automatic topics")
-    return jsonify(ASKNEO.by_auto_topics(limit_date=limit_date))
+    return jsonify(NEOENGINE.ask_neo(BY_AUTO_TOPICS(), limit_date=limit_date))
 
 
 @app.route('/api/v1/by_reviewing_service/', defaults={'limit_date': '1900-01-01'}, methods=['GET', 'POST'])
@@ -75,7 +84,7 @@ def by_hyp(limit_date):
 @cache.cached()
 def by_reviewing_service(limit_date):
     app.logger.info(f"list by by_reviewing_service")
-    return jsonify(ASKNEO.by_reviewing_service(limit_date=limit_date))
+    return jsonify(NEOENGINE.ask_neo(BY_REVIEWING_SERVICE(), limit_date=limit_date))
 
 
 @app.route('/api/v1/automagic/', defaults={'limit_date': '1900-01-01'}, methods=['GET', 'POST'])
@@ -83,14 +92,14 @@ def by_reviewing_service(limit_date):
 @cache.cached()
 def automagic(limit_date):
     app.logger.info(f"list by automagic score")
-    return jsonify(ASKNEO.automagic(limit_date=limit_date))
+    return jsonify(NEOENGINE.ask_neo(AUTOMAGIC(), limit_date=limit_date))
 
 
 @app.route('/api/v1/doi/<path:doi>', methods=['GET', 'POST'])
 @cache.cached()
 def by_doi(doi: str):
     app.logger.info(f"search doi: {doi}")
-    return jsonify(ASKNEO.by_doi(doi=doi))
+    return jsonify(NEOENGINE.ask_neo(BY_DOI(), doi=doi))
 
 
 @app.route('/api/v1/dois/', methods=['POST'])
@@ -104,7 +113,7 @@ def by_dois():
         doi_data = cache.get(cache_key)
         if doi_data is None:
             app.logger.info(f"\t\t cache miss: {doi}")
-            doi_data = ASKNEO.by_doi(doi=doi)[0]
+            doi_data = NEOENGINE.ask_neo(BY_DOI(), doi=doi)[0]
             cache.add(cache_key, doi_data)
         else:
             app.logger.info(f"\t\t  cache hit: {doi}")
@@ -112,85 +121,89 @@ def by_dois():
     return jsonify(response)
 
 
-@app.route('/api/v1/review/<path:doi>', methods=['GET', 'POST'])
+@app.route('/api/v1/reviews/<path:doi>', methods=['GET', 'POST'])
 @cache.cached()
 def review_by_doi(doi: str):
-    app.logger.info(f"review for doi:{doi}")
-    return jsonify(ASKNEO.review_by_doi(doi=doi))
+    app.logger.info(f"review process for doi:{doi}")
+    return jsonify(NEOENGINE.ask_neo(REVIEW_PROCESS_BY_DOI(), doi=doi))
+
+
+@app.route('/api/v1/review/<path:doi>/<int:n>', methods=['GET', 'POST'])
+@cache.cached()
+def review_by_doi_n(doi: str, n: int):
+    app.logger.info(f"review #{n} for doi:{doi}")
+    j = NEOENGINE.ask_neo(REVIEW_PROCESS_BY_DOI(), doi=doi)
+    try:
+        j = j[0].get('review_process', []).get('reviews', [])
+        j = j[n]
+    except IndexError:
+        j = {}
+    return jsonify(j)
+
+
+@app.route('/api/v1/response/<path:doi>', methods=['GET', 'POST'])
+@cache.cached()
+def response_by_doi(doi: str):
+    app.logger.info(f"response for doi:{doi}")
+    j = NEOENGINE.ask_neo(REVIEW_PROCESS_BY_DOI(), doi=doi)
+    j = j[0].get('review_process', []).get('response', [])
+    return jsonify(j)
 
 
 @app.route('/api/v1/figure', methods=['GET', 'POST'])
 def fig_by_doi_idx():
     app.logger.info(f"figure {request.args.get('position_idx')} from {request.args.get('doi')}")
-    return jsonify(ASKNEO.fig_by_doi_idx(request))
+    return jsonify(NEOENGINE.ask_neo(FIG_BY_DOI_IDX(), **request.args))
 
 
-# @app.route('/api/v1/panel/<int:id>', methods=['GET', 'POST'])
-# def panel_by_neo_id(id):
-#     app.logger.info(f"panel {id}")
-#     return jsonify(ASKNEO.panel_by_neo_id(id=id))
-
-
-@app.route('/api/v1/search/<escape_lucene:query>', methods=['GET'])
+@app.route('/api/v1/search/<escape_lucene:search_string>', methods=['GET'])
 @cache.cached()
-def search(query: str):
-    app.logger.info(f"search '{query}'")
-    return jsonify(ASKNEO.search(query=query))
-
-
-# @app.route('/api/v1/smartfigure/<id>', methods=['GET', 'POST'])
-# def smartfigure(id: str):
-#     smartfigure_url = f'https://search.sourcedata.io/panel/{id}'
-#     return redirect(smartfigure_url)
-
-
-# @app.route('/api/v1/summary/<panel_id>', methods=['GET', 'POST'])
-# def panel_summary(panel_id: str):
-#     return jsonify(ASKNEO.panel_summary(panel_id=panel_id))
+def search(search_string: str):
+    app.logger.info(f"search '{search_string}'")
+    results_fields = NEOENGINE.ask_neo(LUCENE_SEARCH(), search_string=search_string)
+    results_doi = NEOENGINE.ask_neo(SEARCH_DOI(), search_string=search_string)
+    results = results_doi if results_doi else results_fields
+    return jsonify(results)
 
 
 @app.route('/api/v1/collection/covid19', methods=['GET', 'POST'])
 @cache.cached()
 def covid19():
-    return jsonify(ASKNEO.covid19(request))
+    return jsonify(NEOENGINE.ask_neo(COVID19()))
 
 
 @app.route('/api/v1/collection/refereed-preprints', methods=['GET', 'POST'])
 @cache.cached()
 def refereed_preprints():
-    return jsonify(ASKNEO.refereed_preprints(request))
+    return jsonify(NEOENGINE.ask_neo(REFEREED_PREPRINTS()))
 
 
 @app.route('/api/v1/subjects', methods=['GET', 'POST'])
 @cache.cached()
 def subjects():
     app.logger.info(f"subjects names")
-    return jsonify(ASKNEO.subjects(request))
+    return jsonify(NEOENGINE.ask_neo(COLLECTION_NAMES()))
 
 
 @app.route('/api/v1/collection/<subject>', methods=['GET', 'POST'])
 @cache.cached()
 def subject_collection(subject: str):
     app.logger.info(f"collection '{subject}'")
-    return jsonify(ASKNEO.subject_collection(subject))
+    return jsonify(NEOENGINE.ask_neo(SUBJECT_COLLECTIONS(), subject=subject))
 
 
-@app.route('/api/v1/docmap/doi/<path:doi>', methods=['GET', 'POST'])
+@app.route('/api/v2/review_process/<path:doi>', methods=['GET', 'POST'])
 @cache.cached()
 def docmap_paper_doi(doi: str):
-    app.logger.info(f"docmap for paper doi '{doi}")
-    return jsonify(ASKNEO.docmap_paper_doi(doi))
+    app.logger.info(f"review_proces for paper doi '{doi}")
+    root = url_for('root', _external=True)
+    return jsonify(NEOENGINE.ask_neo(DOCMAP_BY_DOI(), doi=doi, root=root))
 
 
-@app.route('/api/v1/docmap/peer_review_service/<path:url>', methods=['GET', 'POST'])
+@app.route('/api/v2/review_material/<int:node_id>', methods=['GET', 'POST'])
 @cache.cached()
-def docmap_peer_review_service(url: str):
-    app.logger.info(f"docmap for peer review service '{url}")
-    return jsonify(ASKNEO.docmap_service(url))
-
-
-@app.route('/api/v1/docmap/review_id/<int:id>', methods=['GET', 'POST'])
-@cache.cached()
-def docmap_peer_review_document(id: int):
-    app.logger.info(f"docmap for peer review service '{id}")
-    return jsonify(ASKNEO.docmap_peer_review_document(id))
+def review_material_by_id(node_id: int):
+    app.logger.info(f"review material for id {node_id}")
+    root = url_for('root', _external=True)
+    j = NEOENGINE.ask_neo(REVIEW_MATERIAL_BY_ID(), node_id=node_id, root=root)
+    return jsonify(j)
