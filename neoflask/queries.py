@@ -243,37 +243,38 @@ MATCH (rs:ReviewingService)
 MATCH (a:Article)
 WHERE a.doi = $doi // "10.1101/2020.06.02.130047"  // example for debugging
 // collect the reviews when they exist
-MATCH (a)-[r]->(review {reviewed_by: rs.name})
-// mixed review process files are linked via HasAnnot relationships
-// properly identify reviews are linked via HasReview relationshops
-WHERE type(r)="HasReview" OR type(r)="HasAnnot"
+OPTIONAL MATCH (a)-[:HasReview]->(review:Review {reviewed_by: rs.name})
 // build the DocMap for the review
 WITH
   rs, a,
-  {
-    contentType: "review",
-    id: id(review),
-    content: $root + "api/v1/review_material/" + id(review),
-    provider: $root,
-    isReviewOf: [
-        {
-            contentType: a.article_type,
-            content: "https://www.biorxiv.org/content/" + a.doi,
-            doi: a.doi
-        }
-    ],
-    asserter: rs.url,
-    assertedOn: review.posting_date,
-    createdOn: review.posting_date,
-    completedOn: review.posting_date,
-    review_number: toInteger(review.review_idx),
-    contributors: [
-        "anonymous"
-    ]
-  } AS review
+  CASE review
+    WHEN NULL THEN NULL  // // don't assemble a DocMap is there is no review
+    ELSE
+    {
+      contentType: "review",
+      id: id(review),
+      content: $root + "api/v2/review_material/" + id(review),
+      provider: $root,
+      isReviewOf: [
+          {
+              contentType: a.article_type,
+              content: "https://www.biorxiv.org/content/" + a.doi,
+              doi: a.doi
+          }
+      ],
+      asserter: rs.url,
+      assertedOn: review.posting_date,
+      createdOn: review.posting_date,
+      completedOn: review.posting_date,
+      running_number: toInteger(review.review_idx),
+      contributors: [
+          "anonymous"
+      ]
+    }
+  END AS review
 // order the reviews so that they are properly listed
 ORDER BY
-  review.review_idx
+  review.running_number
 // aggregate the reviews in the ref_report array
 WITH
   rs, a,
@@ -306,7 +307,7 @@ WITH
     ELSE {
       contentType: "response",
       id: id(resp),
-      content: $root + "api/v1/review_material/" + id(resp),
+      content: $root + "api/v2/review_material/" + id(resp),
       provider: $root,
       asserter: rs.url,
       assertedOn: resp.posting_date,
@@ -315,32 +316,51 @@ WITH
       contributors: authors
     }
   END AS resp
-// aggregate the review rounds based on identical posting date
+// fetch other kind of peer review material eg. composite documents
+OPTIONAL MATCH (a)-[:HasAnnot]->(undef_rev_mat:PeerReviewMaterial {reviewed_by: rs.name})
 WITH
-  a,
-  rs, ref_reports, resp,
-  apoc.coll.toSet([rev_date, resp_date]) AS unique_dates // can contain NULL when no separate response available
-// to get unique non null dates
-UNWIND unique_dates AS date  
+  rs, a, rev_date, ref_reports, resp, resp_date,
+  CASE undef_rev_mat
+    WHEN NULL THEN NULL // don't assemble a DocMap is there is nothing
+    ELSE {
+      contentType: "composite_review_material",
+      id: id(undef_rev_mat),
+      content: $root + "api/v2/review_material/" + id(undef_rev_mat),
+      provider: $root,
+      asserter: rs.url,
+      assertedOn: undef_rev_mat.posting_date,
+      contributors: [
+        "anonymous"
+      ]
+    }
+  END AS undef_rev_mat,
+  undef_rev_mat.posting_date AS rev_material_date
+// aggregate review items into a review round based on identical posting date
+WITH
+  a, rs,
+  [ref_reports, resp, undef_rev_mat] AS review_items, // can contain NULL
+  [rev_date, resp_date, rev_material_date] AS dates // can contain NULL
+// remove NULLs and make unique
+UNWIND dates AS date
+UNWIND review_items AS rev
 WITH DISTINCT
-   a,
-   rs, ref_reports, resp,
-   date
+   a, rs, rev, date
 WHERE
-  date IS NOT NULL
+  date IS NOT NULL AND rev is NOT NULL AND rev <> []
 WITH
-  a,
+  a, date, rs,
   {
       contentType: "review-round",
       provider: $root,
       asserter: rs.url,
-      //   content: // not implemented
+      // content: // not implemented
       policy: rs.peer_review_policy,
-      reviews: ref_reports,
-      response: resp,
+      author_driven_submissions: rs.author_driven_submissions,
+      post_review_decision: rs.post_review_decision,
+      pre_review_triage: rs.pre_review_triage,
+      review_items: COLLECT(rev),
       assertedOn: toString(date)
-  } AS review_round,
-  date
+  } AS review_round
 ORDER BY
   date ASC
 WITH
@@ -348,9 +368,9 @@ WITH
 RETURN
   {
       contentType: "review-process",
-      permalink: $root + "api/v1/docmap/doi/" + a.doi,
+      permalink: $root + "api/v2/review_process/" + a.doi,
       provider: $root,
-      asserter: $root,    
+      asserter: $root,
       assertedOn: toString(DATETIME()),
       isReviewOf: [
         {
@@ -400,7 +420,7 @@ WITH
         assertedOn: posting_date,
         createdOn: posting_date,
         completedOn: posting_date,
-        review_number: r.review_idx,
+        running_number: r.review_idx,
         contributors: [
             "anonymous"
         ]
