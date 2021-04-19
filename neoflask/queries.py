@@ -297,7 +297,9 @@ ORDER BY
   auth.position_idx ASC
 WITH
   rs, a, rev_date, ref_reports, resp,
-  COLLECT(DISTINCT auth {.surname, .given_names, .position_idx, orcid: ORCID}) AS authors
+  COLLECT(DISTINCT  {
+    surname: auth.surname, given_names: split(auth.given_names, ' '), position_idx: auth.position_idx, orcid: ORCID
+  }) AS authors
 // build the DocMap for the response
 WITH
   rs, a, rev_date, ref_reports,
