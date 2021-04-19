@@ -266,7 +266,7 @@ WITH
       assertedOn: review.posting_date,
       createdOn: review.posting_date,
       completedOn: review.posting_date,
-      running_number: toInteger(review.review_idx),
+      runningNumber: toInteger(review.review_idx),
       contributors: [
           "anonymous"
       ]
@@ -279,30 +279,30 @@ ORDER BY
 WITH
   rs, a,
   DATE(DATETIME(review.assertedOn)) AS rev_date,
-  COLLECT(review) AS ref_reports
+  COLLECT(review) AS review_items
 // fetch responses when they exist
 OPTIONAL MATCH (a)-[:HasResponse]->(resp:Response {reviewed_by: rs.name})
 // the response has the authors of the paper as Contrib
 WITH
-  rs, a, rev_date, ref_reports, resp
+  rs, a, rev_date, review_items, resp
 OPTIONAL MATCH (a)-->(auth:Contrib)
 WITH
-  rs, a, auth, rev_date, ref_reports, resp
+  rs, a, auth, rev_date, review_items, resp
 OPTIONAL MATCH (auth)-[:has_orcid]->(auth_id:Contrib_id)
 WITH
-  rs, a, rev_date, ref_reports, resp,
+  rs, a, rev_date, review_items, resp,
   auth,
   auth_id.text AS ORCID
 ORDER BY 
   auth.position_idx ASC
 WITH
-  rs, a, rev_date, ref_reports, resp,
+  rs, a, rev_date, review_items, resp,
   COLLECT(DISTINCT  {
     surname: auth.surname, given_names: split(auth.given_names, ' '), position_idx: auth.position_idx, orcid: ORCID
   }) AS authors
 // build the DocMap for the response
 WITH
-  rs, a, rev_date, ref_reports,
+  rs, a, rev_date, review_items,
   DATE(DATETIME(resp.posting_date)) AS resp_date,
   CASE resp
     WHEN NULL THEN NULL // don't assemble a DocMap is there is no response
@@ -321,7 +321,7 @@ WITH
 // fetch other kind of peer review material eg. composite documents
 OPTIONAL MATCH (a)-[:HasAnnot]->(undef_rev_mat:PeerReviewMaterial {reviewed_by: rs.name})
 WITH
-  rs, a, rev_date, ref_reports, resp, resp_date,
+  rs, a, rev_date, review_items + [resp] AS review_items, resp_date,
   CASE undef_rev_mat
     WHEN NULL THEN NULL // don't assemble a DocMap is there is nothing
     ELSE {
@@ -340,7 +340,7 @@ WITH
 // aggregate review items into a review round based on identical posting date
 WITH
   a, rs,
-  [ref_reports, resp, undef_rev_mat] AS review_items, // can contain NULL
+  review_items + [undef_rev_mat] AS review_items, // can contain NULL
   [rev_date, resp_date, rev_material_date] AS dates // can contain NULL
 // remove NULLs and make unique
 UNWIND dates AS date
@@ -357,10 +357,10 @@ WITH
       asserter: rs.url,
       // content: // not implemented
       policy: rs.peer_review_policy,
-      author_driven_submissions: rs.author_driven_submissions,
-      post_review_decision: rs.post_review_decision,
-      pre_review_triage: rs.pre_review_triage,
-      review_items: COLLECT(rev),
+      authorDrivenSubmissions: rs.author_driven_submissions,
+      postReviewDecision: rs.post_review_decision,
+      preReviewTriage: rs.pre_review_triage,
+      reviewItems: COLLECT(rev),
       assertedOn: toString(date)
   } AS review_round
 ORDER BY
@@ -422,7 +422,7 @@ WITH
         assertedOn: posting_date,
         createdOn: posting_date,
         completedOn: posting_date,
-        running_number: r.review_idx,
+        runningNumber: r.review_idx,
         contributors: [
             "anonymous"
         ]
