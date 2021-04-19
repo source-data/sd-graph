@@ -19,7 +19,11 @@ def cache_warm_up(base_url):
         response = requests.get(url, verify=False)
         if response.status_code == 200:
             collections = None
-            collections = response.json()
+            try:
+                collections = response.json()
+            except json.JSONDecodeError:
+                print(f"response.content")
+                raise
             N_collections = len(collections)
             for i, collection in enumerate(collections):
                 papers = collection['papers']
@@ -43,8 +47,6 @@ def cache_warm_up(base_url):
         r = requests.get(doi_url, verify=False)
         successes += 1 if r.status_code == 200 else 0
     print(f"\ncache warmed up with {successes} out of {N_dois} dois.\n")
-
-
 
 
 if __name__ == '__main__':
