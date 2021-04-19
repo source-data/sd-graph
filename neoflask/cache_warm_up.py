@@ -21,7 +21,7 @@ def cache_warm_up(base_url):
             collections = None
             try:
                 collections = response.json()
-            except json.JSONDecodeError:
+            except json.decoder.JSONDecodeError:
                 print(f"response.content")
                 raise
             N_collections = len(collections)
