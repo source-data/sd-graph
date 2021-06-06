@@ -111,6 +111,7 @@
 import MarkdownIt from 'markdown-it'
 import { serviceId2Name } from '../../store/by-reviewing-service'
 
+
 export default {
   props: {
     article: Object,
