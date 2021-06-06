@@ -85,10 +85,10 @@ export default {
     },
     generateKeywords (article) {
       const assays = article.assays
-      const topics = article.main_topics[0]
+      const topics = article.main_topics.length > 0 ? article.main_topics[0] : []
       const highlighted_entities = article.highlighted_entities
       const other_entities = article.entities
-      const keywords = [...assays, ...topics, ...highlighted_entities, ...other_entities]
+      const keywords = [].concat(assays, topics, highlighted_entities, other_entities)
       return keywords.join(", ")
     },
     generate_jsonld (article) {
