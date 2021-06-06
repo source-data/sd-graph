@@ -463,6 +463,20 @@ RETURN docmap
     returns = ['docmap']
 
 
+class DESCRIBE_REVIEWING_SERVICES(Query):
+    code = '''
+MATCH (r:ReviewingService)
+RETURN
+    r.name AS name,
+    r.url AS url,
+    r.peer_review_policy AS peer_review_policy,
+    r.author_driven_submissions AS author_driven_submissions,
+    r.post_review_decision AS post_review_decision,
+    r.pre_review_triage AS pre_review_triage
+    '''
+    returns = ['name', 'url', 'peer_review_policy', 'author_driven_submissions', 'post_review_decision', 'pre_review_triage']
+
+
 class BY_REVIEWING_SERVICE(Query):
 
     code = '''
@@ -472,12 +486,14 @@ WHERE DATETIME(revdate.date) > DATETIME($limit_date)
 WITH DISTINCT
    subcol, 
    paper{.*, rank: ""} AS paper_j // json serializable
+MATCH (rev:ReviewingService {name: subcol.name})
 RETURN
     subcol.name AS id,
+    rev{.*} AS reviewing_service_description,
     COLLECT(DISTINCT paper_j) as papers
   '''
     map = {'limit_date': {'req_param': 'limit_date', 'default':'1900-01-01'}}
-    returns = ['id', 'papers']
+    returns = ['id', 'papers', 'reviewing_service_description']
 
 
 class BY_AUTO_TOPICS(Query):

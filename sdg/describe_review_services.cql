@@ -40,7 +40,7 @@ MERGE (r:ReviewingService {
     pre_review_triage: true
 });
 MERGE (r:ReviewingService {
-    name: "Peerage of Science",
+    name: "peerage of science",
     url: "https://www.peerageofscience.org/",
     peer_review_policy: "",
     author_driven_submissions: true,

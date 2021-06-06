@@ -8,9 +8,9 @@
     v-card-text
       ul
         li
-          span(v-if="journal_independent").lime--text.text--darken-4
-            | Journal-independent: <b>Yes</b>
-          span(v-else).grey--text Journal-independent: No
+          span(v-if="pre_review_triage").lime--text.text--darken-4
+            | Pre-review selection: <b>Yes</b>
+          span(v-else).grey--text Pre-review selection: No
         li
           span(v-if="certification").amber--text.text--darken-4
             | Post-review certification: <b>Yes</b>
@@ -28,10 +28,9 @@ export default {
   props: {
     service_name: String,
     url: String,
-    evaluation_type: String, // "peer_review" | "commenting"
     certification: Boolean, 
     author_driven: Boolean,
-    journal_independent: Boolean,
+    pre_review_triage: Boolean,
   },
 }
 </script>
