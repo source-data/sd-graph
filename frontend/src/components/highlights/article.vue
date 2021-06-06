@@ -32,12 +32,30 @@ export default {
     }
     return {
       title: this.article.title,
+      link: [
+        {rel: 'canonical', href: `https://eeb.embo.org/doi/${this.article_doi}`}
+      ] ,
       meta: [
-        {
-          vmid: 'description',
-          name: 'description',
-          content: this.article.abstract
-        },
+        {vmid: 'description', name: 'description', content: this.article.abstract},
+        {property: 'og:title', content: this.article.title},
+        {property: 'og:site_name', content: 'Early Evidence Base'},
+        {property: 'og:type', content: 'article'},
+        {property: 'og:url', content: `https://eeb.embo.org/doi/${this.article_doi}`},
+        {property: 'og:image', content: 'https://eeb.embo.org/img/EEB_HP_Banner.286d8912.svg'},
+        {property: 'og:description', content: this.article.abstract},
+
+        // Twitter card
+        {name: 'twitter:card', content: 'summary'},
+        {name: 'twitter:site', content: 'https://www.my-site.com/my-special-page'},
+        {name: 'twitter:title', content: this.article.title},
+        {name: 'twitter:description', content: this.article.abstract},
+        {name: 'twitter:creator', content: '@EarlyEvidenceBase'},
+        {name: 'twitter:image:src', content: 'https://www.my-site.com/my-special-image.jpg'},
+
+        // Google / Schema.org markup:
+        {itemprop: 'name', content: this.article.title},
+        {itemprop: 'description', content: this.article.abstract},
+        {itemprop: 'image', content: 'https://eeb.embo.org/img/EEB_HP_Banner.286d8912.svg'}
       ],
     }
   },
