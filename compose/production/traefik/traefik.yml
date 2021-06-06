@@ -72,7 +72,7 @@ http:
       service: vuejs
 
     web-secure-vuejs-router:
-      rule: "Host(`eeb.embo.org`)"
+      rule: "Host(`eeb.embo.org`) || Host(`eeb-dev.embo.org`)"
       entryPoints:
         - web-secure
       middlewares:
@@ -83,7 +83,7 @@ http:
         # https://docs.traefik.io/master/routing/routers/#certresolver
         certResolver: letsencrypt
     web-secure-api-router:
-      rule: "( Host(`eeb.embo.org`)  )  && (PathPrefix(`/api`) || PathPrefix(`/sitemap.xml`))"
+      rule: "( Host(`eeb.embo.org`)  || Host(`eeb-dev.embo.org`) )  && (PathPrefix(`/api`) || PathPrefix(`/sitemap.xml`))"
       entryPoints:
         - web-secure
       middlewares:
