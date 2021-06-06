@@ -3,6 +3,7 @@ from .sitemap import create_sitemap
 from .converter import LuceneQueryConverter
 from .queries import (
     STATS, BY_DOI, FIG_BY_DOI_IDX,
+    DESCRIBE_REVIEWING_SERVICES,
     REVIEW_PROCESS_BY_DOI, REVIEW_MATERIAL_BY_ID,
     DOCMAP_BY_DOI, BY_REVIEWING_SERVICE,
     BY_AUTO_TOPICS, AUTOMAGIC,
@@ -92,6 +93,13 @@ def stats():
 def by_hyp(limit_date):
     app.logger.info(f"list by automatic topics")
     return jsonify(ask_neo(BY_AUTO_TOPICS(), limit_date=limit_date))
+
+
+@app.route('/api/v1/reviewing_services/', methods=['GET', 'POST'])
+@cache.cached()
+def reviewing_services():
+    app.logger.info(f"descriptions of reviewing services")
+    return jsonify(ask_neo(DESCRIBE_REVIEWING_SERVICES()))
 
 
 @app.route('/api/v1/by_reviewing_service/', defaults={'limit_date': '1900-01-01'}, methods=['GET', 'POST'])

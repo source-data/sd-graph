@@ -38,56 +38,56 @@ function _serviceId2Name (id) {
 }
 
 
-const _properties = {
-  'review-commons': {
-    service_name: "Review Commons",
-    url: "https://reviewcommons.org",
-    evaluation_type: "formal_peer_review",
-    certification: false, 
-    author_driven: true,
-    journal_independent: true,
-  },
-  elife: {
-    service_name: "eLife",
-    url: "http://elifesci.org/preprint-review",
-    evaluation_type: "formal_peer_review",
-    certification: true, 
-    author_driven: true,
-    journal_independent: false,
-  },
-  'embo-press': {
-    service_name: "EMBO Press",
-    url: "https://www.embopress.org/policies",
-    evaluation_type: "formal_peer_review",
-    certification: true, 
-    author_driven: true,
-    journal_independent: false,
-  },
-  'peerage-of-science': {
-    service_name: "Peerage of Science",
-    url: "https://www.peerageofscience.org/",
-    evaluation_type: "formal_peer_review",
-    certification: false, 
-    author_driven: true,
-    journal_independent: true,
-  },
-  rrc19: {
-    service_name: "Rapid Reviews: COVID-19",
-    url: "https://rapidreviewscovid19.mitpress.mit.edu/",
-    evaluation_type: "formal_peer_review",
-    certification: true, 
-    author_driven: false,
-    journal_independent: false,
-  },
-  'peer-community-in': {
-    service_name: "Peer Community In",
-    url: "https://peercommunityin.org/",
-    evaluation_type: "formal_peer_review",  // formal peer review | commentary
-    certification: true, 
-    author_driven: true,
-    journal_independent: true,
-  }
-}
+// const _properties = {
+//   'review-commons': {
+//     service_name: "Review Commons",
+//     url: "https://reviewcommons.org",
+//     evaluation_type: "formal_peer_review",
+//     certification: false, 
+//     author_driven: true,
+//     journal_independent: true,
+//   },
+//   elife: {
+//     service_name: "eLife",
+//     url: "http://elifesci.org/preprint-review",
+//     evaluation_type: "formal_peer_review",
+//     certification: true, 
+//     author_driven: true,
+//     journal_independent: false,
+//   },
+//   'embo-press': {
+//     service_name: "EMBO Press",
+//     url: "https://www.embopress.org/policies",
+//     evaluation_type: "formal_peer_review",
+//     certification: true, 
+//     author_driven: true,
+//     journal_independent: false,
+//   },
+//   'peerage-of-science': {
+//     service_name: "Peerage of Science",
+//     url: "https://www.peerageofscience.org/",
+//     evaluation_type: "formal_peer_review",
+//     certification: false, 
+//     author_driven: true,
+//     journal_independent: true,
+//   },
+//   rrc19: {
+//     service_name: "Rapid Reviews: COVID-19",
+//     url: "https://rapidreviewscovid19.mitpress.mit.edu/",
+//     evaluation_type: "formal_peer_review",
+//     certification: true, 
+//     author_driven: false,
+//     journal_independent: false,
+//   },
+//   'peer-community-in': {
+//     service_name: "Peer Community In",
+//     url: "https://peercommunityin.org/",
+//     evaluation_type: "formal_peer_review",  // formal peer review | commentary
+//     certification: true, 
+//     author_driven: true,
+//     journal_independent: true,
+//   }
+// }
 
 export function serviceId2Slug (serviceId) {
   return _serviceId2Slug[serviceId]
@@ -105,15 +105,17 @@ export function serviceSlug2name(serviceSlug) {
 }
 
 // this should come from backend
-export function serviceSlug2Props (serviceSlug) {
-  return _properties[serviceSlug]
-}
+// export function serviceSlug2Props (serviceSlug) {
+//   return
+//   // return _properties[serviceSlug]
+// }
 
 
 export const byReviewingService = {
   namespaced: true,
   state: {
     records: {},
+    reviewing_service_descriptions: {},
     currentRecordId: 'review commons',
     loadingRecords: false,
     loadComplete: false,
@@ -122,6 +124,10 @@ export const byReviewingService = {
     records (state) {
       //return Object.values(state.records).slice().sort((a, b) => a.item_name.toLowerCase().localeCompare(b.item_name.toLowerCase()))
       return Object.values(state.records)
+    },
+    reviewingService (state) {
+      console.debug("state.reviewing_service_descriptions['elife']", state.reviewing_service_descriptions['elife'])
+      return id => Object(state.reviewing_service_descriptions[id])
     },
     currentRecord (state) {
       return state.records[state.currentRecordId]
@@ -136,10 +142,13 @@ export const byReviewingService = {
     */
     addRecords (state, records) {
       const recordsById = {}
+      const reviewing_service_descriptions = {}
       records.forEach((record) => {
         recordsById[record.id] = record
+        reviewing_service_descriptions[record.id] = record.reviewing_service_description
       })
       state.records = recordsById
+      state.reviewing_service_descriptions = reviewing_service_descriptions
     },
     /* *************************************************************************
     * NAVIGATION

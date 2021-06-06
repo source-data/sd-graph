@@ -70,15 +70,15 @@ export default {
         if (article.doi) {  // if the backend doesn't find the article it
                             // returns an article with all its properties set to null
           this.article = article
-          return httpClient.get(`/api/v1/review/${doi}`)
+          // return httpClient.get(`/api/v1/review/${doi}`)
         }
       })
-      .then((response) => {
-        if (response.data[0]) {
-          let review_process = response.data[0].review_process
-          this.article.review_process = review_process
-        }
-      })
+      // .then((response) => {
+      //   if (response.data[0]) {
+      //     let review_process = response.data[0].review_process
+      //     this.article.review_process = review_process
+      //   }
+      // })
     },
     generateMyUrl (doi) {
       return `${this.publicPath}/doi/${doi}`
@@ -91,6 +91,16 @@ export default {
       const keywords = [].concat(assays, topics, highlighted_entities, other_entities)
       return keywords.join(", ")
     },
+    generateAuthorList (article) {
+      const authors = article.authors.map(a => {
+        return {
+          "@type": "Person",
+          givenName: a.given_names,
+          familyName: a.surname
+        }
+      })
+      return authors
+    },
     generate_jsonld (article) {
       const j= {
         "@context": "https://schema.org",
@@ -98,11 +108,7 @@ export default {
         "headline": article.title,
         "image": [],
         "datePublished": article.pub_date,
-        "author": {
-          "@type": "Person",
-          "givenName": article.authors[0].given_names,
-          "familyName": article.authors[0].surname,
-        },
+        "author": this.generateAuthorList(article),
         "keywords": this.generateKeywords(article),
         "publisher": {
           "@type": "Organization",
