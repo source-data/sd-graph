@@ -36,7 +36,7 @@ def ask_neo(query: Query, **kwargs) -> Dict:
 
 def get_all_dois():
 
-    refereed_preprints = ask_neo(REFEREED_PREPRINTS(), limit_date='1900-01-01')
+    refereed_preprints = ask_neo(BY_REVIEWING_SERVICE(), limit_date='1900-01-01')
     by_auto_topics = ask_neo(BY_AUTO_TOPICS(), limit_date='1900-01-01')
     automagic = ask_neo(AUTOMAGIC(), limit_date='1900-01-01')
     app.logger.info("gathering all dois")
