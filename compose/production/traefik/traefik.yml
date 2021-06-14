@@ -60,9 +60,11 @@ http:
         - web-secure
       middlewares:
         - redirectToEmbo
-      service: vuejs
+      service:
+        - vuejs
+   
     vuejs-router:
-      rule: "Host(`0.0.0.0`) || Host(`eeb.embo.org`) || Host(`eeb-dev.embo.org`) "
+      rule: "Host(`0.0.0.0`) || Host(`eeb.embo.org`) "
       # priority: 1
       entryPoints:
         - web
@@ -72,7 +74,7 @@ http:
       service: vuejs
 
     web-secure-vuejs-router:
-      rule: "Host(`eeb.embo.org`) || Host(`eeb-dev.embo.org`)"
+      rule: "Host(`eeb.embo.org`)"
       entryPoints:
         - web-secure
       middlewares:
@@ -83,7 +85,7 @@ http:
         # https://docs.traefik.io/master/routing/routers/#certresolver
         certResolver: letsencrypt
     web-secure-api-router:
-      rule: "( Host(`eeb.embo.org`)  || Host(`eeb-dev.embo.org`) )  && (PathPrefix(`/api`) || PathPrefix(`/sitemap.xml`))"
+      rule: "( Host(`eeb.embo.org`) )  && (PathPrefix(`/api`) || PathPrefix(`/sitemap.xml`))"
       entryPoints:
         - web-secure
       middlewares:
@@ -99,8 +101,7 @@ http:
     redirectToEmbo:
       redirectRegex:
         regex: "https?://eeb.sourcedata.io/(.*)"
-        replacement: "http://eeb.embo.org/${1}"
-        # permanent: true
+        replacement: "http://eeb.embo.org/${1}"      
     redirect:
       # https://docs.traefik.io/master/middlewares/redirectscheme/
       redirectScheme:
