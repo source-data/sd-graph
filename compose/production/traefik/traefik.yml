@@ -54,7 +54,7 @@ http:
           #  service: flask
 
     sd2embo:
-      rule: "Host(`eeb.sourcedata.io`)"
+      rule: "Host(`eeb-dev.sourcedata.io`)"
       entryPoints:
         - web
         - web-secure
@@ -62,7 +62,7 @@ http:
         - redirectToEmbo
       service: vuejs
     vuejs-router:
-      rule: "Host(`0.0.0.0`) || Host(`eeb.embo.org`) || Host(`eeb-dev.embo.org`) "
+      rule: "Host(`0.0.0.0`) || Host(`eeb-dev.embo.org`) "
       # priority: 1
       entryPoints:
         - web
@@ -72,7 +72,7 @@ http:
       service: vuejs
 
     web-secure-vuejs-router:
-      rule: "Host(`eeb.embo.org`) || Host(`eeb-dev.embo.org`)"
+      rule: "Host(`eeb-dev.embo.org`)"
       entryPoints:
         - web-secure
       middlewares:
@@ -83,7 +83,7 @@ http:
         # https://docs.traefik.io/master/routing/routers/#certresolver
         certResolver: letsencrypt
     web-secure-api-router:
-      rule: "( Host(`eeb.embo.org`)  || Host(`eeb-dev.embo.org`) )  && (PathPrefix(`/api`) || PathPrefix(`/sitemap.xml`))"
+      rule: "( Host(`eeb-dev.embo.org`) )  && (PathPrefix(`/api`) || PathPrefix(`/sitemap.xml`))"
       entryPoints:
         - web-secure
       middlewares:
@@ -98,8 +98,8 @@ http:
   middlewares:
     redirectToEmbo:
       redirectRegex:
-        regex: "https?://eeb.sourcedata.io/(.*)"
-        replacement: "http://eeb.embo.org/${1}"
+        regex: "https?://eeb-dev.sourcedata.io/(.*)"
+        replacement: "http://eeb-dev.embo.org/${1}"
         # permanent: true
     redirect:
       # https://docs.traefik.io/master/middlewares/redirectscheme/
