@@ -234,6 +234,15 @@ RETURN a.doi as doi, {reviews: COLLECT(DISTINCT review {.*, id: id(review)}), re
     returns = ['doi', 'review_process']
 
 
+class DOCMAP_SEMA_BY_DOI(Query):
+    code = '''
+MATCH path=(preprint:Preprint {doi: $doi})-[:inputs]->(action_1:Action)<-[:outputs]-(ref:RefereeReport)-[:inputs]->(action_2:Action)<-[:outputs]-(reply:AuthorReply), (docmap)<-[:actions]-(action_1)
+RETURN path
+'''
+    returns = ['path']
+    map = {'doi': {'req_param': 'doi', 'default': ''}}
+
+
 class DOCMAP_BY_DOI(Query):
 
     code = '''
@@ -484,7 +493,7 @@ class BY_REVIEWING_SERVICE(Query):
 MATCH (col:VizCollection {name: "refereed-preprints"})-[:HasSubCol]->(subcol:VizSubCollection)-[:HasPaper]->(paper:VizPaper)-[:HasReviewDate]->(revdate:VizReviewDate)
 WHERE DATETIME(revdate.date) > DATETIME($limit_date)
 WITH DISTINCT
-   subcol, 
+   subcol,
    paper{.*, rank: ""} AS paper_j // json serializable
 MATCH (rev:ReviewingService {name: subcol.name})
 RETURN
