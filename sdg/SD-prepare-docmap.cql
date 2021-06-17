@@ -47,7 +47,7 @@ MERGE (docmap:Docmap {
   uri: "https://eeb.embo.org/api/v2.1/docmap/" + doi
 })
 MERGE (docmap)<-[:actions]-(action:Action {uri: "bnode://genid-"+apoc.create.uuid()})<-[:inputs]-(preprint)
-RETURN COUNT(docmap) AS `docmap isStatusHeldBy`;
+RETURN COUNT(docmap) AS `docmap generated`;
 :commit
 
 :begin
