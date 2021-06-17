@@ -46,6 +46,7 @@ class Config:
         #     Config.add_logger(app, mail_handler, level=logging.ERROR)
 
         ## Done
+        app.config['JSON_SORT_KEYS'] = False
         app.logger.info("CONFIG LOADED")
 
     @classmethod

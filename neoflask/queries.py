@@ -236,10 +236,41 @@ RETURN a.doi as doi, {reviews: COLLECT(DISTINCT review {.*, id: id(review)}), re
 
 class DOCMAP_SEMA_BY_DOI(Query):
     code = '''
-MATCH path=(preprint:Preprint {doi: $doi})-[:inputs]->(action_1:Action)<-[:outputs]-(ref:RefereeReport)-[:inputs]->(action_2:Action)<-[:outputs]-(reply:AuthorReply), (docmap)<-[:actions]-(action_1)
-RETURN path
+MATCH (preprint:Preprint {doi: $doi})-[:inputs]->(action_1:Action)<-[:outputs]-(review:RefereeReport)-[:inputs]->(action_2:Action)<-[:outputs]-(reply:AuthorReply), (docmap)<-[:actions]-(action_1)
+WITH DISTINCT
+  docmap, preprint, review{type: "review", .*} AS review, reply
+ORDER BY review.creator
+WITH DISTINCT
+  docmap, preprint, COLLECT(review) AS reviews, reply
+MATCH (reply)<-[:created]-(author:Person)
+WITH
+    docmap, preprint, reviews, reply,
+    COLLECT(author) AS authors
+RETURN {
+  id: docmap.uri,
+  type: "docmap",
+  created: docmap.created,
+  description: docmap.description,
+  publisher: docmap.publisher,
+  provenance: docmap.provenance,
+  creator: docmap.creator,
+  actions: [
+    {
+      inputs: [{uri: preprint.uri, type: "preprint"}],
+      outputs: reviews
+    },
+    {
+      inputs: reviews,
+      outputs: [reply{
+        type: "reply",
+        .*,
+        creator: authors
+      }]
+    }
+  ]
+} AS record
 '''
-    returns = ['path']
+    returns = ['record']
     map = {'doi': {'req_param': 'doi', 'default': ''}}
 
 
