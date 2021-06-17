@@ -242,7 +242,7 @@ WITH DISTINCT
 ORDER BY review.creator
 WITH DISTINCT
   docmap, preprint, COLLECT(review) AS reviews, reply
-MATCH (reply)<-[:created]-(author:Person)
+MATCH (reply)<-[:created]-(author:Author)
 WITH
     docmap, preprint, reviews, reply,
     COLLECT(author) AS authors
