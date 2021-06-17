@@ -116,63 +116,63 @@ RETURN COUNT(person_author) AS `authors linked to replies`;
 :commit
 
 
-:begin
-// setup for semantic mapping
+// :begin
+// // setup for semantic mapping
 
-CALL n10s.graphconfig.init({handleVocabUris: 'MAP'});
-:commit
+// CALL n10s.graphconfig.init({handleVocabUris: 'MAP'});
+// :commit
 
-:begin
-CREATE CONSTRAINT n10s_unique_uri IF NOT EXISTS ON (r:Resource)
-ASSERT r.uri IS UNIQUE;
-:commit
+// :begin
+// CREATE CONSTRAINT n10s_unique_uri IF NOT EXISTS ON (r:Resource)
+// ASSERT r.uri IS UNIQUE;
+// :commit
 
-:begin
-// prefixes
-CALL n10s.nsprefixes.add("dct", "http://purl.org/dc/terms/");
-CALL n10s.nsprefixes.add("foaf", "http://xmlns.com/foaf/0.1/");
-CALL n10s.nsprefixes.add("part", "http://www.ontologydesignpatterns.org/cp/owl/participation.owl#");
-CALL n10s.nsprefixes.add("fabio", "http://purl.org/spar/fabio/");
-CALL n10s.nsprefixes.add("pso", "http://purl.org/spar/pso/");
-CALL n10s.nsprefixes.add("pwo", "http://purl.org/spar/pwo/");
-CALL n10s.nsprefixes.add("xsd", "http://www.w3.org/2001/XMLSchema#");
-CALL n10s.nsprefixes.add("prism", "http://prismstandard.org/namespaces/basic/2.0/");
-:commit
+// :begin
+// // prefixes
+// CALL n10s.nsprefixes.add("dct", "http://purl.org/dc/terms/");
+// CALL n10s.nsprefixes.add("foaf", "http://xmlns.com/foaf/0.1/");
+// CALL n10s.nsprefixes.add("part", "http://www.ontologydesignpatterns.org/cp/owl/participation.owl#");
+// CALL n10s.nsprefixes.add("fabio", "http://purl.org/spar/fabio/");
+// CALL n10s.nsprefixes.add("pso", "http://purl.org/spar/pso/");
+// CALL n10s.nsprefixes.add("pwo", "http://purl.org/spar/pwo/");
+// CALL n10s.nsprefixes.add("xsd", "http://www.w3.org/2001/XMLSchema#");
+// CALL n10s.nsprefixes.add("prism", "http://prismstandard.org/namespaces/basic/2.0/");
+// :commit
 
 
-:begin
-// mappings
-WITH [
-    { internal: "Docmap", uri: "http://purl.org/spar/pwo/", pub: "WorkflowExecution"},
-    { internal: "Action", uri: "http://purl.org/spar/pwo/", pub: "Action"},
-    { internal: "created", uri: "http://purl.org/dc/terms/", pub: "created"},
-    { internal: "title", uri: "http://purl.org/dc/terms/", pub: "title" },
-    { internal: "doi", uri: "http://purl.org/dc/terms/", pub: "doi" },
-    { internal: "Creator", uri: "http://purl.org/spar/fabio/", pub: "creator" },
-    { internal: "published", uri: "http://prismstandard.org/namespaces/basic/2.0/", pub: "publicationDate" },
-    { internal: "name", uri: "http://xmlns.com/foaf/0.1/", pub: "name" },
-    { internal: "Author", uri: "http://xmlns.com/foaf/0.1/", pub: "Person" },
-    { internal: "Preprint", uri: "http://purl.org/spar/fabio/", pub: "Preprint"},
-    { internal: "RefereeReport", uri: "http://purl.org/spar/fabio/", pub: "ProductReview"},
-    { internal: "AuthorReply", uri: "http://purl.org/spar/fabio/", pub: "Reply"},
-    { internal: "publisher", uri: "http://purl.org/dc/terms/", pub: "publisher" },
-    { internal: "provenance", uri: "http://purl.org/dc/terms/", pub: "provenance" },
-    { internal: "inputs", uri: "http://purl.org/spar/pwo/", pub: "needs" },
-    { internal: "outputs", uri: "http://purl.org/spar/pwo/", pub: "produces" },
-    { internal: "assertions", uri: "http://purl.org/spar/pso/", pub: "resultsInAcquiring" },
-    { internal: "involved", uri: "http://www.ontologydesignpatterns.org/cp/owl/participation.owl#", pub: "hasParticipant" },
-    { internal: "actions", uri: "http://purl.org/spar/pwo/", pub: "involvesAction" },
-    { internal: "item", uri: "http://purl.org/spar/pso/", pub: "isStatusHeldBy" },
-    { internal: "status", uri: "http://purl.org/spar/pso/", pub: "withStatus" },
-    { internal: "content", uri: "http://purl.org/spar/fabio/", pub: "hasManifestation" },
-    { internal: "hasUrl", uri: "http://purl.org/spar/fabio/", pub: "hasURL" }
-] as mappings
+// :begin
+// // mappings
+// WITH [
+//     { internal: "Docmap", uri: "http://purl.org/spar/pwo/", pub: "WorkflowExecution"},
+//     { internal: "Action", uri: "http://purl.org/spar/pwo/", pub: "Action"},
+//     { internal: "created", uri: "http://purl.org/dc/terms/", pub: "created"},
+//     { internal: "title", uri: "http://purl.org/dc/terms/", pub: "title" },
+//     { internal: "doi", uri: "http://purl.org/dc/terms/", pub: "doi" },
+//     { internal: "Creator", uri: "http://purl.org/spar/fabio/", pub: "creator" },
+//     { internal: "published", uri: "http://prismstandard.org/namespaces/basic/2.0/", pub: "publicationDate" },
+//     { internal: "name", uri: "http://xmlns.com/foaf/0.1/", pub: "name" },
+//     { internal: "Author", uri: "http://xmlns.com/foaf/0.1/", pub: "Person" },
+//     { internal: "Preprint", uri: "http://purl.org/spar/fabio/", pub: "Preprint"},
+//     { internal: "RefereeReport", uri: "http://purl.org/spar/fabio/", pub: "ProductReview"},
+//     { internal: "AuthorReply", uri: "http://purl.org/spar/fabio/", pub: "Reply"},
+//     { internal: "publisher", uri: "http://purl.org/dc/terms/", pub: "publisher" },
+//     { internal: "provenance", uri: "http://purl.org/dc/terms/", pub: "provenance" },
+//     { internal: "inputs", uri: "http://purl.org/spar/pwo/", pub: "needs" },
+//     { internal: "outputs", uri: "http://purl.org/spar/pwo/", pub: "produces" },
+//     { internal: "assertions", uri: "http://purl.org/spar/pso/", pub: "resultsInAcquiring" },
+//     { internal: "involved", uri: "http://www.ontologydesignpatterns.org/cp/owl/participation.owl#", pub: "hasParticipant" },
+//     { internal: "actions", uri: "http://purl.org/spar/pwo/", pub: "involvesAction" },
+//     { internal: "item", uri: "http://purl.org/spar/pso/", pub: "isStatusHeldBy" },
+//     { internal: "status", uri: "http://purl.org/spar/pso/", pub: "withStatus" },
+//     { internal: "content", uri: "http://purl.org/spar/fabio/", pub: "hasManifestation" },
+//     { internal: "hasUrl", uri: "http://purl.org/spar/fabio/", pub: "hasURL" }
+// ] as mappings
 
-UNWIND mappings as m
-    CALL n10s.mapping.add(m.uri + m.pub, m.internal) YIELD schemaElement
-RETURN
-    count(schemaElement) AS mappingsDefined;
-:commit
+// UNWIND mappings as m
+//     CALL n10s.mapping.add(m.uri + m.pub, m.internal) YIELD schemaElement
+// RETURN
+//     count(schemaElement) AS mappingsDefined;
+// :commit
 
 //try 
 // :POST /rdf/neo4j/cypher
