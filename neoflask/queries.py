@@ -236,41 +236,113 @@ RETURN a.doi as doi, {reviews: COLLECT(DISTINCT review {.*, id: id(review)}), re
 
 class DOCMAP_SEMA_BY_DOI(Query):
     code = '''
-MATCH (preprint:Preprint {doi: $doi})-[:inputs]->(action_1:Action)<-[:outputs]-(review:RefereeReport)-[:inputs]->(action_2:Action)<-[:outputs]-(reply:AuthorReply), (docmap)<-[:actions]-(action_1)
+MATCH
+  (docmap:Docmap)<-[:steps]-(step_1:Step),
+  (step_1)<-[:inputs]-(preprint:Preprint {doi: $doi}),
+  (step_1)<-[:actions]-(reviewing_action:Action),
+  (reviewing_action)<-[:participants]-(reviewer:Person),
+  (reviewing_action)<-[:outputs]-(review:RefereeReport),
+  (review)<-[:content]-(review_content:Content),
+  (step_1)<-[:assertions]-(assertion_1:Assertion),
+  (docmap)<-[:steps]-(step_2:Step),
+  (step_2)<-[:inputs]-(review),
+  (step_2)<-[:actions]-(replying_action:Action),
+  (replying_action)<-[:participants]-(author:Person),
+  (replying_action)<-[:outputs]-(reply:AuthorReply),
+  (reply)<-[:content]-(reply_content:Content),
+  (step_2)<-[:assertions]-(assertion_2:Assertion)
 WITH DISTINCT
-  docmap, preprint, review{type: "review", .*} AS review, reply
-ORDER BY review.creator
+  docmap, preprint,
+  step_1, assertion_1, reviewing_action, review, review_content, reviewer,
+  step_2, assertion_2, reply, reply_content, author
+//ORDER BY reviewing_action.index
 WITH DISTINCT
-  docmap, preprint, COLLECT(review) AS reviews, reply
-MATCH (reply)<-[:created]-(author:Author)
-WITH
-    docmap, preprint, reviews, reply,
-    COLLECT(author) AS authors
-RETURN {
-  id: docmap.uri,
-  type: "docmap",
-  created: docmap.created,
-  description: docmap.description,
-  publisher: docmap.publisher,
-  provenance: docmap.provenance,
-  creator: docmap.creator,
-  actions: [
-    {
-      inputs: [{uri: preprint.uri, type: "preprint"}],
-      outputs: reviews
-    },
-    {
-      inputs: reviews,
-      outputs: [reply{
-        type: "reply",
+  docmap, preprint,
+  step_1, assertion_1, review, reviewer,
+  COLLECT(DISTINCT review_content) AS review_content_list,
+  step_2, assertion_2, reply, author,
+  COLLECT(DISTINCT reply_content) AS reply_content_list
+WITH DISTINCT
+  docmap, preprint,
+  step_1, assertion_1, review,
+  {
+    participants: [
+      {
+        actor: {
+          type: "person",
+          name: reviewer.name
+        },
+        role: reviewer.role
+      }
+    ],
+    outputs: [review{
+        type: "review",
         .*,
-        creator: authors
-      }]
+        content: review_content_list
+      }
+    ]
+  } AS reviewing_action,
+  step_2, assertion_2,
+  reply{
+      type: "Reply",
+      .*,
+      content: reply_content_list
+  } AS reply_action_output,
+  COLLECT(DISTINCT
+    {
+      actor: {
+        type: "person",
+        firstName: author.firstName,
+        familyName: author.familyName
+      },
+      role: author.role
     }
-  ]
+  ) AS participating_authors
+WITH DISTINCT
+    docmap,
+    step_1,
+    {
+      assertions: [assertion_1{.*}],
+      `next-step`: step_1.next_step,
+      inputs: [preprint{.*}],
+      actions: COLLECT(reviewing_action)
+    } AS step_1_json,
+    step_2,
+    {
+      assertions: [assertion_2{.*}],
+      inputs: COLLECT(DISTINCT review{.uri}),
+      actions: [
+        {
+          participants: participating_authors,
+          outputs: reply_action_output
+        }
+      ]
+    } AS step_2_json
+WITH DISTINCT
+  docmap.id AS id,
+  "docmap" AS type,
+  docmap.created AS created,
+  docmap.publisher AS publisher,
+  docmap.provider AS provider,
+  docmap.generateAt AS generatedAt,
+  docmap.first_step AS `first-step`,
+  apoc.map.fromPairs([
+    [step_1.id, step_1_json],
+    [step_2.id, step_2_json]
+  ]) AS steps
+RETURN {
+  id: id,
+  type: type,
+  created: created,
+  publisher: publisher,
+  provider: provider,
+  generatedAt: generatedAt,
+  `first-step`: `first-step`,
+  steps: steps
 } AS record
 '''
     returns = ['record']
+    # returns = ['id', 'type', 'created', 'publisher', 'provider', 'generatedAt', 'first-step', 'steps']
     map = {'doi': {'req_param': 'doi', 'default': ''}}
 
 
