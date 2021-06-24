@@ -324,7 +324,7 @@ WITH DISTINCT
   docmap.created AS created,
   docmap.publisher AS publisher,
   docmap.provider AS provider,
-  docmap.generateAt AS generatedAt,
+  docmap.generatedAt AS generatedAt,
   docmap.first_step AS `first-step`,
   apoc.map.fromPairs([
     [step_1.id, step_1_json],
