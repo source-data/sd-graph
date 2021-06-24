@@ -214,15 +214,6 @@ def subject_collection(subject: str):
     app.logger.info(f"collection '{subject}'")
     return jsonify(ask_neo(SUBJECT_COLLECTIONS(), subject=subject))
 
-
-@app.route('/api/v2/review_process/<path:doi>', methods=['GET', 'POST'])
-@cache.cached()
-def docmap_paper_doi(doi: str):
-    app.logger.info(f"review_proces for paper doi '{doi}")
-    root = url_for('root', _external=True)
-    return jsonify(ask_neo(DOCMAP_BY_DOI(), doi=doi, root=root))
-
-
 @app.route('/api/v2/review_material/<int:node_id>', methods=['GET', 'POST'])
 @cache.cached()
 def review_material_by_id(node_id: int):
@@ -231,8 +222,8 @@ def review_material_by_id(node_id: int):
     j = ask_neo(REVIEW_MATERIAL_BY_ID(), node_id=node_id, root=root)
     return jsonify(j)
 
-
-@app.route('/api/v2.1/docmap/<path:doi>', methods=['GET', 'POST'])
+@app.route('/api/v2/review_process/<path:doi>', methods=['GET', 'POST'])
+@app.route('/api/v2/docmap/<path:doi>', methods=['GET', 'POST'])
 @cache.cached()
 def docmap_semantic_doi(doi: str):
     app.logger.info(f"docmap for id {doi}")
