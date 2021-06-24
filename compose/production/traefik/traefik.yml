@@ -60,7 +60,9 @@ http:
         - web-secure
       middlewares:
         - redirectToEmbo
-      service: vuejs
+      service:
+        - vuejs
+   
     vuejs-router:
       rule: "Host(`0.0.0.0`) || Host(`eeb-dev.embo.org`) "
       # priority: 1

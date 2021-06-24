@@ -17,8 +17,8 @@ services:
       - .:/app
       - ./log:/log
       # - ${BIORXIV_PATH}:/app/biorxiv # to be provided in .env
-      - /tmp/.X11-unix:/tmp/.X11-unix
-      - /tmp:/tmp
+      # - /tmp/.X11-unix:/tmp/.X11-unix
+      # - /tmp:/tmp
     environment:
       - XAUTHORITY=${XAUTH} # needs to make sure export XAUTH before i.e. in .bashrc
       - DISPLAY=${DISPLAY} # this seems to be exported by default 
@@ -33,7 +33,7 @@ services:
   neo4j:
     image: neo4j:4.1
     environment:
-      - NEO4JLABS_PLUGINS=["apoc", "graph-data-science"]
+      - NEO4JLABS_PLUGINS=["apoc", "graph-data-science", "n10s"]
     ulimits:
       nofile:
         soft: 40000
