@@ -689,77 +689,60 @@ class LUCENE_SEARCH(Query):
     code = '''
 // Full-text search on multiple indices.
 
-//CALL db.index.fulltext.createNodeIndex("title", ["SDArticle"], ["title"]);
-WITH $query AS query
-CALL db.index.fulltext.queryNodes("title", query) YIELD node, score
-WITH node, score, query
-WHERE node.journalName IN ["biorxiv", "medrxiv"]
-WITH
-// weight 4x for results on title
-  node.doi AS doi, node.title AS text, 1 * score AS weighted_score, "title" AS source, query
+CALL {
+
+  ////////// SEARCH TITLE /////////
+  //INDEXING: CALL db.index.fulltext.createNodeIndex("title", ["SDArticle"], ["title"]);
+  WITH $query AS query
+  CALL db.index.fulltext.queryNodes("title", query) YIELD node, score
+  WITH node, score, query
+  WHERE node.journalName IN ["biorxiv", "medrxiv"]
+  WITH
+    // weight 1x for results on title
+    node.doi AS doi, node.title AS text, 1 * score AS weighted_score, "title" AS source, query
+  ORDER BY weighted_score DESC
+  RETURN 
+  // entities is obligatory field for info for compatibility with the other methods
+    doi, [{title: "'" + $query + "' found in " + source, text: text, entities: []}] AS info, weighted_score, source, query
+
+  UNION
+
+  ////////// SEARCH ABSTRACT /////////
+  //CALL db.index.fulltext.createNodeIndex("abstract",["SDArticle"], ["abstract"]);
+  WITH $query AS query
+  CALL db.index.fulltext.queryNodes("abstract", query) YIELD node, score
+  WITH node, score, query
+  WHERE node.journalName IN ["biorxiv", "medrxiv"]
+  WITH
+    node.doi AS doi, node.title as text, 1 * score AS weighted_score, "abstract" AS source, query
+  ORDER BY weighted_score DESC
+  RETURN 
+    doi, [{title: "'" + $query + "' found in " + source, text: text, entities: []}] AS info, weighted_score, source, query
+  LIMIT 20
+
+  UNION
+
+  ///////// SEARCH AUTHORS /////////
+  //INDEXED WITH: CALL db.index.fulltext.createNodeIndex("name",["Contrib"], ["surname", "given_names"]);
+  WITH $query AS query
+  CALL db.index.fulltext.queryNodes("name", query) YIELD node, score
+  WITH id(node) AS id, score, query
+  MATCH (author:Contrib)
+  WHERE id(author) = id
+  WITH DISTINCT author, score, query
+  MATCH (article:SDArticle)-[:has_author]->(author)
+  WHERE article.journalName IN ["biorxiv", "medrxiv"]
+  WITH
+  //weight 4x for results on authors
+    article.doi as doi, author.surname as text, 2 * score AS weighted_score, "author list" AS source, query
+  ORDER BY weighted_score DESC
+  RETURN 
+    doi, [{title: $query + " found in " + source, text: text, entities: []}] AS info, weighted_score, source, query
+  LIMIT 20
+}
+RETURN doi, info, weighted_score, source, query
 ORDER BY weighted_score DESC
-RETURN 
-// entities is obligatory field for info for compatibility with the other methods
-  doi, [{title: "'" + $query + "' found in " + source, text: text, entities: []}] AS info, weighted_score, source, query
-
-UNION
-
-//CALL db.index.fulltext.createNodeIndex("abstract",["SDArticle"], ["abstract"]);
-WITH $query AS query
-CALL db.index.fulltext.queryNodes("abstract", query) YIELD node, score
-WITH node, score, query
-WHERE node.journalName IN ["biorxiv", "medrxiv"]
-WITH
-// weight 2x for results on abstract
-  node.doi AS doi, node.title as text, 1 * score AS weighted_score, "abstract" as source, query
-ORDER BY weighted_score DESC
-RETURN 
-  doi, [{title: "'" + $query + "' found in " + source, text: text, entities: []}] AS info, weighted_score, source, query
-LIMIT 20
-
-UNION
-
-//CALL db.index.fulltext.createNodeIndex("caption",["SDPanel"], ["caption"]);
-WITH $query AS query
-CALL db.index.fulltext.queryNodes("caption", query) YIELD node, score
-MATCH (article:SDArticle)-[:has_figure]->(f:SDFigure)-[:has_panel]->(node)
-WHERE node.journalName IN ["biorxiv", "medrxiv"]
-WITH DISTINCT
-// weight 1 for caption
-  article.doi as doi, node.caption as text, 1 * score AS weighted_score, "caption" AS source, query
-ORDER BY weighted_score DESC
-RETURN 
-  doi, [{title: "'" + $query + "' found in " + source, text: text, entities: []}] AS info, weighted_score, source, query
-LIMIT 20
-
-//UNION
-
-//slow!
-//CALL db.index.fulltext.createNodeIndex("entity_name",["H_Entity"],["name"]);
-//CALL db.index.fulltext.queryNodes("entity_name", $query) YIELD node, score
-//MATCH (sd_article:SDArticle)-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(ct:CondTag)-[:Identified_by]->(h:H_Entity)
-//WHERE h.name = node.name AND node.name <> ""
-//WITH DISTINCT 
-//  sd_article.doi as doi, h.name as text, 1.0 * score AS weighted_score, "entity" as source, query
-//ORDER BY score DESC
-//RETURN 
-//  doi, [{title: "'" + $query + "' found in " + source, text: text, entities: []}] AS info, weighted_score, source, query
-//LIMIT 20
-
-UNION
-
-//CALL db.index.fulltext.createNodeIndex("name",["Contrib"], ["surname", "given_names"]);
-WITH $query AS query
-CALL db.index.fulltext.queryNodes("name", query) YIELD node, score
-MATCH (article:SDArticle)-->(author:Contrib)
-WHERE node.journalName IN ["biorxiv", "medrxiv"] AND author.surname = node.surname AND author.given_names = node.given_names
-WITH DISTINCT
-//weight 4x for results on authors
-  article.doi as doi, node.surname as text, 1 * score AS weighted_score, "author list" AS source, query
-ORDER BY weighted_score DESC
-RETURN 
-  doi, [{title: $query + " found in " + source, text: text, entities: []}] AS info, weighted_score, source, query
-LIMIT 20
+LIMIT 10
 '''
     map = {'query': {'req_param': 'search_string', 'default': ''}}
     returns = ['doi', 'info', 'score', 'source', 'query']

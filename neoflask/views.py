@@ -13,8 +13,11 @@ from .queries import (
 )
 from neotools.db import Query
 from typing import Dict
+import re
 from . import DB, app, cache
 
+
+DOI_REGEX = re.compile(r'^10.\d{4,9}/[-._;()/:A-Z0-9]+$', flags=re.IGNORECASE)
 
 app.url_map.converters['escape_lucene'] = LuceneQueryConverter
 
@@ -121,7 +124,7 @@ def automagic(limit_date):
 @app.route('/api/v1/doi/<path:doi>', methods=['GET', 'POST'])
 @cache.cached()
 def by_doi(doi: str):
-    app.logger.info(f"search doi: {doi}")
+    app.logger.info(f"lookup doi: {doi}")
     return jsonify(ask_neo(BY_DOI(), doi=doi))
 
 
@@ -129,7 +132,7 @@ def by_doi(doi: str):
 def by_dois():
     print(request)
     dois = request.json['dois']
-    app.logger.info(f"search dois: {dois}")
+    app.logger.info(f"lookup dois: {dois}")
     response = []
     for doi in dois:
         cache_key = f'/api/v1/dois/{doi}'
@@ -179,13 +182,17 @@ def fig_by_doi_idx():
     return jsonify(ask_neo(FIG_BY_DOI_IDX(), **request.args))
 
 
+# <escape_lucene:search_string> triggers the use of converter.LuceneQueryConverter to quotes Lucene search strings
 @app.route('/api/v1/search/<escape_lucene:search_string>', methods=['GET'])
+@app.route('/api/v1/search/<path:search_string>', methods=['GET'])
 @cache.cached()
 def search(search_string: str):
     app.logger.info(f"search '{search_string}'")
-    results_fields = ask_neo(LUCENE_SEARCH(), search_string=search_string)
-    results_doi = ask_neo(SEARCH_DOI(), search_string=search_string)
-    results = results_doi if results_doi else results_fields
+    search_string = search_string.strip()
+    if DOI_REGEX.match(search_string):
+        results = ask_neo(SEARCH_DOI(), search_string=search_string)
+    else:
+        results = ask_neo(LUCENE_SEARCH(), search_string=search_string)
     return jsonify(results)
 
 
@@ -214,6 +221,7 @@ def subject_collection(subject: str):
     app.logger.info(f"collection '{subject}'")
     return jsonify(ask_neo(SUBJECT_COLLECTIONS(), subject=subject))
 
+
 @app.route('/api/v2/review_material/<int:node_id>', methods=['GET', 'POST'])
 @cache.cached()
 def review_material_by_id(node_id: int):
@@ -221,6 +229,7 @@ def review_material_by_id(node_id: int):
     root = url_for('root', _external=True)
     j = ask_neo(REVIEW_MATERIAL_BY_ID(), node_id=node_id, root=root)
     return jsonify(j)
+
 
 @app.route('/api/v2/review_process/<path:doi>', methods=['GET', 'POST'])
 @app.route('/api/v2/docmap/<path:doi>', methods=['GET', 'POST'])
