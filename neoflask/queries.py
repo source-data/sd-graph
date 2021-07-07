@@ -703,7 +703,7 @@ CALL {
   ORDER BY weighted_score DESC
   RETURN 
   // entities is obligatory field for info for compatibility with the other methods
-    doi, [{title: "'" + $query + "' found in " + source, text: text, entities: []}] AS info, weighted_score, source, query
+    doi, [{title: "'" + query + "' found in " + source, text: text, entities: []}] AS info, weighted_score, source, query
 
   UNION
 
@@ -717,7 +717,7 @@ CALL {
     node.doi AS doi, node.title as text, 1 * score AS weighted_score, "abstract" AS source, query
   ORDER BY weighted_score DESC
   RETURN 
-    doi, [{title: "'" + $query + "' found in " + source, text: text, entities: []}] AS info, weighted_score, source, query
+    doi, [{title: "'" + query + "' found in " + source, text: text, entities: []}] AS info, weighted_score, source, query
   LIMIT 20
 
   UNION
@@ -737,7 +737,7 @@ CALL {
     article.doi as doi, author.surname as text, 2 * score AS weighted_score, "author list" AS source, query
   ORDER BY weighted_score DESC
   RETURN 
-    doi, [{title: $query + " found in " + source, text: text, entities: []}] AS info, weighted_score, source, query
+    doi, [{title: query + " found in " + source, text: text, entities: []}] AS info, weighted_score, source, query
   LIMIT 20
 }
 RETURN doi, info, weighted_score, source, query
