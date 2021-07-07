@@ -17,7 +17,7 @@ import re
 from . import DB, app, cache
 
 
-DOI_REGEX = re.compile(r'^10.\d{4,9}/[-._;()/:A-Z0-9]+$', flags=re.IGNORECASE)
+DOI_REGEX = re.compile(r'10.\d{4,9}/[-._;()/:A-Z0-9]+$', flags=re.IGNORECASE)
 
 app.url_map.converters['escape_lucene'] = LuceneQueryConverter
 
@@ -184,14 +184,18 @@ def fig_by_doi_idx():
 
 # <escape_lucene:search_string> triggers the use of converter.LuceneQueryConverter to quotes Lucene search strings
 @app.route('/api/v1/search/<escape_lucene:search_string>', methods=['GET'])
+# using <path:search_string> to match route when doi is searched
 @app.route('/api/v1/search/<path:search_string>', methods=['GET'])
 @cache.cached()
 def search(search_string: str):
-    app.logger.info(f"search '{search_string}'")
     search_string = search_string.strip()
-    if DOI_REGEX.match(search_string):
-        results = ask_neo(SEARCH_DOI(), search_string=search_string)
+    doi = DOI_REGEX.search(search_string)
+    if doi is not None:
+        doi = doi.group(0)
+        app.logger.info(f"search doi: '{doi}'")
+        results = ask_neo(SEARCH_DOI(), search_string=doi)
     else:
+        app.logger.info(f"search text: '{search_string}'")
         results = ask_neo(LUCENE_SEARCH(), search_string=search_string)
     return jsonify(results)
 

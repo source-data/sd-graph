@@ -723,7 +723,7 @@ CALL {
   UNION
 
   ///////// SEARCH AUTHORS /////////
-  //INDEXED WITH: CALL db.index.fulltext.createNodeIndex("name",["Contrib"], ["surname", "given_names"]);
+  //INDEXED WITH: CALL db.index.fulltext.createNodeIndex("name", ["Contrib"], ["surname", "given_names"]);
   WITH $query AS query
   CALL db.index.fulltext.queryNodes("name", query) YIELD node, score
   WITH id(node) AS id, score, query
@@ -755,7 +755,7 @@ MATCH (article:SDArticle)
 WHERE article.doi = query
 RETURN
   article.doi AS doi, [{title: 'doi match', text: article.doi, entities:[]}] AS info, 10.0 AS score, 'doi' AS source, query
-    '''
+'''
     map = {'query': {'req_param': 'search_string', 'default': ''}}
     returns = ['doi', 'info', 'score', 'source', 'query']
 
