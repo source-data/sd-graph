@@ -284,7 +284,7 @@ WITH DISTINCT
   } AS reviewing_action,
   step_2, assertion_2,
   reply{
-      type: "Reply",
+      type: "author-response",
       .*,
       content: reply_content_list
   } AS reply_action_output,
@@ -723,7 +723,7 @@ CALL {
   UNION
 
   ///////// SEARCH AUTHORS /////////
-  //INDEXED WITH: CALL db.index.fulltext.createNodeIndex("name", ["Contrib"], ["surname", "given_names"]);
+  //INDEXED WITH: CALL db.index.fulltext.createNodeIndex("name",["SDContrib"], ["concat_name", "surname"]);
   WITH $query AS query
   CALL db.index.fulltext.queryNodes("name", query) YIELD node, score
   WITH id(node) AS id, score, query
