@@ -110,7 +110,7 @@ SET reviewing_step.next_step = reply_step
 MERGE (docmap)<-[:steps]-(step:Step {id: reply_step, previous_step: reviewing_step.id})
 MERGE (step)<-[:assertions]-(assertion:Assertion {
   item: preprint_uri,
-  status: "authors-replied-to-reviewers"
+  status: "" // in the future: a value to the effect that "authors-replied-to-reviewers"
 })
 WITH DISTINCT docmap, reviews, response, step
 UNWIND reviews as review
