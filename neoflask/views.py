@@ -5,7 +5,7 @@ from .queries import (
     STATS, BY_DOI, FIG_BY_DOI_IDX,
     DESCRIBE_REVIEWING_SERVICES,
     REVIEW_PROCESS_BY_DOI, REVIEW_MATERIAL_BY_ID,
-    DOCMAP_BY_DOI, DOCMAP_SEMA_BY_DOI, BY_REVIEWING_SERVICE,
+    DOCMAP_BY_DOI, BY_REVIEWING_SERVICE,
     BY_AUTO_TOPICS, AUTOMAGIC,
     LUCENE_SEARCH, SEARCH_DOI,
     COVID19, REFEREED_PREPRINTS,
@@ -241,15 +241,5 @@ def review_material_by_id(node_id: int):
 def docmap_semantic_doi(doi: str):
     app.logger.info(f"docmap for id {doi}")
     root = url_for('root', _external=True)
-    j = ask_neo(DOCMAP_SEMA_BY_DOI(), doi=doi, root=root)
+    j = ask_neo(DOCMAP_BY_DOI(), doi=doi, root=root)
     return jsonify(j)
-
-
-# @app.route('/api/v2.1/docmap/<path:doi>/rdf', methods=['GET', 'POST'])
-# def docmap_semantic_doi_rdf(doi: str):
-#     url = 'http://localhost:7474/rdf/cypher'
-#     cypher = 'MATCH path = (cust:Customer)-[:PURCHASED]->(o)-[:ORDERS]->()-[:PART_OF]->(cat:Category) \
-# 		  WHERE cust.customerID = "GROSR" AND cat.categoryName = "Beverages" \
-# 		  RETURN path '
-#     payload = { 'cypher' : cypher , 'format' : 'RDF/XML' }
-#     response = requests.post(url, auth=('neo4j', 'neo'), data = json.dumps(payload))

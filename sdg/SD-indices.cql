@@ -40,7 +40,7 @@ CALL db.index.fulltext.drop("title_jats");
 CALL db.index.fulltext.drop("caption");
 
 // create
-CALL db.index.fulltext.createNodeIndex("name",["Contrib"], ["surname", "given_names"]);
+CALL db.index.fulltext.createNodeIndex("name",["SDContrib"], ["concat_name", "surname"]);
 CALL db.index.fulltext.createNodeIndex("entity_name",["H_Entity"],["name"], {analyzer: "english"});
 CALL db.index.fulltext.createNodeIndex("synonym",["Term"],["text"], {analyzer: "english"});
 CALL db.index.fulltext.createNodeIndex("title", ["SDArticle"], ["title"], {analyzer: "english"});

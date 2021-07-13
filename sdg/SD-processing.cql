@@ -107,6 +107,34 @@ SET p.panel_id = ""
 RETURN COUNT(p) AS `NULL panel_id set to ""`;
 :commit
 :begin
+MATCH (au:Contrib)
+WHERE au.collab IS NULL AND au.surname IS NULL AND au.given_names IS NULL
+DETACH DELETE au
+RETURN COUNT(au) AS `contrib with all NULL fields deleted`;
+:commit
+:begin
+MATCH (au:Contrib)
+WHERE au.surname IS NULL
+SET au.surname = ""
+RETURN COUNT(DISTINCT au) AS `contrib with NULL surname set to ""`;
+:commit
+:begin
+MATCH (au:Contrib)
+WHERE au.given_names IS NULL
+SET au.given_names = ""
+RETURN COUNT(DISTINCT au) AS `contrib with NULL given_names set to ""`;
+:commit
+:begin
+MATCH (au:Contrib)
+WHERE au.collab IS NULL
+SET au.collab = ""
+RETURN COUNT(DISTINCT au) AS `contrib with NULL fields set to ""`;
+:commit
+:begin
+MATCH (sdau:SDContrib) DETACH DELETE sdau
+RETURN COUNT(sdau) AS `sd_author deleted`;
+:commit
+:begin
 //A: condense tags with same ext id and role
 MATCH (p:SDPanel)-->(t:SDTag)
 WHERE
@@ -235,7 +263,7 @@ SET a += {pub_date: most_recent, abstract: abstr}
 RETURN COUNT(DISTINCT a) AS `SDArticles with pub date`;
 :commit
 :begin
-//Link to authors via Contrib nodes
+//Link to authors via SDContrib nodes
 MATCH (jats:Article), (sd:SDArticle)
 WHERE jats.doi = sd.doi
 WITH DISTINCT
@@ -253,6 +281,12 @@ WITH DISTINCT
   doi,
   sd,
   au
-MERGE (sd)-[r:has_author]->(au)
+MERGE (sd)-[r:has_author]->(sdau:SDContrib {
+  position_idx: au.position_idx,
+  source: au.source,
+  given_names: au.given_names,
+  surname: au.surname,
+  concat_name: au.given_names + " " + au.surname + " " + au.collab
+})
 RETURN COUNT(DISTINCT r) AS `SDArticle author relationships`;
 :commit

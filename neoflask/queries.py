@@ -234,7 +234,7 @@ RETURN a.doi as doi, {reviews: COLLECT(DISTINCT review {.*, id: id(review)}), re
     returns = ['doi', 'review_process']
 
 
-class DOCMAP_SEMA_BY_DOI(Query):
+class DOCMAP_BY_DOI(Query):
     code = '''
 MATCH
   (docmap:Docmap)<-[:steps]-(step_1:Step),
@@ -381,158 +381,6 @@ RETURN {
     returns = ['docmap']
     # returns = ['id', 'type', 'created', 'publisher', 'provider', 'generatedAt', 'first-step', 'steps']
     map = {'doi': {'req_param': 'doi', 'default': ''}}
-
-
-class DOCMAP_BY_DOI(Query):
-
-    code = '''
-CALL {
-  MATCH (rs:ReviewingService), (a:Article)
-  WHERE a.doi = $doi //"10.1101/2020.06.02.130047"  // example for debugging
-  WITH rs, a
-  // collect the reviews when they exist
-  MATCH (a)-[:HasReview]->(review:Review {reviewed_by: rs.name})
-  // build the DocMap for the review
-  WITH DISTINCT
-    rs, a.doi AS doi, a.article_type AS article_type,
-    {
-        contentType: "review",
-        id: id(review),
-        content: $root + "api/v2/review_material/" + id(review),
-        provider: $root,
-        isReviewOf: [
-            {
-                contentType: a.article_type,
-                content: "https://www.biorxiv.org/content/" + a.doi,
-                doi: a.doi
-            }
-        ],
-        asserter: rs.url,
-        assertedOn: review.posting_date,
-        createdOn: review.posting_date,
-        completedOn: review.posting_date,
-        runningNumber: toInteger(review.review_idx),
-        contributors: [
-            "anonymous"
-        ]
-      } AS review
-  RETURN DISTINCT
-    rs, doi, article_type,
-    DATE(DATETIME(review.assertedOn)) AS date,
-    review AS item
-   // order the reviews so that they are properly listed
-  ORDER BY
-    item.runningNumber
-
-  UNION
-
-  MATCH (rs:ReviewingService), (a:Article)
-  WHERE a.doi = $doi // "10.1101/2020.06.02.130047"  // example for debugging
-  WITH rs, a
-  // fetch responses when they exist
-  MATCH (a)-[:HasResponse]->(resp:Response {reviewed_by: rs.name})
-  // the response has the authors of the paper as Contrib
-  WITH DISTINCT
-    rs, a, resp
-  OPTIONAL MATCH (a)-->(auth:Contrib)
-  WITH DISTINCT
-    rs, a.doi AS doi, a.article_type AS article_type, auth, resp
-  OPTIONAL MATCH (auth)-[:has_orcid]->(auth_id:Contrib_id)
-  WITH DISTINCT
-    rs, doi, article_type, resp,
-    auth, auth_id.text AS ORCID
-  ORDER BY 
-    auth.position_idx ASC
-  WITH DISTINCT
-    rs, doi, article_type, resp,
-    COLLECT(DISTINCT {
-      surname: auth.surname, given_names: split(auth.given_names, ' '), position_idx: auth.position_idx, orcid: ORCID
-    }) AS authors
-  // build the DocMap for the response
-  WITH DISTINCT
-    rs, doi, article_type,
-    {
-        contentType: "response",
-        id: id(resp),
-        content: $root + "api/v2/review_material/" + id(resp),
-        provider: $root,
-        asserter: rs.url,
-        assertedOn: resp.posting_date,
-        // createdOn: resp.posting_date,
-        // completedOn: resp.posting_date,
-        contributors: authors
-    } AS resp
-  RETURN
-    rs, doi, article_type,
-    DATE(DATETIME(resp.assertedOn)) AS date,
-    resp AS item
-
-  UNION
-
-  MATCH (rs:ReviewingService), (a:Article)
-  WHERE a.doi = $doi // "10.1101/2020.06.02.130047"  // example for debugging
-  WITH rs, a
-  // fetch other kind of peer review material eg. composite documents
-  MATCH (a)-[:HasAnnot]->(undef_rev_mat:PeerReviewMaterial {reviewed_by: rs.name})
-  WITH DISTINCT
-    rs, a.doi AS doi, a.article_type AS article_type,
-    {
-        contentType: "composite_review_material",
-        id: id(undef_rev_mat),
-        content: $root + "api/v2/review_material/" + id(undef_rev_mat),
-        provider: $root,
-        asserter: rs.url,
-        assertedOn: undef_rev_mat.posting_date,
-        contributors: [
-          "anonymous"
-        ]
-    } AS undef_rev_mat
-  RETURN
-    rs, doi, article_type,
-    DATE(DATETIME(undef_rev_mat.assertedOn)) AS date,
-    undef_rev_mat AS item
-}
-
-WITH DISTINCT
-  rs, doi, article_type, date, COLLECT(item) AS review_items
-WITH DISTINCT
-  rs, doi, article_type, date, 
-  {
-      contentType: "review-round",
-      provider: $root,
-      asserter: rs.url,
-      // content: // not implemented
-      policy: rs.peer_review_policy,
-      authorDrivenSubmissions: rs.author_driven_submissions,
-      postReviewDecision: rs.post_review_decision,
-      preReviewTriage: rs.pre_review_triage,
-      reviewItems: review_items,
-      assertedOn: toString(date)
-  } AS review_round
-ORDER BY
-  date ASC
-RETURN
-  {
-      contentType: "review-process",
-      permalink: $root + "api/v2/review_process/" + doi,
-      provider: $root,
-      asserter: $root,
-      assertedOn: toString(DATETIME()),
-      isReviewOf: [
-        {
-            contentType: article_type,
-            content: "https://www.biorxiv.org/content/" + doi,
-            doi: doi
-        }
-      ],
-      reviewRounds: COLLECT(review_round)
-  } as docmap
-    '''
-    map = {
-      'doi': {'req_param': 'doi', 'default': ''},
-      'root': {'req_param': 'root', 'default': 'https://eeb.embo.org'}
-    }
-    returns = ['docmap']
 
 
 class REVIEW_MATERIAL_BY_ID(Query):
@@ -764,7 +612,7 @@ CALL {
   WITH $query AS query
   CALL db.index.fulltext.queryNodes("name", query) YIELD node, score
   WITH id(node) AS id, score, query
-  MATCH (author:Contrib)
+  MATCH (author:SDContrib)
   WHERE id(author) = id
   WITH DISTINCT author, score, query
   MATCH (article:SDArticle)-[:has_author]->(author)
