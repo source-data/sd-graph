@@ -240,10 +240,11 @@ MATCH
   (docmap:Docmap)<-[:steps]-(step_1:Step),
   (step_1)<-[:inputs]-(preprint:Preprint {doi: $doi}),
   (step_1)<-[:actions]-(reviewing_action:Action),
-  (reviewing_action)<-[:participants]-(reviewer:Person),
   (reviewing_action)<-[:outputs]-(review:RefereeReport),
   (review)<-[:content]-(review_content:Content),
-  (step_1)<-[:assertions]-(assertion_1:Assertion),
+  (step_1)<-[:assertions]-(assertion_1:Assertion)
+OPTIONAL MATCH
+  (reviewing_action)<-[:participants]-(reviewer:Person),
   (docmap)<-[:steps]-(step_2:Step),
   (step_2)<-[:inputs]-(review),
   (step_2)<-[:actions]-(replying_action:Action),
@@ -264,17 +265,26 @@ WITH DISTINCT
   COLLECT(DISTINCT reply_content) AS reply_content_list
 WITH DISTINCT
   docmap, preprint,
-  step_1, assertion_1, review,
+  step_1, assertion_1, review, reviewer, review_content_list,
+  CASE
+    WHEN reviewer IS NOT NULL THEN
+      [
+        {
+          actor: {
+            type: "person",
+            name: reviewer.name
+          },
+          role: reviewer.role
+        }
+      ]
+    ELSE NULL
+  END AS participants,
+  step_2, assertion_2, reply, author, reply_content_list
+WITH DISTINCT
+  docmap, preprint,
+  step_1, assertion_1, review, participants,
   {
-    participants: [
-      {
-        actor: {
-          type: "person",
-          name: reviewer.name
-        },
-        role: reviewer.role
-      }
-    ],
+    // participants: participants,  // deferring assignment of participants to check for null
     outputs: [review{
         type: "review",
         .*,
@@ -298,12 +308,23 @@ WITH DISTINCT
       role: author.role
     }
   ) AS participating_authors
+WITH
+  docmap, preprint,
+  step_1, assertion_1, review,
+  step_2, assertion_2,
+  CASE
+    WHEN participants IS NOT NULL THEN
+       reviewing_action{.*, participants: participants}
+    ELSE
+      reviewing_action
+  END AS reviewing_action,
+  reply_action_output, participating_authors
 WITH DISTINCT
     docmap,
     step_1,
     {
       assertions: [assertion_1{.*}],
-      `next-step`: step_1.next_step,
+      // `next-step`: step_1.next_step, // note: deferring next-step assignment to be able to check for null
       inputs: [preprint{.*}],
       actions: COLLECT(reviewing_action)
     } AS step_1_json,
@@ -319,6 +340,16 @@ WITH DISTINCT
       ]
     } AS step_2_json
 WITH DISTINCT
+  docmap,
+  step_1, step_1_json,
+  step_2,
+  CASE
+    WHEN step_1 IS NOT NULL THEN
+      step_2_json{.*, `next-step`: step_1.next_step}
+    ELSE
+      step_2_json
+  END AS step_2_json
+WITH DISTINCT
   docmap.id AS id,
   "docmap" AS type,
   docmap.created AS created,
@@ -326,10 +357,16 @@ WITH DISTINCT
   docmap.provider AS provider,
   docmap.generatedAt AS generatedAt,
   docmap.first_step AS `first-step`,
-  apoc.map.fromPairs([
-    [step_1.id, step_1_json],
-    [step_2.id, step_2_json]
-  ]) AS steps
+  CASE WHEN step_2 IS NOT NULL THEN
+    apoc.map.fromPairs([
+      [step_1.id, step_1_json],
+      [step_2.id, step_2_json]
+    ])
+  ELSE
+    apoc.map.fromPairs([
+      [step_1.id, step_1_json]
+    ])
+  END AS steps
 RETURN {
   id: id,
   type: type,
@@ -339,9 +376,9 @@ RETURN {
   generatedAt: generatedAt,
   `first-step`: `first-step`,
   steps: steps
-} AS record
+} AS docmap
 '''
-    returns = ['record']
+    returns = ['docmap']
     # returns = ['id', 'type', 'created', 'publisher', 'provider', 'generatedAt', 'first-step', 'steps']
     map = {'doi': {'req_param': 'doi', 'default': ''}}
 

@@ -25,12 +25,12 @@ RETURN "purge" as `completed`;
 MATCH (rs:ReviewingService)
 WITH rs
 MATCH (a:Article)
-OPTIONAL MATCH (a)-[r:HasReview]->(review:Review {reviewed_by: rs.name})
+OPTIONAL MATCH (a)-[:HasReview]->(review:Review {reviewed_by: rs.name})
+WITH rs, a, review
 OPTIONAL MATCH (a)-[:HasAnnot]->(annot:PeerReviewMaterial {reviewed_by: rs.name})
-OPTIONAL MATCH (a)-[:HasResponse]->(response:Response {reviewed_by: rs.name})
-WITH rs, a, review, annot, response
+WITH rs, a, review, annot
 WHERE 
-  (review is NOT NULL OR response is NOT NULL OR annot IS NOT NULL)
+  (review is NOT NULL OR annot IS NOT NULL)
   AND a.journal_title IN ['bioRxiv', 'medRxiv']
 WITH DISTINCT rs, a.doi as doi, a.publication_date as published
 ORDER BY DATETIME(published)
@@ -48,10 +48,9 @@ MERGE (docmap:Docmap {
   generatedAt: toString(DATETIME()),
   provider: "https://eeb.embo.org",
   publisher: rs.url,
-  id: "https://eeb.embo.org/api/v2.1/docmap/" + doi,
+  id: "https://eeb.embo.org/api/v2/docmap/" + doi,
   first_step: first_step
 })
-// MERGE (docmap)<-[:actions]-(action:Action {uri: "bnode://genid-"+apoc.create.uuid()})<-[:inputs]-(preprint)
 MERGE (docmap)<-[:steps]-(step:Step {id: first_step})
 MERGE (step)<-[:inputs]-(preprint)
 RETURN COUNT(docmap) AS `docmap generated`;
@@ -63,31 +62,41 @@ RETURN COUNT(docmap) AS `docmap generated`;
 MATCH (rs:ReviewingService)
 WITH rs
 MATCH
-  (docmap:Docmap {publisher: rs.url})<-[:steps]-(step:Step)<-[:inputs]-(preprint:Preprint),
+  (docmap:Docmap {publisher: rs.url})<-[:steps]-(step:Step)<-[:inputs]-(preprint:Preprint)
+OPTIONAL MATCH
   (a:Article {doi: preprint.doi})-[r:HasReview]->(review:Review {reviewed_by: rs.name})
-WHERE review is NOT NULL
+WITH rs, docmap, step, preprint, review
+OPTIONAL MATCH
+  (a:Article {doi: preprint.doi})-[r:HasAnnot]->(annot:PeerReviewMaterial {reviewed_by: rs.name})
+// use aggregation to coerce individual peer review material documents as review
 WITH DISTINCT
-  preprint.uri AS preprint_uri, docmap, step, review
+  preprint.uri AS preprint_uri, docmap, step, COLLECT(DISTINCT review) + COLLECT(DISTINCT annot) AS reviews
+UNWIND reviews as review
+WITH DISTINCT
+  preprint_uri, docmap, step, review
 WITH preprint_uri, docmap, step, review, "_:b-"+apoc.create.uuid() AS action_uuid
 MERGE (step)<-[:assertions]-(assertion:Assertion {
   item: preprint_uri,
   status: "reviewed"
 })
-MERGE (step)<-[:actions]-(action:Action {id: action_uuid, index: review.review_idx})
+MERGE (step)<-[:actions]-(action:Action {id: action_uuid})
+MERGE (action)<-[:outputs]-(rev:RefereeReport {
+  published: review.posting_date,
+  uri: "https://eeb.embo.org/api/v2/review_material/" + id(review)
+})
+MERGE (rev)<-[:content]-(content:Content {
+  type: "web-page", 
+  url: "https://eeb.embo.org/api/v2/review_material/" + id(review)
+})
+WITH DISTINCT action, review
+WHERE review.review_idx IS NOT NULL
 MERGE (action)<-[:participants]-(reviewer:Person {
   id : "reviewer #" + review.review_idx,
   name: "anonymous",
   role: "peer-reviewer"
 })
-MERGE (action)<-[:outputs]-(rev:RefereeReport {
-  published: review.posting_date,
-  uri: "https://eeb.embo.org/api/v2/review_material/"+id(review)
-})
-MERGE (rev)<-[:content]-(content:Content {
-  type: "web-page", 
-  url: "https://eeb.embo.org/api/v2/review_material/"+id(review)
-})
-RETURN COUNT(DISTINCT rev) AS `review linked`;
+SET action.index = review.review_idx
+RETURN DISTINCT "done" AS `reviews linked`;
 :commit
 
 
@@ -98,12 +107,9 @@ WITH rs
 MATCH
   (docmap:Docmap {publisher: rs.url})<-[:steps]-(reviewing_step:Step)<-[:actions]-(:Action)<-[:outputs]-(review:RefereeReport),
   (reviewing_step)<-[:inputs]-(preprint:Preprint),
-  (a:Article {doi: preprint.doi})
-OPTIONAL MATCH (a)-[:HasResponse]->(response:Response {reviewed_by: rs.name})
-WITH DISTINCT preprint.uri AS preprint_uri, docmap, reviewing_step, review, response
-WHERE response is NOT NULL
+  (a:Article {doi: preprint.doi})-[:HasResponse]->(response:Response {reviewed_by: rs.name})
 WITH DISTINCT
-  preprint_uri, docmap, reviewing_step, COLLECT(DISTINCT review) AS reviews, response
+  preprint.uri AS preprint_uri, docmap, reviewing_step, COLLECT(DISTINCT review) AS reviews, response
 WITH
   preprint_uri, docmap, reviewing_step, reviews, response, "_:b-"+apoc.create.uuid() as reply_step
 SET reviewing_step.next_step = reply_step
@@ -121,11 +127,11 @@ WITh docmap, response, step, "_:b-"+apoc.create.uuid() AS action_uuid
 MERGE (step)<-[:actions]-(action:Action {id: action_uuid})
 MERGE (action)<-[:outputs]-(reply:AuthorReply {
   published: response.posting_date,
-  uri: "https://eeb.embo.org/api/v2/review_material/"+id(response)
+  uri: "https://eeb.embo.org/api/v2/review_material/" + id(response)
 })
 MERGE (reply)<-[:content]-(content:Content {
   type: "web-page",
-  url: "https://eeb.embo.org/api/v2/review_material/"+id(response)
+  url: "https://eeb.embo.org/api/v2/review_material/" + id(response)
 })
 RETURN COUNT(DISTINCT response) AS `response linked`;
 :commit
