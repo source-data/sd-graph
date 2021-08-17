@@ -341,14 +341,14 @@ WITH DISTINCT
     } AS step_2_json
 WITH DISTINCT
   docmap,
-  step_1, step_1_json,
-  step_2,
+  step_1,
+  step_2, step_2_json,
   CASE
-    WHEN step_1 IS NOT NULL THEN
-      step_2_json{.*, `next-step`: step_1.next_step}
+    WHEN step_2 IS NOT NULL THEN
+      step_1_json{.*, `next-step`: step_1.next_step}
     ELSE
-      step_2_json
-  END AS step_2_json
+      step_1_json
+  END AS step_1_json
 WITH DISTINCT
   docmap.id AS id,
   "docmap" AS type,
