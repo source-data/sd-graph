@@ -6,7 +6,7 @@ set -e
 # set -o history -o histexpand
 
 mail_developers(){
-  local developers_emails="mainar@embl.de,lemberge@embl.de"
+  local developers_emails="mainar@embl.de,lemberge@embl.de,eidens@embl.de"
   # local developers_emails="mainar@embl.de"
   local subject=$1
   local body=$2
