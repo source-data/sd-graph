@@ -20,13 +20,13 @@
                             span.v-badge__wrapper
                               span(
                                 v-if="reviewingService(reviewingListId(i, j)).post_review_decision"
-                                style="inset: auto auto calc(100% - 5px) calc(100% - 28px);").v-badge__badge.lime.darken-5
+                                style="inset: auto auto calc(100% - 5px) calc(100% - 18px);").v-badge__badge.amber.darken-5
                               span(
                                 v-if="reviewingService(reviewingListId(i, j)).author_driven_submissions"
-                                style="inset: auto auto calc(100% - 5px) calc(100% - 18px);").v-badge__badge.amber.darken-2
+                                style="inset: auto auto calc(100% - 5px) calc(100% - 8px);").v-badge__badge.purple.darken-2
                               span(
                                 v-if="reviewingService(reviewingListId(i, j)).pre_review_triage"
-                                style="inset: auto auto calc(100% - 5px) calc(100% - 8px);").v-badge__badge.purple
+                                style="inset: auto auto calc(100% - 5px) calc(100% - 28px);").v-badge__badge.lime
         v-col(v-if="selectedRev" cols=4)
           InfoCardsReviewServiceSummary(
             :service_name="serviceId2Name(serviceSlug2Id(selectedRev))",
