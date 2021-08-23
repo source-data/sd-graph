@@ -306,7 +306,7 @@ main() {
     local DAY_OF_THE_MONTH=$(date +%d)
     local DAY_OF_THE_WEEK=$(date +%u) # 1(monday), 2 (tuesday), ... 7(sunday)
     local MONDAY=1
-    if [ $DAY_OF_THE_MONTH -eq 1 ]; then
+    if [ $DAY_OF_THE_MONTH -eq 2 ]; then
       PERIODICITY="monthly"
     elif [[ $DAY_OF_THE_WEEK -eq $MONDAY ]]; then
       PERIODICITY="weekly"
