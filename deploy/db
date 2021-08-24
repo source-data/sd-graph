@@ -266,7 +266,7 @@ main() {
         echo "deploy db"
         echo "--------------------------------------------------------------------------------------"
         echo ""
-        echo "deploy/db --stage_name STAGE_NAME [--periodicity PERIODICITY] [--log_file 'PATH/TO/LOG/FILE']"
+        echo "deploy/db --stage_name STAGE_NAME --periodicity PERIODICITY [--log_file 'PATH/TO/LOG/FILE']"
         echo ""
         echo "Options:"
         echo "  --help        | -h"
@@ -275,7 +275,7 @@ main() {
         echo "  --log_file    | -l 'quoted/path/to/file.log'"
         echo ""
         echo "example of usage:"
-        echo "  deploy/db --stage_name staging --log_file '/home/eeb/logs/deploydb.log'"
+        echo "  deploy/db --stage_name staging --periodicity daily --log_file '/home/eeb/logs/deploydb.log'"
         echo ""
         exit 0
         ;;
@@ -300,22 +300,15 @@ main() {
       ;;
   esac
 
-  if [ ! -z "$PERIODICITY" ]; then
-    echo "setting periodicity"
-
-    local DAY_OF_THE_MONTH=$(date +%d)
-    local DAY_OF_THE_WEEK=$(date +%u) # 1(monday), 2 (tuesday), ... 7(sunday)
-    local MONDAY=1
-    if [ $DAY_OF_THE_MONTH -eq 2 ]; then
-      PERIODICITY="monthly"
-    elif [[ $DAY_OF_THE_WEEK -eq $MONDAY ]]; then
-      PERIODICITY="weekly"
-    else
-      PERIODICITY="daily"
-    fi
-    echo "perodicity is $PERIODICITY"
-  fi
-
+  case $PERIODICITY in
+    "daily"|"weekly"|"monthly")
+    # valid periodicity, continue
+    ;;
+    *)
+    echo "[ERROR] Argument - please specify a valid --periodicity (daily|weekly|monthly)"
+    exit 1
+    ;;
+  esac
 
   if [ ! -z $LOG_FILE ]; then
     # LOG_FILE is specified, let's redirect stdout and stderr to the $LOG_FILE
