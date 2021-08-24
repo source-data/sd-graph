@@ -300,7 +300,7 @@ main() {
       ;;
   esac
 
-  if [ -z "$PERIODICITY" ]; then
+  if [ ! -z "$PERIODICITY" ]; then
     echo "setting periodicity"
 
     local DAY_OF_THE_MONTH=$(date +%d)
