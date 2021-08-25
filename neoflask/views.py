@@ -243,3 +243,11 @@ def docmap_semantic_doi(doi: str):
     root = url_for('root', _external=True)
     j = ask_neo(DOCMAP_BY_DOI(), doi=doi, root=root)
     return jsonify(j)
+
+# @app.route('/api/v2/<reviewing_service>/docmap/<start_date>/<end_date>/<int:pagination>', methods=['GET', 'POST'])
+
+# @app.route('/api/v2/docmap/<start_date>/<end_date>/<int:pagination>', methods=['GET', 'POST'])
+
+# @app.route('/api/v2/<reviewing_service>/docmap/<int:N_most_recent>/<int:pagination>', methods=['GET', 'POST'])
+
+# @app.route('/api/v2/<reviewing_service>/docmap/<int:days>d/<int:pagination>', methods=['GET', 'POST'])
