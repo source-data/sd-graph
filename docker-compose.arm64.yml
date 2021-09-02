@@ -7,6 +7,3 @@ services:
 
   neo4j:
     image: neo4j/neo4j-arm64-experimental:4.1.10-arm64
-
-  vuejs:
-    platform: "linux/amd64"
