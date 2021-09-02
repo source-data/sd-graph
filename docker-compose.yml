@@ -10,7 +10,6 @@ services:
       context: .
       dockerfile: ./compose/local/flask/Dockerfile
     image: neoflask_local_flask
-    platform: "linux/amd64"
     depends_on:
       - neo4j
       - redis
@@ -32,7 +31,7 @@ services:
     command: /start
 
   neo4j:
-    image: neo4j/neo4j-arm64-experimental:4.1.10-arm64
+    image: neo4j:4.1
     environment:
       - NEO4JLABS_PLUGINS=["apoc", "graph-data-science", "n10s"]
     ulimits:
@@ -54,7 +53,6 @@ services:
       context: .
       dockerfile: ./compose/local/vuejs/Dockerfile
     image: neoflask_local_vuejs
-    platform: "linux/amd64"
     volumes:
       - './frontend:/app'
       - '/app/node_modules'
