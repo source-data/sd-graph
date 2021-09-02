@@ -66,6 +66,5 @@ services:
 
   redis:
     image: redis:6
-    platform: "linux/amd64"
     volumes:
       - ./data/redis-data:/data
