@@ -15,6 +15,7 @@ scikit-learn==0.23.2
 cdlib==0.1.9
 python-igraph==0.8.3
 wurlitzer==2.0.1
+Werkzeug < 2.0.0
 
 -e git+https://github.com/source-data/ai.git#egg=ai
 -e git+https://github.com/source-data/py-smtag.git@dev#egg=smtag

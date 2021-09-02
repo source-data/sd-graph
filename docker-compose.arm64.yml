@@ -1,0 +1,14 @@
+# Use this file in conjunction with docker-compose.yml to make this app run on ARM-based computers like the M1 Macbook.
+# Building the images: `docker compose --file docker-compose.yml --file docker-compose.arm64.yml build`
+# Running the containers: `docker compose --file docker-compose.yml --file docker-compose.arm64.yml up`
+# See https://docs.docker.com/compose/extends/#multiple-compose-files for more info.
+services:
+  flask:
+    # Without the `platform` flag, this service fails to build on an M1 Macbook (which has an ARM processor) because
+    # Tensorflow, which is required by smtag, only provides x86_64 binaries.
+    platform: "linux/amd64"
+
+  neo4j:
+    # The standard Neo4j 4.1 image doesn't run on M1 Macbooks even with the `platform` flag (not sure why, but probably
+    # due to the plugins). Instead, they provide an experimental but working image for arm64.
+    image: neo4j/neo4j-arm64-experimental:4.1.10-arm64
