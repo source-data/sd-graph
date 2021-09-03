@@ -4,15 +4,17 @@ import requests
 from . import EEB_PUBLIC_API
 from neotools.utils import progress
 
+import common.logging
+logger = common.logging.get_logger(__name__)
 
 def cache_warm_up(base_url):
 
-    print(f"waming up cache using {base_url}:")
+    logger.info(f"waming up cache using {base_url}:")
     dois = []
     # warm up the stats method
     url = base_url + 'stats'
     r = requests.get(url, verify=False)
-    print(f"method /stats warmed up: {r.status_code == 200}")
+    logger.info(f"method /stats warmed up: {r.status_code == 200}")
     for method in ['by_reviewing_service/', 'automagic/', 'by_auto_topics/']:
         url = base_url + method
         # warm up of the main methods
@@ -22,7 +24,7 @@ def cache_warm_up(base_url):
             try:
                 collections = response.json()
             except json.decoder.JSONDecodeError:
-                print(f"content: {response.content}")
+                logger.info(f"content: {response.content}")
                 raise
             N_collections = len(collections)
             for i, collection in enumerate(collections):
@@ -35,10 +37,10 @@ def cache_warm_up(base_url):
                 if r.status_code == 200:
                     dois += new_dois
                 else:
-                    print(f"Problem with {method}{collection['id']}! Status code: {r.status_code}")
+                    logger.warning(f"Problem with {method}{collection['id']}! Status code: {r.status_code}")
     dois = set(dois)  # remove duplicates
     N_dois = len(dois)
-    print(f"\nfetched {N_dois} unique dois.")
+    logger.info(f"\nfetched {N_dois} unique dois.")
     successes = 0
     for i, doi in enumerate(dois):
         progress(i, N_dois, f"{doi}                       ")
@@ -46,11 +48,12 @@ def cache_warm_up(base_url):
         doi_url = base_url + "doi/{doi}"
         r = requests.get(doi_url, verify=False)
         successes += 1 if r.status_code == 200 else 0
-    print(f"\ncache warmed up with {successes} out of {N_dois} dois.\n")
+    logger.info(f"\ncache warmed up with {successes} out of {N_dois} dois.\n")
 
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Loading meca or CORD-19 archives into neo4j.')
     parser.add_argument('base_url', default=EEB_PUBLIC_API,help='Host address to be warmed up')
     args = parser.parse_args()
+    common.logging.configure_logging()
     cache_warm_up(args.base_url)

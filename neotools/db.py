@@ -2,6 +2,8 @@ import re
 from typing import List, Dict, Tuple, Callable
 from neo4j import GraphDatabase, Transaction
 
+import common.logging
+logger = common.logging.get_logger(__name__)
 
 def quote4neo(properties):
     quotes_added = {}
@@ -86,9 +88,9 @@ class Instance:
             summary = results.consume()
             notifications = summary.notifications
             if notifications:
-                print(f"WARNING: {notifications} when checking for existence.")
-                print(summary.statement)
-                print(summary.parameters)
+                logger.warning(f"WARNING: {notifications} when checking for existence.")
+                logger.warning(summary.statement)
+                logger.warning(summary.parameters)
             return found_one
         found_it = self.query_with_tx_funct(tx_funct, q)
         return found_it
@@ -170,12 +172,12 @@ class Instance:
     def _tx_funct_single(tx: Transaction, code: str, params: Dict = {}):
         records = Instance._tx_funct(tx, code, params)
         if len(records) > 1:
-            print(f"WARNING: {len(records)} > 1 records returned with statement:'")
-            print(code)
-            print(f"with params {params}.")
-            print("Affected records:")
+            logger.warning(f"WARNING: {len(records)} > 1 records returned with statement:'")
+            logger.warning(code)
+            logger.warning(f"with params {params}.")
+            logger.warning("Affected records:")
             for r in records:
-                print(r)
+                logger.warning(r)
         r = records[0]
         return r
 
