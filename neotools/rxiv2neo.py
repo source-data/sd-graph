@@ -15,7 +15,10 @@ from .queries import (
     CREATE_INDEX_DOI,
     CREATE_INDEX_VERSION,
 )
-from . import logger, DB
+from . import DB
+
+import common.logging
+logger = common.logging.get_logger(__name__)
 
 
 DEBUG_MODE = False
@@ -207,6 +210,8 @@ if __name__ == '__main__':
     path = args.path
     type = args.type
     check_for_duplicate = not args.no_duplicate_check
+
+    common.logging.configure_logging()
     if path:
         if type == 'meca':
             MECALoader(Path(path), check_for_duplicate=check_for_duplicate).load_dir()
