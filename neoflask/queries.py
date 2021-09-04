@@ -644,6 +644,48 @@ RETURN
     map = {'query': {'req_param': 'search_string', 'default': ''}}
     returns = ['doi', 'info', 'score', 'source', 'query']
 
+class SEARCH_REVIEWS(Query):
+    code = '''
+MATCH (
+  col:VizCollection {name: "refereed-preprints"}
+)-[:HasSubCol]->(
+  subcol:VizSubCollection
+)-[:HasPaper]->(
+  paper:VizPaper
+)-[:HasReviewDate]->(
+  revdate:VizReviewDate
+)
+WHERE DATETIME(revdate.date) >= DATETIME($start_date)
+   AND DATETIME(revdate.date) < DATETIME($end_date)
+   AND subcol.name = $reviewing_service
+RETURN paper.doi AS doi
+ORDER BY revdate.date
+SKIP $offset
+LIMIT $page_size
+'''
+    map = {
+      'reviewing_service': {
+        'req_param': 'reviewing_service',
+        'default': '',
+      },
+      'start_date': {
+        'req_param': 'start_date',
+        'default': '1900-01-01',
+      },
+      'end_date': {
+        'req_param': 'end_date',
+        'default': '2900-01-01',
+      },
+      'offset': {
+        'req_param': 'offset',
+        'default': 0,
+      },
+      'page_size': {
+        'req_param': 'page_size',
+        'default': 100,
+      },
+    }
+    returns = ['doi']
 
 class STATS(Query):
     code = '''
