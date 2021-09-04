@@ -21,6 +21,7 @@ docker-compose down --volumes # to clean the content of the volumes
 ```
 
 This can solve some issues, for example if you run `build` with a wrong config file.
+
 #### First time setup:
 
 ```bash
@@ -34,6 +35,16 @@ Before you import any dump you need to make sure that Neo4j creates the layout f
 docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p THE_SOURCEDATA_USER_PASSWORD
 ```
 
+### Note for running on arm64 hosts like M1 Macbooks
+
+Use docker-compose.arm64.yml together with docker-compose.yml to make this app run on ARM-based computers (tested on an M1 Macbook) like so:
+
+```bash
+docker compose --file docker-compose.yml --file docker-compose.arm64.yml build
+docker compose --file docker-compose.yml --file docker-compose.arm64.yml up
+```
+
+See https://docs.docker.com/compose/extends/#multiple-compose-files for more info on the concepts behind multiple compose files.
 
 #### Updating the database contents
 Normally you need this:
