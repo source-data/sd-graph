@@ -1,6 +1,7 @@
 import json
 from argparse import ArgumentParser
 import requests
+from tqdm import tqdm
 from . import EEB_PUBLIC_API
 from neotools.utils import progress
 
@@ -27,10 +28,9 @@ def cache_warm_up(base_url):
                 logger.info(f"content: {response.content}")
                 raise
             N_collections = len(collections)
-            for i, collection in enumerate(collections):
+            for collection in tqdm(collections):
                 papers = collection['papers']
                 new_dois = [paper['doi'] for paper in papers]
-                progress(i, N_collections, f"{method}{collection['id']} {len(new_dois)} dois              ")
                 # warm up of the multiple doi method
                 multi_dois_url = base_url + "dois/"
                 r = requests.post(multi_dois_url, json={'dois': new_dois}, verify=False)
@@ -42,8 +42,7 @@ def cache_warm_up(base_url):
     N_dois = len(dois)
     logger.info(f"\nfetched {N_dois} unique dois.")
     successes = 0
-    for i, doi in enumerate(dois):
-        progress(i, N_dois, f"{doi}                       ")
+    for doi in tqdm(dois):
         # warm up of the individual doi method
         doi_url = base_url + "doi/{doi}"
         r = requests.get(doi_url, verify=False)
