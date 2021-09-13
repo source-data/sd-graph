@@ -2,10 +2,10 @@ import json
 from argparse import ArgumentParser
 import requests
 from tqdm import tqdm
+import common.logging
 from . import EEB_PUBLIC_API
 from neotools.utils import progress
 
-import common.logging
 logger = common.logging.get_logger(__name__)
 
 def cache_warm_up(base_url):
@@ -51,8 +51,8 @@ def cache_warm_up(base_url):
 
 
 if __name__ == '__main__':
+    common.logging.configure_logging()
     parser = ArgumentParser(description='Loading meca or CORD-19 archives into neo4j.')
     parser.add_argument('base_url', default=EEB_PUBLIC_API,help='Host address to be warmed up')
     args = parser.parse_args()
-    common.logging.configure_logging()
     cache_warm_up(args.base_url)

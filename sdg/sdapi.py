@@ -2,6 +2,7 @@ import argparse
 import requests
 import re
 from typing import List
+import common.logging
 from .sdnode import (
     API,
     BaseCollection, BaseArticle, BaseFigure, BasePanel, BaseTag
@@ -155,6 +156,7 @@ class SDAPI(API):
 
 
 if __name__ == '__main__':
+    common.logging.configure_logging()
     parser = argparse.ArgumentParser( description="interace to the SourceData API" )
     parser.add_argument('collection', nargs="?", default="PUBLICSEARCH", help="Takes the name of a collection (try \"PUBLICSEARCH\") nd returns the list of papers")
     parser.add_argument('-L', '--listing', action="store_true", help="List of articles in the collection.") 

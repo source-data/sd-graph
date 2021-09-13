@@ -3,6 +3,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 from io import BytesIO
 from typing import Dict
+import common.logging
 from neotools.txt2node import XMLNode
 from neotools.rxiv2neo import build_neo_graph
 from neo4j.exceptions import ConstraintError
@@ -131,6 +132,7 @@ def self_test():
 
 
 if __name__ == '__main__':
+    common.logging.configure_logging()
     parser = ArgumentParser(description='Loading the disease ontology into neo4j.')
     parser.add_argument('path', nargs="?", help='Paths to owl file.')
     args = parser.parse_args()

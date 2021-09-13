@@ -7,7 +7,10 @@ from pathlib import Path
 from typing import Dict
 from neotools.utils import inner_text
 from .queries import ALL_ARTICLES, FIGURES_BY_PAPER_ID, PANEL_BY_FIG_ID
-from . import DB, logger
+from . import DB
+
+import common.logging
+logger = common.logging.get_logger(__name__)
 
 
 xml_parser = XMLParser(recover=True)

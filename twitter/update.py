@@ -2,11 +2,14 @@ import argparse
 import tweepy
 from string import Template
 import time
+import common.logging
 from sdg.sdnode import API
 from neotools.utils import progress
 from .queries import TWEET_BY_DOI, ADD_TWITTER_STATUS
 from typing import Dict
-from . import DB, TWITTER, EEB_PUBLIC_API, logger
+from . import DB, TWITTER, EEB_PUBLIC_API
+
+logger = common.logging.get_logger(__name__)
 
 
 TWITTER_MAX_LENGTH = 280
@@ -194,4 +197,5 @@ def main():
 
 
 if __name__ == '__main__':
+    common.logging.configure_logging()
     main()

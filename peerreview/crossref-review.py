@@ -2,6 +2,7 @@ import re
 import math
 from argparse import ArgumentParser
 from typing import Dict
+import common.logging
 from neotools.utils import progress
 from . import DB
 from .queries import (
@@ -153,6 +154,7 @@ class PCIFinder:
 
 
 if __name__ == '__main__':
+    common.logging.configure_logging()
     parser = ArgumentParser(description="Upload peer review material using CrossRef.")
     parser.add_argument('-S', '--source', default='CCR19', help='Name of the reviewing service (source) to scan.')
     parser.add_argument('-T', '--targets', default=['10.1101'], help='DOI prefix of the published reviewed papers (target).')

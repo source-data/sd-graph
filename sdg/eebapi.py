@@ -1,6 +1,7 @@
 import argparse
 import json
 from lxml.etree import fromstring
+import common.logging
 from neotools.utils import inner_text, cleanup
 from .sdnode import (
     API,
@@ -146,6 +147,7 @@ class EEBAPI(API):
 
 
 if __name__ == '__main__':
+    common.logging.configure_logging()
     parser = argparse.ArgumentParser(description='interace to the SourceData API' )
     parser.add_argument('-L', '--listing', action='store_true', help='List of articles in the collection.') 
     parser.add_argument('-D', '--doi', default='', help='Takes a doi and return article information')

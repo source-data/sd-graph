@@ -3,6 +3,7 @@ from io import BytesIO
 from typing import Dict
 import re
 import json
+import common.logging
 from .model import (
     JATS_GRAPH_MODEL,
     CORD19_GRAPH_MODEL,
@@ -11,7 +12,6 @@ from .model import (
 )
 from .utils import inner_text
 
-import common.logging
 logger = common.logging.get_logger(__name__)
 
 

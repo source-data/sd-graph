@@ -2,7 +2,9 @@ import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 from typing import Dict, List
-from . import logger
+
+import common.logging
+logger = common.logging.get_logger(__name__)
 
 
 class SDNode:

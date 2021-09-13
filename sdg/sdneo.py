@@ -2,7 +2,10 @@ import argparse
 import re
 from typing import List
 from .queries import SDARTICLE_LOADING_STATUS, DELETE_TREE, SET_STATUS, COLLECTION_NAMES
-from . import DB, logger
+from . import DB
+
+import common.logging
+logger = common.logging.get_logger(__name__)
 
 
 class SDNeo:

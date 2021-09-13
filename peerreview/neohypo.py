@@ -4,6 +4,7 @@ import time
 from string import Template
 from argparse import ArgumentParser
 from typing import Dict
+import common.logging
 from neotools.utils import progress
 from . import HYPO, DB
 from .queries import (
@@ -345,6 +346,7 @@ class CrossRefReviewFinder(PeerReviewFinder):
 
 
 if __name__ == '__main__':
+    common.logging.configure_logging()
     parser = ArgumentParser(description="Upload peer review material using CrossRef. Identifies reviews produced by source on papers/preprints published by target.")
     parser.add_argument('source', default='', help='Name of the reviewing service (source) to scan.')
     parser.add_argument('-T', '--target', default='biorxiv', help='DOI prefix of the published reviewed papers (target).')

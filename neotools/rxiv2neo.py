@@ -7,6 +7,7 @@ from zipfile import ZipFile, BadZipFile
 from pathlib import Path
 from argparse import ArgumentParser
 from neo4j.exceptions import ClientError
+import common.logging
 from .model import JATS_GRAPH_MODEL, CORD19_GRAPH_MODEL
 from .txt2node import XMLNode, JSONNode
 from .db import Instance
@@ -17,7 +18,6 @@ from .queries import (
 )
 from . import DB
 
-import common.logging
 logger = common.logging.get_logger(__name__)
 
 
@@ -201,6 +201,7 @@ def add_indices():
 
 
 if __name__ == '__main__':
+    common.logging.configure_logging()
     parser = ArgumentParser(description='Loading meca or CORD-19 archives into neo4j.')
     parser.add_argument('path', nargs="?", help='Paths to directory containing the archives.')
     parser.add_argument('-Y', '--type', choices=['meca','cord19'], help="Type or archive.")
@@ -210,7 +211,6 @@ if __name__ == '__main__':
     type = args.type
     check_for_duplicate = not args.no_duplicate_check
 
-    common.logging.configure_logging()
     if path:
         if type == 'meca':
             MECALoader(Path(path), check_for_duplicate=check_for_duplicate).load_dir()

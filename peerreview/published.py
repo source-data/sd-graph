@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+import common.logging
 from neotools.utils import progress
 from peerreview.neohypo import BioRxiv, CrossRefDOI
 from . import DB
@@ -57,4 +58,5 @@ def main():
 
 
 if __name__ == '__main__':
+    common.logging.configure_logging()
     main()
