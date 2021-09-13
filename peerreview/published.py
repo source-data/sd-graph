@@ -7,6 +7,7 @@ from .queries import (
     NotYetPublished, UpdatePublicationStatus,
 )
 
+logger = common.logging.get_logger(__name__)
 
 class PublicationUpdate:
 
@@ -38,7 +39,7 @@ class PublicationUpdate:
 
     def run(self, limit_date: str):
         not_yet_published = self.get_not_published(limit_date)
-        print(f"{len(not_yet_published)} preprints posted since {limit_date} with no journal publication info yet.")
+        logger.info(f"{len(not_yet_published)} preprints posted since {limit_date} with no journal publication info yet.")
         msg = ''
         N = len(not_yet_published)
         for i, preprint_doi in enumerate(not_yet_published):

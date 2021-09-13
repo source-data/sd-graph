@@ -2,8 +2,8 @@ import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 from typing import Dict, List
-
 import common.logging
+
 logger = common.logging.get_logger(__name__)
 
 
@@ -168,15 +168,15 @@ class API:
             if response.status_code == 200:
                 data = response.json()
             else:
-                print(f"WARNING: failed loading json object with {url} ({response.status_code})")
+                logger.warning(f"WARNING: failed loading json object with {url} ({response.status_code})")
         except Exception as e:
-            print("server query failed")
-            print(type(e), e)
+            logger.error("server query failed")
+            logger.error(type(e), e)
         finally:
             if data:
                 return data
             else:
-                print(f"response to {url} is empty")
+                logger.info(f"response to {url} is empty")
                 return dict()
 
     def generate_sdnode(self, url, Cls, *args, **kwargs) -> SDNode:

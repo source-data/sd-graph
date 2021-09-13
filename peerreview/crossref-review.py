@@ -14,6 +14,7 @@ from neotools.txt2node import JSONNode
 from neotools.rxiv2neo import build_neo_graph
 from neotools.model import CROSSREF_PEERREVIEW_GRAPH_MODEL, CROSSREF_PCI_REVIEW_GRAPH_MODEL
 
+logger = common.logging.get_logger(__name__)
 
 """
 https://api.crossref.org/prefixes/10.24072/works?select
@@ -46,7 +47,7 @@ class CrossRefPeerReview(API):
             pages = math.ceil(total_results / items_per_page)
             items = []
             check = 0
-            print(f"total_results, items_per_page, pages:", total_results, items_per_page, pages)
+            logger.info(f"total_results, items_per_page, pages:", total_results, items_per_page, pages)
             for offset in range(0, items_per_page * pages, items_per_page):
                 progress(offset + items_per_page, total_results, f"offset={offset} with {items_per_page} items per page over {pages} pages")
                 url = f'https://api.crossref.org/prefixes/{prefix}/works?filter=type:peer-review&rows={items_per_page}&offset={offset}'
@@ -75,7 +76,7 @@ class CrossRefWorks(API):
             pages = math.ceil(total_results / items_per_page)
             items = []
             check = 0
-            print(f"total_results, items_per_page, pages:", total_results, items_per_page, pages)
+            logger.info(f"total_results, items_per_page, pages:", total_results, items_per_page, pages)
             for offset in range(0, items_per_page * pages, items_per_page):
                 progress(offset + items_per_page, total_results, f"offset={offset} with {items_per_page} items per page over {pages} pages")
                 url = f'https://api.crossref.org/prefixes/{prefix}/works?rows={items_per_page}&offset={offset}'
@@ -122,7 +123,7 @@ class CrossRefReviewFinder:
         for item in items:
             if is_review_of(item, target_prefixes):
                 peer_review_node = JSONNode(item, self.MODELS[source_prefix])
-                print(peer_review_node)
+                logger.info(peer_review_node)
                 # rev_neo_node = self.db.node(peer_review_node, clause="MERGE")
                 # self.add_prelim_article(peer_review_node)
          # self.make_relationships()
@@ -145,9 +146,9 @@ class PCIFinder:
                 # try:
                 peer_review_node = JSONNode(item, self.MODELS[source_prefix])
                 # except Exception as e:
-                #     print(e)
+                #     logger.info(e)
                 #     import pdb; pdb.set_trace()
-                print(peer_review_node)
+                logger.info(peer_review_node)
                 # rev_neo_node = self.db.node(peer_review_node, clause="MERGE")
                 # self.add_prelim_article(peer_review_node)
         # self.make_relationships()
@@ -167,4 +168,4 @@ if __name__ == '__main__':
     elif source == 'RRC19':
         PeerReviewFinder(DB).run(source_prefix, target_prefixes)
     else:
-        print("no model yet for this source")
+        logger.info("no model yet for this source")

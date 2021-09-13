@@ -11,6 +11,8 @@ from smtag.predict.cartridges import CARTRIDGE
 from smtag.predict.engine import SmtagEngine
 from . import EEB_PUBLIC_API
 
+logger = common.logging.get_logger(__name__)
+
 
 TAGGING_ENGINE = SmtagEngine(CARTRIDGE)
 
@@ -162,28 +164,28 @@ if __name__ == '__main__':
     eebapi = EEBAPI()
 
     collections = eebapi.collection(collection_names)
-    print(f'Collection {[c.name for c in collections]} have {[len(c) for c in collections]} articles.')
+    logger.info(f'Collection {[c.name for c in collections]} have {[len(c) for c in collections]} articles.')
 
     if listing:
         for coll in collections:
             for doi in coll.children:
                 a = eebapi.article(doi)
-                print(f'{doi}: {a.title}')
+                logger.info(f'{doi}: {a.title}')
 
     if doi_arg:
         article = eebapi.article(doi_arg)
-        print('doi:', article.doi)
-        print('title:', article.title)
-        print('journal:', article.journal)
-        print('number of figures:', article.nb_figures)
+        logger.info('doi:', article.doi)
+        logger.info('title:', article.title)
+        logger.info('journal:', article.journal)
+        logger.info('number of figures:', article.nb_figures)
 
     if fig and doi_arg:
         figure = eebapi.figure(fig, doi_arg)
-        print('label:', figure.fig_label)
-        print('caption:', figure.caption)
+        logger.info('label:', figure.fig_label)
+        logger.info('caption:', figure.caption)
         for panel in figure.children:
-            print(f'pseudo panel {panel.panel_id}')
-            print(f'formatted tagged caption:', panel.formatted_caption)
+            logger.info(f'pseudo panel {panel.panel_id}')
+            logger.info(f'formatted tagged caption:', panel.formatted_caption)
             for t in panel.children:
                 sd_tag = SDTag(t)
-                print(sd_tag.properties)
+                logger.info(sd_tag.properties)

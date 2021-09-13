@@ -24,7 +24,7 @@ class Twideleter:
         if self.db.exists(TWEET_BY_ID(params={'twitter_id': twitter_id})):
             try:
                 # self.twitter.destroy_status(twitter_id)
-                print(f"destroying {twitter_id}")
+                logger.info(f"destroying {twitter_id}")
                 time.sleep(24.0)  # max 150 post + 150 delete per hour: 3600 sec / 150 = 24sec !!
                 q = DELETE_TWEET(params={'twitter_id': twitter_id})
                 db_response = self.db.query(q)

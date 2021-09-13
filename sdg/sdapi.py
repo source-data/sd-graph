@@ -9,6 +9,7 @@ from .sdnode import (
 )
 from . import SD_API_URL, SD_API_USERNAME, SD_API_PASSWORD
 
+logger = common.logging.get_logger(__name__)
 
 class SDCollection(BaseCollection):
     def __init__(self, *args, **kwargs):
@@ -172,36 +173,36 @@ if __name__ == '__main__':
     sdapi = SDAPI()
     if collection_name:
         collection = sdapi.collection([collection_name])
-        print(f'collection {collection.name} has id = {collection.id} and has {len(collection)} articles.')
+        logger.info(f'collection {collection.name} has id = {collection.id} and has {len(collection)} articles.')
 
     if listing:
         for doi in collection.children:
             a = sdapi.article(doi)
-            print(f"{a.doi}\t{a.import_id}\t{a.title}")
+            logger.info(f"{a.doi}\t{a.import_id}\t{a.title}")
 
     if doi:
         article = sdapi.article(doi)
-        print('doi:', article.doi)
-        print('title:', article.title)
-        print('journal:', article.journal)
-        print('year:', article.year)
-        print('pmid:', article.pmid)
-        print('number of figures:', article.nb_figures)
+        logger.info('doi:', article.doi)
+        logger.info('title:', article.title)
+        logger.info('journal:', article.journal)
+        logger.info('year:', article.year)
+        logger.info('pmid:', article.pmid)
+        logger.info('number of figures:', article.nb_figures)
 
     if fig and doi:
         figure = sdapi.figure(fig, doi)
-        print('label:', figure.label)
-        print('caption:', figure.caption)
-        print('url:', figure.href)
-        print('panel ids:', '\t'.join(figure.children))
+        logger.info('label:', figure.label)
+        logger.info('caption:', figure.caption)
+        logger.info('url:', figure.href)
+        logger.info('panel ids:', '\t'.join(figure.children))
 
     if panel_id:
         panel = sdapi.panel(panel_id)
-        print('label:', panel.label)
-        print('url:', panel.href)
-        print('caption:', panel.caption)
-        print()
-        print('formatted caption:', panel.formatted_caption)
-        print('coordinates:', panel.coords)
+        logger.info('label:', panel.label)
+        logger.info('url:', panel.href)
+        logger.info('caption:', panel.caption)
+        logger.info()
+        logger.info('formatted caption:', panel.formatted_caption)
+        logger.info('coordinates:', panel.coords)
         for tag_data in panel.children:
-           print(sdapi.tag(tag_data))
+           logger.info(sdapi.tag(tag_data))

@@ -1,10 +1,10 @@
 import argparse
 import re
 from typing import List
+import common.logging
 from .queries import SDARTICLE_LOADING_STATUS, DELETE_TREE, SET_STATUS, COLLECTION_NAMES
 from . import DB
 
-import common.logging
 logger = common.logging.get_logger(__name__)
 
 
@@ -35,13 +35,13 @@ class SDNeo:
             filtered_list = []
             for doi in doi_list:
                 if not re.match('^10.\d{4,9}/[-._;()/:A-Z0-9]+$', doi, flags=re.IGNORECASE):
-                    print(f"WARNING: {doi} is not a doi. Ignored.")
+                    logger.warning(f"WARNING: {doi} is not a doi. Ignored.")
                 else:
                     results = self.db.query(SDARTICLE_LOADING_STATUS(params={'doi': doi}))  # 'complete' | 'partial' | 'absent'
                     if results:
                         if results[0]['status'] == 'partial':
                             self.db.query(DELETE_TREE(params={'doi': doi}))
-                            print(f"deleted tree for {doi}")
+                            logger.info(f"deleted tree for {doi}")
                             filtered_list.append(doi)
                     else:
                         filtered_list.append(doi)
@@ -56,10 +56,8 @@ class SDNeo:
         for a, a_node in zip(articles, article_nodes):
             if not a.doi:
                 logger.warning(f"!!!! Article '{a.title}'' has no doi.")
-                print(f"!!!! Article '{a.title}'' has no doi.")
             else:
                 logger.info(f"article {a.doi}")
-                print(f"article {a.doi}")
                 figure_nodes = self.create_figures(a.children, a.doi)
                 self.create_relationships(a_node, figure_nodes, 'has_fig')
                 self.db.query(SET_STATUS(params={'doi': a.doi, 'status': 'complete'}))
@@ -71,11 +69,9 @@ class SDNeo:
             logger.warning(f"Skipped figures: {', '.join([f.fig_label for f in skipped_figures])}")
         if not (figures and figure_nodes):
             logger.warning(f"!!!! skipped creating any figure for {doi}")
-            print(f"!!!! skipped creating any figure for {doi}")
         else:
             for f, f_nodes in zip(figures, figure_nodes):
                 logger.info(f"    figure {f.fig_label}")
-                print(f"    figure {f.fig_label}")
                 panel_nodes = self.create_panels(f.children)
                 self.create_relationships(f_nodes, panel_nodes, 'has_panel')
         return figure_nodes
@@ -86,11 +82,9 @@ class SDNeo:
             logger.warning(f"Skipped panels: {', '.join([p.panel_label for p in skipped_panels])}")
         if not (panels and panel_nodes):
             logger.warning(f"!!!! skipped creating any panels.")
-            print(f"!!!! skipped creating any panels.")
         else:
             for p, p_node in zip(panels, panel_nodes):
                 logger.info(f"        panel {p.panel_label}")
-                print(f"        panel {p.panel_label}")
                 tag_nodes = self.create_tags(p.children)
                 self.create_relationships(p_node, tag_nodes, 'has_tag')
         return panel_nodes
@@ -130,9 +124,9 @@ def import_as_one_collection(collections, api_name, db):
     else:
         from .sdapi import SDAPI
         sdneo = SDNeo(api=SDAPI(), db=DB)
-    print(f"Importing: {', '.join(collections)} with api={api_name}")
+    logger.info(f"Importing: {', '.join(collections)} with api={api_name}")
     sdneo.create_graph(collection_names=collections)
-    print(f"Imported {', '.join(collections)} papers.")
+    logger.info(f"Imported {', '.join(collections)} papers.")
 
 
 if __name__ == "__main__":
