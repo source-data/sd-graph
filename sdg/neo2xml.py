@@ -265,4 +265,5 @@ def main():
 
 
 if __name__ == "__main__":
+    common.logging.configure_logging()
     main()

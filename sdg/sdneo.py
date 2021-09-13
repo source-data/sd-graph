@@ -130,6 +130,7 @@ def import_as_one_collection(collections, api_name, db):
 
 
 if __name__ == "__main__":
+    common.logging.configure_logging()
     parser = argparse.ArgumentParser(description="Uploads collections to neo4j datatbase")
     parser.add_argument('collections', nargs="+", help="Name(s) of the collection(s) to download (multiple collections separated by space)")
     parser.add_argument('--api', choices=['sdapi', 'eebapi'], default='sdapi', help="Name of the REST api to use.")
