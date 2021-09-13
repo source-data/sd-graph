@@ -2,6 +2,7 @@ import argparse
 import tweepy
 from string import Template
 import time
+from tqdm import tqdm
 import common.logging
 from sdg.sdnode import API
 from neotools.utils import progress
@@ -142,8 +143,7 @@ class Twitterer:
     def filter_not_tweeted(self, records):
         filtered_records = []
         N = len(records)
-        for i, record in enumerate(records):
-            progress(i, N, "check if already tweeted")
+        for record in tqdm(records):
             doi = record['doi']
             already_tweeted = self.db.exists(TWEET_BY_DOI(params={'doi': doi}))
             if not already_tweeted:
