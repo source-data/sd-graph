@@ -35,7 +35,7 @@ class SDNeo:
             filtered_list = []
             for doi in doi_list:
                 if not re.match('^10.\d{4,9}/[-._;()/:A-Z0-9]+$', doi, flags=re.IGNORECASE):
-                    logger.warning(f"WARNING: {doi} is not a doi. Ignored.")
+                    logger.warning(f"{doi} is not a doi. Ignored.")
                 else:
                     results = self.db.query(SDARTICLE_LOADING_STATUS(params={'doi': doi}))  # 'complete' | 'partial' | 'absent'
                     if results:

@@ -47,7 +47,7 @@ class MECALoader:
             summary = results.consume()
             notifications = summary.notifications
             if notifications:
-                logger.warning(f"WARNING: {notifications} when checking for duplicates.")
+                logger.warning(f"{notifications} when checking for duplicates.")
                 logger.warning(summary.statement)
                 logger.warning(summary.parameters)
             return found_one
@@ -77,7 +77,7 @@ class MECALoader:
         count = 0
         for count, meca_archive in enumerate(self.archives):
             if self.check_for_duplicate and self.already_loaded(meca_archive):
-                logger.warning(f"WARNING: {meca_archive.name} already loaded. Skipping.", end="\r")
+                logger.warning(f"{meca_archive.name} already loaded. Skipping.", end="\r")
                 skipped += 1
             else:
                 try:
@@ -85,7 +85,7 @@ class MECALoader:
                         xml_file_list = [f for f in z.namelist() if Path(f).suffix == '.xml']
                         path_full_text = self.extract_from_manifest(z)
                         if path_full_text not in xml_file_list:
-                            msg = f"WARNING: the file {path_full_text} indicated in the manifest is not in {meca_archive}"
+                            msg = f"The file {path_full_text} indicated in the manifest is not in {meca_archive}"
                             logger.warning(msg)
                             path_full_text = self.find_alternative(xml_file_list, path_full_text)
                             logger.warning(f"Trying {path_full_text} instead.")
@@ -136,7 +136,7 @@ class CORDLoader:
             summary = results.consume()
             notifications = summary.notifications
             if notifications:
-                logger.warning(f"WARNING: {notifications} when checking for duplicates.")
+                logger.warning(f"{notifications} when checking for duplicates.")
                 logger.warning(summary.statement)
                 logger.warning(summary.parameters)
             return found_one
@@ -151,7 +151,7 @@ class CORDLoader:
         for count, archive_metadata in self.metadata.iterrows():
             json_path = Path(archive_metadata['pdf_json_files'])
             if self.check_for_duplicate and self.already_loaded(json_path):
-                logger.warning(f"WARNING: {json_path.name} already loaded. Skipping.", end="\r")
+                logger.warning(f"{json_path.name} already loaded. Skipping.", end="\r")
                 skipped += 1
             else:
                 self.load_full_text(json_path, archive_metadata)

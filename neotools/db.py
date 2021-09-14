@@ -88,7 +88,7 @@ class Instance:
             summary = results.consume()
             notifications = summary.notifications
             if notifications:
-                logger.warning(f"WARNING: {notifications} when checking for existence.")
+                logger.warning(f"{notifications} when checking for existence.")
                 logger.warning(summary.statement)
                 logger.warning(summary.parameters)
             return found_one
@@ -172,7 +172,7 @@ class Instance:
     def _tx_funct_single(tx: Transaction, code: str, params: Dict = {}):
         records = Instance._tx_funct(tx, code, params)
         if len(records) > 1:
-            logger.warning(f"WARNING: {len(records)} > 1 records returned with statement:'")
+            logger.warning(f"{len(records)} > 1 records returned with statement:'")
             logger.warning(code)
             logger.warning(f"with params {params}.")
             logger.warning("Affected records:")
