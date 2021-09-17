@@ -46,6 +46,7 @@ class PublicationUpdate:
             published_doi = self.check_publication_status(preprint_doi)
             if (published_doi is not None) and (published_doi != "NA"):
                 journal = self.update_status(preprint_doi, published_doi)
+                tqdm.write(f"{preprint_doi} --> {published_doi} in {journal}")
 
 
 def main():
