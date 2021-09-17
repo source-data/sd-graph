@@ -42,38 +42,6 @@ def restorative_innertext(element: Element, add_after=['.//sd-panel/strong[1]', 
     return innertext
 
 
-# From https://gist.github.com/vladignatyev/06860ec2040cb497f0f3
-# The MIT License (MIT)
-# Copyright (c) 2016 Vladimir Ignatev
-#
-# Permission is hereby granted, free of charge, to any person obtaining
-# a copy of this software and associated documentation files (the "Software"),
-# to deal in the Software without restriction, including without limitation
-# the rights to use, copy, modify, merge, publish, distribute, sublicense,
-# and/or sell copies of the Software, and to permit persons to whom the Software
-# is furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-# PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
-# FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT
-# OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
-# OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
-def progress(count, total, status=''):
-    bar_len = 60
-    filled_len = int(round(bar_len * (count+1) / float(total)))
-
-    percents = round(100.0 * (count+1) / float(total))
-    bar = u'█' * filled_len + '-' * (bar_len - filled_len)
-
-    print(u'\r[%s] %s%s ...%s' % (bar, percents, '%', status), end="")
-
-
 def main():
     # test_text = '''<fig><sd-panel><b>(B)</b><sd-tag external_database0="NCBI gene" external_id0="110213" id="sdTag272" role="component" type="gene">BI‐1</sd-tag> KO <sd-tag external_database0="CVCL" external_id0="CVCL_9115" id="sdTag273" role="component" type="cell">MEFs</sd-tag> were stably transduced with lentiviral vectors as described in <b>A</b>. Cells were exposed to <sd-tag id="sdTag274" role="component" type="undefined">EBSS</sd-tag> for 3 h, and then <sd-tag external_database0="Uniprot" external_database1="Uniprot" external_id0="Q91VR7" external_id1="Q9CQV6" id="sdTag276" role="assayed" type="protein">LC3</sd-tag> levels were analysed by <sd-tag category="assay" external_database0="BAO" external_id0="BAO_0002424" id="sdTag277">western blot</sd-tag>. Image was assembled from cropped lanes of the same <sd-tag category="assay" external_database0="BAO" external_id0="BAO_0002424" id="sdTag278">western blot</sd-tag> analysis.<graphic href="https://api.sourcedata.io/file.php?panel_id=5247" /></sd-panel><sd-panel><b>(C)</b> Endogenous <sd-tag external_database0="Uniprot" external_database1="Uniprot" external_id0="Q91VR7" external_id1="Q9CQV6" id="sdTag281" role="assayed" type="protein">LC3</sd-tag> distribution was visualized using immunofluorescence and <sd-tag category="assay" external_database0="BAO" external_id0="BAO_0000453" id="sdTag283">confocal microscopy</sd-tag> in <sd-tag external_database0="NCBI gene" external_id0="110213" id="sdTag284" role="component" type="gene">BI‐1</sd-tag> KO/shLuc and <sd-tag external_database0="NCBI gene" external_id0="110213" id="sdTag285" role="component" type="gene">BI‐1</sd-tag> KO/sh<sd-tag external_database0="NCBI gene" external_id0="56208" id="sdTag286" role="intervention" type="gene">Beclin‐1</sd-tag> cells. Quantification represents the visualization of at least 180 cells. Student's <i>t</i>‐test was used to analyse statistical significance. Mean and standard deviation are presented, <sup>*</sup><i>P</i>0.001, NS: non‐significant. <graphic href="https://api.sourcedata.io/file.php?panel_id=5248" /></sd-panel><sd-panel><b>(D)</b><sd-tag external_database0="Uniprot" external_database1="Uniprot" external_id0="Q91VR7" external_id1="Q9CQV6" id="sdTag290" role="assayed" type="protein">LC3</sd-tag> was visualized and quantified in <sd-tag external_database0="NCBI gene" external_id0="110213" id="sdTag291" role="component" type="gene">BI‐1</sd-tag> KO/shLuc and <sd-tag external_database0="NCBI gene" external_id0="110213" id="sdTag292" role="component" type="gene">BI‐1</sd-tag> KO/sh<sd-tag external_database0="NCBI gene" external_id0="78943" id="sdTag299" role="intervention" type="gene">IRE1α</sd-tag> cells described in (<b>B</b>) by immunofluorescence and <sd-tag category="assay" external_database0="BAO" external_id0="BAO_0000453" id="sdTag294">confocal microscopy</sd-tag> analysis. <graphic href="https://api.sourcedata.io/file.php?panel_id=5249" /></sd-panel></fig>'''
     # test_text = '''<p>(<b>A</b>) <sd-tag id="sdTag133">Blood</sd-tag> <sd-tag id="sdTag134">glucose</sd-tag> levels in 6 mo</p>'''

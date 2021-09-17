@@ -1,11 +1,14 @@
 import networkx as nx
 import numpy as np
 from cdlib.algorithms import spinglass
+import common.logging
 from neotools.db import Query
 from sklearn.feature_extraction.text import TfidfVectorizer
 from math import isnan
 from collections import OrderedDict
 from . import DB
+
+logger = common.logging.get_logger(__name__)
 
 
 class ENTITY_AS_NODE(Query):
@@ -140,7 +143,7 @@ def list_subgraph_central(
 ):
     highlights = OrderedDict()
     for i, subg in enumerate(subgraphs):
-        print(f"{i}: {len(subg)} nodes with CC={nx.average_clustering(subg):.3f}")
+        logger.info(f"{i}: {len(subg)} nodes with CC={nx.average_clustering(subg):.3f}")
         centrality = funct(subg, **kwargs)
         centrality = {k: v for k, v in centrality.items() if not isnan(v)}
         centrality_values = list(centrality.values())
@@ -150,7 +153,7 @@ def list_subgraph_central(
         centrality_sorted = OrderedDict(sorted(centrality_filtered.items(), key=lambda e: e[1], reverse=True))  # nodeId: centrality_value
         highlights[i] = centrality_sorted
         for j, (node_id, val) in enumerate(centrality_sorted.items()):
-            print(f"\t{j}: {subg.nodes[node_id]['description']} ({val:.3f})")
+            logger.info(f"\t{j}: {subg.nodes[node_id]['description']} ({val:.3f})")
     return highlights
 
 
@@ -182,9 +185,9 @@ def name_hypothesis_community():
             entity_names = collections[community_id]['entity_names']
             topics = [t for t in topics if t not in entity_names]
             collections[community_id]['topics'] = topics
-            print(f"Collection topics: {', '.join(topics[:5])}")
-            print(f"Key entities: {', '.join(entity_names)}")
-            print()
+            logger.info(f"Collection topics: {', '.join(topics[:5])}")
+            logger.info(f"Key entities: {', '.join(entity_names)}")
+            logger.info()
 
     results_corpus = DB.query(ALL_SUMMARIES())
     corpus = [r['summary'] for r in results_corpus]
@@ -201,7 +204,7 @@ def name_hypothesis_community():
     select_best(corpus, collections)
     # uptdate database
     deleted = DB.query(DELETE_AUTO_TOPICS())
-    print(f"{deleted[0]['deleted']} nodes deleted")
+    logger.info(f"{deleted[0]['deleted']} nodes deleted")
     for community_id, collection in collections.items():
         entities_ids = [entity.id for entity in collection['entities']]
         q = MERGE_AUTO_TOPICS_COLLECTION(params={
@@ -211,18 +214,18 @@ def name_hypothesis_community():
             'dois': collection['dois']
         })
         r = DB.query(q)
-        print(f"create auto topics collection {r[0]['autotopics']['topics']}")
+        logger.info(f"create auto topics collection {r[0]['autotopics']['topics']}")
 
 
 def automagic(g, community_funct, highlight_funct):
     components = community_sub_graphs(g, funct=nx.weakly_connected_components)
     gcc = components[0]
-    print(f"CENTRALITY ON ENTIRE GCC COMPONENTS")
+    logger.info(f"CENTRALITY ON ENTIRE GCC COMPONENTS")
     general_highlights = list_subgraph_central([gcc], funct=highlight_funct)
     general_highlights = general_highlights[0]  # only one element
 
     subgraphs_hyp = community_sub_graphs(gcc, funct=community_funct)
-    print(f"CENTRALITY ON {len(subgraphs_hyp)} COMMUNITIES FROM THE GCC ({len(gcc)} elements)")
+    logger.info(f"CENTRALITY ON {len(subgraphs_hyp)} COMMUNITIES FROM THE GCC ({len(gcc)} elements)")
     community_highlights = list_subgraph_central(subgraphs_hyp, funct=highlight_funct)
     return general_highlights, community_highlights
 
@@ -231,14 +234,14 @@ def neo2nx(threshold=2):
     def community_funct(x): return spinglass(x.to_undirected()).communities
     def highlight_funct(x): return nx.load_centrality(x, normalized=True)
     g_entity_as_nodes = full_graph(ENTITY_AS_NODE(params={'threshold': threshold}))
-    print("ENTITY CENTRALITY")
-    print(nx.info(g_entity_as_nodes))
+    logger.info("ENTITY CENTRALITY")
+    logger.info(nx.info(g_entity_as_nodes))
     general_highlights, community_highlights = automagic(g_entity_as_nodes, community_funct, highlight_funct)
     return general_highlights, community_highlights
 
 
 def nx2neo(general_highlights, community_highlights):
-    print("Writing results to database")
+    logger.info("Writing results to database")
     res = DB.query(RESET_CENTRALITY_PROPERTIES())
     assert res[0]['reset_entities'] > 0, "centrality properties could not be reset properly"
     for node_id, val in general_highlights.items():
@@ -255,4 +258,5 @@ def main():
 
 
 if __name__ == "__main__":
+    common.logging.configure_logging()
     main()
