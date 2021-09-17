@@ -174,18 +174,18 @@ if __name__ == '__main__':
 
     if doi_arg:
         article = eebapi.article(doi_arg)
-        logger.info('doi:', article.doi)
-        logger.info('title:', article.title)
-        logger.info('journal:', article.journal)
-        logger.info('number of figures:', article.nb_figures)
+        logger.info('doi: %s', article.doi)
+        logger.info('title: %s', article.title)
+        logger.info('journal: %s', article.journal)
+        logger.info('number of figures: %s', article.nb_figures)
 
     if fig and doi_arg:
         figure = eebapi.figure(fig, doi_arg)
-        logger.info('label:', figure.fig_label)
-        logger.info('caption:', figure.caption)
+        logger.info('label: %s', figure.fig_label)
+        logger.info('caption: %s', figure.caption)
         for panel in figure.children:
             logger.info(f'pseudo panel {panel.panel_id}')
-            logger.info(f'formatted tagged caption:', panel.formatted_caption)
+            logger.info('formatted tagged caption: %s', panel.formatted_caption)
             for t in panel.children:
                 sd_tag = SDTag(t)
                 logger.info(sd_tag.properties)

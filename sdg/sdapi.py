@@ -182,27 +182,27 @@ if __name__ == '__main__':
 
     if doi:
         article = sdapi.article(doi)
-        logger.info('doi:', article.doi)
-        logger.info('title:', article.title)
-        logger.info('journal:', article.journal)
-        logger.info('year:', article.year)
-        logger.info('pmid:', article.pmid)
-        logger.info('number of figures:', article.nb_figures)
+        logger.info('doi: %s', article.doi)
+        logger.info('title: %s', article.title)
+        logger.info('journal: %s', article.journal)
+        logger.info('year: %s', article.year)
+        logger.info('pmid: %s', article.pmid)
+        logger.info('number of figures: %s', article.nb_figures)
 
     if fig and doi:
         figure = sdapi.figure(fig, doi)
-        logger.info('label:', figure.label)
-        logger.info('caption:', figure.caption)
-        logger.info('url:', figure.href)
-        logger.info('panel ids:', '\t'.join(figure.children))
+        logger.info('label: %s', figure.label)
+        logger.info('caption: %s', figure.caption)
+        logger.info('url: %s', figure.href)
+        logger.info('panel ids: %s', '\t'.join(figure.children))
 
     if panel_id:
         panel = sdapi.panel(panel_id)
-        logger.info('label:', panel.label)
-        logger.info('url:', panel.href)
-        logger.info('caption:', panel.caption)
+        logger.info('label: %s', panel.label)
+        logger.info('url: %s', panel.href)
+        logger.info('caption: %s', panel.caption)
         logger.info()
-        logger.info('formatted caption:', panel.formatted_caption)
-        logger.info('coordinates:', panel.coords)
+        logger.info('formatted caption: %s', panel.formatted_caption)
+        logger.info('coordinates: %s', panel.coords)
         for tag_data in panel.children:
            logger.info(sdapi.tag(tag_data))

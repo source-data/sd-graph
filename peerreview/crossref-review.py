@@ -48,7 +48,7 @@ class CrossRefPeerReview(API):
             pages = math.ceil(total_results / items_per_page)
             items = []
             check = 0
-            logger.info(f"total_results, items_per_page, pages:", total_results, items_per_page, pages)
+            logger.info(f"total_results, items_per_page, pages: %s, %s, %s", total_results, items_per_page, pages)
             for offset in trange(0, items_per_page * pages, items_per_page):
                 url = f'https://api.crossref.org/prefixes/{prefix}/works?filter=type:peer-review&rows={items_per_page}&offset={offset}'
                 response = self.rest2data(url)
@@ -76,7 +76,7 @@ class CrossRefWorks(API):
             pages = math.ceil(total_results / items_per_page)
             items = []
             check = 0
-            logger.info(f"total_results, items_per_page, pages:", total_results, items_per_page, pages)
+            logger.info(f"total_results, items_per_page, pages: %s, %s, %s", total_results, items_per_page, pages)
             for offset in trange(0, items_per_page * pages, items_per_page):
                 url = f'https://api.crossref.org/prefixes/{prefix}/works?rows={items_per_page}&offset={offset}'
                 response = self.rest2data(url)

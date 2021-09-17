@@ -195,7 +195,7 @@ class CrossRefPeerReview(API):
             limit = limit if limit else total_results
             items_per_page = min(1000, limit)
             check = 0
-            logger.info(f"total_results:", total_results)
+            logger.info(f"total_results: %s", total_results)
             # deep paggin with cursor https://github.com/CrossRef/rest-api-doc#result-controls
             cursor = "*"
             params = {'rows': items_per_page}

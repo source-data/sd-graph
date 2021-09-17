@@ -171,7 +171,7 @@ class API:
                 logger.warning(f"failed loading json object with {url} ({response.status_code})")
         except Exception as e:
             logger.error("server query failed")
-            logger.error(type(e), e)
+            logger.error(e)
         finally:
             if data:
                 return data
