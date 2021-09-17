@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 from tqdm import tqdm
+from tqdm.contrib.logging import logging_redirect_tqdm
 import common.logging
 from peerreview.neohypo import BioRxiv, CrossRefDOI
 from . import DB
@@ -42,11 +43,12 @@ class PublicationUpdate:
         logger.info(f"{len(not_yet_published)} preprints posted since {limit_date} with no journal publication info yet.")
         msg = ''
         N = len(not_yet_published)
-        for preprint_doi in tqdm(not_yet_published):
-            published_doi = self.check_publication_status(preprint_doi)
-            if (published_doi is not None) and (published_doi != "NA"):
-                journal = self.update_status(preprint_doi, published_doi)
-                tqdm.write(f"{preprint_doi} --> {published_doi} in {journal}")
+        with logging_redirect_tqdm():
+            for preprint_doi in tqdm(not_yet_published):
+                published_doi = self.check_publication_status(preprint_doi)
+                if (published_doi is not None) and (published_doi != "NA"):
+                    journal = self.update_status(preprint_doi, published_doi)
+                    logger.info(f"{preprint_doi} --> {published_doi} in {journal}")
 
 
 def main():

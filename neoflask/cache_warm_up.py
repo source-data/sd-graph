@@ -2,6 +2,7 @@ import json
 from argparse import ArgumentParser
 import requests
 from tqdm import tqdm
+from tqdm.contrib.logging import logging_redirect_tqdm
 import common.logging
 from . import EEB_PUBLIC_API
 
@@ -27,25 +28,27 @@ def cache_warm_up(base_url):
                 logger.info(f"content: {response.content}")
                 raise
             N_collections = len(collections)
-            for collection in tqdm(collections):
-                papers = collection['papers']
-                new_dois = [paper['doi'] for paper in papers]
-                # warm up of the multiple doi method
-                multi_dois_url = base_url + "dois/"
-                r = requests.post(multi_dois_url, json={'dois': new_dois}, verify=False)
-                if r.status_code == 200:
-                    dois += new_dois
-                else:
-                    logger.warning(f"Problem with {method}{collection['id']}! Status code: {r.status_code}")
+            with logging_redirect_tqdm():
+                for collection in tqdm(collections):
+                    papers = collection['papers']
+                    new_dois = [paper['doi'] for paper in papers]
+                    # warm up of the multiple doi method
+                    multi_dois_url = base_url + "dois/"
+                    r = requests.post(multi_dois_url, json={'dois': new_dois}, verify=False)
+                    if r.status_code == 200:
+                        dois += new_dois
+                    else:
+                        logger.warning(f"Problem with {method}{collection['id']}! Status code: {r.status_code}")
     dois = set(dois)  # remove duplicates
     N_dois = len(dois)
     logger.info(f"\nfetched {N_dois} unique dois.")
     successes = 0
-    for doi in tqdm(dois):
-        # warm up of the individual doi method
-        doi_url = base_url + "doi/{doi}"
-        r = requests.get(doi_url, verify=False)
-        successes += 1 if r.status_code == 200 else 0
+    with logging_redirect_tqdm():
+        for doi in tqdm(dois):
+            # warm up of the individual doi method
+            doi_url = base_url + "doi/{doi}"
+            r = requests.get(doi_url, verify=False)
+            successes += 1 if r.status_code == 200 else 0
     logger.info(f"\ncache warmed up with {successes} out of {N_dois} dois.\n")
 
 

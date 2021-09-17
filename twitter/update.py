@@ -3,6 +3,7 @@ import tweepy
 from string import Template
 import time
 from tqdm import tqdm
+from tqdm.contrib.logging import logging_redirect_tqdm
 import common.logging
 from sdg.sdnode import API
 from .queries import TWEET_BY_DOI, ADD_TWITTER_STATUS
@@ -142,11 +143,12 @@ class Twitterer:
     def filter_not_tweeted(self, records):
         filtered_records = []
         N = len(records)
-        for record in tqdm(records):
-            doi = record['doi']
-            already_tweeted = self.db.exists(TWEET_BY_DOI(params={'doi': doi}))
-            if not already_tweeted:
-                filtered_records.append(record)
+        with logging_redirect_tqdm():
+            for record in tqdm(records):
+                doi = record['doi']
+                already_tweeted = self.db.exists(TWEET_BY_DOI(params={'doi': doi}))
+                if not already_tweeted:
+                    filtered_records.append(record)
         logger.info()
         logger.info(f"{len(filtered_records)} updates to be tweeted.")
         return filtered_records
