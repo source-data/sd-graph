@@ -4,7 +4,6 @@ from argparse import ArgumentParser
 from typing import Dict
 from tqdm import trange
 import common.logging
-from neotools.utils import progress
 from . import DB
 from .queries import (
     NotYetPublished, UpdatePublicationStatus,

@@ -5,7 +5,6 @@ from string import Template
 from argparse import ArgumentParser
 from typing import Dict
 import common.logging
-from neotools.utils import progress
 from . import HYPO, DB
 from .queries import (
     MATCH_DOI, LINK_REVIEWS, LINK_RESPONSES, LINK_ANNOT

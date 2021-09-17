@@ -4,7 +4,6 @@ import requests
 from tqdm import tqdm
 import common.logging
 from . import EEB_PUBLIC_API
-from neotools.utils import progress
 
 logger = common.logging.get_logger(__name__)
 

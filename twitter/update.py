@@ -5,7 +5,6 @@ import time
 from tqdm import tqdm
 import common.logging
 from sdg.sdnode import API
-from neotools.utils import progress
 from .queries import TWEET_BY_DOI, ADD_TWITTER_STATUS
 from typing import Dict
 from . import DB, TWITTER, EEB_PUBLIC_API

@@ -1,7 +1,6 @@
 from argparse import ArgumentParser
 from tqdm import tqdm
 import common.logging
-from neotools.utils import progress
 from peerreview.neohypo import BioRxiv, CrossRefDOI
 from . import DB
 from .queries import (
