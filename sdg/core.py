@@ -77,7 +77,7 @@ lass XMLNode:
         # this_element_xpath_to_properties = graph_model['properties']
         self.namespaces = namespaces
         self.label = cleanup_name(element.tag).capitalize()
-        logger.info(f"parsing {self.label} {position_idx}                               ", end="\r")
+        logger.info(f"parsing {self.label} {position_idx}")
         recipe_for_properties = graph_model.get('properties', None)
         properties = {}
         if recipe_for_properties is not None:
@@ -150,7 +150,7 @@ def build_neo_graph(xml_node: XMLNode, source: str, db: Instance):
     properties = xml_node.properties  # deal with types!
     properties['source'] = source
     node = db.node(xml_node)
-    logger.info(f"loaded {xml_node.label} as node {node.id}                                ", end="\r")
+    logger.info(f"loaded {xml_node.label} as node {node.id}")
     for rel, children in xml_node.children.items():
         for child in children:
             child_node = build_neo_graph(child, source, db)

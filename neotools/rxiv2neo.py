@@ -77,7 +77,7 @@ class MECALoader:
         count = 0
         for count, meca_archive in enumerate(self.archives):
             if self.check_for_duplicate and self.already_loaded(meca_archive):
-                logger.warning(f"{meca_archive.name} already loaded. Skipping.", end="\r")
+                logger.warning(f"{meca_archive.name} already loaded. Skipping.")
                 skipped += 1
             else:
                 try:
@@ -151,7 +151,7 @@ class CORDLoader:
         for count, archive_metadata in self.metadata.iterrows():
             json_path = Path(archive_metadata['pdf_json_files'])
             if self.check_for_duplicate and self.already_loaded(json_path):
-                logger.warning(f"{json_path.name} already loaded. Skipping.", end="\r")
+                logger.warning(f"{json_path.name} already loaded. Skipping.")
                 skipped += 1
             else:
                 self.load_full_text(json_path, archive_metadata)
@@ -182,7 +182,7 @@ def build_neo_graph(py_node, source: str, db: Instance, catch_exception: Excepti
     except NoException as e:
         raise e
     if node is not None:
-        logger.info(f"loaded {py_node.label} as node {node.id}                                ", end="\r")
+        logger.info(f"loaded {py_node.label} as node {node.id}")
         for rel, children in py_node.children.items():
             for child in children:
                 child_node = build_neo_graph(child, source, db, catch_exception)
