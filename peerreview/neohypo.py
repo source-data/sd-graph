@@ -204,7 +204,6 @@ class CrossRefPeerReview(API):
                 params['filter'] = type_filter
             url = f'https://api.crossref.org/prefixes/{prefix}/works'
             while cursor:
-                progress(len(items), total_results, f"{len(items)} / {total_results}")
                 params['cursor'] = cursor
                 response = self.rest2data(url, params)
                 if response.get('status') == 'ok':
