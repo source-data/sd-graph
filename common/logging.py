@@ -18,6 +18,9 @@ BASE_CONFIG = {
    'version': 1,
    'disable_existing_loggers': False,
    'formatters': {
+      'console': {
+         'format': '%(asctime)s - %(levelname)s - %(message)s'
+      },
       'simple': {
          'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
       }
@@ -26,7 +29,7 @@ BASE_CONFIG = {
       'console': {
          'class': 'logging.StreamHandler',
          'level': 'DEBUG',
-         'formatter': 'simple',
+         'formatter': 'console',
          'stream': 'ext://sys.stdout'
       },
    },
