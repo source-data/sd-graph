@@ -72,7 +72,7 @@ def configure_logging():
     logging.config.dictConfig(config)
     
     root_logger = get_logger(name=None)
-    root_logger.info('LOGGING CONFIGURED')
+    root_logger.debug('LOGGING CONFIGURED')
     root_logger.debug(config)
 
 def get_logger(*args, **kwargs):
