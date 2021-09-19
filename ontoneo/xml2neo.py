@@ -35,12 +35,9 @@ def load_ontology(path: Path, graph_model: Dict):
             del namespaces[None]  # need to remove it otherwise XPath raises TypeError: empty namespace prefix is not supported in XPath
         # compile(graph_model, namespaces)
         source = path.name
-        logger.info()
         xml_node = XMLNode(xml, graph_model, namespaces=namespaces)
-        logger.info()
         DB.query(CONTRAINT_CLASS_UNIQUE()) # some ontologies share classes, will raise neobolt.exceptions.ConstraintError
         build_neo_graph(xml_node, source, DB, ConstraintError)
-        logger.info()
         res = DB.query(REMOVE_DEPRECATED())
         for row in res:
             logger.info("REMOVE_DEPRECATED: ", "; ".join([str(row[column]) for column in REMOVE_DEPRECATED.returns]))
@@ -125,7 +122,6 @@ def self_test():
     logger.info(graph)
     res = DB.query(CONTRAINT_CLASS_UNIQUE())
     build_neo_graph(graph, 'test', DB)
-    logger.info()
     res = DB.query(REMOVE_DEPRECATED())
     res = DB.query(MAKE())
     for row in res:

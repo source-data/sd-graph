@@ -149,7 +149,6 @@ class Twitterer:
                 already_tweeted = self.db.exists(TWEET_BY_DOI(params={'doi': doi}))
                 if not already_tweeted:
                     filtered_records.append(record)
-        logger.info()
         logger.info(f"{len(filtered_records)} updates to be tweeted.")
         return filtered_records
 

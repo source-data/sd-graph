@@ -201,7 +201,6 @@ if __name__ == '__main__':
         logger.info('label: %s', panel.label)
         logger.info('url: %s', panel.href)
         logger.info('caption: %s', panel.caption)
-        logger.info()
         logger.info('formatted caption: %s', panel.formatted_caption)
         logger.info('coordinates: %s', panel.coords)
         for tag_data in panel.children:

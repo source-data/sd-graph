@@ -92,7 +92,6 @@ class MECALoader:
                         self.load_full_text(z, meca_archive, path_full_text)
                 except BadZipFile:
                     logger.error(f"not a zip file: {meca_archive}")
-        logger.info()
         if count is not None:
             logger.info(f"skipped {skipped} out of {count+1}")
         else:
@@ -155,7 +154,6 @@ class CORDLoader:
                 skipped += 1
             else:
                 self.load_full_text(json_path, archive_metadata)
-        logger.info()
         if count is not None:
             logger.info(f"skipped {skipped} out of {count+1}")
         else:

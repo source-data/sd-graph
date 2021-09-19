@@ -187,7 +187,6 @@ def name_hypothesis_community():
             collections[community_id]['topics'] = topics
             logger.info(f"Collection topics: {', '.join(topics[:5])}")
             logger.info(f"Key entities: {', '.join(entity_names)}")
-            logger.info()
 
     results_corpus = DB.query(ALL_SUMMARIES())
     corpus = [r['summary'] for r in results_corpus]
