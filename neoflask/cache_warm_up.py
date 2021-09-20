@@ -14,12 +14,12 @@ def cache_warm_up(base_url):
     dois = []
     # warm up the stats method
     url = base_url + 'stats'
-    r = requests.get(url, verify=False)
+    r = requests.get(url)
     logger.info(f"method /stats warmed up: {r.status_code == 200}")
     for method in ['by_reviewing_service/', 'automagic/', 'by_auto_topics/']:
         url = base_url + method
         # warm up of the main methods
-        response = requests.get(url, verify=False)
+        response = requests.get(url)
         if response.status_code == 200:
             collections = None
             try:
@@ -34,7 +34,7 @@ def cache_warm_up(base_url):
                     new_dois = [paper['doi'] for paper in papers]
                     # warm up of the multiple doi method
                     multi_dois_url = base_url + "dois/"
-                    r = requests.post(multi_dois_url, json={'dois': new_dois}, verify=False)
+                    r = requests.post(multi_dois_url, json={'dois': new_dois})
                     if r.status_code == 200:
                         dois += new_dois
                     else:
@@ -47,7 +47,7 @@ def cache_warm_up(base_url):
         for doi in tqdm(dois):
             # warm up of the individual doi method
             doi_url = base_url + "doi/{doi}"
-            r = requests.get(doi_url, verify=False)
+            r = requests.get(doi_url)
             successes += 1 if r.status_code == 200 else 0
     logger.info(f"\ncache warmed up with {successes} out of {N_dois} dois.\n")
 
