@@ -22,12 +22,28 @@ help(){
 
 sub_production(){
     echo "[deploy:production] START"
-    ssh ec2-user@eeb.sourcedata.io "cd sd-graph/ && git checkout master && git pull && docker-compose -f production.yml build && docker-compose -f production.yml up -d"
+    ssh ec2-user@eeb.sourcedata.io << EOF
+        cd sd-graph/                                   && \
+        git checkout dev                               && \
+        git pull                                       && \
+        export EEB_HOSTNAME="eeb.embo.org"                \
+               EEB_HOSTNAME_OLD="eeb.sourcedata.io"    && \
+        docker-compose -f production.yml build         && \
+        docker-compose -f production.yml up -d
+EOF
     echo "[deploy:production] DONE :)"
 }
 sub_staging(){
     echo "[deploy:staging] START"
-    ssh ec2-user@eeb-dev.sourcedata.io "cd sd-graph/ && git checkout dev && git pull && docker-compose -f production.yml build && docker-compose -f production.yml up -d"
+    ssh ec2-user@eeb-dev.sourcedata.io << EOF
+        cd sd-graph/                                       && \
+        git checkout dev                                   && \
+        git pull                                           && \
+        export EEB_HOSTNAME="eeb-dev.embo.org"                \
+               EEB_HOSTNAME_OLD="eeb-dev.sourcedata.io"    && \
+        docker-compose -f production.yml build             && \
+        docker-compose -f production.yml up -d
+EOF
     echo "[deploy:staging] DONE :)"
 }
 

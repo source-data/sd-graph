@@ -45,6 +45,9 @@ services:
     image: neoflask_production_traefik
     depends_on:
       - flask
+    environment:
+      - EEB_HOSTNAME
+      - EEB_HOSTNAME_OLD
     volumes:
       - production_traefik:/etc/traefik/acme
     ports:
