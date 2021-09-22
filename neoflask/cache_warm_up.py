@@ -43,7 +43,7 @@ def cache_warm_up(base_url):
     for i, doi in enumerate(dois):
         progress(i, N_dois, f"{doi}                       ")
         # warm up of the individual doi method
-        doi_url = base_url + "doi/{doi}"
+        doi_url = base_url + f"doi/{doi}"
         r = requests.get(doi_url, verify=False)
         successes += 1 if r.status_code == 200 else 0
     print(f"\ncache warmed up with {successes} out of {N_dois} dois.\n")
