@@ -31,7 +31,8 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
 COPY requirements/ requirements
 RUN pip install cmake \
   && pip install cython
-RUN pip install -r requirements/base.txt
+RUN pip install --upgrade pip  \
+  && pip install -r requirements/base.txt
 
 COPY ./compose/production/flask/entrypoint /entrypoint
 RUN sed -i 's/\r$//g' /entrypoint
