@@ -2,6 +2,7 @@ neo4j==4.1.1
 flask-cors
 Flask==1.1.2
 Flask-Caching==1.8.0
+Werkzeug==1.0.1
 redis==3.5.2
 Flask-DotEnv==0.1.1
 python-dotenv==0.10.1

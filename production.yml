@@ -57,6 +57,8 @@ services:
       context: .
       dockerfile: ./compose/production/vuejs/Dockerfile
     image: neoflask_production_vuejs
+    depends_on: 
+      - flask
     env_file:
       - ./.env
     # ports:

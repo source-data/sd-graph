@@ -251,3 +251,5 @@ def docmap_semantic_doi(doi: str):
 # @app.route('/api/v2/<reviewing_service>/docmap/<int:N_most_recent>/<int:pagination>', methods=['GET', 'POST'])
 
 # @app.route('/api/v2/<reviewing_service>/docmap/<int:days>d/<int:pagination>', methods=['GET', 'POST'])
+
+# date of docmap creation and date of docmap update. filter on publishing data or on docmap creation date.
