@@ -1,11 +1,14 @@
 from argparse import ArgumentParser
-from neotools.utils import progress
+from tqdm import tqdm
+from tqdm.contrib.logging import logging_redirect_tqdm
+import common.logging
 from peerreview.neohypo import BioRxiv, CrossRefDOI
 from . import DB
 from .queries import (
     NotYetPublished, UpdatePublicationStatus,
 )
 
+logger = common.logging.get_logger(__name__)
 
 class PublicationUpdate:
 
@@ -37,15 +40,15 @@ class PublicationUpdate:
 
     def run(self, limit_date: str):
         not_yet_published = self.get_not_published(limit_date)
-        print(f"{len(not_yet_published)} preprints posted since {limit_date} with no journal publication info yet.")
+        logger.info(f"{len(not_yet_published)} preprints posted since {limit_date} with no journal publication info yet.")
         msg = ''
         N = len(not_yet_published)
-        for i, preprint_doi in enumerate(not_yet_published):
-            published_doi = self.check_publication_status(preprint_doi)
-            if (published_doi is not None) and (published_doi != "NA"):
-                journal = self.update_status(preprint_doi, published_doi)
-                msg = f"{preprint_doi} --> {published_doi} in {journal}                    "
-            progress(i, N, msg)
+        with logging_redirect_tqdm():
+            for preprint_doi in tqdm(not_yet_published):
+                published_doi = self.check_publication_status(preprint_doi)
+                if (published_doi is not None) and (published_doi != "NA"):
+                    journal = self.update_status(preprint_doi, published_doi)
+                    logger.info(f"{preprint_doi} --> {published_doi} in {journal}")
 
 
 def main():
@@ -57,4 +60,5 @@ def main():
 
 
 if __name__ == '__main__':
+    common.logging.configure_logging()
     main()

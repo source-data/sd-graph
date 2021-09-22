@@ -1,4 +1,11 @@
-from flask import request, render_template, jsonify, Response, url_for
+from flask import (
+    abort,
+    jsonify,
+    render_template,
+    request,
+    Response,
+    url_for,
+)
 from .sitemap import create_sitemap
 from .converter import LuceneQueryConverter
 from .queries import (
@@ -130,8 +137,11 @@ def by_doi(doi: str):
 
 @app.route('/api/v1/dois/', methods=['POST'])
 def by_dois():
-    print(request)
-    dois = request.json['dois']
+    if not request.is_json:
+        abort(415) # unsupported media type
+    if not 'dois' in request.json:
+        abort(400) # required parameter is missing
+    dois = request.json.get('dois', [])
     app.logger.info(f"lookup dois: {dois}")
     response = []
     for doi in dois:
