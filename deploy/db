@@ -241,7 +241,7 @@ rotate_backup(){
 cache_warmup(){
   local HOST=$1
   local SERVER_ADDRESS="https://$HOST/api/v1/"
-  docker-compose -f docker-compose.deploy.yml run --rm flask python -m neoflask.cache_warm_up $SERVER_ADDRESS
+  docker-compose -f docker-compose.deploy.yml run --rm flask python -m neoflask.cache_warm_up $SERVER_ADDRESS --no-progress
 }
 
 main() {

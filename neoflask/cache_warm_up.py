@@ -8,7 +8,7 @@ from . import EEB_PUBLIC_API
 
 logger = common.logging.get_logger(__name__)
 
-def cache_warm_up(base_url):
+def cache_warm_up(base_url, no_progress=False):
 
     logger.info(f"Warming up cache using base URL {base_url}")
     dois = []
@@ -30,7 +30,7 @@ def cache_warm_up(base_url):
                 raise
             N_collections = len(collections)
             with logging_redirect_tqdm():
-                for collection in tqdm(collections):
+                for collection in tqdm(collections, disable=no_progress):
                     papers = collection['papers']
                     new_dois = [paper['doi'] for paper in papers]
                     logger.info(f'  Warming up collection \"{collection["id"]}\" with {len(new_dois)} DOIs')
@@ -48,7 +48,7 @@ def cache_warm_up(base_url):
     logger.info(f"fetched {N_dois} unique dois.")
     successes = 0
     with logging_redirect_tqdm():
-        for doi in tqdm(dois):
+        for doi in tqdm(dois, disable=no_progress):
             # warm up of the individual doi method
             doi_url = base_url + f"doi/{doi}"
             r = requests.get(doi_url)
@@ -60,5 +60,6 @@ if __name__ == '__main__':
     common.logging.configure_logging()
     parser = ArgumentParser(description='Loading meca or CORD-19 archives into neo4j.')
     parser.add_argument('base_url', default=EEB_PUBLIC_API,help='Host address to be warmed up')
+    parser.add_argument('--no-progress', action='store_true', help='Do not output progress bars')
     args = parser.parse_args()
-    cache_warm_up(args.base_url)
+    cache_warm_up(args.base_url, no_progress=args.no_progress)
