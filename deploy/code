@@ -22,12 +22,11 @@ help(){
 
 sub_production(){
     echo "[deploy:production] START"
+    # Use shell heredoc to make long command more readable
     ssh ec2-user@eeb.sourcedata.io << EOF
         cd sd-graph/                                   && \
-        git checkout dev                               && \
+        git checkout master                            && \
         git pull                                       && \
-        export EEB_HOSTNAME="eeb.embo.org"                \
-               EEB_HOSTNAME_OLD="eeb.sourcedata.io"    && \
         docker-compose -f production.yml build         && \
         docker-compose -f production.yml up -d
 EOF
@@ -35,12 +34,11 @@ EOF
 }
 sub_staging(){
     echo "[deploy:staging] START"
+    # Use shell heredoc to make long command more readable
     ssh ec2-user@eeb-dev.sourcedata.io << EOF
         cd sd-graph/                                       && \
         git checkout dev                                   && \
         git pull                                           && \
-        export EEB_HOSTNAME="eeb-dev.embo.org"                \
-               EEB_HOSTNAME_OLD="eeb-dev.sourcedata.io"    && \
         docker-compose -f production.yml build             && \
         docker-compose -f production.yml up -d
 EOF
