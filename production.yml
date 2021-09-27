@@ -45,6 +45,7 @@ services:
     image: neoflask_production_traefik
     depends_on:
       - flask
+    env_file: .env
     volumes:
       - production_traefik:/etc/traefik/acme
     ports:
@@ -57,6 +58,8 @@ services:
       context: .
       dockerfile: ./compose/production/vuejs/Dockerfile
     image: neoflask_production_vuejs
+    depends_on: 
+      - flask
     env_file:
       - ./.env
     # ports:

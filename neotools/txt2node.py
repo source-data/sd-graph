@@ -3,6 +3,7 @@ from io import BytesIO
 from typing import Dict
 import re
 import json
+import common.logging
 from .model import (
     JATS_GRAPH_MODEL,
     CORD19_GRAPH_MODEL,
@@ -10,6 +11,8 @@ from .model import (
     CROSSREF_PREPRINT_API_GRAPH_MODEL
 )
 from .utils import inner_text
+
+logger = common.logging.get_logger(__name__)
 
 
 # def compile(graph_model: Dict, namespaces: Dict = namespaces):
@@ -59,7 +62,7 @@ class XMLNode:
         # this_element_xpath_to_properties = graph_model['properties']
         self.namespaces = namespaces
         self.label = cleanup_name(element.tag).capitalize()
-        print(f"parsing {self.label} {position_idx}                               ", end="\r")
+        logger.info(f"parsing {self.label} {position_idx}")
         recipe_for_properties = graph_model.get('properties', None)
         properties = {}
         if recipe_for_properties is not None:
@@ -88,8 +91,8 @@ class XMLNode:
             try:
                 target_elements = element.xpath(xpath, namespaces=self.namespaces)
             except XPathEvalError as e:
-                print(f"Error with {xpath}")
-                print(f"{element.tag} with {element.attrib}")
+                logger.error(f"Error with {xpath}")
+                logger.error(f"{element.tag} with {element.attrib}")
                 raise e
             target_value = []
             if 'as_list' in rec:  # target value as a list of values for each element returned by xpath
@@ -157,7 +160,7 @@ class JSONNode:
             label = cleanup_name(graph_model['path']['type'])
             # only first letter only to keep camel case; .capitalize()  puts everyghin lower case except first char
             self.label = label[0].upper() + label[1:]
-        print(f"parsing {self.label} {position_idx}                               ", end="\r")
+        logger.info(f"parsing {self.label} {position_idx}")
         recipe_for_properties = graph_model.get('properties', None)
         properties = {}
         if recipe_for_properties is not None:
@@ -248,7 +251,7 @@ def self_test():
     tree = parse(BytesIO(jats_example))
     xml_element = tree.getroot()
     jats_graph = XMLNode(xml_element, JATS_GRAPH_MODEL)
-    print(jats_graph)
+    logger.info(jats_graph)
 
     cord_example = {
         "paper_id": "0b159ec402f822d502c0a2a478f5e08c1212acb5",
@@ -307,7 +310,7 @@ def self_test():
     cord_example['metadata']['doi'] = "sdlkfjsdlkfjsf"
     cord_example['metadata']['pub_date'] = "2020-05-30"    
     cord_n = JSONNode(cord_example, CORD19_GRAPH_MODEL)
-    print(cord_n)
+    logger.info(cord_n)
 
     # biorxiv_api_example = '''{
     #     "doi": "10.1101\/2020.02.12.944629",
@@ -325,7 +328,7 @@ def self_test():
     # }'''
     # j = json.loads(biorxiv_api_example)
     # biorxiv_api_n = JSONNode(j, BIORXIV_API_GRAPH_MODEL)
-    # print(biorxiv_api_n)
+    # logger.info(biorxiv_api_n)
 
     cross_ref_example = '''
     {
@@ -415,8 +418,9 @@ def self_test():
     '''
     j = json.loads(cross_ref_example)
     cross_ref_example_n = JSONNode(j, CROSSREF_PREPRINT_API_GRAPH_MODEL)
-    print(cross_ref_example_n)
+    logger.info(cross_ref_example_n)
 
 
 if __name__ == '__main__':
+    common.logging.configure_logging()
     self_test()

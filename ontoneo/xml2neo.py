@@ -3,6 +3,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 from io import BytesIO
 from typing import Dict
+import common.logging
 from neotools.txt2node import XMLNode
 from neotools.rxiv2neo import build_neo_graph
 from neo4j.exceptions import ConstraintError
@@ -21,10 +22,11 @@ from .model import (
 from .queries import MAKE, REMOVE_DEPRECATED, CONTRAINT_CLASS_UNIQUE
 from . import DB
 
+logger = common.logging.get_logger(__name__)
 
 def load_ontology(path: Path, graph_model: Dict):
     with open(path) as file:
-        print(f"parsing {path}")
+        logger.info(f"parsing {path}")
         parser = XMLParser(remove_blank_text=True)
         xml = parse(file, parser=parser).getroot()
         namespaces = xml.nsmap
@@ -33,18 +35,15 @@ def load_ontology(path: Path, graph_model: Dict):
             del namespaces[None]  # need to remove it otherwise XPath raises TypeError: empty namespace prefix is not supported in XPath
         # compile(graph_model, namespaces)
         source = path.name
-        print()
         xml_node = XMLNode(xml, graph_model, namespaces=namespaces)
-        print()
         DB.query(CONTRAINT_CLASS_UNIQUE()) # some ontologies share classes, will raise neobolt.exceptions.ConstraintError
         build_neo_graph(xml_node, source, DB, ConstraintError)
-        print()
         res = DB.query(REMOVE_DEPRECATED())
         for row in res:
-            print("REMOVE_DEPRECATED: ", "; ".join([str(row[column]) for column in REMOVE_DEPRECATED.returns]))
+            logger.info("REMOVE_DEPRECATED: ", "; ".join([str(row[column]) for column in REMOVE_DEPRECATED.returns]))
         res = DB.query(MAKE())
         for row in res:
-            print("MAKE: ", "; ".join([str(row[column]) for column in MAKE.returns]))
+            logger.info("MAKE: ", "; ".join([str(row[column]) for column in MAKE.returns]))
 
 
 # map of local file names with graph model
@@ -120,17 +119,17 @@ def self_test():
     namespaces = xml_element.nsmap
     del namespaces[None]
     graph = XMLNode(xml_element, DOID_GRAPH_MODEL, namespaces=namespaces)
-    print(graph)
+    logger.info(graph)
     res = DB.query(CONTRAINT_CLASS_UNIQUE())
     build_neo_graph(graph, 'test', DB)
-    print()
     res = DB.query(REMOVE_DEPRECATED())
     res = DB.query(MAKE())
     for row in res:
-        print("; ".join([str(row[column]) for column in MAKE.returns]))
+        logger.info("; ".join([str(row[column]) for column in MAKE.returns]))
 
 
 if __name__ == '__main__':
+    common.logging.configure_logging()
     parser = ArgumentParser(description='Loading the disease ontology into neo4j.')
     parser.add_argument('path', nargs="?", help='Paths to owl file.')
     args = parser.parse_args()

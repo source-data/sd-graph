@@ -2,9 +2,7 @@ import pathlib
 from flask_dotenv import DotEnv
 import os
 import sys
-import logging
-from logging.handlers import RotatingFileHandler
-
+import common.logging
 
 class Config:
 
@@ -21,13 +19,11 @@ class Config:
         })
 
         #########################################
-        ## Setup loggers
-        if not os.path.exists('log'):
-            os.mkdir('log')
         for hdlr in app.logger.handlers[:]:  # remove all old handlers
             app.logger.removeHandler(hdlr)
-        Config.add_logger(app, logging.StreamHandler(stream=sys.stdout), level='DEBUG')
-        Config.add_logger(app, RotatingFileHandler('log/neoflask.log', maxBytes=10240, backupCount=10))
+
+        common.logging.configure_logging()
+
         # if (not app.debug):
         #     auth = None
         #     if app.config['MAIL_USERNAME'] or app.config['MAIL_PASSWORD']:
@@ -48,12 +44,3 @@ class Config:
         ## Done
         app.config['JSON_SORT_KEYS'] = False
         app.logger.info("CONFIG LOADED")
-
-    @classmethod
-    def add_logger(self, app, handler, level=None):
-        formatter = logging.Formatter('[%(levelname)s %(asctime)s %(name)s] %(pathname)s:%(lineno)d: %(message)s')
-        if (not level):
-            level = logging.DEBUG if app.debug else logging.INFO
-        handler.setFormatter(formatter)
-        handler.setLevel(level)
-        app.logger.addHandler(handler)

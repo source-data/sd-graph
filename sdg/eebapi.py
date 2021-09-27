@@ -1,6 +1,7 @@
 import argparse
 import json
 from lxml.etree import fromstring
+import common.logging
 from neotools.utils import inner_text, cleanup
 from .sdnode import (
     API,
@@ -9,6 +10,8 @@ from .sdnode import (
 from smtag.predict.cartridges import CARTRIDGE
 from smtag.predict.engine import SmtagEngine
 from . import EEB_PUBLIC_API
+
+logger = common.logging.get_logger(__name__)
 
 
 TAGGING_ENGINE = SmtagEngine(CARTRIDGE)
@@ -146,6 +149,7 @@ class EEBAPI(API):
 
 
 if __name__ == '__main__':
+    common.logging.configure_logging()
     parser = argparse.ArgumentParser(description='interace to the SourceData API' )
     parser.add_argument('-L', '--listing', action='store_true', help='List of articles in the collection.') 
     parser.add_argument('-D', '--doi', default='', help='Takes a doi and return article information')
@@ -160,28 +164,28 @@ if __name__ == '__main__':
     eebapi = EEBAPI()
 
     collections = eebapi.collection(collection_names)
-    print(f'Collection {[c.name for c in collections]} have {[len(c) for c in collections]} articles.')
+    logger.info(f'Collection {[c.name for c in collections]} have {[len(c) for c in collections]} articles.')
 
     if listing:
         for coll in collections:
             for doi in coll.children:
                 a = eebapi.article(doi)
-                print(f'{doi}: {a.title}')
+                logger.info(f'{doi}: {a.title}')
 
     if doi_arg:
         article = eebapi.article(doi_arg)
-        print('doi:', article.doi)
-        print('title:', article.title)
-        print('journal:', article.journal)
-        print('number of figures:', article.nb_figures)
+        logger.info('doi: %s', article.doi)
+        logger.info('title: %s', article.title)
+        logger.info('journal: %s', article.journal)
+        logger.info('number of figures: %s', article.nb_figures)
 
     if fig and doi_arg:
         figure = eebapi.figure(fig, doi_arg)
-        print('label:', figure.fig_label)
-        print('caption:', figure.caption)
+        logger.info('label: %s', figure.fig_label)
+        logger.info('caption: %s', figure.caption)
         for panel in figure.children:
-            print(f'pseudo panel {panel.panel_id}')
-            print(f'formatted tagged caption:', panel.formatted_caption)
+            logger.info(f'pseudo panel {panel.panel_id}')
+            logger.info('formatted tagged caption: %s', panel.formatted_caption)
             for t in panel.children:
                 sd_tag = SDTag(t)
-                print(sd_tag.properties)
+                logger.info(sd_tag.properties)
