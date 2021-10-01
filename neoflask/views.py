@@ -12,9 +12,9 @@ from .queries import (
     STATS, BY_DOI, FIG_BY_DOI_IDX,
     DESCRIBE_REVIEWING_SERVICES,
     REVIEW_PROCESS_BY_DOI, REVIEW_MATERIAL_BY_ID,
-    DOCMAP_BY_DOI, BY_REVIEWING_SERVICE,
-    BY_AUTO_TOPICS, AUTOMAGIC,
-    LUCENE_SEARCH, SEARCH_DOI, SEARCH_REVIEWS,
+    DOCMAP_BY_DOI, DOCMAPS_BY_REVSERVICE_AND_INTERVAL,
+    BY_AUTO_TOPICS, BY_REVIEWING_SERVICE, AUTOMAGIC,
+    LUCENE_SEARCH, SEARCH_DOI,
     COVID19, REFEREED_PREPRINTS,
     COLLECTION_NAMES, SUBJECT_COLLECTIONS,
 )
@@ -263,9 +263,8 @@ def docmap_search(reviewing_service: str, start_date: str, end_date: str, pagina
     offset = pagination * page_size
     root = url_for('root', _external=True)
 
-    # First, fetch all DOIs the user is interested in based on the given parameters...
-    dois = ask_neo(
-        SEARCH_REVIEWS(),
+    result = ask_neo(
+        DOCMAPS_BY_REVSERVICE_AND_INTERVAL(),
         reviewing_service=reviewing_service,
         start_date=start_date,
         end_date=end_date,
@@ -274,18 +273,6 @@ def docmap_search(reviewing_service: str, start_date: str, end_date: str, pagina
         root=root,
     )
 
-    # ... then, construct the DocMap for each DOI and return them all.
-    app.logger.debug('Found %s dois, now constructing their DocMaps...', len(dois))
-    result = []
-    for doi_dict in dois:
-        doi = doi_dict['doi']
-        result.extend(
-            ask_neo(
-                DOCMAP_BY_DOI(),
-                doi=doi,
-                root=root,
-            )
-        )
     return jsonify(result)
 
 # @app.route('/api/v2/docmap/<start_date>/<end_date>/<int:pagination>', methods=['GET', 'POST'])
