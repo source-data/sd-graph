@@ -7,6 +7,7 @@ from zipfile import ZipFile, BadZipFile
 from pathlib import Path
 from argparse import ArgumentParser
 from neo4j.exceptions import ClientError
+import common.logging
 from .model import JATS_GRAPH_MODEL, CORD19_GRAPH_MODEL
 from .txt2node import XMLNode, JSONNode
 from .db import Instance
@@ -15,7 +16,9 @@ from .queries import (
     CREATE_INDEX_DOI,
     CREATE_INDEX_VERSION,
 )
-from . import logger, DB
+from . import DB
+
+logger = common.logging.get_logger(__name__)
 
 
 DEBUG_MODE = False
@@ -31,7 +34,7 @@ class MECALoader:
 
     def load_full_text(self, z: ZipFile, meca_archive, path_full_text: str):
         with z.open(path_full_text) as full_text_xml:
-            print(f"parsing {meca_archive}/{path_full_text}")
+            logger.info(f"parsing {meca_archive}/{path_full_text}")
             xml = parse(full_text_xml, parser=self.parser).getroot() # root is <article>
             source = meca_archive.name
             xml_node = XMLNode(xml, JATS_GRAPH_MODEL)
@@ -44,9 +47,9 @@ class MECALoader:
             summary = results.consume()
             notifications = summary.notifications
             if notifications:
-                print(f"WARNING: {notifications} when checking for duplicates.")
-                print(summary.statement)
-                print(summary.parameters)
+                logger.warning(f"{notifications} when checking for duplicates.")
+                logger.warning(summary.statement)
+                logger.warning(summary.parameters)
             return found_one
         query = SOURCE_BY_UUID(params={'source': meca_archive.name})
         found_it = DB.query_with_tx_funct(tx_funct, query)
@@ -74,7 +77,7 @@ class MECALoader:
         count = 0
         for count, meca_archive in enumerate(self.archives):
             if self.check_for_duplicate and self.already_loaded(meca_archive):
-                print(f"WARNING: {meca_archive.name} already loaded. Skipping.", end="\r")
+                logger.warning(f"{meca_archive.name} already loaded. Skipping.")
                 skipped += 1
             else:
                 try:
@@ -82,19 +85,17 @@ class MECALoader:
                         xml_file_list = [f for f in z.namelist() if Path(f).suffix == '.xml']
                         path_full_text = self.extract_from_manifest(z)
                         if path_full_text not in xml_file_list:
-                            msg = f"WARNING: the file {path_full_text} indicated in the manifest is not in {meca_archive}"
-                            print(msg)
+                            msg = f"The file {path_full_text} indicated in the manifest is not in {meca_archive}"
                             logger.warning(msg)
                             path_full_text = self.find_alternative(xml_file_list, path_full_text)
-                            print(f"Trying {path_full_text} instead.")
+                            logger.warning(f"Trying {path_full_text} instead.")
                         self.load_full_text(z, meca_archive, path_full_text)
                 except BadZipFile:
                     logger.error(f"not a zip file: {meca_archive}")
-        print()
         if count is not None:
-            print(f"skipped {skipped} out of {count+1}")
+            logger.info(f"skipped {skipped} out of {count+1}")
         else:
-            print(f"No archives found!")
+            logger.info(f"No archives found!")
 
 
 class CORDLoader:
@@ -115,7 +116,7 @@ class CORDLoader:
     def load_full_text(self, json_path: Path, supplementary_metadata):
         full_path = self.path / json_path
         with open(full_path) as json_archive:
-            print(f"parsing {json_archive.name}")
+            logger.info(f"parsing {json_archive.name}")
             j = json.load(json_archive)
             # unfortunately CORD-19 documents are not self-contained
             # part of the metadata needs to be reinserted a posteriori
@@ -123,7 +124,7 @@ class CORDLoader:
             j['metadata']['pub_date'] = supplementary_metadata['publish_time']
             j['metadata']['journal-title'] = supplementary_metadata['source_x']
             json_node = JSONNode(j, CORD19_GRAPH_MODEL)
-            print(json_node)
+            logger.info(json_node)
             source = json_archive.name
             build_neo_graph(json_node, source, DB)
 
@@ -134,9 +135,9 @@ class CORDLoader:
             summary = results.consume()
             notifications = summary.notifications
             if notifications:
-                print(f"WARNING: {notifications} when checking for duplicates.")
-                print(summary.statement)
-                print(summary.parameters)
+                logger.warning(f"{notifications} when checking for duplicates.")
+                logger.warning(summary.statement)
+                logger.warning(summary.parameters)
             return found_one
         query = SOURCE_BY_UUID
         query.params = {'source': archive.name}
@@ -149,15 +150,14 @@ class CORDLoader:
         for count, archive_metadata in self.metadata.iterrows():
             json_path = Path(archive_metadata['pdf_json_files'])
             if self.check_for_duplicate and self.already_loaded(json_path):
-                print(f"WARNING: {json_path.name} already loaded. Skipping.", end="\r")
+                logger.warning(f"{json_path.name} already loaded. Skipping.")
                 skipped += 1
             else:
                 self.load_full_text(json_path, archive_metadata)
-        print()
         if count is not None:
-            print(f"skipped {skipped} out of {count+1}")
+            logger.info(f"skipped {skipped} out of {count+1}")
         else:
-            print(f"No archives found!")
+            logger.info(f"No archives found!")
 
 
 class NoException(Exception):
@@ -174,13 +174,13 @@ def build_neo_graph(py_node, source: str, db: Instance, catch_exception: Excepti
     try:
         node = db.node(py_node)
     except catch_exception as e:
-        print(e)
-        print(f"Exception with {py_node.label}")
+        logger.error(e)
+        logger.error(f"Exception with {py_node.label}")
         node = None
     except NoException as e:
         raise e
     if node is not None:
-        print(f"loaded {py_node.label} as node {node.id}                                ", end="\r")
+        logger.info(f"loaded {py_node.label} as node {node.id}")
         for rel, children in py_node.children.items():
             for child in children:
                 child_node = build_neo_graph(child, source, db, catch_exception)
@@ -194,11 +194,12 @@ def add_indices():
         DB.query(CREATE_INDEX_DOI())
         DB.query(CREATE_INDEX_VERSION())
     except ClientError as error:
-        print()
-        print(error)
+        logger.error()
+        logger.error(error)
 
 
 if __name__ == '__main__':
+    common.logging.configure_logging()
     parser = ArgumentParser(description='Loading meca or CORD-19 archives into neo4j.')
     parser.add_argument('path', nargs="?", help='Paths to directory containing the archives.')
     parser.add_argument('-Y', '--type', choices=['meca','cord19'], help="Type or archive.")
@@ -207,6 +208,7 @@ if __name__ == '__main__':
     path = args.path
     type = args.type
     check_for_duplicate = not args.no_duplicate_check
+
     if path:
         if type == 'meca':
             MECALoader(Path(path), check_for_duplicate=check_for_duplicate).load_dir()
@@ -214,4 +216,4 @@ if __name__ == '__main__':
             CORDLoader(Path(path), ['MedRxiv']).load_dir()
         add_indices()
     else:
-        print("no path, nothing to do!")
+        logger.info("no path, nothing to do!")

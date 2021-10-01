@@ -1,3 +1,6 @@
+import common.logging
+logger = common.logging.get_logger(__name__)
+
 
 class CoreNode:
 """
@@ -74,7 +77,7 @@ lass XMLNode:
         # this_element_xpath_to_properties = graph_model['properties']
         self.namespaces = namespaces
         self.label = cleanup_name(element.tag).capitalize()
-        print(f"parsing {self.label} {position_idx}                               ", end="\r")
+        logger.info(f"parsing {self.label} {position_idx}")
         recipe_for_properties = graph_model.get('properties', None)
         properties = {}
         if recipe_for_properties is not None:
@@ -103,8 +106,8 @@ lass XMLNode:
             try:
                 target_elements = element.xpath(xpath, namespaces=self.namespaces)
             except XPathEvalError as e:
-                print(f"Error with {xpath}")
-                print(f"{element.tag} with {element.attrib}")
+                logger.error(f"Error with {xpath}")
+                logger.error(f"{element.tag} with {element.attrib}")
                 raise e
             target_value = []
             if 'as_list' in rec:  # target value as a list of values for each element returned by xpath
@@ -147,7 +150,7 @@ def build_neo_graph(xml_node: XMLNode, source: str, db: Instance):
     properties = xml_node.properties  # deal with types!
     properties['source'] = source
     node = db.node(xml_node)
-    print(f"loaded {xml_node.label} as node {node.id}                                ", end="\r")
+    logger.info(f"loaded {xml_node.label} as node {node.id}")
     for rel, children in xml_node.children.items():
         for child in children:
             child_node = build_neo_graph(child, source, db)
@@ -174,10 +177,8 @@ class SDNeo:
         for a, a_node in zip(articles, article_nodes):
             if not a.doi:
                 logger.warning(f"!!!! Article '{a.title}'' has no doi.")
-                print(f"!!!! Article '{a.title}'' has no doi.")
             else:
                 logger.info(f"article {a.doi}")
-                print(f"article {a.doi}")
                 figure_nodes = self.create_figures(a.children, a.doi)
                 self.create_relationships(a_node, figure_nodes, 'has_fig')
         return article_nodes
@@ -189,11 +190,9 @@ class SDNeo:
             logger.warning(f"Skipped figures: {', '.join([f.fig_label for f in skipped_figures])}")
         if not (figures and figure_nodes):
             logger.warning(f"!!!! skipped creating any figure for {doi}")
-            print(f"!!!! skipped creating any figure for {doi}")
         else:
             for f, f_nodes in zip(figures, figure_nodes):
                 logger.info(f"    figure {f.fig_label}")
-                print(f"    figure {f.fig_label}")
                 panel_nodes = self.create_panels(f.children)
                 self.create_relationships(f_nodes, panel_nodes, 'has_panel')
         return figure_nodes
@@ -204,11 +203,9 @@ class SDNeo:
             logger.warning(f"Skipped panels: {', '.join([p.panel_label for p in skipped_panels])}")
         if not (panels and panel_nodes):
             logger.warning(f"!!!! skipped creating any panels.")
-            print(f"!!!! skipped creating any panels.")
         else:
             for p, p_node in zip(panels, panel_nodes):
                 logger.info(f"        panel {p.panel_label}")
-                print(f"        panel {p.panel_label}")
                 tag_nodes = self.create_tags(p.children)
                 self.create_relationships(p_node, tag_nodes, 'has_tag')
         return panel_nodes
