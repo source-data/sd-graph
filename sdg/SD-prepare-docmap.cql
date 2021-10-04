@@ -162,31 +162,6 @@ MERGE (reply_action)<-[:participants]-(person:Person {
 RETURN COUNT(person) AS `authors linked to replies`;
 :commit
 
-
-// :begin
-// // setup for semantic mapping
-
-// CALL n10s.graphconfig.init({handleVocabUris: 'MAP'});
-// :commit
-
-// :begin
-// CREATE CONSTRAINT n10s_unique_uri IF NOT EXISTS ON (r:Resource)
-// ASSERT r.uri IS UNIQUE;
-// :commit
-
-// :begin
-// // prefixes
-// CALL n10s.nsprefixes.add("dct", "http://purl.org/dc/terms/");
-// CALL n10s.nsprefixes.add("foaf", "http://xmlns.com/foaf/0.1/");
-// CALL n10s.nsprefixes.add("part", "http://www.ontologydesignpatterns.org/cp/owl/participation.owl#");
-// CALL n10s.nsprefixes.add("fabio", "http://purl.org/spar/fabio/");
-// CALL n10s.nsprefixes.add("pso", "http://purl.org/spar/pso/");
-// CALL n10s.nsprefixes.add("pwo", "http://purl.org/spar/pwo/");
-// CALL n10s.nsprefixes.add("xsd", "http://www.w3.org/2001/XMLSchema#");
-// CALL n10s.nsprefixes.add("prism", "http://prismstandard.org/namespaces/basic/2.0/");
-// :commit
-
-
 // :begin
 // // mappings
 // WITH [
@@ -214,12 +189,6 @@ RETURN COUNT(person) AS `authors linked to replies`;
 //     { internal: "content", uri: "http://purl.org/spar/fabio/", pub: "hasManifestation" },
 //     { internal: "hasUrl", uri: "http://purl.org/spar/fabio/", pub: "hasURL" }
 // ] as mappings
-
-// UNWIND mappings as m
-//     CALL n10s.mapping.add(m.uri + m.pub, m.internal) YIELD schemaElement
-// RETURN
-//     count(schemaElement) AS mappingsDefined;
-// :commit
 
 //try 
 // :POST /rdf/neo4j/cypher
