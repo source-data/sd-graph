@@ -36,7 +36,7 @@ trap 'on_exit $?' EXIT
 
 log(){
   local timestamp=$(date +%Y-%m-%d\ %H:%M:%S)
-  echo "[deply/db $STAGE_NAME $PERIODICITY $timestamp] $1"
+  echo "[deploy/db $STAGE_NAME $PERIODICITY $timestamp] $1"
 }
 
 load_dotenv(){
