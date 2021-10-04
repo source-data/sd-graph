@@ -135,10 +135,22 @@ update_local_neo4j() {
     cat sdg/update_close.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
   }
 
+  wait_for_neo4j() {
+    log "Waiting for neo4j to start up..."
+    docker-compose -f docker-compose.deploy.yml exec flask deploy/wait-for http://neo4j:7474 --timeout 360
+    if [ $? -ne 0 ]; then
+        log "ABORTING: neo4j failed to start. Check the neo4j log for details."
+        exit 1
+    fi
+    log "neo4j has started up"
+  }
+
 
   log "starting docker"
   docker-compose -f docker-compose.deploy.yml build
   docker-compose -f docker-compose.deploy.yml up -d
+  wait_for_neo4j
+
 
   local PERIODICITY=$1
   case $PERIODICITY in
