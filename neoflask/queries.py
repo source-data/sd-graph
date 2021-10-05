@@ -425,21 +425,18 @@ WITH $doi AS doi
     '''
     map_docmap_filtering = {'doi': {'req_param': 'doi', 'default': ''}}
 
-class DOCMAPS_BY_REVSERVICE_AND_INTERVAL(_DOCMAP):
+class DOCMAPS_FROM_REVSERVICE_IN_INTERVAL(_DOCMAP):
     code_docmap_filtering = '''
-MATCH (
-  col:VizCollection {name: "refereed-preprints"}
-)-[:HasSubCol]->(
-  subcol:VizSubCollection
-)-[:HasPaper]->(
-  paper:VizPaper
-)-[:HasReviewDate]->(
-  revdate:VizReviewDate
-)
-WHERE DATETIME(revdate.date) >= DATETIME($start_date)
-  AND DATETIME(revdate.date) < DATETIME($end_date)
+MATCH
+  (col:VizCollection)-[:HasSubCol]->(subcol:VizSubCollection)-[:HasPaper]->(paper:VizPaper),
+  (preprint:Preprint)-[:inputs]->(Step)<-[:actions]-(Action)<-[:outputs]-(review:RefereeReport)
+WHERE col.name = "refereed-preprints"
   AND subcol.name = $reviewing_service
-WITH COLLECT(DISTINCT paper.doi) AS doiList
+  AND paper.doi = preprint.doi
+WITH preprint, DATETIME(MAX(review.published)) AS publish_date_newest_review
+WHERE publish_date_newest_review >= DATETIME($start_date)
+  AND publish_date_newest_review < DATETIME($end_date)
+WITH COLLECT(DISTINCT preprint.doi) AS doiList
 UNWIND doiList AS doi
     '''
     map_docmap_filtering = {
@@ -447,6 +444,27 @@ UNWIND doiList AS doi
         'req_param': 'reviewing_service',
         'default': '',
       },
+      'start_date': {
+        'req_param': 'start_date',
+        'default': '1900-01-01',
+      },
+      'end_date': {
+        'req_param': 'end_date',
+        'default': '2900-01-01',
+      },
+    }
+
+class DOCMAPS_IN_INTERVAL(_DOCMAP):
+    code_docmap_filtering = '''
+MATCH
+  (preprint:Preprint)-[:inputs]->(Step)<-[:actions]-(Action)<-[:outputs]-(review:RefereeReport)
+WITH preprint, DATETIME(MAX(review.published)) AS publish_date_newest_review
+WHERE publish_date_newest_review >= DATETIME($start_date)
+  AND publish_date_newest_review < DATETIME($end_date)
+WITH COLLECT(DISTINCT preprint.doi) AS doiList
+UNWIND doiList AS doi
+    '''
+    map_docmap_filtering = {
       'start_date': {
         'req_param': 'start_date',
         'default': '1900-01-01',
