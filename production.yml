@@ -24,7 +24,7 @@ services:
   neo4j:
     image: neo4j:4.1
     environment:
-      - NEO4JLABS_PLUGINS=["apoc", "graph-data-science"]  #, "n10s"]
+      - NEO4JLABS_PLUGINS=["apoc", "graph-data-science"]
     ulimits:
       nofile:
         soft: 40000
