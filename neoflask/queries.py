@@ -433,9 +433,9 @@ MATCH
 WHERE col.name = "refereed-preprints"
   AND subcol.name = $reviewing_service
   AND paper.doi = preprint.doi
-WITH preprint, DATETIME(MAX(review.published)) AS publish_date_newest_review
-WHERE publish_date_newest_review >= DATETIME($start_date)
-  AND publish_date_newest_review < DATETIME($end_date)
+WITH preprint, DATETIME(review.published) AS review_publish_date
+WHERE review_publish_date >= DATETIME($start_date)
+  AND review_publish_date < DATETIME($end_date)
 WITH COLLECT(DISTINCT preprint.doi) AS doiList
 UNWIND doiList AS doi
     '''
@@ -456,11 +456,10 @@ UNWIND doiList AS doi
 
 class DOCMAPS_IN_INTERVAL(_DOCMAP):
     code_docmap_filtering = '''
-MATCH
-  (preprint:Preprint)-[:inputs]->(Step)<-[:actions]-(Action)<-[:outputs]-(review:RefereeReport)
-WITH preprint, DATETIME(MAX(review.published)) AS publish_date_newest_review
-WHERE publish_date_newest_review >= DATETIME($start_date)
-  AND publish_date_newest_review < DATETIME($end_date)
+MATCH (preprint:Preprint)-[:inputs]->(Step)<-[:actions]-(Action)<-[:outputs]-(review:RefereeReport)
+WITH preprint, DATETIME(review.published) AS review_publish_date
+WHERE review_publish_date >= DATETIME($start_date)
+  AND review_publish_date < DATETIME($end_date)
 WITH COLLECT(DISTINCT preprint.doi) AS doiList
 UNWIND doiList AS doi
     '''
