@@ -234,11 +234,24 @@ RETURN a.doi as doi, {reviews: COLLECT(DISTINCT review {.*, id: id(review)}), re
     returns = ['doi', 'review_process']
 
 
-class DOCMAP_BY_DOI(Query):
-    code = '''
+class _DOCMAP(Query):
+    """Base class to filter and construct DocMaps.
+
+    The creation of the DocMaps is encapsulated in `code_docmap_creation`. This
+    part remains constant. What is variable is the filtering of the DocMaps.
+    That is to be implemented in subclasses by using the class variables
+    `code_docmap_filtering` and `map_docmap_filtering`.
+    
+    `code_docmap_filtering` has to provide a `doi` variable by which preprints
+    are filtered. It can be provided as either a single variable or a list
+    using the `UNWIND` Cypher syntax. See DOCMAP_BY_DOI and
+    DOCMAP_BY_REVSERVICE_AND_INTERVAL for examples.
+    """
+
+    code_docmap_creation = '''
 MATCH
   (docmap:Docmap)<-[:steps]-(step_1:Step),
-  (step_1)<-[:inputs]-(preprint:Preprint {doi: $doi}),
+  (step_1)<-[:inputs]-(preprint:Preprint {doi: doi}),
   (step_1)<-[:actions]-(reviewing_action:Action),
   (reviewing_action)<-[:outputs]-(review:RefereeReport),
   (review)<-[:content]-(review_content:Content),
@@ -377,11 +390,132 @@ RETURN {
   `first-step`: `first-step`,
   steps: steps
 } AS docmap
+ORDER BY id
+SKIP $offset
+LIMIT $page_size
 '''
-    returns = ['docmap']
-    # returns = ['id', 'type', 'created', 'publisher', 'provider', 'generatedAt', 'first-step', 'steps']
-    map = {'doi': {'req_param': 'doi', 'default': ''}}
+    map_docmap_creation = {
+      'offset': {
+        'req_param': 'offset',
+        'default': 0,
+      },
+      'page_size': {
+        'req_param': 'page_size',
+        'default': 100,
+      },
+    }
 
+    code_docmap_filtering = ''
+    map_docmap_filtering = {}
+
+    returns = ['docmap']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.code = f'''{self.__class__.code_docmap_filtering}
+{self.__class__.code_docmap_creation}
+'''
+        self.map = {}
+        self.map.update(self.__class__.map_docmap_creation)
+        self.map.update(self.__class__.map_docmap_filtering)
+
+class DOCMAP_BY_DOI(_DOCMAP):
+    code_docmap_filtering = '''
+WITH $doi AS doi
+    '''
+    map_docmap_filtering = {'doi': {'req_param': 'doi', 'default': ''}}
+
+class DOCMAPS_FROM_REVSERVICE_IN_INTERVAL(_DOCMAP):
+    code_docmap_filtering = '''
+MATCH
+  (col:VizCollection)-[:HasSubCol]->(subcol:VizSubCollection)-[:HasPaper]->(paper:VizPaper),
+  (preprint:Preprint)-[:inputs]->(Step)<-[:actions]-(Action)<-[:outputs]-(review:RefereeReport)
+WHERE col.name = "refereed-preprints"
+  AND subcol.name = $reviewing_service
+  AND paper.doi = preprint.doi
+WITH preprint, DATETIME(review.published) AS review_publish_date
+WHERE review_publish_date >= DATETIME($start_date)
+  AND review_publish_date < DATETIME($end_date)
+WITH COLLECT(DISTINCT preprint.doi) AS doiList
+UNWIND doiList AS doi
+    '''
+    map_docmap_filtering = {
+      'reviewing_service': {
+        'req_param': 'reviewing_service',
+        'default': '',
+      },
+      'start_date': {
+        'req_param': 'start_date',
+        'default': '1900-01-01',
+      },
+      'end_date': {
+        'req_param': 'end_date',
+        'default': '2900-01-01',
+      },
+    }
+
+class DOCMAPS_IN_INTERVAL(_DOCMAP):
+    code_docmap_filtering = '''
+MATCH (preprint:Preprint)-[:inputs]->(Step)<-[:actions]-(Action)<-[:outputs]-(review:RefereeReport)
+WITH preprint, DATETIME(review.published) AS review_publish_date
+WHERE review_publish_date >= DATETIME($start_date)
+  AND review_publish_date < DATETIME($end_date)
+WITH COLLECT(DISTINCT preprint.doi) AS doiList
+UNWIND doiList AS doi
+    '''
+    map_docmap_filtering = {
+      'start_date': {
+        'req_param': 'start_date',
+        'default': '1900-01-01',
+      },
+      'end_date': {
+        'req_param': 'end_date',
+        'default': '2900-01-01',
+      },
+    }
+
+class SEARCH_REVIEWS(Query):
+    code = '''
+MATCH (
+  col:VizCollection {name: "refereed-preprints"}
+)-[:HasSubCol]->(
+  subcol:VizSubCollection
+)-[:HasPaper]->(
+  paper:VizPaper
+)-[:HasReviewDate]->(
+  revdate:VizReviewDate
+)
+WHERE DATETIME(revdate.date) >= DATETIME($start_date)
+   AND DATETIME(revdate.date) < DATETIME($end_date)
+   AND subcol.name = $reviewing_service
+RETURN paper.doi AS doi
+ORDER BY revdate.date
+SKIP $offset
+LIMIT $page_size
+'''
+    map = {
+      'reviewing_service': {
+        'req_param': 'reviewing_service',
+        'default': '',
+      },
+      'start_date': {
+        'req_param': 'start_date',
+        'default': '1900-01-01',
+      },
+      'end_date': {
+        'req_param': 'end_date',
+        'default': '2900-01-01',
+      },
+      'offset': {
+        'req_param': 'offset',
+        'default': 0,
+      },
+      'page_size': {
+        'req_param': 'page_size',
+        'default': 100,
+      },
+    }
+    returns = ['doi']
 
 class REVIEW_MATERIAL_BY_ID(Query):
     code = '''
@@ -643,7 +777,6 @@ RETURN
 '''
     map = {'query': {'req_param': 'search_string', 'default': ''}}
     returns = ['doi', 'info', 'score', 'source', 'query']
-
 
 class STATS(Query):
     code = '''
