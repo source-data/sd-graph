@@ -137,7 +137,7 @@ update_local_neo4j() {
 
   wait_for_neo4j() {
     log "Waiting for neo4j to become available..."
-    docker-compose -f docker-compose.deploy.yml exec flask dockerize -wait tcp://neo4j:7687 -timeout 360s
+    docker-compose -f docker-compose.deploy.yml run --rm flask dockerize -wait tcp://neo4j:7687 -timeout 360s
     if [ $? -ne 0 ]; then
         log "neo4j probably failed to start, check the neo4j log for details. Aborting"
         exit 1
