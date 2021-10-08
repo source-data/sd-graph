@@ -612,17 +612,19 @@ class BY_REVIEWING_SERVICE(Query):
 
     code = '''
 // Using precomputed Viz nodes
-MATCH (col:VizCollection {name: "refereed-preprints"})-[:HasSubCol]->(subcol:VizSubCollection)-[:HasPaper]->(paper:VizPaper)-[:HasReviewDate]->(revdate:VizReviewDate)
+MATCH
+    (col:VizCollection {name: "refereed-preprints"})-[:HasSubCol]->(subcol:VizSubCollection)-[:HasPaper]->(paper:VizPaper)-[:HasReviewDate]->(revdate:VizReviewDate)
 WHERE DATETIME(revdate.date) > DATETIME($limit_date)
 WITH DISTINCT
-   subcol,
-   paper{.*, rank: ""} AS paper_j // json serializable
-MATCH (rev:ReviewingService {name: subcol.name})
+    subcol,
+    paper{.*, rank: ""} AS paper_j // json serializable
+MATCH
+    (subcol)-[:HasDesciption]->(descriptor:VizDescriptor)
 RETURN
     subcol.name AS id,
-    rev{.*} AS reviewing_service_description,
+    descriptor{.*} AS reviewing_service_description,
     COLLECT(DISTINCT paper_j) as papers
-  '''
+    '''
     map = {'limit_date': {'req_param': 'limit_date', 'default':'1900-01-01'}}
     returns = ['id', 'papers', 'reviewing_service_description']
 
