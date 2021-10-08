@@ -28,7 +28,7 @@
                               //-   v-if="reviewingService(reviewingListId(i, j)).pre_review_triage"
                               //-   style="inset: auto auto calc(100% - 5px) calc(100% - 8px);").v-badge__badge.lime
         v-col(v-if="selectedRev" cols=4)
-          InfoCardsReviewServiceSummary(
+          InfoCardsReviewServiceSummaryGraph(
             :service_name="serviceId2Name(serviceSlug2Id(selectedRev))",
             :url="reviewingService(serviceSlug2Id(selectedRev)).url",
             :peer_review_policy="reviewingService(serviceSlug2Id(selectedRev)).peer_review_policy",
@@ -48,12 +48,12 @@
 
 import { mapGetters, mapState } from 'vuex'
 import { serviceId2Slug, serviceId2Name, serviceSlug2Id } from '../../store/by-reviewing-service'
-import InfoCardsReviewServiceSummary from './info-cards/review-service-summary.vue'
+import InfoCardsReviewServiceSummaryGraph from './info-cards/review-service-summary-graph.vue'
 
 
 export default {
   components: {
-    InfoCardsReviewServiceSummary,
+    InfoCardsReviewServiceSummaryGraph,
   },
   data () {
     return {
