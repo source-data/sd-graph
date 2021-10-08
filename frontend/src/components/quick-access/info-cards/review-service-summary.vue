@@ -4,7 +4,7 @@
       span(slot)
         | About: <i>{{ service_name }}</i>
     v-card-subtitle
-      a(href:url) {{ url }}
+      a(:href="url") {{ url }}
     v-card-text
       ul
         li
