@@ -1,7 +1,7 @@
 <template lang="pug">
   v-container
       v-row(align="center")
-        v-col(cols=8)
+        v-col(cols=7)
           v-card(outlined).pa-5
             v-card-title Preprints linked to formal reviews
             v-card-text
@@ -27,7 +27,7 @@
                               //- span(
                               //-   v-if="reviewingService(reviewingListId(i, j)).pre_review_triage"
                               //-   style="inset: auto auto calc(100% - 5px) calc(100% - 8px);").v-badge__badge.lime
-        v-col(v-if="selectedRev" cols=4)
+        v-col(v-if="selectedRev" cols=5)
           InfoCardsReviewServiceSummaryGraph(
             :service_name="serviceId2Name(serviceSlug2Id(selectedRev))",
             :url="reviewingService(serviceSlug2Id(selectedRev)).url",
