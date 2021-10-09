@@ -1,7 +1,5 @@
 <template lang="pug">
-  v-card(class="pa-5")
-    v-card-title Discover preprints with one of these methods
-    v-card-text
+  v-card(class="px-3")
       v-tabs(
         v-model="activeTab_"
         @change="onTabChange"
