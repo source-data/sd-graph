@@ -8,7 +8,7 @@ from flask import (
     url_for,
 )
 from .sitemap import create_sitemap
-from .converter import LuceneQueryConverter
+from .converter import LuceneQueryConverter, ReviewServiceConverter
 from .queries import (
     STATS, BY_DOI, FIG_BY_DOI_IDX,
     DESCRIBE_REVIEWING_SERVICES,
@@ -29,7 +29,7 @@ from . import DB, app, cache
 DOI_REGEX = re.compile(r'10.\d{4,9}/[-._;()/:A-Z0-9]+$', flags=re.IGNORECASE)
 
 app.url_map.converters['escape_lucene'] = LuceneQueryConverter
-
+app.url_map.converters['service_name'] = ReviewServiceConverter
 
 def ask_neo(query: Query, **kwargs) -> Dict:
     """
@@ -294,7 +294,7 @@ def docmaps_in_interval(start_date: str, end_date: str, pagination: int):
         page=pagination,
     )
 
-@app.route('/api/v2/<reviewing_service>/docmap/<int:days>d/<int:pagination>', methods=['GET', 'POST'])
+@app.route('/api/v2/<service_name:reviewing_service>/docmap/<int:days>d/<int:pagination>', methods=['GET', 'POST'])
 def docmaps_from_revservice_in_last_days(reviewing_service: str, days: int, pagination: int):
     app.logger.info(f"Getting docmaps for reviewing service \"{reviewing_service}\" with reviews in the last {days} days, page {pagination}")
     # The Docmap query is exclusive for the end of the interval. We want any reviews published today so add a day here.

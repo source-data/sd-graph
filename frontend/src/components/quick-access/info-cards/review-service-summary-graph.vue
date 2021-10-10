@@ -11,7 +11,7 @@
         //-.green--text.text--darken-3
         v-row(v-if="review_requested_by")
           v-col
-            span(v-if="review_requested_by==='Authors'") Author-driven 
+            span(v-if="review_requested_by==='Authors'") Author-driven
             span(v-else) Author-independent
           v-col(align="center")
             span(v-if="review_requested_by==='Authors'")
