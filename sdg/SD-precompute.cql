@@ -35,6 +35,27 @@ UNWIND [
   {name: 'Peer Community In', rank: 4},
   {name: 'MIT Press - Journals', rank: 5}
 ] AS reviewing
+MATCH
+    (rev_service:ReviewingService {name: reviewing.name})-->(val:PRDVal)<--(field:PRDField)
+WITH
+    reviewing,
+    rev_service,
+    COLLECT(val.value) AS values,
+    COLLECT(field.key) AS keys
+WITH
+    reviewing, 
+    rev_service,
+    apoc.map.fromLists(keys, values) AS descriptor
+WITH
+    reviewing,
+    rev_service,
+    //merging the peer review descriptor fields with attributes from the review service node
+    descriptor{
+      .*,
+      name: rev_service.name,
+      url: rev_service.url,
+      peer_review_policy: rev_service.peer_review_policy
+    }
 MATCH (a:Article)
 OPTIONAL MATCH (a)-[r:HasReview]->(review:Review)
 WHERE
@@ -43,28 +64,30 @@ OPTIONAL MATCH (a)-[:HasAnnot]->(annot:PeerReviewMaterial)
 WHERE
   annot.reviewed_by STARTS WITH reviewing.name
 WITH DISTINCT
-    reviewing, a.doi AS doi, review, annot
+  reviewing, descriptor, a.doi AS doi, review, annot
 WHERE 
-    EXISTS(review.reviewed_by) OR EXISTS(annot.reviewed_by)
+  EXISTS(review.reviewed_by) OR EXISTS(annot.reviewed_by)
 WITH DISTINCT 
-  reviewing, doi, 
+  reviewing, descriptor, doi, 
   COLLECT(DISTINCT DATETIME(review.posting_date)) + COLLECT(DISTINCT DATETIME(annot.posting_date)) AS peer_review_dates
 UNWIND peer_review_dates AS peer_review_date
 // remove duplicate and sort to hvae most recent peer review date first
 WITH DISTINCT
-    reviewing, doi, peer_review_date
+  reviewing, descriptor, doi, peer_review_date
 ORDER BY peer_review_date DESC
 // keep most recent peer review date
 WITH DISTINCT
-    reviewing, doi, COLLECT(DISTINCT peer_review_date)[0] AS earliest_review_date
+  reviewing, descriptor, doi, COLLECT(DISTINCT peer_review_date)[0] AS earliest_review_date
 MATCH
   (paper:VizPaper {doi: doi})
 WITH
-  reviewing, doi, paper, paper.pub_date AS pub_date, earliest_review_date
+  reviewing, descriptor, doi, paper, paper.pub_date AS pub_date, earliest_review_date
 ORDER BY
-    reviewing.rank ASC, pub_date DESC
+  reviewing.rank ASC, pub_date DESC
 MERGE (col:VizCollection {name: "refereed-preprints"})
 MERGE (subcol:VizSubCollection {name: reviewing.name})
+MERGE (subcol)-[:HasDesciption]->(descr:VizDescriptor)
+SET descr = descriptor
 MERGE (revdate:VizReviewDate {date: toString(earliest_review_date)})
 MERGE (paper)-[:HasReviewDate]->(revdate)
 MERGE (col)-[:HasSubCol]->(subcol)

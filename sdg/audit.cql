@@ -30,3 +30,33 @@ MATCH (a:SDArticle)
 WITH DISTINCT a.doi  AS doi, COUNT(a) AS N
 WHERE N > 1
 RETURN COUNT(DISTINCT doi) AS `duplicate doi SDArticle`;
+
+// check number of preprints imported by year and month
+WITH
+  [2020, 2021] as years,
+  [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] AS months
+UNWIND years as year
+UNWIND months as month
+MATCH (a:Article)
+WHERE
+  date(a.publication_date).year = year AND 
+  date(a.publication_date).month = month
+RETURN
+  year, 
+  month, 
+  COUNT(DISTINCT a);
+
+
+// What kind of nodes exist
+// Sample some nodes, reporting on property and relationship counts per node.
+MATCH (n) WHERE rand() <= 0.1
+RETURN
+DISTINCT
+  labels(n),
+  count(*) AS SampleSize,
+  avg(size(keys(n))) as Avg_PropertyCount,
+  min(size(keys(n))) as Min_PropertyCount,
+  max(size(keys(n))) as Max_PropertyCount,
+  avg(size( (n)-[]-() ) ) as Avg_RelationshipCount,
+  min(size( (n)-[]-() ) ) as Min_RelationshipCount,
+  max(size( (n)-[]-() ) ) as Max_RelationshipCount;
