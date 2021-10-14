@@ -19,15 +19,15 @@
               //- v-icon fas fa-user-graduate
               //- v-icon fas fa-caret-right
               //- v-icon fas fa-building
-              v-icon.red--text.text--darken-3 mdi-book-open-variant
-              v-icon.red--text.text--darken-3 mdi-account-tie
+              v-icon.author mdi-account-tie
+              v-icon.preprint mdi-book-open-variant
               v-icon mdi-menu-right
-              v-icon.blue--text.text--darken-4 mdi-office-building-outline
+              v-icon.office mdi-office-building-outline
             span(v-else) 
               //-   v-icon fas fa-book-open
-              v-icon.blue--text.text--darken-4 mdi-office-building-outline
+              v-icon.office mdi-office-building-outline
               v-icon mdi-menu-left
-              v-icon.red--text.text--darken-3 mdi-book-open-variant
+              v-icon.preprint mdi-book-open-variant
         v-row(v-if="reviewer_selected_by" dense)
           v-col
             span(v-if="reviewer_selected_by==='Editor, service, or community'") Invited reviewers
@@ -40,34 +40,34 @@
               //- <i class="fa-solid fa-book-open-reader"></i>
               //-   v-icon fas fa-caret-right
               //-   v-icon fas fa-users
-              v-icon.blue--text.text--darken-4 mdi-office-building-outline
+              v-icon.office mdi-office-building-outline
               v-icon mdi-menu-right  
-              v-icon.green--text.text--darken-3 mdi-account-group
+              v-icon.reviewer mdi-account-group
             span(v-else-if="reviewer_selected_by==='Self-nominated'")
               //-   v-icon fas fa-users
               //-   v-icon fas fa-caret-right
               //-   v-icon fas fa-building
-              v-icon.green--text.text--darken-3 mdi-account-group
+              v-icon.reviewer mdi-account-group
               v-icon mdi-menu-right
-              v-icon.blue--text.text--darken-4 mdi-office-building-outline
+              v-icon.office mdi-office-building-outline
             span(v-else-if="reviewer_selected_by==='Authors'")
               //-   v-icon fas fa-graduate-user
               //-   v-icon fas fa-caret-right
               //-   v-icon fas fa-users
               //-   v-icon fas fa-caret-right
               //-   v-icon fas fa-building
-              v-icon.red--text.text--darken-3 mdi-account-tie
+              v-icon.author mdi-account-tie
               v-icon mdi-menu-right
-              v-icongreen--text.text--darken-3  mdi-account-group
+              v-icon.reviewer  mdi-account-group
               v-icon mdi-menu-right
-              v-icon.blue--text.text--darken-4 mdi-office-building-outline
+              v-icon.office mdi-office-building-outline
         v-row(v-if="public_interaction" dense)
           v-col
             span(v-if="public_interaction=='Included'") Public feedback
             span(v-else) No public interactions
           v-col(align="center")
             span(v-if="public_interaction=='Included'")
-              v-icon.teal--text.text--darken-2 mid-crowd
+              v-icon.crowd mid-crowd
             span(v-else)
               v-icon mdi-minus
         v-row(v-if="opportunity_for_author_response" dense)
@@ -79,9 +79,9 @@
               //-   v-icon  fas fa-user-graduate
               //-   v-icon fas fa-caret-right
               //- v-icon fas fa-list
-              v-icon.red--text.text--darken-3 mdi-account-tie
+              v-icon.author mdi-account-tie
               v-icon mdi-menu-right
-              v-icon.deep-purple--text.text--darken-2 mdi-message-bulleted
+              v-icon.response mdi-message-bulleted
             span(v-else)
               v-icon mdi-minus
               //- i.fas.fa-minus
@@ -93,11 +93,11 @@
           v-col(align="center")
             span(v-if="recommendation=='Binary decision'")
               //- v-icon fas fa-award
-              v-icon.yellow--text.text--darken-3 mdi-certificate
+              v-icon.recommendation mdi-certificate
             span(v-else-if="recommendation=='Other scale or rating'")
               //-v-icon fas bar-chart
               //- i.fas.fa-square-poll-horizontal
-              v-icon.yellow--text.text--darken-3 mdi-chart-bar
+              v-icon.recommendation mdi-chart-bar
             span(v-else)
               v-icon mdi-minus
               //-v-icon fas fa-minus
@@ -157,7 +157,23 @@ export default {
     font-size: 18px !important;
     padding: 2px;
   }
-  .submission {
-    color: var(--v-red-lighten2) !important;
+  .preprint, .author{
+    color: #B71C1C !important; // red darken-4
+  }
+  .office {
+    color: #0D47A1 !important; // blue darkent-4
+  }
+  .reviewer {
+    color: #2E7D32 !important; //green darken-3
+  }
+  .crowd {
+    color: #9E9D24 !important; // teal darken-2
+  }
+  .response {
+    color: #512DA8 !important; //deep-purple--text.text--darken-2
+  }
+  .recommendation {
+    color: #F9A825 !important; //yellow--text.text--darken-3
+
   }
 </style>
