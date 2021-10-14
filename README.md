@@ -85,7 +85,7 @@ Inspired by https://serverfault.com/questions/835092/how-do-you-perform-a-dump-o
 docker-compose down
 
 # dump the contents of your database using a temporary container
-docker run --rm --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data -it neo4j:4.1 bin/neo4j-admin dump --database=neo4j --to=data/neo4j.db.dump.`date +%Y-%m-%d-%H.%M.%S`
+docker compose run --rm --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data -it neo4j:4.1 bin/neo4j-admin dump --database=neo4j --to=data/neo4j.db.dump.`date +%Y-%m-%d-%H.%M.%S`
 ```
 
 ## How to load content into the neo4j database

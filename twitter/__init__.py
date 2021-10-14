@@ -1,28 +1,9 @@
 import os
-import logging
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
 from neotools.db import Instance
 from tweepy import API, OAuthHandler
-
-# create logger
-logger = logging.getLogger('twhighlight logger')
-logger.setLevel(logging.DEBUG)
-log_dir = Path('twitter/log')
-log_file = Path('twitter.log')
-if not log_dir.exists():
-    Path(log_dir).mkdir(parents=True)
-log_path = log_dir / log_file
-ch = logging.FileHandler(log_path)
-ch.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-ch.setFormatter(formatter)
-logger.addHandler(ch)
-
-consoleHandler = logging.StreamHandler()
-consoleHandler.setFormatter(formatter)
-logger.addHandler(consoleHandler)
 
 load_dotenv()
 NEO_URI = os.getenv('NEO_URI')

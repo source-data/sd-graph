@@ -4,7 +4,7 @@ import time
 from string import Template
 from argparse import ArgumentParser
 from typing import Dict
-from neotools.utils import progress
+import common.logging
 from . import HYPO, DB
 from .queries import (
     MATCH_DOI, LINK_REVIEWS, LINK_RESPONSES, LINK_ANNOT
@@ -17,6 +17,8 @@ from neotools.model import (
     CROSSREF_PEERREVIEW_GRAPH_MODEL,
     CROSSREF_PCI_REVIEW_GRAPH_MODEL
 )
+
+logger = common.logging.get_logger(__name__)
 
 HYPO_GROUP_IDS = {
     'NEGQVabn': 'review commons',
@@ -192,7 +194,7 @@ class CrossRefPeerReview(API):
             limit = limit if limit else total_results
             items_per_page = min(1000, limit)
             check = 0
-            print(f"total_results:", total_results)
+            logger.info(f"total_results: %s", total_results)
             # deep paggin with cursor https://github.com/CrossRef/rest-api-doc#result-controls
             cursor = "*"
             params = {'rows': items_per_page}
@@ -201,7 +203,6 @@ class CrossRefPeerReview(API):
                 params['filter'] = type_filter
             url = f'https://api.crossref.org/prefixes/{prefix}/works'
             while cursor:
-                progress(len(items), total_results, f"{len(items)} / {total_results}")
                 params['cursor'] = cursor
                 response = self.rest2data(url, params)
                 if response.get('status') == 'ok':
@@ -213,7 +214,7 @@ class CrossRefPeerReview(API):
                     else:
                         cursor = response['message']['next-cursor']
                 else:
-                    print(response)
+                    logger.info(response)
                     cursor = ''
                 time.sleep(1.0)
             assert check == total_results or check <= limit
@@ -245,16 +246,16 @@ class PeerReviewFinder:
                     prelim.properties['abstract'] = data_biorxiv.get('abstract','abstract not available')
                     prelim.properties['version'] = data_biorxiv['version']
                 else:
-                    print(f"problem with biorxiv obtaining abstract from doi: {doi}")
+                    logger.info(f"problem with biorxiv obtaining abstract from doi: {doi}")
                 build_neo_graph(prelim, 'biorxiv_crossref', self.db)
             else:
-                print(f"problem with crossref to get preprint with doi={doi}")
+                logger.info(f"problem with crossref to get preprint with doi={doi}")
 
     def make_relationships(self):
         N_rev = self.db.query(LINK_REVIEWS())
         N_resp = self.db.query(LINK_RESPONSES())
         N_annot = self.db.query(LINK_ANNOT())
-        print(f"{N_rev}, {N_resp}, {N_annot}")
+        logger.info(f"{N_rev}, {N_resp}, {N_annot}")
 
 
 class Hypothelink(PeerReviewFinder):
@@ -272,7 +273,7 @@ class Hypothelink(PeerReviewFinder):
                 peer_review_node = self.hypo2node(row)
                 peer_review_node.update_properties({'reviewed_by': HYPO_GROUP_IDS[group_id]})
                 self.db.node(peer_review_node, clause="MERGE")
-                print(f"loaded {peer_review_node.label} for {peer_review_node.properties['related_article_doi']}")
+                logger.info(f"loaded {peer_review_node.label} for {peer_review_node.properties['related_article_doi']}")
                 # check if article node missing and add temporary one with source='biorxiv_crossref'
                 self.add_prelim_article(peer_review_node.related_doi)
         self.make_relationships()
@@ -300,10 +301,10 @@ class Hypothelink(PeerReviewFinder):
                 N = response['total']  # does not change
                 remaining = N - offset
                 offset += limit
-                print(f"found {N} annotations for group {HYPO_GROUP_IDS[group_id]}")
+                logger.info(f"found {N} annotations for group {HYPO_GROUP_IDS[group_id]}")
                 rows += response['rows']
             else:
-                print(f"PROBLEM: {response.status_code}")
+                logger.info(f"PROBLEM: {response.status_code}")
                 rows = None
                 remaining = 0
         return rows
@@ -338,13 +339,14 @@ class CrossRefReviewFinder(PeerReviewFinder):
         for item in items:
             if is_cross_ref_review(item, target_prefixes):
                 peer_review_node = CrossRefReviewNode(item, self.MODELS[source_prefix])
-                print(peer_review_node)
+                logger.info(peer_review_node)
                 build_neo_graph(peer_review_node, 'cross_ref', self.db)
                 self.add_prelim_article(peer_review_node.properties['related_article_doi'])
         self.make_relationships()
 
 
 if __name__ == '__main__':
+    common.logging.configure_logging()
     parser = ArgumentParser(description="Upload peer review material using CrossRef. Identifies reviews produced by source on papers/preprints published by target.")
     parser.add_argument('source', default='', help='Name of the reviewing service (source) to scan.')
     parser.add_argument('-T', '--target', default='biorxiv', help='DOI prefix of the published reviewed papers (target).')
@@ -370,4 +372,4 @@ if __name__ == '__main__':
     elif source == 'hypothesis':
         Hypothelink(DB, HYPO).run(HYPO_GROUP_IDS)
     else:
-        print("no model yet for this source")
+        logger.info("no model yet for this source")

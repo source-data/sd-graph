@@ -1,3 +1,4 @@
+from datetime import date, timedelta
 from flask import (
     abort,
     jsonify,
@@ -7,13 +8,14 @@ from flask import (
     url_for,
 )
 from .sitemap import create_sitemap
-from .converter import LuceneQueryConverter
+from .converter import LuceneQueryConverter, ReviewServiceConverter
 from .queries import (
     STATS, BY_DOI, FIG_BY_DOI_IDX,
     DESCRIBE_REVIEWING_SERVICES,
     REVIEW_PROCESS_BY_DOI, REVIEW_MATERIAL_BY_ID,
-    DOCMAP_BY_DOI, BY_REVIEWING_SERVICE,
-    BY_AUTO_TOPICS, AUTOMAGIC,
+    DOCMAP_BY_DOI, DOCMAPS_FROM_REVSERVICE_IN_INTERVAL,
+    DOCMAPS_IN_INTERVAL,
+    BY_AUTO_TOPICS, BY_REVIEWING_SERVICE, AUTOMAGIC,
     LUCENE_SEARCH, SEARCH_DOI,
     COVID19, REFEREED_PREPRINTS,
     COLLECTION_NAMES, SUBJECT_COLLECTIONS,
@@ -27,7 +29,7 @@ from . import DB, app, cache
 DOI_REGEX = re.compile(r'10.\d{4,9}/[-._;()/:A-Z0-9]+$', flags=re.IGNORECASE)
 
 app.url_map.converters['escape_lucene'] = LuceneQueryConverter
-
+app.url_map.converters['service_name'] = ReviewServiceConverter
 
 def ask_neo(query: Query, **kwargs) -> Dict:
     """
@@ -253,3 +255,60 @@ def docmap_semantic_doi(doi: str):
     root = url_for('root', _external=True)
     j = ask_neo(DOCMAP_BY_DOI(), doi=doi, root=root)
     return jsonify(j)
+
+def do_paginated_docmap_query(query, page=0, page_size=100, **kwargs):
+    if page < 0:
+        abort(400) # pagination paramater must be 0 or greater
+
+    offset = page * page_size
+    root = url_for('root', _external=True)
+
+    result = ask_neo(
+        query,
+        root=root,
+        offset=offset,
+        page_size=page_size,
+        **kwargs,
+    )
+
+    return jsonify(result)
+
+@app.route('/api/v2/<reviewing_service>/docmap/<start_date>/<end_date>/<int:pagination>', methods=['GET', 'POST'])
+def docmaps_from_revservice_in_interval(reviewing_service: str, start_date: str, end_date: str, pagination: int):
+    app.logger.info(f"Getting docmaps for reviewing service \"{reviewing_service}\" from {start_date} to {end_date}, page {pagination}")
+    return do_paginated_docmap_query(
+        DOCMAPS_FROM_REVSERVICE_IN_INTERVAL(),
+        reviewing_service=reviewing_service,
+        start_date=start_date,
+        end_date=end_date,
+        page=pagination,
+    )
+
+@app.route('/api/v2/docmap/<start_date>/<end_date>/<int:pagination>', methods=['GET', 'POST'])
+def docmaps_in_interval(start_date: str, end_date: str, pagination: int):
+    app.logger.info(f"Getting docmaps from {start_date} to {end_date}, page {pagination}")
+    return do_paginated_docmap_query(
+        DOCMAPS_IN_INTERVAL(),
+        start_date=start_date,
+        end_date=end_date,
+        page=pagination,
+    )
+
+@app.route('/api/v2/<service_name:reviewing_service>/docmap/<int:days>d/<int:pagination>', methods=['GET', 'POST'])
+def docmaps_from_revservice_in_last_days(reviewing_service: str, days: int, pagination: int):
+    app.logger.info(f"Getting docmaps for reviewing service \"{reviewing_service}\" with reviews in the last {days} days, page {pagination}")
+    # The Docmap query is exclusive for the end of the interval. We want any reviews published today so add a day here.
+    end_date = date.today() + timedelta(days=1)
+    # With this start date we get any reviews published today and in the last n-1 days, so reviews from a total of n days.
+    start_date = end_date - timedelta(days=days)
+    return do_paginated_docmap_query(
+        DOCMAPS_FROM_REVSERVICE_IN_INTERVAL(),
+        reviewing_service=reviewing_service,
+        start_date=str(start_date),
+        end_date=str(end_date),
+        page=pagination,
+    )
+
+# @app.route('/api/v2/<reviewing_service>/docmap/<int:n_most_recent>/<int:pagination>', methods=['GET', 'POST'])
+
+# date of docmap creation and date of docmap update. filter on publishing data or on docmap creation date.

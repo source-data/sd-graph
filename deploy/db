@@ -36,7 +36,7 @@ trap 'on_exit $?' EXIT
 
 log(){
   local timestamp=$(date +%Y-%m-%d\ %H:%M:%S)
-  echo "[deply/db $STAGE_NAME $PERIODICITY $timestamp] $1"
+  echo "[deploy/db $STAGE_NAME $PERIODICITY $timestamp] $1"
 }
 
 load_dotenv(){
@@ -115,18 +115,24 @@ update_local_neo4j() {
     log "generate merged graph"
     cat sdg/SD-processing.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
 
-
     log "neo4j graph data science"
     cat sdg/SD-gds.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
 
     log "advanced graph data science"
     docker-compose -f docker-compose.deploy.yml run --rm flask python -m sdg.algonet
 
+    log "build preprint peer review descriptor voc"
+    cat sdg/build_preprint_review_descriptor_voc.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
+
+    log "review service descriptors"
+    cat sdg/describe_review_services.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
+
     log "precompute the graph used by front end"
     cat sdg/SD-precompute.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
 
     log "precompute pilot docmap graph"
     cat sdg/SD-prepare-docmap.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
+
   }
 
   update_close() {
@@ -135,10 +141,22 @@ update_local_neo4j() {
     cat sdg/update_close.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
   }
 
+  wait_for_neo4j() {
+    log "Waiting for neo4j to become available..."
+    docker-compose -f docker-compose.deploy.yml run --rm flask dockerize -wait tcp://neo4j:7687 -timeout 360s
+    if [ $? -ne 0 ]; then
+        log "neo4j probably failed to start, check the neo4j log for details. Aborting"
+        exit 1
+    fi
+    log "neo4j is available"
+  }
+
 
   log "starting docker"
   docker-compose -f docker-compose.deploy.yml build
   docker-compose -f docker-compose.deploy.yml up -d
+  wait_for_neo4j
+
 
   local PERIODICITY=$1
   case $PERIODICITY in
@@ -241,7 +259,7 @@ rotate_backup(){
 cache_warmup(){
   local HOST=$1
   local SERVER_ADDRESS="https://$HOST/api/v1/"
-  docker-compose -f docker-compose.deploy.yml run --rm flask python -m neoflask.cache_warm_up $SERVER_ADDRESS
+  docker-compose -f docker-compose.deploy.yml run --rm flask python -m neoflask.cache_warm_up $SERVER_ADDRESS --no-progress
 }
 
 main() {
@@ -266,7 +284,7 @@ main() {
         echo "deploy db"
         echo "--------------------------------------------------------------------------------------"
         echo ""
-        echo "deploy/db --stage_name STAGE_NAME [--periodicity PERIODICITY] [--log_file 'PATH/TO/LOG/FILE']"
+        echo "deploy/db --stage_name STAGE_NAME --periodicity PERIODICITY [--log_file 'PATH/TO/LOG/FILE']"
         echo ""
         echo "Options:"
         echo "  --help        | -h"
@@ -275,7 +293,7 @@ main() {
         echo "  --log_file    | -l 'quoted/path/to/file.log'"
         echo ""
         echo "example of usage:"
-        echo "  deploy/db --stage_name staging --log_file '/home/eeb/logs/deploydb.log'"
+        echo "  deploy/db --stage_name staging --periodicity daily --log_file '/home/eeb/logs/deploydb.log'"
         echo ""
         exit 0
         ;;
@@ -300,22 +318,15 @@ main() {
       ;;
   esac
 
-  if [ -z "$PERIODICITY" ]; then
-    echo "setting periodicity"
-
-    local DAY_OF_THE_MONTH=$(date +%d)
-    local DAY_OF_THE_WEEK=$(date +%u) # 1(monday), 2 (tuesday), ... 7(sunday)
-    local MONDAY=1
-    if [ $DAY_OF_THE_MONTH -eq 1 ]; then
-      PERIODICITY="monthly"
-    elif [[ $DAY_OF_THE_WEEK -eq $MONDAY ]]; then
-      PERIODICITY="weekly"
-    else
-      PERIODICITY="daily"
-    fi
-    echo "perodicity is $PERIODICITY"
-  fi
-
+  case $PERIODICITY in
+    "daily"|"weekly"|"monthly")
+    # valid periodicity, continue
+    ;;
+    *)
+    echo "[ERROR] Argument - please specify a valid --periodicity (daily|weekly|monthly)"
+    exit 1
+    ;;
+  esac
 
   if [ ! -z $LOG_FILE ]; then
     # LOG_FILE is specified, let's redirect stdout and stderr to the $LOG_FILE

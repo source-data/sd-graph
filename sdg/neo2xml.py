@@ -5,9 +5,12 @@ from random import shuffle
 from math import floor
 from pathlib import Path
 from typing import Dict
+import common.logging
 from neotools.utils import inner_text
 from .queries import ALL_ARTICLES, FIGURES_BY_PAPER_ID, PANEL_BY_FIG_ID
-from . import DB, logger
+from . import DB
+
+logger = common.logging.get_logger(__name__)
 
 
 xml_parser = XMLParser(recover=True)
@@ -91,7 +94,6 @@ def XMLPanel(d: Dict = None, text: str = None, tail: str = None):
     except XMLSyntaxError as err:
         n = int(re.search(r'column (\d+)', str(err)).group(1))
         logger.error(f"XMLSyntaxError: ```{caption[n-10:n]+'!!!'+caption[n]+'!!!'+caption[n+1:n+10]}```")
-        print(f"XMLSyntaxError: ```{caption[n-10:n]+'!!!'+caption[n]+'!!!'+caption[n+1:n+10]}```")
         e = None
     return e
 
@@ -180,7 +182,7 @@ class Compendium:
     def fetch_articles(self):
         results_articles = self.db.query(ALL_ARTICLES())
         for a in results_articles:
-            print(f"Article {a['doi']}")
+            logger.info(f"Article {a['doi']}")
             a_id = a['id']
             doi = a['doi']
             if doi == '':
@@ -196,7 +198,7 @@ class Compendium:
         figure_query = FIGURES_BY_PAPER_ID(params={'id': id})
         results_figures = self.db.query(figure_query)
         for f in results_figures:
-            print(f"    Figure {f['fig_label']}")
+            logger.info(f"    Figure {f['fig_label']}")
             figure_element = XMLFigure(f)
             fig_id = figure_element.attrib['id']
             self.fetch_caption(figure_element, int(fig_id))
@@ -210,7 +212,7 @@ class Compendium:
     def fetch_panels(self, caption_element, id: int):
         results_panels = self.db.query(PANEL_BY_FIG_ID(params={'id': id}))
         for p in results_panels:
-            print(f"        Panel {p['panel_label']}")
+            logger.info(f"        Panel {p['panel_label']}")
             panel_element = XMLPanel(p)
             if panel_element is not None:
                 caption_element.append(panel_element)
@@ -238,7 +240,7 @@ class Compendium:
                 doi = doi.replace(".", "_").replace("/", "-")
                 filename = doi + '.xml'
                 file_path = subpath / filename
-                print('writing to {}'.format(str(file_path)))
+                logger.info('writing to {}'.format(str(file_path)))
                 # indent(article, space="    ")
                 ElementTree(article).write(str(file_path), encoding='utf-8', xml_declaration=True)
 
@@ -252,15 +254,16 @@ def main():
     args = parser.parse_args()
     path = Path(args.path)
     if path.exists():
-        print(f"data {path} already exists! Aborting.")
+        logger.info(f"data {path} already exists! Aborting.")
     else:
         options = {}
         options['testfract'] = args.testfract
         options['validfract'] = args.validfract
-        print(options)
+        logger.info(options)
         compendium = Compendium(DB, options)
         compendium.save(path)
 
 
 if __name__ == "__main__":
+    common.logging.configure_logging()
     main()
