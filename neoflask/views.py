@@ -273,7 +273,7 @@ def do_paginated_docmap_query(query, page=0, page_size=100, **kwargs):
 
     return jsonify(result)
 
-@app.route('/api/v2/<reviewing_service>/docmap/<start_date>/<end_date>/<int:pagination>', methods=['GET', 'POST'])
+@app.route('/api/v2/<service_name:reviewing_service>/docmap/<start_date>/<end_date>/<int:pagination>', methods=['GET', 'POST'])
 def docmaps_from_revservice_in_interval(reviewing_service: str, start_date: str, end_date: str, pagination: int):
     app.logger.info(f"Getting docmaps for reviewing service \"{reviewing_service}\" from {start_date} to {end_date}, page {pagination}")
     return do_paginated_docmap_query(
