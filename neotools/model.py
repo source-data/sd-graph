@@ -203,7 +203,7 @@ CROSSREF_PREPRINT_API_GRAPH_MODEL = {
     'properties': {
         'article-type': lambda d: d['subtype'],
         'doi': lambda d: d['DOI'],
-        'journal-title': lambda d: d['institution']['name'],  # for obscure reasons; journal would be d['container-title']
+        'journal-title': lambda d: d['institution'][0]['name'],  # for obscure reasons; journal would be d['container-title']
         'publication-date': lambda d: date(*d['posted']['date-parts'][0]).isoformat(),  # journal: d['ublished-online']['date-parts']
         'title': lambda d: d['title'],
         'abstract': lambda d: d['abstract'],  # contains jats namespaced formatting tags
