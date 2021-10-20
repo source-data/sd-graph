@@ -14,6 +14,7 @@ MATCH (n:VizInfo) DETACH DELETE n;
 MATCH (n:VizEntity) DETACH DELETE n;
 MATCH (n:VizReviewDate) DETACH DELETE n;
 MATCH (n:VizPaperRank) DETACH DELETE n;
+MATCH (n:VizDescriptor) DETACH DELETE n;
 :commit
 RETURN "purge" as `completed`;
 
