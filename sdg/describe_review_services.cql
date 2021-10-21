@@ -82,11 +82,11 @@ WITH [
         review_requested_by: "Non-authors",
         reviewer_selected_by: "Editor, service, or community",
         review_coverage: "Full paper",
-        reviewer_identity_known_to: "Editor or service",
+        reviewer_identity_known_to: "Public",
         competing_interests: "Checked",
         public_interaction: "Not included",
         opportunity_for_author_response: "Not included",
-        recommendation: "Other scale or rating"
+        recommendation: "Scale or rating"
     },
     {
         service_name: "Peer Community In",
@@ -107,7 +107,7 @@ WITH [
         reviewer_identity_known_to: "Editor or service",
         competing_interests: "Checked",
         public_interaction: "Not included",
-        opportunity_for_author_response: "Included",
+        opportunity_for_author_response: "Not included",
         recommendation: "Binary decision"
     }
 ] AS descriptors
