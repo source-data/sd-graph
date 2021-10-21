@@ -179,7 +179,7 @@ MERGE
     })
 MERGE
     (recommendation)-[:child]->(recommendation_scale:PRDVal {
-        value: "Other scale or rating",
+        value: "Scale or rating",
         prd_id: 27
     })
 MERGE
