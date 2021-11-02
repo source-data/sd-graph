@@ -35,8 +35,8 @@ cache = Cache(config={
 })
 
 cache.init_app(app)
-# with app.app_context():
-#     cache.clear()
+with app.app_context():
+    cache.clear()
 
 DB = Instance(NEO_URI, NEO_USERNAME, NEO_PASSWORD)
 
