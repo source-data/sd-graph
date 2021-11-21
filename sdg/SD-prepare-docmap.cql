@@ -49,7 +49,8 @@ MERGE (docmap:Docmap {
   provider: "https://eeb.embo.org",
   publisher: rs.url,
   id: "https://eeb.embo.org/api/v2/docmap/" + doi,
-  first_step: first_step
+  first_step: first_step,
+  origin_url: "https://doi.org/" + doi  // for convenience but this is NOT part of the docmap spec
 })
 MERGE (docmap)<-[:steps]-(step:Step {id: first_step})
 MERGE (step)<-[:inputs]-(preprint)
@@ -70,11 +71,11 @@ OPTIONAL MATCH
   (a:Article {doi: preprint.doi})-[r:HasAnnot]->(annot:PeerReviewMaterial {reviewed_by: rs.name})
 // use aggregation to coerce individual peer review material documents as review
 WITH DISTINCT
-  preprint.uri AS preprint_uri, docmap, step, COLLECT(DISTINCT review) + COLLECT(DISTINCT annot) AS reviews
+  preprint.uri AS preprint_uri, preprint.doi AS doi, docmap, step, COLLECT(DISTINCT review) + COLLECT(DISTINCT annot) AS reviews
 UNWIND reviews as review
 WITH DISTINCT
-  preprint_uri, docmap, step, review
-WITH preprint_uri, docmap, step, review, "_:b-"+apoc.create.uuid() AS action_uuid
+  preprint_uri, doi, docmap, step, review
+WITH preprint_uri, doi, docmap, step, review, "_:b-"+apoc.create.uuid() AS action_uuid
 MERGE (step)<-[:assertions]-(assertion:Assertion {
   item: preprint_uri,
   status: "reviewed"
@@ -84,9 +85,25 @@ MERGE (action)<-[:outputs]-(rev:RefereeReport {
   published: review.posting_date,
   uri: "https://eeb.embo.org/api/v2/review_material/" + id(review)
 })
-MERGE (rev)<-[:content]-(content:Content {
-  type: "web-page", 
+// realization on eeb as json
+MERGE (rev)<-[:content]-(content_on_eeb:Content {
+  type: "json", 
   url: "https://eeb.embo.org/api/v2/review_material/" + id(review)
+})
+// realization on hypothesis as HTML
+MERGE (rev)<-[:content]-(content_on_hypothesis:Content {
+  type: "web-page", 
+  url: review.link_html
+})
+// realization on biorxiv in context of the preprint
+MERGE (rev)<-[:content]-(content_incontext:Content {
+  type: "incontext", 
+  url: "https://doi.org/" + doi + "#review"
+})
+// abstract realization as hypothesis id
+MERGE (rev)<-[:content]-(content_hypothesis_id:Content {
+  type: "hypothesis_id", 
+  id: review.hypothesis_id
 })
 WITH DISTINCT action, review
 WHERE review.review_idx IS NOT NULL
@@ -123,15 +140,27 @@ UNWIND reviews as review
 WITH DISTINCT docmap, review, response, step
 MERGE (step)<-[:inputs]-(review)
 WITH DISTINCT docmap, response, step
-WITh docmap, response, step, "_:b-"+apoc.create.uuid() AS action_uuid
+WITH docmap, response, step, "_:b-"+apoc.create.uuid() AS action_uuid
 MERGE (step)<-[:actions]-(action:Action {id: action_uuid})
 MERGE (action)<-[:outputs]-(reply:AuthorReply {
   published: response.posting_date,
   uri: "https://eeb.embo.org/api/v2/review_material/" + id(response)
 })
 MERGE (reply)<-[:content]-(content:Content {
-  type: "web-page",
+  type: "json",
   url: "https://eeb.embo.org/api/v2/review_material/" + id(response)
+})
+MERGE (rev)<-[:content]-(content_on_hypothesis:Content {
+  type: "web-page", 
+  url: response.link_html
+})
+MERGE (rev)<-[:content]-(content_incontext:Content {
+  type: "incontext", 
+  url: "https://doi.org/" + doi + "#review"
+})
+MERGE (rev)<-[:content]-(content_hypothesis_id:Content {
+  type: "hypothesis_id", 
+  id: response.hypothesis_id
 })
 RETURN COUNT(DISTINCT response) AS `response linked`;
 :commit

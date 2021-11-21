@@ -1,3 +1,4 @@
+from os import pread
 import re
 import math
 import time
@@ -51,6 +52,8 @@ def doi_from_uri(uri):
 
 class PeerReviewNode:
     def __init__(self, hypo_row):
+        # hypo_row.keys() = dict_keys(['id', 'created', 'updated', 'user', 'uri', 'text', 'tags', 'group', 'permissions', 'target', 'document', 'links', 'user_info', 'flagged', 'moderation', 'hidden'])
+        # self.links = {'html': 'https://hypothes.is/a/ChtnSEQXEeygzff7nOkaag', 'incontext': 'https://hyp.is/ChtnSEQXEeygzff7nOkaag/www.biorxiv.org/content/10.1101/2021.08.21.457202v2', 'json': 'https://hypothes.is/api/annotations/ChtnSEQXEeygzff7nOkaag'}
         self._resp = hypo_row
         self.label = 'PeerReviewMaterial'
         self.properties = {}
@@ -59,6 +62,11 @@ class PeerReviewNode:
             'text': self.text,
             'related_article_uri': self.related_article,
             'related_article_doi': self.related_doi,
+            'hypothesis_id': self.hypothesis_id,
+            'tags': self.tags,
+            'link_html': self.link_html,
+            'link_json': self.link_json,
+            'link_incontext': self.link_incontext,
         })
 
     def update_properties(self, prop: Dict):
@@ -77,8 +85,28 @@ class PeerReviewNode:
         return self._resp['uri']
 
     @property
+    def hypothesis_id(self):
+        return self._resp.get('id', '')
+
+    @property
+    def tags(self):
+        return self._resp.get('tags', [])
+
+    @property
     def related_doi(self):
         return doi_from_uri(self.related_article)
+
+    @property
+    def link_html(self):
+        return self._resp['links'].get('html', '')
+
+    @property
+    def link_incontext(self):
+        return self._resp['links'].get('incontext', '')
+
+    @property
+    def link_json(self):
+        return self._resp['links'].get('json', '')
 
 
 class ReviewCommonsReviewNode(PeerReviewNode):
@@ -293,20 +321,19 @@ class Hypothelink(PeerReviewFinder):
         rows = []
         limit = 200
         offset = 0
-        remaining = 1
-        while remaining > 0:
+        N = 1
+        while offset < N:
+            logger.info(f"offset={offset}, limit={limit}")
             response = self.hypo.annotations.search(group=group_id, limit=limit, offset=offset)
             if response.status_code == 200:
                 response = response.json()
-                N = response['total']  # does not change
-                remaining = N - offset
-                offset += limit
-                logger.info(f"found {N} annotations for group {HYPO_GROUP_IDS[group_id]}")
+                logger.info(f"{len(response.get('rows'))} annotations found for group {HYPO_GROUP_IDS[group_id]}")
                 rows += response['rows']
+                N = response['total']  # does not change
+                offset += limit
             else:
                 logger.info(f"PROBLEM: {response.status_code}")
                 rows = None
-                remaining = 0
         return rows
 
 
