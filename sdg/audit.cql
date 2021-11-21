@@ -46,16 +46,11 @@ RETURN
   month, 
   COUNT(DISTINCT a);
 
+// detecting reviews posted multiple times
 MATCH (a:Article)-->(rev:Review), (a)-->(resp:Response)
 WITH DISTINCT a.doi AS doi, COUNT(DISTINCT rev) AS N_review, COUNT(DISTINCT resp) AS N_resp
 WHERE N_review > 3 AND N_resp > 1
 RETURN DISTINCT doi AS `preprint with suspiciously more than 3 reviews and 1 response`;
-
-MATCH (a:Article)-->(r:Response)
-WITH a, COUNT(r) AS N_review
-WHERE N_review > 4
-RETURN a.doi AS `preprint with suspiciously more than 4 reviews`;
-
 
 // What kind of nodes exist
 // Sample some nodes, reporting on property and relationship counts per node.
