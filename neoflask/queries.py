@@ -370,7 +370,11 @@ WITH DISTINCT
   docmap.provider AS provider,
   docmap.generatedAt AS generatedAt,
   docmap.first_step AS `first-step`,
-  docmap.origin_url AS `origin-url`,
+  CASE WHEN docmap.origin_url IS NOT NULL THEN
+    docmap.origin_url
+  ELSE
+    ''
+  END AS `origin-url`,
   CASE WHEN step_2 IS NOT NULL THEN
     apoc.map.fromPairs([
       [step_1.id, step_1_json],
