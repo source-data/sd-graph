@@ -77,7 +77,7 @@ update_local_neo4j() {
     log "import full text biorxiv preprints"
     # this is missing the July_2020
     #docker-compose run --rm -v /usb01/shared/biorxiv-src-monthly:/biorxiv-src-monthly flask python -m neotools.rxiv2neo /biorxiv-src-monthly/July_2020 --type meca
-    local PREVIOUS_MONTH=`date --date='-1 month' +%B` # Biorxiv only publishes monthly updates when the month is over, meaning the 1st of September we get access to August content
+    local PREVIOUS_MONTH=`LC_TIME=en_US.UTF-8 date --date='-1 month' +%B` # Biorxiv only publishes monthly updates when the month is over, meaning the 1st of September we get access to August content
     local YEAR=`date --date='-1 month' +%Y` # Biorxiv only publishes monthly updates when the month is over, meaning the 1st of September we get access to August content
     docker-compose -f docker-compose.deploy.yml run --rm flask python -m neotools.rxiv2neo /app/biorxiv/"$PREVIOUS_MONTH"_"$YEAR" --type meca
   }
