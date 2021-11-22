@@ -75,7 +75,21 @@ WITH DISTINCT
 UNWIND reviews as review
 WITH DISTINCT
   preprint_uri, doi, docmap, step, review
-WITH preprint_uri, doi, docmap, step, review, "_:b-"+apoc.create.uuid() AS action_uuid
+WITH 
+  preprint_uri, 
+  doi,
+  docmap,
+  step,
+  review, "_:b-"+apoc.create.uuid() AS action_uuid,
+  // filtering NULLs to prevent error in MERGE
+  CASE WHEN review.link_html IS NOT NULL
+    THEN review.link_html
+    ELSE ""
+  END AS link_html,
+  CASE WHEN review.hypothesis_id IS NOT NULL
+    THEN review.hypothesis_id
+    ELSE ""
+  END AS hypothesis_id
 MERGE (step)<-[:assertions]-(assertion:Assertion {
   item: preprint_uri,
   status: "reviewed"
@@ -93,7 +107,7 @@ MERGE (rev)<-[:content]-(content_on_eeb:Content {
 // realization on hypothesis as HTML
 MERGE (rev)<-[:content]-(content_on_hypothesis:Content {
   type: "web-page", 
-  url: review.link_html
+  url: link_html
 })
 // realization on biorxiv in context of the preprint
 MERGE (rev)<-[:content]-(content_incontext:Content {
@@ -103,7 +117,7 @@ MERGE (rev)<-[:content]-(content_incontext:Content {
 // abstract realization as hypothesis id
 MERGE (rev)<-[:content]-(content_hypothesis_id:Content {
   type: "hypothesis_id", 
-  id: review.hypothesis_id
+  id: hypothesis_id
 })
 WITH DISTINCT action, review
 WHERE review.review_idx IS NOT NULL
@@ -126,21 +140,34 @@ MATCH
   (reviewing_step)<-[:inputs]-(preprint:Preprint),
   (a:Article {doi: preprint.doi})-[:HasResponse]->(response:Response {reviewed_by: rs.name})
 WITH DISTINCT
-  preprint.uri AS preprint_uri, docmap, reviewing_step, COLLECT(DISTINCT review) AS reviews, response
+  preprint.uri AS preprint_uri, preprint.doi AS doi, docmap, reviewing_step, COLLECT(DISTINCT review) AS reviews, response
 WITH
-  preprint_uri, docmap, reviewing_step, reviews, response, "_:b-"+apoc.create.uuid() as reply_step
+  preprint_uri, doi, docmap, reviewing_step, reviews, response, "_:b-"+apoc.create.uuid() as reply_step
 SET reviewing_step.next_step = reply_step
 MERGE (docmap)<-[:steps]-(step:Step {id: reply_step, previous_step: reviewing_step.id})
 MERGE (step)<-[:assertions]-(assertion:Assertion {
   item: preprint_uri,
   status: "" // in the future: a value to the effect that "authors-replied-to-reviewers"
 })
-WITH DISTINCT docmap, reviews, response, step
+WITH DISTINCT doi, docmap, reviews, response, step
 UNWIND reviews as review
-WITH DISTINCT docmap, review, response, step
+WITH DISTINCT doi, docmap, review, response, step
 MERGE (step)<-[:inputs]-(review)
-WITH DISTINCT docmap, response, step
-WITH docmap, response, step, "_:b-"+apoc.create.uuid() AS action_uuid
+WITH DISTINCT doi, docmap, response, step
+WITH
+  doi, 
+  docmap,
+  response,
+  step,
+  "_:b-"+apoc.create.uuid() AS action_uuid,
+  CASE WHEN response.link_html IS NOT NULL
+    THEN response.link_html
+    ELSE ""
+  END AS link_html,
+  CASE WHEN response.hypothesis_id IS NOT NULL
+    THEN response.hypothesis_id
+    ELSE ""
+  END AS hypothesis_id
 MERGE (step)<-[:actions]-(action:Action {id: action_uuid})
 MERGE (action)<-[:outputs]-(reply:AuthorReply {
   published: response.posting_date,
@@ -152,7 +179,7 @@ MERGE (reply)<-[:content]-(content:Content {
 })
 MERGE (rev)<-[:content]-(content_on_hypothesis:Content {
   type: "web-page", 
-  url: response.link_html
+  url: link_html
 })
 MERGE (rev)<-[:content]-(content_incontext:Content {
   type: "incontext", 
@@ -160,7 +187,7 @@ MERGE (rev)<-[:content]-(content_incontext:Content {
 })
 MERGE (rev)<-[:content]-(content_hypothesis_id:Content {
   type: "hypothesis_id", 
-  id: response.hypothesis_id
+  id: hypothesis_id
 })
 RETURN COUNT(DISTINCT response) AS `response linked`;
 :commit
