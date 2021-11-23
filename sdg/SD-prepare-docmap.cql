@@ -117,7 +117,7 @@ MERGE (rev)<-[:content]-(content_on_hypothesis:Content {
 // realization on biorxiv in context of the preprint
 MERGE (rev)<-[:content]-(content_incontext:Content {
   type: "web-page", 
-  url: "https://biorxiv.org/" + doi + "#review",
+  url: "https://biorxiv.org/content/" + doi + "#review",
   id: doi,
   service: "https://biorxiv.org"
 })
@@ -189,7 +189,7 @@ MERGE (rev)<-[:content]-(content_on_hypothesis:Content {
 })
 MERGE (rev)<-[:content]-(content_incontext:Content {
   type: "wev-page", 
-  url: "https://biorxiv.org/" + doi + "#review",
+  url: "https://biorxiv.org/content/" + doi + "#review",
   id: doi,
   service: "https://biorxiv.org"
 })
