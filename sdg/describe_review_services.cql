@@ -31,7 +31,7 @@ CREATE (embo_press:ReviewingService {
 CREATE (peerage_of_science:ReviewingService {
     name: "peerage of science",
     url: "https://www.peerageofscience.org/",
-    peer_review_policy: NULL
+    peer_review_policy: ""
 })
 
 RETURN

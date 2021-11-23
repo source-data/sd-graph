@@ -273,9 +273,9 @@ WITH DISTINCT
 WITH DISTINCT
   docmap, preprint,
   step_1, assertion_1, review, reviewer,
-  COLLECT(DISTINCT review_content) AS review_content_list,
+  COLLECT(DISTINCT review_content{.*}) AS review_content_list,
   step_2, assertion_2, reply, author,
-  COLLECT(DISTINCT reply_content) AS reply_content_list
+  COLLECT(DISTINCT reply_content{.*}) AS reply_content_list
 WITH DISTINCT
   docmap, preprint,
   step_1, assertion_1, review, reviewer, review_content_list,
@@ -366,15 +366,10 @@ WITH DISTINCT
   docmap.id AS id,
   "docmap" AS type,
   docmap.created AS created,
-  docmap.publisher AS publisher,
   docmap.provider AS provider,
+  {url: docmap.publisher_url, name: docmap.publisher_name, peer_review_policy: docmap.publisher_peer_review_policy} AS publisher,
   docmap.generatedAt AS generatedAt,
   docmap.first_step AS `first-step`,
-  CASE WHEN docmap.origin_url IS NOT NULL THEN
-    docmap.origin_url
-  ELSE
-    ''
-  END AS `origin-url`,
   CASE WHEN step_2 IS NOT NULL THEN
     apoc.map.fromPairs([
       [step_1.id, step_1_json],
@@ -393,7 +388,6 @@ RETURN {
   provider: provider,
   generatedAt: generatedAt,
   `first-step`: `first-step`,
-  `origin-url`: `origin-url`,
   steps: steps
 } AS docmap
 ORDER BY id

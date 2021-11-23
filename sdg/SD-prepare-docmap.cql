@@ -47,10 +47,11 @@ MERGE (docmap:Docmap {
   created: toString(DATETIME()),
   generatedAt: toString(DATETIME()),
   provider: "https://eeb.embo.org",
-  publisher: rs.url,
+  publisher_url: rs.url,
+  publisher_name: rs.name,
+  publisher_peer_review_policy: rs.peer_review_policy,
   id: "https://eeb.embo.org/api/v2/docmap/" + doi,
-  first_step: first_step,
-  origin_url: "https://doi.org/" + doi  // for convenience but this is NOT part of the docmap spec
+  first_step: first_step
 })
 MERGE (docmap)<-[:steps]-(step:Step {id: first_step})
 MERGE (step)<-[:inputs]-(preprint)
@@ -63,7 +64,7 @@ RETURN COUNT(docmap) AS `docmap generated`;
 MATCH (rs:ReviewingService)
 WITH rs
 MATCH
-  (docmap:Docmap {publisher: rs.url})<-[:steps]-(step:Step)<-[:inputs]-(preprint:Preprint)
+  (docmap:Docmap {publisher_url: rs.url})<-[:steps]-(step:Step)<-[:inputs]-(preprint:Preprint)
 OPTIONAL MATCH
   (a:Article {doi: preprint.doi})-[r:HasReview]->(review:Review {reviewed_by: rs.name})
 WITH rs, docmap, step, preprint, review
@@ -101,23 +102,24 @@ MERGE (action)<-[:outputs]-(rev:RefereeReport {
 })
 // realization on eeb as json
 MERGE (rev)<-[:content]-(content_on_eeb:Content {
-  type: "json", 
-  url: "https://eeb.embo.org/api/v2/review_material/" + id(review)
+  type: "web-page", 
+  url: "https://eeb.embo.org/api/v2/review_material/" + id(review),
+  id: toString(id(review)),
+  service: "https://eeb.embo.org/"
 })
 // realization on hypothesis as HTML
 MERGE (rev)<-[:content]-(content_on_hypothesis:Content {
   type: "web-page", 
-  url: link_html
+  url: link_html,
+  id: hypothesis_id,
+  service: "https://hypothes.is/"
 })
 // realization on biorxiv in context of the preprint
 MERGE (rev)<-[:content]-(content_incontext:Content {
-  type: "incontext", 
-  url: "https://doi.org/" + doi + "#review"
-})
-// abstract realization as hypothesis id
-MERGE (rev)<-[:content]-(content_hypothesis_id:Content {
-  type: "hypothesis_id", 
-  id: hypothesis_id
+  type: "web-page", 
+  url: "https://biorxiv.org/" + doi + "#review",
+  id: doi,
+  service: "https://biorxiv.org"
 })
 WITH DISTINCT action, review
 WHERE review.review_idx IS NOT NULL
@@ -127,7 +129,7 @@ MERGE (action)<-[:participants]-(reviewer:Person {
   role: "peer-reviewer"
 })
 SET action.index = review.review_idx
-RETURN DISTINCT "done" AS `reviews linked`;
+RETURN DISTINCT COUNT(DISTINCT review) AS `reviews linked`;
 :commit
 
 
@@ -136,7 +138,7 @@ RETURN DISTINCT "done" AS `reviews linked`;
 MATCH (rs:ReviewingService)
 WITH rs
 MATCH
-  (docmap:Docmap {publisher: rs.url})<-[:steps]-(reviewing_step:Step)<-[:actions]-(:Action)<-[:outputs]-(review:RefereeReport),
+  (docmap:Docmap {publisher_url: rs.url})<-[:steps]-(reviewing_step:Step)<-[:actions]-(:Action)<-[:outputs]-(review:RefereeReport),
   (reviewing_step)<-[:inputs]-(preprint:Preprint),
   (a:Article {doi: preprint.doi})-[:HasResponse]->(response:Response {reviewed_by: rs.name})
 WITH DISTINCT
@@ -174,20 +176,22 @@ MERGE (action)<-[:outputs]-(reply:AuthorReply {
   uri: "https://eeb.embo.org/api/v2/review_material/" + id(response)
 })
 MERGE (reply)<-[:content]-(content:Content {
-  type: "json",
-  url: "https://eeb.embo.org/api/v2/review_material/" + id(response)
+  type: "web-page",
+  url: "https://eeb.embo.org/api/v2/review_material/" + id(response),
+  id: toString(id(response)),
+  service: "https://eeb.embo.org"
 })
 MERGE (rev)<-[:content]-(content_on_hypothesis:Content {
   type: "web-page", 
-  url: link_html
+  url: link_html,
+  id: hypothesis_id,
+  service: "https://hypothes.is"
 })
 MERGE (rev)<-[:content]-(content_incontext:Content {
-  type: "incontext", 
-  url: "https://doi.org/" + doi + "#review"
-})
-MERGE (rev)<-[:content]-(content_hypothesis_id:Content {
-  type: "hypothesis_id", 
-  id: hypothesis_id
+  type: "wev-page", 
+  url: "https://biorxiv.org/" + doi + "#review",
+  id: doi,
+  service: "https://biorxiv.org"
 })
 RETURN COUNT(DISTINCT response) AS `response linked`;
 :commit
@@ -198,13 +202,13 @@ RETURN COUNT(DISTINCT response) AS `response linked`;
 MATCH (rs:ReviewingService)
 WITH rs
 MATCH
-  (docmap:Docmap {publisher: rs.url})<-[:steps]-(replying_step:Step)<-[:actions]-(reply_action:Action)<-[:outputs]-(reply:AuthorReply),
+  (docmap:Docmap {publisher_url: rs.url})<-[:steps]-(replying_step:Step)<-[:actions]-(reply_action:Action)<-[:outputs]-(reply:AuthorReply),
   (docmap)<-[:steps]-(reviwing_step:Step)<-[:inputs]-(preprint:Preprint)
 WITH DISTINCT docmap, preprint, reply_action
 MATCH (a:Article {doi: preprint.doi})-[:has_author]->(author:Contrib)
 OPTIONAL MATCH (author)-[:has_orcid]->(orcid:Contrib_id)
 WITH DISTINCT
-  reply_action, author,
+  reply_action, author, preprint,
   CASE 
     WHEN orcid IS NULL THEN "null"
     ELSE orcid.text
@@ -215,6 +219,7 @@ MERGE (reply_action)<-[:participants]-(person:Person {
   familyName: author.surname,
   role: "author"
 })
+MERGE (preprint)-[:has_author]->(person)
 RETURN COUNT(person) AS `authors linked to replies`;
 :commit
 
