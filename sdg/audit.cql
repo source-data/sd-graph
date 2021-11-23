@@ -31,6 +31,12 @@ WITH DISTINCT a.doi  AS doi, COUNT(a) AS N
 WHERE N > 1
 RETURN COUNT(DISTINCT doi) AS `duplicate doi SDArticle`;
 
+MATCH (orcid:Contrib_id)
+WITH DISTINCT orcid.text, COUNT(DISTINCT orcid) AS duplicates
+WHERE duplicates > 1
+RETURN COUNT(DISTINCT text) AS `orcid with duplicate nodes`;
+
+
 // check number of preprints imported by year and month
 WITH
   [2020, 2021] as years,
