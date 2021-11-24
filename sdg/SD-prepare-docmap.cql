@@ -188,7 +188,7 @@ MERGE (reply)<-[:content]-(content_on_hypothesis:Content {
   service: "https://hypothes.is"
 })
 MERGE (reply)<-[:content]-(content_incontext:Content {
-  type: "wev-page", 
+  type: "web-page", 
   url: "https://biorxiv.org/content/" + doi + "#review",
   id: doi,
   service: "https://biorxiv.org"
