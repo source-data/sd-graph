@@ -143,7 +143,7 @@ def list_subgraph_central(
 ):
     highlights = OrderedDict()
     for i, subg in enumerate(subgraphs):
-        logger.info(f"{i}: {len(subg)} nodes with CC={nx.average_clustering(subg):.3f}")
+        logger.debug(f"{i}: {len(subg)} nodes with CC={nx.average_clustering(subg):.3f}")
         centrality = funct(subg, **kwargs)
         centrality = {k: v for k, v in centrality.items() if not isnan(v)}
         centrality_values = list(centrality.values())
@@ -153,7 +153,7 @@ def list_subgraph_central(
         centrality_sorted = OrderedDict(sorted(centrality_filtered.items(), key=lambda e: e[1], reverse=True))  # nodeId: centrality_value
         highlights[i] = centrality_sorted
         for j, (node_id, val) in enumerate(centrality_sorted.items()):
-            logger.info(f"\t{j}: {subg.nodes[node_id]['description']} ({val:.3f})")
+            logger.debug(f"\t{j}: {subg.nodes[node_id]['description']} ({val:.3f})")
     return highlights
 
 

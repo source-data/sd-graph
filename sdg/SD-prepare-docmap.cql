@@ -181,13 +181,13 @@ MERGE (reply)<-[:content]-(content:Content {
   id: toString(id(response)),
   service: "https://eeb.embo.org"
 })
-MERGE (rev)<-[:content]-(content_on_hypothesis:Content {
+MERGE (reply)<-[:content]-(content_on_hypothesis:Content {
   type: "web-page", 
   url: link_html,
   id: hypothesis_id,
   service: "https://hypothes.is"
 })
-MERGE (rev)<-[:content]-(content_incontext:Content {
+MERGE (reply)<-[:content]-(content_incontext:Content {
   type: "wev-page", 
   url: "https://biorxiv.org/content/" + doi + "#review",
   id: doi,
