@@ -62,7 +62,7 @@ class XMLNode:
         # this_element_xpath_to_properties = graph_model['properties']
         self.namespaces = namespaces
         self.label = cleanup_name(element.tag).capitalize()
-        logger.info(f"parsing {self.label} {position_idx}")
+        logger.debug(f"parsing {self.label} {position_idx}")
         recipe_for_properties = graph_model.get('properties', None)
         properties = {}
         if recipe_for_properties is not None:
@@ -160,7 +160,7 @@ class JSONNode:
             label = cleanup_name(graph_model['path']['type'])
             # only first letter only to keep camel case; .capitalize()  puts everyghin lower case except first char
             self.label = label[0].upper() + label[1:]
-        logger.info(f"parsing {self.label} {position_idx}")
+        logger.debug(f"parsing {self.label} {position_idx}")
         recipe_for_properties = graph_model.get('properties', None)
         properties = {}
         if recipe_for_properties is not None:

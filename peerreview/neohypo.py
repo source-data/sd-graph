@@ -242,7 +242,7 @@ class CrossRefPeerReview(API):
                     else:
                         cursor = response['message']['next-cursor']
                 else:
-                    logger.info(response)
+                    logger.error(response)
                     cursor = ''
                 time.sleep(1.0)
             assert check == total_results or check <= limit
@@ -274,16 +274,16 @@ class PeerReviewFinder:
                     prelim.properties['abstract'] = data_biorxiv.get('abstract','abstract not available')
                     prelim.properties['version'] = data_biorxiv['version']
                 else:
-                    logger.info(f"problem with biorxiv obtaining abstract from doi: {doi}")
+                    logger.error(f"problem with biorxiv obtaining abstract from doi: {doi}")
                 build_neo_graph(prelim, 'biorxiv_crossref', self.db)
             else:
-                logger.info(f"problem with crossref to get preprint with doi={doi}")
+                logger.error(f"problem with crossref to get preprint with doi={doi}")
 
     def make_relationships(self):
         N_rev = self.db.query(LINK_REVIEWS())
         N_resp = self.db.query(LINK_RESPONSES())
         N_annot = self.db.query(LINK_ANNOT())
-        logger.info(f"{N_rev}, {N_resp}, {N_annot}")
+        logger.info(f"{N_rev} reviews linked, {N_resp} responses linked, {N_annot} further annotations linked")
 
 
 class Hypothelink(PeerReviewFinder):
@@ -332,7 +332,7 @@ class Hypothelink(PeerReviewFinder):
                 N = response['total']  # does not change
                 offset += limit
             else:
-                logger.info(f"PROBLEM: {response.status_code}")
+                logger.error(f"PROBLEM: {response.status_code}")
                 rows = None
         return rows
 
@@ -366,7 +366,7 @@ class CrossRefReviewFinder(PeerReviewFinder):
         for item in items:
             if is_cross_ref_review(item, target_prefixes):
                 peer_review_node = CrossRefReviewNode(item, self.MODELS[source_prefix])
-                logger.info(peer_review_node)
+                logger.debug(peer_review_node)
                 build_neo_graph(peer_review_node, 'cross_ref', self.db)
                 self.add_prelim_article(peer_review_node.properties['related_article_doi'])
         self.make_relationships()

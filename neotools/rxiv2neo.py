@@ -124,7 +124,7 @@ class CORDLoader:
             j['metadata']['pub_date'] = supplementary_metadata['publish_time']
             j['metadata']['journal-title'] = supplementary_metadata['source_x']
             json_node = JSONNode(j, CORD19_GRAPH_MODEL)
-            logger.info(json_node)
+            logger.debug(json_node)
             source = json_archive.name
             build_neo_graph(json_node, source, DB)
 
