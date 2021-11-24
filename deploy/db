@@ -10,11 +10,12 @@ mail_developers(){
   # local developers_emails="mainar@embl.de"
   local subject=$1
   local body=$2
+
   if [ ! -z $LOG_FILE ]; then
-    local _log=`cat $LOG_FILE`
-    local log="----------\n\nOutput of log file: $LOG_FILE\n$_log"
+    local body="$2\n\n----------\n\nLast 50 lines of the log file @ $LOG_FILE\n\n$(tail -50 $LOG_FILE)"
   fi
-  echo -e "$2\n\n$log" | mail -s "[sd-graph deploy/db] $subject" $developers_emails
+
+  echo -e "$body" | mail -s "[sd-graph deploy/db] $subject" $developers_emails
 }
 
 on_exit(){
