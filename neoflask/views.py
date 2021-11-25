@@ -110,7 +110,7 @@ def stats():
 @cache.cached()
 def by_hyp(limit_date):
     if limit_date is None:
-        limit_date = n_months_ago(6)
+        limit_date = n_months_ago(4)
     app.logger.info(f"list by automatic topics with limit {limit_date}")
     return jsonify(ask_neo(BY_AUTO_TOPICS(), limit_date=limit_date))
 
