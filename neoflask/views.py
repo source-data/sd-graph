@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from dateutil.relativedelta import relativedelta
 from flask import (
     abort,
     jsonify,
@@ -30,6 +31,11 @@ DOI_REGEX = re.compile(r'10.\d{4,9}/[-._;()/:A-Z0-9]+$', flags=re.IGNORECASE)
 
 app.url_map.converters['escape_lucene'] = LuceneQueryConverter
 app.url_map.converters['service_name'] = ReviewServiceConverter
+
+def n_months_ago(n):
+    n_months_ago = date.today() + relativedelta(months=-n)
+    first_day_of_that_month = n_months_ago.replace(day=1)
+    return str(first_day_of_that_month)
 
 def ask_neo(query: Query, **kwargs) -> Dict:
     """
@@ -99,11 +105,13 @@ def stats():
 
 
 # using routing rather than parameters to provide limit_date so that cache.cached() works properly; memoize would need function params
-@app.route('/api/v1/by_auto_topics/', defaults={'limit_date': '1900-01-01'}, methods=['GET', 'POST'])
+@app.route('/api/v1/by_auto_topics/', defaults={'limit_date': None}, methods=['GET', 'POST'])
 @app.route('/api/v1/by_auto_topics/<limit_date>', methods=['GET', 'POST'])
 @cache.cached()
 def by_hyp(limit_date):
-    app.logger.info(f"list by automatic topics")
+    if limit_date is None:
+        limit_date = n_months_ago(6)
+    app.logger.info(f"list by automatic topics with limit {limit_date}")
     return jsonify(ask_neo(BY_AUTO_TOPICS(), limit_date=limit_date))
 
 
