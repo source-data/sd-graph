@@ -7,28 +7,23 @@ CREATE CONSTRAINT term_text_ IF NOT EXISTS ON (te:Term) ASSERT te.text IS UNIQUE
 
 // purge processed nodes
 // prelimin solution before proper combined keys are implemented that will allow using MERGE instead of CREATE cond Tags
+// combo_id for CondTag should include role: role, type: type, category: category, ext_ids: ext_ids, text: most_used_text
+// and the SDPaanel id
+// can we use hashes? https://neo4j.com/labs/apoc/4.1/overview/apoc.hashing/apoc.hashing.fingerprinting/
+// apoc.hashing.fingerprinting(some object :: ANY?, conf = {} :: MAP?) :: (STRING?)
 :begin
-MATCH (ct:CondTag)-[r]-()
+MATCH (ct:CondTag)
 DETACH DELETE ct
-RETURN COUNT(DISTINCT ct) AS `deleted CondTag`;
+RETURN COUNT(ct) AS `deleted CondTag`;
 :commit
 :begin
 MATCH (ct:CondTag)
 RETURN COUNT(ct) AS `remaining CondTag`;
 :commit
-// :begin
-// MATCH (h:H_Entity)-[r]-()
-// DETACH DELETE h
-// RETURN COUNT(DISTINCT h) AS `deleted H_Entity`;
-// :commit
-// :begin
-// MATCH (h:H_Entity)
-// RETURN COUNT(h) AS `remaining H_Entity`;
-// :commit
 :begin
 MATCH (t:Term)
 DETACH DELETE t
-RETURN COUNT(DISTINCT t) AS `deleted Term`;
+RETURN COUNT(t) AS `deleted Term`;
 :commit
 :begin
 MATCH (t:Term)
@@ -144,7 +139,8 @@ ORDER BY N DESC
 WITH DISTINCT p, role, type, category, ext_ids, text[0] AS most_used_text
 CREATE (c:CondTag {role: role, type: type, category: category, ext_ids: ext_ids, text: most_used_text})
 CREATE (p)-[rel:HasCondTag]->(c);
-
+:commit
+:begin
 MATCH 
    (p:SDPanel)-[:has_tag]->(t:SDTag), (p)-[:HasCondTag]->(c:CondTag)
 WHERE
@@ -162,7 +158,8 @@ WHERE
 WITH DISTINCT p, t.norm_text AS text, t.role AS role, t.type AS type, t.category AS category
 CREATE (c:CondTag {role: role, type:type, category: category, ext_ids: "", text: text})
 CREATE (p)-[:HasCondTag]->(c);
-
+:commit
+:begin
 MATCH 
     (p:SDPanel)-[:has_tag]->(t:SDTag), (p)-[:HasCondTag]->(c:CondTag)
 WHERE
@@ -215,7 +212,7 @@ RETURN COUNT(h) AS `H_Entity remaining without a name`;
 :commit
 :begin
 //Create unique terms
-MATCH (t:SDTag)-->(c:CondTag)-->(hyb:H_Entity)
+MATCH (t:SDTag)-[:Condensed_into}->(c:CondTag)-[:Identified_by]->(hyb:H_Entity)
 WITH DISTINCT t.norm_text AS text, hyb
 MERGE (te:Term {text: text})
 MERGE (hyb)-[r:Has_text]->(te)
@@ -223,7 +220,7 @@ RETURN COUNT(r) AS `unique terms`;
 :commit
 :begin
 // Compute popularity of terms
-MATCH (sd:SDArticle)-->(f:SDFigure)-->(p:SDPanel)-->(ct:CondTag)-->(h:H_Entity)-->(t:Term)
+MATCH (sd:SDArticle)-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(ct:CondTag)-[:Identified_by]->(h:H_Entity)-[:Has_text]->(t:Term)
 WITH t, COUNT(DISTINCT p) AS freq
 SET t.freq_in_panel = freq
 RETURN COUNT (t) as `tags with popularity frequency added`;
@@ -231,8 +228,8 @@ RETURN COUNT (t) as `tags with popularity frequency added`;
 :begin
 //infer tested hypotheses at condensed tag level
 MATCH 
-  (p:SDPanel)-->(intervention:CondTag {role: "intervention"}),
-  (p:SDPanel)-->(assayed:CondTag {role: "assayed"})
+  (p:SDPanel)-[:HasCondTag]->(intervention:CondTag {role: "intervention"}),
+  (p:SDPanel)-[:HasCondTag]->(assayed:CondTag {role: "assayed"})
 MERGE (intervention)-[r:H]->(assayed)
 RETURN COUNT(r) AS `hypotheses at cond tag level`;
 :commit
