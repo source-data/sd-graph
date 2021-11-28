@@ -212,7 +212,7 @@ RETURN COUNT(h) AS `H_Entity remaining without a name`;
 :commit
 :begin
 //Create unique terms
-MATCH (t:SDTag)-[:Condensed_into}->(c:CondTag)-[:Identified_by]->(hyb:H_Entity)
+MATCH (t:SDTag)-[:Condensed_into]->(c:CondTag)-[:Identified_by]->(hyb:H_Entity)
 WITH DISTINCT t.norm_text AS text, hyb
 MERGE (te:Term {text: text})
 MERGE (hyb)-[r:Has_text]->(te)
