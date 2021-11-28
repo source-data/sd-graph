@@ -54,6 +54,8 @@ MATCH (a:Article)
 OPTIONAL MATCH (a)-[:HasReview]->(review:Review)
 OPTIONAL MATCH (a)-[:HasResponse]->(response:Response)
 OPTIONAL MATCH (a)-[:HasAnnot]->(annot:PeerReviewMaterial)
+WITH DISTINCT a, review, response, annot
+WHERE review IS NOT NULL OR annot IS NOT NULL
 WITH
   id(a) AS id,
   a.publication_date AS pub_date,
@@ -63,8 +65,6 @@ WITH
   a.doi AS doi,
   a.journalName as journal,
   {reviews: COLLECT(DISTINCT review {.*}), response: response {.*}, annot: COLLECT(DISTINCT annot {.*})} AS review_process
-WHERE
-  review_process.reviews <> [] OR EXISTS(review_process.annot)
 RETURN id, pub_date, title, abstract, version, doi, journal, review_process
 ORDER BY pub_date DESC
     '''

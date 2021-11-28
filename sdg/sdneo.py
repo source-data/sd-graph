@@ -48,6 +48,7 @@ class SDNeo:
             return filtered_list
 
         filtered_doi_list = filter_existing_complete_articles(doi_list)
+        logger.info(f"{len(filtered_doi_list)} articles to process after filtering completed articles out of {len(doi_list)})")
         articles, article_nodes, skipped_articles = self.create_nodes(self.api.article, filtered_doi_list)
         for a in articles:
             self.db.query(SET_STATUS(params={'doi': a.doi, 'status': 'partial'}))
