@@ -10,11 +10,12 @@ mail_developers(){
   # local developers_emails="mainar@embl.de"
   local subject=$1
   local body=$2
+
   if [ ! -z $LOG_FILE ]; then
-    local _log=`cat $LOG_FILE`
-    local log="----------\n\nOutput of log file: $LOG_FILE\n$_log"
+    local body="$2\n\n----------\n\nLast 50 lines of the log file @ $LOG_FILE\n\n$(tail -50 $LOG_FILE)"
   fi
-  echo -e "$2\n\n$log" | mail -s "[sd-graph deploy/db] $subject" $developers_emails
+
+  echo -e "$body" | mail -s "[sd-graph deploy/db] $subject" $developers_emails
 }
 
 on_exit(){
@@ -271,13 +272,13 @@ main() {
         if [[ "$1" != *=* ]]; then shift; fi # Value is next arg if no `=`
         STAGE_NAME="${1#*=}"
         ;;
-      --log_file*|-l*)
-        if [[ "$1" != *=* ]]; then shift; fi
-        LOG_FILE="${1#*=}"
-        ;;
       --periodicity*|-p*)
         if [[ "$1" != *=* ]]; then shift; fi
         PERIODICITY="${1#*=}"
+        ;;
+      --log_dir*|-L*)
+        if [[ "$1" != *=* ]]; then shift; fi
+        LOG_DIR="${1#*=}"
         ;;
       --help|-h)
         echo "--------------------------------------------------------------------------------------"
@@ -290,10 +291,10 @@ main() {
         echo "  --help        | -h"
         echo "  --stage_name  | -s (staging|production)"
         echo "  --periodicity | -p (daily|weekly|monthly)"
-        echo "  --log_file    | -l 'quoted/path/to/file.log'"
+        echo "  --log_dir    | -l 'quoted/path/to/log/directory'"
         echo ""
         echo "example of usage:"
-        echo "  deploy/db --stage_name staging --periodicity daily --log_file '/home/eeb/logs/deploydb.log'"
+        echo "  deploy/db --stage_name staging --periodicity daily --log_dir '/home/eeb/logs'"
         echo ""
         exit 0
         ;;
@@ -328,11 +329,15 @@ main() {
     ;;
   esac
 
-  if [ ! -z $LOG_FILE ]; then
-    # LOG_FILE is specified, let's redirect stdout and stderr to the $LOG_FILE
-    exec >> $LOG_FILE
-    exec 2>&1
+  if [ -z $LOG_DIR ]; then
+    LOG_DIR="."
   fi
+  local timestamp="$(date +%Y-%m-%d_%H-%M-%S)"
+  LOG_FILE="${LOG_DIR}/db-${STAGE_NAME}-${PERIODICITY}-${timestamp}.log"
+
+  # LOG_FILE is specified, let's redirect stdout and stderr to the $LOG_FILE
+  exec >> $LOG_FILE
+  exec 2>&1
 
   log "############################################################"
   log "##"
