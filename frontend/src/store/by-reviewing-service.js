@@ -8,7 +8,8 @@ const _serviceId2Slug = {
   'embo press': 'embo-press',
   'peerage of science': 'peerage-of-science',
   'MIT Press - Journals': 'rrc19',
-  'Peer Community In': 'peer-community-in'
+  'Peer Community In': 'peer-community-in',
+  'peer ref': 'peer-ref',
 }
 
 const _serviceSlug2Id = Object.keys(_serviceId2Slug).reduce((acc, serviceId) => {
@@ -32,8 +33,10 @@ function _serviceId2Name (id) {
     return 'Peerage of Science' 
   } else if (id === 'MIT Press - Journals') {
     return 'Rapid Reviews: COVID-19'
-  } else if (/Peer Community In/.test(id)) {
+  } else if (/peer community in/i.test(id)) {
     return 'Peer Community In'
+  } else if (id == 'peer ref') {
+    return 'Peer Ref'
   }
 }
 
@@ -52,12 +55,6 @@ export function serviceSlug2name(serviceSlug) {
   return _serviceId2Name(_serviceSlug2Id[serviceSlug])
 }
 
-// this should come from backend
-// export function serviceSlug2Props (serviceSlug) {
-//   return
-//   // return _properties[serviceSlug]
-// }
-
 
 export const byReviewingService = {
   namespaced: true,
@@ -74,7 +71,6 @@ export const byReviewingService = {
       return Object.values(state.records)
     },
     reviewingService (state) {
-      console.debug("state.reviewing_service_descriptions['elife']", state.reviewing_service_descriptions['elife'])
       return id => Object(state.reviewing_service_descriptions[id])
     },
     currentRecord (state) {

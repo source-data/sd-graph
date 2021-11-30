@@ -34,7 +34,8 @@ UNWIND [
   {name: 'embo press', rank: 2},
   {name: 'elife', rank:3},
   {name: 'Peer Community In', rank: 4},
-  {name: 'MIT Press - Journals', rank: 5}
+  {name: 'MIT Press - Journals', rank: 5},
+  {name: 'peer ref', rank: 6}
 ] AS reviewing
 MATCH
     (rev_service:ReviewingService {name: reviewing.name})-->(val:PRDVal)<--(field:PRDField)

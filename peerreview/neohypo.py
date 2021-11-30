@@ -26,6 +26,7 @@ HYPO_GROUP_IDS = {
     'q5X6RWJ6': 'elife',
     'jKiXiKya': 'embo press',
     '9Nn8DMax': 'peerage of science',
+    'LN28Q33j': 'peer ref',
 }
 
 REVIEWER_REGEX = re.compile(r'^.{,300}(referee|reviewer)\W+(\d)', re.IGNORECASE | re.DOTALL)
@@ -34,10 +35,13 @@ RESPONSE_REGEX = re.compile(r'^.{,100}This rebuttal was posted by the correspond
 
 def type_of_annotation(hypo_row):
     text = hypo_row['text']
-    if RESPONSE_REGEX.match(text):  # this pattern first, since 'reviewer' will appear in response as well
+    tags = [t.lower() for t in hypo_row['tags']]  # for PeerRef
+    if RESPONSE_REGEX.match(text) or 'discussion, revision and decision' in tags:  # this pattern first, since 'reviewer' will appear in response as well
         type = 'response'
-    elif REVIEWER_REGEX.match(text):
+    elif REVIEWER_REGEX.match(text) or 'review report' in tags:
         type = 'review'
+    elif 'requires revisions' not in tags and 'under review' not in tags:  # excluding this kind of annotations from PeerRef
+        type = 'peer review material'
     else:
         type = 'undetermined'
     return type
@@ -299,11 +303,12 @@ class Hypothelink(PeerReviewFinder):
             # diff: +add and -remove to sync
             for row in hypo_rows:
                 peer_review_node = self.hypo2node(row)
-                peer_review_node.update_properties({'reviewed_by': HYPO_GROUP_IDS[group_id]})
-                self.db.node(peer_review_node, clause="MERGE")
-                logger.info(f"loaded {peer_review_node.label} for {peer_review_node.properties['related_article_doi']}")
-                # check if article node missing and add temporary one with source='biorxiv_crossref'
-                self.add_prelim_article(peer_review_node.related_doi)
+                if peer_review_node is not None:
+                    peer_review_node.update_properties({'reviewed_by': HYPO_GROUP_IDS[group_id]})
+                    self.db.node(peer_review_node, clause="MERGE")
+                    logger.info(f"loaded {peer_review_node.label} for {peer_review_node.properties['related_article_doi']}")
+                    # check if article node missing and add temporary one with source='biorxiv_crossref'
+                    self.add_prelim_article(peer_review_node.related_doi)
         self.make_relationships()
 
     @staticmethod
@@ -313,8 +318,10 @@ class Hypothelink(PeerReviewFinder):
             return ReviewCommonsReviewNode(hypo_row)
         elif annot_type == 'response':
             return ReviewCommonsResponseNode(hypo_row)
-        else:
+        elif annot_type == 'peer review material':
             return PeerReviewNode(hypo_row)
+        else:
+            return None
 
     def get_annot_from_hypo(self, group_id: str):
         # https://api.hypothes.is/api/search?group=NEGQVabn

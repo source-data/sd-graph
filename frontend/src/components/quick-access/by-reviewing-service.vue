@@ -7,7 +7,7 @@
             v-card-text
               v-btn-toggle(v-model="selectedRev" mandatory)
                 v-container.pa-0
-                  v-row(v-for="i in 3" :key="`row-${i}`")
+                  v-row(v-for="i in 4" :key="`row-${i}`")
                     v-col(cols=6 v-for="j in 2" :key="`col-${j}`")
                       div(v-if="reviewingListId(i, j)")
                         router-link(:to="{ path: `/refereed-preprints/${serviceId2Slug(reviewingListId(i, j))}` }")

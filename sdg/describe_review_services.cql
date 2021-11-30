@@ -33,6 +33,11 @@ CREATE (peerage_of_science:ReviewingService {
     url: "https://www.peerageofscience.org/",
     peer_review_policy: ""
 })
+CREATE (peer_ref:ReviewingService {
+    name: "peer ref",
+    url: "https://peerref.com/",
+    peer_review_policy: "https://www.peerref.com/reviewer-guidelines"
+})
 
 RETURN
     review_commons,
@@ -40,7 +45,8 @@ RETURN
     pci,
     rrc19,
     embo_press,
-    peerage_of_science;
+    peerage_of_science,
+    peer_ref;
 
 // link to preprint peer review descriptor
 WITH [
@@ -108,6 +114,17 @@ WITH [
         competing_interests: "Checked",
         public_interaction: "Not included",
         opportunity_for_author_response: "Not included",
+        recommendation: "Binary decision"
+    },
+    {
+        service_name: "peer ref",
+        review_requested_by: "Authors",
+        reviewer_selected_by: "Editor, service, or community",
+        review_coverage: "Full paper",
+        reviewer_identity_known_to: "Public",
+        competing_interests: "Checked",
+        public_interaction: "Not included",
+        opportunity_for_author_response: "Included",
         recommendation: "Binary decision"
     }
 ] AS descriptors
