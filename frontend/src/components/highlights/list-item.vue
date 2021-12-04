@@ -38,9 +38,10 @@
                     |   Reviewed by
                     |
                     i {{ serviceId2Name(review.reviewed_by) }}
-                    |  | Reviewer 
-                    span(v-if="review.review_idx")
-                      | {{ review.review_idx }}
+                    |  | Review
+                    |
+                    span(v-if="review.review_idx") #
+                      |{{ review.review_idx }}
                     |
                     | ({{ displayDate(review.posting_date) }})
                 b Significance
@@ -52,8 +53,11 @@
                 |   Reviewed by
                 |
                 i {{ serviceId2Name(review.reviewed_by) }}
-                |  | Reviewer #
-                | {{ review.review_idx }}
+                |  | Review
+                |
+                span(v-if="review.review_idx") #
+                  | {{ review.review_idx }}
+                |
                 | ({{ displayDate(review.posting_date) }})
           v-expansion-panel-content
             p(v-html="mdRender(review.text)").md-content
