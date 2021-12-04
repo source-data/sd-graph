@@ -38,8 +38,10 @@
                     |   Reviewed by
                     |
                     i {{ serviceId2Name(review.reviewed_by) }}
-                    |  | Reviewer #
-                    | {{ review.review_idx }}
+                    |  | Reviewer 
+                    span(v-if="review.review_idx")
+                      | {{ review.review_idx }}
+                    |
                     | ({{ displayDate(review.posting_date) }})
                 b Significance
                 p {{ review.highlight }}
