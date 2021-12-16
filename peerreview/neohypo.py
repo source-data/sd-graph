@@ -1,3 +1,4 @@
+from logging import error
 from os import pread
 import re
 import math
@@ -22,10 +23,10 @@ from neotools.model import (
 logger = common.logging.get_logger(__name__)
 
 HYPO_GROUP_IDS = {
-    'NEGQVabn': 'review commons',
-    'q5X6RWJ6': 'elife',
-    'jKiXiKya': 'embo press',
-    '9Nn8DMax': 'peerage of science',
+    # 'NEGQVabn': 'review commons',
+    # 'q5X6RWJ6': 'elife',
+    # 'jKiXiKya': 'embo press',
+    # '9Nn8DMax': 'peerage of science',
     'LN28Q33j': 'peer ref',
 }
 
@@ -48,9 +49,15 @@ def type_of_annotation(hypo_row):
 
 
 def doi_from_uri(uri):
+    # how to do a uri-to-doi inverse lookup?
     # dirty for now: strip away the version postfix from the biorixv uri
     # 'https://www.biorxiv.org/content/10.1101/733097v2'
-    doi = re.search(r'10\.1101/[\d\.]+', uri).group(0)
+    doi = re.search(r'10\.1101/[\d\.]+', uri)
+    if doi is not None:
+        doi = doi.group(0)
+    else:
+        message = f"doi of related article could not be extracted from uri={uri}"
+        logger.error(message)
     return doi
 
 
@@ -98,7 +105,8 @@ class PeerReviewNode:
 
     @property
     def related_doi(self):
-        return doi_from_uri(self.related_article)
+        doi = doi_from_uri(self.related_article)
+        return doi
 
     @property
     def link_html(self):
@@ -303,12 +311,14 @@ class Hypothelink(PeerReviewFinder):
             # diff: +add and -remove to sync
             for row in hypo_rows:
                 peer_review_node = self.hypo2node(row)
-                if peer_review_node is not None:
+                if peer_review_node is not None and peer_review_node.properties['related_article_doi'] is not None:
                     peer_review_node.update_properties({'reviewed_by': HYPO_GROUP_IDS[group_id]})
                     self.db.node(peer_review_node, clause="MERGE")
                     logger.info(f"loaded {peer_review_node.label} for {peer_review_node.properties['related_article_doi']}")
                     # check if article node missing and add temporary one with source='biorxiv_crossref'
                     self.add_prelim_article(peer_review_node.related_doi)
+                else:
+                    logger.warning(f"null or orphan review with annotation: {row['links']}")
         self.make_relationships()
 
     @staticmethod
