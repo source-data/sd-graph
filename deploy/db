@@ -346,13 +346,24 @@ main() {
   log "##"
   local
 
-  load_dotenv
-  update_local_neo4j $PERIODICITY
-  NEO4J_DUMP_NAME="neo4j.dump"
-  dump_local_neo4j $NEO4J_DUMP_NAME
-  deploy_database $REMOTE_HOST dumps/$NEO4J_DUMP_NAME
-  rotate_backup
-  cache_warmup $REMOTE_HOST
+  # flock creates an exclusive lock on $LOCK_FILE. Everything within the round brackets is only executed if the lock
+  # could be acquired; if the lock is already held by another process, flock returns instantly due to --nonblock.
+  # This mechanism prevents any concurrent db updates for the same stage.
+  LOCK_FILE="/var/lock/eeb-db-${STAGE_NAME}"
+  (
+    if ! flock --nonblock 9; then
+      echo "Failed to acquire lock. Is another db update still running?"
+      exit 1
+    fi
+
+    load_dotenv
+    update_local_neo4j $PERIODICITY
+    NEO4J_DUMP_NAME="neo4j.dump"
+    dump_local_neo4j $NEO4J_DUMP_NAME
+    deploy_database $REMOTE_HOST dumps/$NEO4J_DUMP_NAME
+    rotate_backup
+    cache_warmup $REMOTE_HOST
+  ) 9>${LOCK_FILE}
 
   log "##"
   log "## FINISHED SD-GRAPH DB DEPLOY"
