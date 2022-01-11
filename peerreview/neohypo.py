@@ -23,12 +23,13 @@ from neotools.model import (
 logger = common.logging.get_logger(__name__)
 
 HYPO_GROUP_IDS = {
-    # 'NEGQVabn': 'review commons',
-    # 'q5X6RWJ6': 'elife',
-    # 'jKiXiKya': 'embo press',
-    # '9Nn8DMax': 'peerage of science',
+    'NEGQVabn': 'review commons',
+    'q5X6RWJ6': 'elife',
+    'jKiXiKya': 'embo press',
+    '9Nn8DMax': 'peerage of science',
     'LN28Q33j': 'peer ref',
 }
+
 
 REVIEWER_REGEX = re.compile(r'^.{,300}(referee|reviewer)\W+(\d)', re.IGNORECASE | re.DOTALL)
 RESPONSE_REGEX = re.compile(r'^.{,100}This rebuttal was posted by the corresponding author to \*Review Commons\*', re.IGNORECASE | re.DOTALL)
