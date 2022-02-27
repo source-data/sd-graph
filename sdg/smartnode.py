@@ -1,13 +1,18 @@
 from enum import auto
 import os
+import pdb
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Dict, List, Union
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
-from lxml.etree import Element, ElementTree, XMLParser, XMLSyntaxError, fromstring
+from lxml.etree import (
+    Element, ElementTree,
+    XMLParser, parse, XMLSyntaxError,
+    fromstring, tostring
+)
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 from tqdm.autonotebook import tqdm
@@ -81,8 +86,15 @@ class ResilientRequests:
             return data
 
 
-def doi2filename(doi: str):
+def doi2filename(doi: str) -> str:
     return doi.replace("/", "_").replace(".", "-")
+
+
+def inner_text(xml_element: Element) -> str:
+    if xml_element is not None:
+        return "".join([t for t in xml_element.itertext()])
+    else:
+        return ""
 
 
 @dataclass
@@ -271,13 +283,16 @@ class SourceDataAPIParser:
             # protection against badly formed link elements
             panel_caption = re.sub(r'<link href="(.*)">', r'<link href="\1"/>', panel_caption)
             panel_caption = re.sub(r'<link href="(.*)"/>(\n|.)*</link>', r'<link href="\1">\2</link>', panel_caption)
+            # protection against spurious xml declarations
+            # needs to be removed before next steps
+            panel_caption = re.sub(r'<\?xml.*?\?>', '', panel_caption)
             # protection against missing <sd-panel> tags
             if re.search(r'^<sd-panel>(\n|.)*</sd-panel>$', panel_caption) is None:
                 logger.debug(f"correcting missing <sd-panel> </sd-panel> tags in {panel_caption}")
                 panel_caption = '<sd-panel>' + panel_caption + '</sd-panel>'
             # protection against nested or empty sd-panel
-            panel_caption = re.sub(r'<sd-panel><sd-panel>', r'<sd-panel>', panel_caption)
-            panel_caption = re.sub(r'</sd-panel></sd-panel>', r'</sd-panel>', panel_caption)
+            panel_caption = re.sub(r'<sd-panel> *(<p>)* *<sd-panel>', r'<sd-panel>', panel_caption)
+            panel_caption = re.sub(r'</sd-panel> *(</p>)* *</sd-panel>', r'</sd-panel>', panel_caption)
             panel_caption = re.sub(r'<sd-panel/>', '', panel_caption)
             # We may loose a space that separates panels in the actual figure legend...
             panel_caption = re.sub(r'</sd-panel>$', r' </sd-panel>', panel_caption)
@@ -373,10 +388,10 @@ class XMLSerializer:
 
     def generate_article(self, article: "Article") -> Element:
         xml_article = Element('article', doi=article.props.doi)
-        xml_article = self.append_children_of_article(xml_article, article)
+        xml_article = self.add_children_of_article(xml_article, article)
         return xml_article
 
-    def append_children_of_article(self, xml_article: Element, article: "Article") -> Element:
+    def add_children_of_article(self, xml_article: Element, article: "Article") -> Element:
         figures = [rel.target for rel in article.relationships if rel.rel_type == "has_figure"]
         xml_figures = [self.generate_figure(fig) for fig in figures]
         # do this here since there might be cases where several types of relationships have to be combined
@@ -394,10 +409,10 @@ class XMLSerializer:
         xml_fig.append(xml_fig_label)
         graphic_element = Element('graphic', href=figure.props.href)
         xml_fig.append(graphic_element)
-        xml_fig = self.append_children_of_figure(xml_fig, figure)
+        xml_fig = self.add_children_of_figure(xml_fig, figure)
         return xml_fig
 
-    def append_children_of_figure(self, xml_fig: Element, figure: "Figure") -> Element:
+    def add_children_of_figure(self, xml_fig: Element, figure: "Figure") -> Element:
         panels = [rel.target for rel in figure.relationships if rel.rel_type == "has_panel"]
         xml_panels = [self.generate_panel(panel) for panel in panels]
         for xml_panel in xml_panels:
@@ -409,16 +424,70 @@ class XMLSerializer:
         try:
             if caption:
                 xml_panel = fromstring(caption, parser=self.XML_Parser)
+                # does this include a declaration?? check with 107853
             else:
                 xml_panel = Element("sd-panel")
             xml_panel.attrib['panel_id'] = str(panel.props.panel_id)
             if panel.props.href:
                 graphic_element = Element('graphic', href=panel.props.href)
                 xml_panel.append(graphic_element)
+            xml_panel = self.add_children_of_panels(xml_panel, panel)
         except XMLSyntaxError as err:
             n = int(re.search(r'column (\d+)', str(err)).group(1))
-            logger.error(f"XMLSyntaxError: ```{caption[n-10:n]+'!!!'+caption[n]+'!!!'+caption[n+1:n+10]}```")
+            start = max(0, n - 20)
+            logger.error(f"XMLSyntaxError: ```{caption[start:n]+'!!!'+caption[n]+'!!!'}```")
             xml_panel = None
+        return xml_panel
+
+    def add_children_of_panels(self, xml_panel: Element, panel: "Panel") -> Element:
+        # smart_tags are SmartNode tags
+        smart_tags = [rel.target for rel in panel.relationships if rel.rel_type == "has_entity"]
+        # in principle all of that can be removed if using panel's formatted_caption, but unsure how reliabe it is
+        # tags_xml are the incomplete tags extracted from the panel caption
+        # tags_xml have only a tag_id attribute and we need to update them to add the attributes from the SmartNode tags
+        tags_xml = xml_panel.xpath('.//sd-tag')
+        # smarttags_dict is a dict by tag_id
+        smarttags_dict = {}
+        for t in smart_tags:
+            # in the xml, the tag id have the format sdTag<nnn>
+            tag_id = "sdTag" + t.props.tag_id
+            smarttags_dict[tag_id] = t
+
+        # warn about fantom tags: tags that are returned by sd api but are NOT in the xml
+        smarttags_dict_id = set(smarttags_dict.keys())
+        tags_xml_id = set([t.attrib['id'] for t in tags_xml])
+        tags_not_found_in_xml = smarttags_dict_id - tags_xml_id
+        if tags_not_found_in_xml:
+            logger.warning(f"tag(s) not found: {tags_not_found_in_xml} in {tostring(xml_panel)}")
+
+        # protection against nasty nested tags
+        for tag in tags_xml:
+            nested_tags = tag.xpath('.//sd-tag')
+            if nested_tags:
+                nested_tag = nested_tags[0]  # only 1?
+                logger.warning(f"removing nested tags {tostring(tag)}")
+                text_from_parent = tag.text or ''
+                innertext = inner_text(nested_tag)
+                tail = nested_tag.tail or ''
+                text_to_recover = text_from_parent + innertext + tail
+                for k in nested_tag.attrib:  # in fact, sometimes more levels of nesting... :-(
+                    if k not in tag.attrib:
+                        tag.attrib[k] = nested_tag.attrib[k]
+                tag.text = text_to_recover
+                for e in tag:  # tag.remove(nested_tag) would not always work if some <i> are flanking it for example
+                    tag.remove(e)
+                logger.info(f"cleaned tag: {tostring(tag)}")
+
+        # transfer attributes from smarttags_dict into the panel_xml Element
+        for tag in tags_xml:
+            tag_id = tag.get('id', '')
+            smarttag = smarttags_dict.get(tag_id)
+            if smarttag is not None:
+                # SmartNode.props is a Properties dataclass, hence asdict()
+                for attr, val in asdict(smarttag.props).items():
+                    if attr != 'tag_id':
+                        tag.attrib[attr] = str(val)
+        # xml_panel has been modified in place but nevertheless return it for consistency
         return xml_panel
 
 
@@ -471,9 +540,14 @@ class SmartNode:
         if filepath.exists():
             logger.error(f"{filepath} already exists, not overwriting.")
         else:
-            filepath = str(filepath)
-            logger.info(f"writing to {filepath}")
-            ElementTree(xml_element).write(filepath, encoding='utf-8', xml_declaration=True)
+            try:
+                # xml validation before written file.
+                fromstring(tostring(xml_element))
+                filepath = str(filepath)
+                logger.info(f"writing to {filepath}")
+                ElementTree(xml_element).write(filepath, encoding='utf-8', xml_declaration=True)
+            except XMLSyntaxError as err:
+                logger.error(f"XMLSyntaxError in {filepath}: {str(err)}. File was NOT written.")
         return str(filepath)
 
     def _add_relationships(self, rel_type: str, targets: List["SmartNode"]):
@@ -492,7 +566,7 @@ class SmartNode:
         s += indentation + f"{self.__class__.__name__} {self.props}\n"
         for rel in self.relationships:
             s += indentation + f"-[{rel.rel_type}]->\n"
-            s += rel.target.to_str(level + 1) + "\n"
+            s += rel.target._to_str(level + 1) + "\n"
         return s
 
     def __str__(self):
@@ -556,7 +630,7 @@ class Article(SmartNode):
     GET_COLLECTION = "collection/"
     GET_ARTICLE = "paper/"
 
-    def __init__(self, *args, auto_save: bool = True, overwrite: bool = False, sub_dir: str, **kwargs):
+    def __init__(self, *args, auto_save: bool = True, overwrite: bool = False, sub_dir: str = None, **kwargs):
         super().__init__(*args, **kwargs)
         self.auto_save = auto_save
         self.overwrite = overwrite
@@ -581,6 +655,8 @@ class Article(SmartNode):
                         fig = Figure().from_sd_REST_API(collection_id, doi, idx)
                         figures.append(fig)
                     self._add_relationships("has_figure", figures)
+                else:
+                    logger.warning(f"API response was empty, no props set for doi='{doi}'.")
                 return self._finish()
         else:
             logger.error(f"Cannot create Article with empty params supplied: ('{collection_id}, {doi}')!")
