@@ -1,6 +1,7 @@
 version: '3'
 
 volumes:
+  production_flask_logs: {}
   production_neo4j_data: {}
   production_neo4j_logs: {}
   production_traefik: {}
@@ -14,6 +15,8 @@ services:
     image: neoflask_production_flask
     depends_on:
       - neo4j
+    volumes:
+      - production_flask_logs:/app/log
     env_file:
       - ./.env
     shm_size: '16gb'
