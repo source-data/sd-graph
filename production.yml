@@ -5,6 +5,7 @@ volumes:
   production_neo4j_data: {}
   production_neo4j_logs: {}
   production_traefik: {}
+  production_traefik_logs: {}
   production_redis: {}
 
 services:
@@ -51,6 +52,7 @@ services:
     env_file: .env
     volumes:
       - production_traefik:/etc/traefik/acme
+      - production_traefik_logs:/var/log/traefik
     ports:
       - "0.0.0.0:80:80"
       # - "8080:8080" # debugging UI

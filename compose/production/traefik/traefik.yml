@@ -1,6 +1,10 @@
 log:
   level: INFO
 
+accessLog:
+  filePath: /var/log/traefik/access.log
+  bufferingSize: 100
+
 entryPoints:
   web:
     address: ":80"
