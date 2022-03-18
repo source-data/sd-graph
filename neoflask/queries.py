@@ -102,19 +102,21 @@ ORDER BY DATETIME(pub_date) DESC, score DESC
 class BY_DOI(Query):
 
     code = '''
-//by doi
-//
-MATCH (preprint:Article {doi: $doi})
-// EXPLAIN MATCH (preprint:Article {doi: "10.1101/2020.04.19.049254"})
-WITH preprint, preprint.version AS version
-ORDER BY version DESC
-WITH COLLECT(preprint)[0] AS a
+// Get the most recent version of each article that has one of the given DOIs
+UNWIND $dois as doi
+CALL {
+    WITH doi
+    MATCH (a:Article {doi: doi})
+    WITH a
+    ORDER BY a.version DESC
+    return COLLECT(a)[0] AS a
+}
 OPTIONAL MATCH (a)-->(f:Fig)
 OPTIONAL MATCH (a)-[r:HasReview]->(review:Review)
 OPTIONAL MATCH (a)-[:HasResponse]->(response:Response)
 OPTIONAL MATCH (a)-[:HasAnnot]->(annot:PeerReviewMaterial)
 OPTIONAL MATCH (a)-->(auth:Contrib)
-OPTIONAL MATCH (vzp:VizPaper {doi: $doi})
+OPTIONAL MATCH (vzp:VizPaper {doi: a.doi})
 OPTIONAL MATCH (vzp)-[:HasReviewDate]->(revdate:VizReviewDate)
 WITH DISTINCT
   id(a) AS id,
@@ -129,7 +131,8 @@ WITH DISTINCT
   DATETIME(a.publication_date) AS pub_date, // pub date as preprint! 
   COUNT(DISTINCT f) AS nb_figures,
   auth,
-  vzp, revdate.date AS revdate,
+  vzp,
+  COLLECT(revdate)[0].date AS revdate, // There are possibly multiple review dates. Let's just grab the first one.
   review, response, annot
 OPTIONAL MATCH (auth)-[:has_orcid]->(auth_id:Contrib_id)
 OPTIONAL MATCH
@@ -177,7 +180,7 @@ RETURN DISTINCT
   entities, assays,
   main_topics, highlighted_entities
     '''
-    map = {'doi': {'req_param': 'doi', 'default': ''}}
+    map = {'dois': {'req_param': 'dois', 'default': []}}
     returns = [
       'id', 'doi', 'version', 'source', 'journal', 'title', 'abstract',
       'authors', 'pub_date', 'journal_doi', 'published_journal_title', 'nb_figures',
