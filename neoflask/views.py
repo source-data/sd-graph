@@ -142,8 +142,8 @@ def automagic(limit_date):
 @cache.cached()
 def by_doi(doi: str):
     app.logger.info(f"lookup doi: {doi}")
-    result = ask_neo(BY_DOI(), doi=[doi])
-    return jsonify(result[0])
+    result = ask_neo(BY_DOI(), dois=[doi])
+    return jsonify(result)
 
 
 @app.route('/api/v1/dois/', methods=['POST'])
