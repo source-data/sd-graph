@@ -11,7 +11,7 @@ from flask import (
 from .sitemap import create_sitemap
 from .converter import LuceneQueryConverter, ReviewServiceConverter
 from .queries import (
-    STATS, BY_DOI, FIG_BY_DOI_IDX,
+    STATS, BY_DOIS, FIG_BY_DOI_IDX,
     DESCRIBE_REVIEWING_SERVICES,
     REVIEW_PROCESS_BY_DOI, REVIEW_MATERIAL_BY_ID,
     DOCMAP_BY_DOI, DOCMAPS_FROM_REVSERVICE_IN_INTERVAL,
@@ -142,7 +142,7 @@ def automagic(limit_date):
 @cache.cached()
 def by_doi(doi: str):
     app.logger.info(f"lookup doi: {doi}")
-    result = ask_neo(BY_DOI(), dois=[doi])
+    result = ask_neo(BY_DOIS(), dois=[doi])
     return jsonify(result)
 
 
@@ -161,7 +161,7 @@ def by_dois():
     doi_data = cache.get(cache_key)
     if doi_data is None:
         app.logger.debug(f"\t\t cache miss: {cache_key}")
-        doi_data = ask_neo(BY_DOI(), dois=dois)
+        doi_data = ask_neo(BY_DOIS(), dois=dois)
         cache.add(cache_key, doi_data)
     else:
         app.logger.debug(f"\t\t  cache hit: {cache_key}")
