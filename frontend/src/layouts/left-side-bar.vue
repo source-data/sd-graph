@@ -25,7 +25,12 @@
         //- small Database stats:
         small
           code {{ db_stats.preprints || 0 }}
-          |  bioRxiv preprints loaded (last update: 
+          | bioRxiv preprints loaded <br/>
+          code {{ db_stats.num_reviews || 0 }}
+          | peer reviews <br/>
+          code {{ db_stats.num_docmaps || 0 }}
+          | docmaps <br/>
+          | (last update: 
           code {{lastUpdate}}
           | )
 

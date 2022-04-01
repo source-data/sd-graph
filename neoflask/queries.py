@@ -791,6 +791,8 @@ RETURN
   h.current_num_preprints AS preprints,
   h.current_num_refereed_preprints AS refereed_preprints,
   h.current_num_autoannotated_preprints AS autoannotated_preprints,
+  h.current_num_docmaps AS num_docmaps,
+  h.current_num_reviews AS num_reviews,
   h.update_completed AS last_updated
     '''
-    returns = ['total_nodes', 'preprints', 'refereed_preprints', 'autoannotated_preprints', 'last_updated']
+    returns = ['total_nodes', 'preprints', 'refereed_preprints', 'autoannotated_preprints', 'num_docmaps', 'num_reviews', 'last_updated']

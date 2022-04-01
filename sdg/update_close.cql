@@ -7,11 +7,17 @@ MATCH (a:SDArticle {source: "eebapi"})
 WITH COUNT(DISTINCT a.doi) AS num_autoannotated_preprints, num_refereed_preprints, num_preprints
 MATCH (n)
 WITH COUNT(n) AS total_nodes, num_autoannotated_preprints, num_refereed_preprints, num_preprints
+MATCH (docmaps:Docmap)
+WITH COUNT(docmaps) AS num_docmaps, total_nodes, num_autoannotated_preprints, num_refereed_preprints, num_preprints
+MATCH (rev:RefereeReport)
+WITH COUNT(rev) AS num_reviews, num_docmaps, total_nodes, num_autoannotated_preprints, num_refereed_preprints, num_preprints
 MATCH (h:UpdateStatus)
 SET
   h.current_total_nodes = total_nodes,
   h.current_num_preprints = num_preprints,
   h.current_num_refereed_preprints = num_refereed_preprints,
   h.current_num_autoannotated_preprints = num_autoannotated_preprints,
+  h.current_num_reviews = num_reviews,
+  h.current_num_docmaps = num_docmaps,
   h.update_completed = toString(DATETIME())
 RETURN h.update_completed as `time of update completion`;
