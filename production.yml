@@ -1,9 +1,11 @@
 version: '3'
 
 volumes:
+  production_flask_logs: {}
   production_neo4j_data: {}
   production_neo4j_logs: {}
   production_traefik: {}
+  production_traefik_logs: {}
   production_redis: {}
 
 services:
@@ -14,6 +16,8 @@ services:
     image: neoflask_production_flask
     depends_on:
       - neo4j
+    volumes:
+      - production_flask_logs:/app/log
     env_file:
       - ./.env
     shm_size: '16gb'
@@ -48,6 +52,7 @@ services:
     env_file: .env
     volumes:
       - production_traefik:/etc/traefik/acme
+      - production_traefik_logs:/var/log/traefik
     ports:
       - "0.0.0.0:80:80"
       # - "8080:8080" # debugging UI
