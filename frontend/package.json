@@ -14,7 +14,7 @@
     "@vue/cli": "^4.5.4",
     "axios": "^0.21.1",
     "core-js": "^3.6.4",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.21",
     "markdown-it": "^11.0.0",
     "pug": "^3.0.1",
     "pug-plain-loader": "^1.0.0",
