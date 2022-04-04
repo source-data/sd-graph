@@ -19,6 +19,8 @@ python-igraph==0.8.3
 tqdm==4.62.2
 wurlitzer==2.0.1
 Werkzeug < 2.0.0
+itsdangerous==2.0.1 # fix for Flask < 2: https://stackoverflow.com/q/71189819
+jinja2<3.1.0 # fix for breaking API change: https://stackoverflow.com/a/71721006
 
 -e git+https://github.com/source-data/ai.git#egg=ai
 -e git+https://github.com/source-data/py-smtag.git@dev#egg=smtag
