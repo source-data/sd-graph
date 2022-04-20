@@ -16,7 +16,10 @@ from .queries import (
     CREATE_INDEX_DOI,
     CREATE_INDEX_VERSION,
 )
-from . import DB
+from . import get_db
+
+
+DB = get_db()
 
 logger = common.logging.get_logger(__name__)
 
