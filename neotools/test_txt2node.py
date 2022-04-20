@@ -2,7 +2,7 @@ from lxml.etree import parse
 from io import BytesIO
 from unittest import TestCase
 from .model import JATS_GRAPH_MODEL, CORD19_GRAPH_MODEL, CROSSREF_PREPRINT_API_GRAPH_MODEL
-from .txt2node import XMLNode, JSONNode, ParsingError
+from .txt2node import XMLNode, JSONNode
 
 
 class TestJSONNode(JSONNode):
