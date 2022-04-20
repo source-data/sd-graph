@@ -22,7 +22,7 @@ jobs:
     - name: Install dependencies
       run: |
         pip install --upgrade pip
-        pip install -r /requirements/ci.txt
+        pip install -r requirements/ci.txt
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
