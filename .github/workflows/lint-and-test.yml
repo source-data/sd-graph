@@ -4,17 +4,13 @@
 name: Linting & Testing
 
 on:
-  push:
-    branches: [ master, dev ]
-  pull_request:
-    branches: [ master, dev ]
+  push
 
 permissions:
   contents: read
 
 jobs:
-  build:
-
+  lint:
     runs-on: ubuntu-latest
 
     steps:
@@ -25,16 +21,19 @@ jobs:
         python-version: "3.10"
     - name: Install dependencies
       run: |
-        sudo apt-get install -y build-essential python3-dev
         python -m pip install --upgrade pip
-        pip install flake8 cmake cython
-        pip install -r requirements/base.txt
+        pip install flake8
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with unittest
-      run: |
-        python -m unittest
+
+  test:
+    runs:
+      using: 'docker'
+      image: 'Dockerfile'
+      args:
+        - '-m'
+        - 'unittest'
