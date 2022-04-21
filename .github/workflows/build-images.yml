@@ -6,9 +6,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
   IMAGE_REVISION: https://github.com/source-data/sd-graph
-  IMAGE_SOURCE: ${{ GITHUB_SHA }}
+  IMAGE_SOURCE: ${{ github.sha }}
   IMAGE_TAG: dev
 
 jobs:
