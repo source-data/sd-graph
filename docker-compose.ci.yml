@@ -1,8 +1,9 @@
 services:
   flask:
     image: ghcr.io/source-data/sd-graph_flask:${IMAGE_TAG}
-    platform: "linux/amd64"
     build:
+      context: .
+      dockerfile: ./compose/production/flask/Dockerfile
       labels:
         org.opencontainers.image.source: ${IMAGE_SOURCE}
         org.opencontainers.image.revision: ${IMAGE_REVISION}
@@ -10,6 +11,8 @@ services:
   traefik:
     image: ghcr.io/source-data/sd-graph_traefik:${IMAGE_TAG}
     build:
+      context: .
+      dockerfile: ./compose/production/traefik/Dockerfile
       labels:
         org.opencontainers.image.source: ${IMAGE_SOURCE}
         org.opencontainers.image.revision: ${IMAGE_REVISION}
@@ -17,6 +20,8 @@ services:
   vuejs:
     image: ghcr.io/source-data/sd-graph_vuejs:${IMAGE_TAG}
     build:
+      context: .
+      dockerfile: ./compose/production/vuejs/Dockerfile
       labels:
         org.opencontainers.image.source: ${IMAGE_SOURCE}
         org.opencontainers.image.revision: ${IMAGE_REVISION}
