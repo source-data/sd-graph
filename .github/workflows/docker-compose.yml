@@ -1,0 +1,22 @@
+services:
+  flask:
+    image: ghcr.io/source-data/sd-graph_flask:${IMAGE_TAG}
+    platform: "linux/amd64"
+    build:
+      labels:
+        org.opencontainers.image.source: ${IMAGE_SOURCE}
+        org.opencontainers.image.revision: ${IMAGE_REVISION}
+
+  traefik:
+    image: ghcr.io/source-data/sd-graph_traefik:${IMAGE_TAG}
+    build:
+      labels:
+        org.opencontainers.image.source: ${IMAGE_SOURCE}
+        org.opencontainers.image.revision: ${IMAGE_REVISION}
+
+  vuejs:
+    image: ghcr.io/source-data/sd-graph_vuejs:${IMAGE_TAG}
+    build:
+      labels:
+        org.opencontainers.image.source: ${IMAGE_SOURCE}
+        org.opencontainers.image.revision: ${IMAGE_REVISION}
