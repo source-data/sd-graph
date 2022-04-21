@@ -23,42 +23,43 @@
           |
           | https://doi.org/{{ article.doi }}
     v-card-text
-      v-expansion-panels(v-if="article.review_process" focusable)
+      v-expansion-panels(v-if="article.review_process" focusable v-model="expandedReview")
         v-expansion-panel(v-for="(review, i) in article.review_process.reviews" :key="i")
           v-expansion-panel-header()
-            div(v-if="review.highlight")
-              v-tooltip(
-                v-if="review.highlight"
-                top
-                max-width="500px"
-              )
-                template(v-slot:activator="{ on, attrs }")
-                  span(text v-bind="attrs" v-on="on")
-                    v-icon(small class="px-1" color="indigo lighten-3") mdi-text-box-check-outline
-                    |   Reviewed by
-                    |
-                    i {{ serviceId2Name(review.reviewed_by) }}
-                    |  | Review
-                    |
-                    span(v-if="review.review_idx") #
-                      |{{ review.review_idx }}
-                    |
-                    | ({{ displayDate(review.posting_date) }})
-                b Significance
-                p {{ review.highlight }}
-                b Click on tab to read full review.
-            div(v-else)
-              span
-                v-icon(small class="px-1" color="indigo lighten-3") mdi-text-box-check-outline
-                |   Reviewed by
-                |
-                i {{ serviceId2Name(review.reviewed_by) }}
-                |  | Review
-                |
-                span(v-if="review.review_idx") #
-                  | {{ review.review_idx }}
-                |
-                | ({{ displayDate(review.posting_date) }})
+            div(:id="reviewId(review)")
+              div(v-if="review.highlight")
+                v-tooltip(
+                  v-if="review.highlight"
+                  top
+                  max-width="500px"
+                )
+                  template(v-slot:activator="{ on, attrs }")
+                    span(text v-bind="attrs" v-on="on")
+                      v-icon(small class="px-1" color="indigo lighten-3") mdi-text-box-check-outline
+                      |   Reviewed by
+                      |
+                      i {{ serviceId2Name(review.reviewed_by) }}
+                      |  | Review
+                      |
+                      span(v-if="review.review_idx") #
+                        |{{ review.review_idx }}
+                      |
+                      | ({{ displayDate(review.posting_date) }})
+                  b Significance
+                  p {{ review.highlight }}
+                  b Click on tab to read full review.
+              div(v-else)
+                span
+                  v-icon(small class="px-1" color="indigo lighten-3") mdi-text-box-check-outline
+                  |   Reviewed by
+                  |
+                  i {{ serviceId2Name(review.reviewed_by) }}
+                  |  | Review
+                  |
+                  span(v-if="review.review_idx") #
+                    | {{ review.review_idx }}
+                  |
+                  | ({{ displayDate(review.posting_date) }})
           v-expansion-panel-content
             p(v-html="mdRender(review.text)").md-content
         v-expansion-panel(v-if="article.review_process.response" focusable)
@@ -70,7 +71,7 @@
             p(v-html="mdRender(article.review_process.response.text)").md-content
         //- v-expansion-panel(v-if="article.review_process.annot")
         //- CHECK annot
-        v-expansion-panel(v-for="annot in article.review_process.annot")
+        v-expansion-panel(v-for="(annot, i) in article.review_process.annot" :key="article.review_process.reviews.length + i")
           v-expansion-panel-header
             span
               v-icon(small class="px-1" color="indigo lighten-3") mdi-text-box-check-outline
@@ -121,6 +122,7 @@ import { serviceId2Name } from '../../store/by-reviewing-service'
 export default {
   props: {
     article: Object,
+    expandedReview: Number,
   },
   data() {
     return {
@@ -160,6 +162,9 @@ export default {
       }
       const type = role in map? map[role] : 'info'
       return type
+    },
+    reviewId(review) {
+      return this.article.doi + '#rev0-pr' + review.review_idx
     }
   },
   computed: {
@@ -170,6 +175,16 @@ export default {
       return this.article.info
     },
   },
+  mounted() {
+    if (this.expandedReview >= 0) {
+      let idReviewElem = this.reviewId(this.article.review_process.reviews[this.expandedReview]),
+        reviewElem = document.getElementById(idReviewElem);
+      if (reviewElem) {
+        let dims = reviewElem.getBoundingClientRect();
+        window.scrollTo(window.scrollX, dims.top - 100);
+      }
+    }
+  }
 }
 </script>
 

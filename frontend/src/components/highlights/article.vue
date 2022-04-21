@@ -2,7 +2,7 @@
   v-container
     v-row(v-if="article")
       v-col
-        HighlightedListItem(:article="article")
+        HighlightedListItem(:article="article" :expandedReview="expandedReview")
     v-row(v-else="article")
       v-col
         v-card
@@ -62,6 +62,23 @@ export default {
       article_doi: undefined,
       publicPath: 'https://eeb.embo.org',
     }
+  },
+  computed: {
+    expandedReview () {
+      let hash = this.$route.hash;
+      if (!hash) {
+        return undefined;
+      }
+      let match = hash.match(/^#rev0-rr([0-9]+)$/);
+      if (!match) {
+        return undefined;
+      }
+      let reviewIdx = Number(match[1]);
+      if (reviewIdx <= 0 || reviewIdx > this.article.review_process.reviews.length) {
+        return undefined;
+      }
+      return reviewIdx - 1;
+    },
   },
   methods: {
     getArticle (doi) {
