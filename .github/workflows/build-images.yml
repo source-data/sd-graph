@@ -14,16 +14,17 @@ env:
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
+    
     permissions:
       contents: read
       packages: write
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
     - name: Build the Docker images
-      run: docker-compose -f production.yml -f .github/workflows/docker-compose.yml build
+      run: docker-compose -f production.yml -f docker-compose.ci.yml build
 
     - name: Log in to the Container registry
       uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
@@ -33,4 +34,4 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Push the Docker images
-      run: docker-compose -f production.yml -f .github/workflows/docker-compose.yml push
+      run: docker-compose -f production.yml -f docker-compose.ci.yml push
