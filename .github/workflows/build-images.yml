@@ -2,13 +2,13 @@ name: Docker Image CI
 
 on:
   push:
-    branches: ['dev', 'github-actions-setup']
+    branches: ['master', 'dev', 'github-actions-setup']
 
 env:
   REGISTRY: ghcr.io
   IMAGE_SOURCE: https://github.com/source-data/sd-graph
   IMAGE_REVISION: ${{ github.sha }}
-  IMAGE_TAG: dev
+  IMAGE_TAG: ${{ github.ref_name }}
 
 jobs:
   build-and-push-image:
