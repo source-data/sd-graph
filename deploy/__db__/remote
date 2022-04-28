@@ -3,6 +3,8 @@
 # Set of scripts to be exectued on the remote host as part of the
 # database deployment task
 #
+export IMAGE_TAG="$(git branch --show-current)"
+
 echo '  * [remote] stopping docker'
 docker-compose -f production.yml down
 
