@@ -99,90 +99,136 @@ ORDER BY DATETIME(pub_date) DESC, score DESC
     returns = ['id', 'pub_date', 'title', 'abstract', 'version', 'doi', 'journal', 'score']
 
 
-class BY_DOI(Query):
+class BY_DOIS(Query):
 
     code = '''
-//by doi
-//
-MATCH (preprint:Article {doi: $doi})
-// EXPLAIN MATCH (preprint:Article {doi: "10.1101/2020.04.19.049254"})
-WITH preprint, preprint.version AS version
-ORDER BY version DESC
-WITH COLLECT(preprint)[0] AS a
-OPTIONAL MATCH (a)-->(f:Fig)
+// Get the most recent version of each article that has one of the given DOIs
+UNWIND $dois as doi
+CALL {
+    WITH doi
+    MATCH (article:Article {doi: doi})
+    WITH article
+    ORDER BY article.version DESC
+    return COLLECT(article)[0] AS a
+}
+
 OPTIONAL MATCH (a)-[r:HasReview]->(review:Review)
 OPTIONAL MATCH (a)-[:HasResponse]->(response:Response)
 OPTIONAL MATCH (a)-[:HasAnnot]->(annot:PeerReviewMaterial)
+WITH
+  a,
+  review,
+  response,
+  annot
+ORDER BY
+  a.publication_date DESC,
+  review.review_idx ASC,
+  annot.review_idx ASC
+WITH
+  a,
+  {reviews: COLLECT(DISTINCT review {.*}), response: COLLECT(DISTINCT response {.*})[0], annot: COLLECT(DISTINCT annot {.*})} AS review_process
+
+OPTIONAL MATCH (a)-->(f:Fig)
+WITH
+  a,
+  review_process,
+  COUNT(DISTINCT f) AS nb_figures
+
 OPTIONAL MATCH (a)-->(auth:Contrib)
-OPTIONAL MATCH (vzp:VizPaper {doi: $doi})
+OPTIONAL MATCH (auth)-[:has_orcid]->(auth_id:Contrib_id)
+WITH
+  a,
+  review_process,
+  nb_figures,
+  COLLECT(DISTINCT auth {.surname, .given_names, .position_idx, .corresp, orcid: auth_id.text}) AS authors
+
+OPTIONAL MATCH (vzp:VizPaper {doi: a.doi})
 OPTIONAL MATCH (vzp)-[:HasReviewDate]->(revdate:VizReviewDate)
-WITH DISTINCT
+WITH
+  a,
+  review_process,
+  nb_figures,
+  authors,
+  vzp,
+  COLLECT(revdate)[0].date AS revdate // There are possibly multiple review dates. Let's just grab the first one.
+
+OPTIONAL MATCH (VizCollection {name: "by-auto-topics"})-->(autotopics:VizSubCollection)-[rel_autotopics_paper]->(vzp)-[:HasEntityHighlight]->(highlight:VizEntity {category: 'entity'})
+WITH
+  a,
+  review_process,
+  nb_figures,
+  authors,
+  vzp,
+  revdate,
+  COLLECT(DISTINCT autotopics.topics) AS main_topics,
+  COLLECT(DISTINCT highlight.text) AS highlighted_entities
+
+OPTIONAL MATCH (vzp)-[:HasEntity]->(assay:VizEntity {category: 'assay'})
+WITH
+  a,
+  review_process,
+  nb_figures,
+  authors,
+  vzp,
+  revdate,
+  main_topics,
+  highlighted_entities,
+  COLLECT(DISTINCT assay.text) AS assays
+
+OPTIONAL MATCH (vzp)-[:HasEntity]->(entity:VizEntity {category: 'entity'})
+// don't duplicate entities if they are in the topic highlight set
+WHERE not((vzp)-[:HasEntityHighlight]->(entity))
+WITH
+  a,
+  review_process,
+  nb_figures,
+  authors,
+  revdate,
+  main_topics,
+  highlighted_entities,
+  assays,
+  COLLECT(DISTINCT entity.text) AS entities
+
+RETURN
   id(a) AS id,
   a.doi AS doi,
-  a.version AS version, 
+  a.version AS version,
   a.source AS source,
   a.journal_title AS journal, // this is the preprint server
   a.title AS title,
   a.abstract AS abstract,
   a.journal_doi AS journal_doi,
   a.published_journal_title AS published_journal_title, // this is the journal of final publication
-  DATETIME(a.publication_date) AS pub_date, // pub date as preprint! 
-  COUNT(DISTINCT f) AS nb_figures,
-  auth,
-  vzp, revdate.date AS revdate,
-  review, response, annot
-OPTIONAL MATCH (auth)-[:has_orcid]->(auth_id:Contrib_id)
-OPTIONAL MATCH
-  (col:VizCollection {name: "by-auto-topics"})-->(autotopics:VizSubCollection)-[rel_autotopics_paper]->(vzp)-[:HasEntityHighlight]->(highlight:VizEntity {category: 'entity'})
-WITH
-  id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title,
-  nb_figures, auth,
-  auth_id.text AS ORCID,
-  vzp, revdate,
-  review, response, annot,
-  COLLECT(DISTINCT autotopics.topics) AS main_topics,
-  COLLECT(DISTINCT highlight.text) AS highlighted_entities
-OPTIONAL MATCH
-  (vzp)-[:HasEntity]->(assay:VizEntity {category: 'assay'})
-OPTIONAL MATCH
-  (vzp)-[:HasEntity]->(entity:VizEntity {category: 'entity'})
-WHERE
-  // don't duplicated entities if they are in the topic highlight set
-  NOT entity.text IN highlighted_entities
-WITH
-  id, doi, version, source, journal, title, abstract, pub_date, journal_doi, published_journal_title,
-  nb_figures, auth,
-  ORCID,
-  vzp, revdate,
-  review, response, annot,
-  main_topics, highlighted_entities,
-  COLLECT(DISTINCT assay.text) AS assays,
-  COLLECT(DISTINCT entity.text) AS entities
-ORDER BY
-  pub_date DESC,
-  review.review_idx ASC,
-  annot.review_idx ASC,
-  auth.position_idx ASC
-WITH
-  id, doi, version, source, journal, title, abstract, toString(pub_date) AS pub_date, journal_doi, published_journal_title, nb_figures, auth, ORCID,
-  {reviews: COLLECT(DISTINCT review {.*}), response: response {.*}, annot: COLLECT(DISTINCT annot {.*})} AS review_process,
-  revdate,
-  entities, assays,
-  main_topics, highlighted_entities
-RETURN DISTINCT 
-  id, doi, version, source, journal, title, abstract, pub_date, nb_figures,
-  journal_doi, published_journal_title, COLLECT(DISTINCT auth {.surname, .given_names, .position_idx, .corresp, orcid: ORCID}) AS authors,
+  toString(DATETIME(a.publication_date)) AS pub_date, // pub date as preprint!
   review_process,
+  nb_figures,
+  authors,
   revdate,
-  entities, assays,
-  main_topics, highlighted_entities
-    '''
-    map = {'doi': {'req_param': 'doi', 'default': ''}}
+  main_topics,
+  highlighted_entities,
+  assays,
+  entities
+'''
+    map = {'dois': {'req_param': 'dois', 'default': []}}
     returns = [
-      'id', 'doi', 'version', 'source', 'journal', 'title', 'abstract',
-      'authors', 'pub_date', 'journal_doi', 'published_journal_title', 'nb_figures',
-      'revdate', 'review_process', 'entities', 'assays',
-      'main_topics', 'highlighted_entities'
+      'id',
+      'doi',
+      'version',
+      'source',
+      'journal',
+      'title',
+      'abstract',
+      'journal_doi',
+      'published_journal_title',
+      'pub_date',
+      'review_process',
+      'nb_figures',
+      'authors',
+      'revdate',
+      'entities',
+      'assays',
+      'main_topics',
+      'highlighted_entities',
     ]
 
 

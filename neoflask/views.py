@@ -11,7 +11,7 @@ from flask import (
 from .sitemap import create_sitemap
 from .converter import LuceneQueryConverter, ReviewServiceConverter
 from .queries import (
-    STATS, BY_DOI, FIG_BY_DOI_IDX,
+    STATS, BY_DOIS, FIG_BY_DOI_IDX,
     DESCRIBE_REVIEWING_SERVICES,
     REVIEW_PROCESS_BY_DOI, REVIEW_MATERIAL_BY_ID,
     DOCMAP_BY_DOI, DOCMAPS_FROM_REVSERVICE_IN_INTERVAL,
@@ -142,7 +142,8 @@ def automagic(limit_date):
 @cache.cached()
 def by_doi(doi: str):
     app.logger.info(f"lookup doi: {doi}")
-    return jsonify(ask_neo(BY_DOI(), doi=doi))
+    result = ask_neo(BY_DOIS(), dois=[doi])
+    return jsonify(result)
 
 
 @app.route('/api/v1/dois/', methods=['POST'])
@@ -152,19 +153,20 @@ def by_dois():
     if not 'dois' in request.json:
         abort(400) # required parameter is missing
     dois = request.json.get('dois', [])
-    app.logger.info(f"lookup dois: {dois}")
-    response = []
-    for doi in dois:
-        cache_key = f'/api/v1/dois/{doi}'
-        doi_data = cache.get(cache_key)
-        if doi_data is None:
-            app.logger.info(f"\t\t cache miss: {doi}")
-            doi_data = ask_neo(BY_DOI(), doi=doi)[0]
-            cache.add(cache_key, doi_data)
-        else:
-            app.logger.info(f"\t\t  cache hit: {doi}")
-        response.append(doi_data)
-    return jsonify(response)
+    num_dois = len(dois)
+    dois_info = f'{dois}' if num_dois < 4 else f'["{dois[0]}", "{dois[1]}", ..., "{dois[-1]}"] ({num_dois} in total)'
+    app.logger.info(f"lookup dois: {dois_info}")
+
+    cache_key = f'/api/v1/dois/{hash(frozenset(dois))}'
+    doi_data = cache.get(cache_key)
+    if doi_data is None:
+        app.logger.debug(f"\t\t cache miss: {cache_key}")
+        doi_data = ask_neo(BY_DOIS(), dois=dois)
+        cache.add(cache_key, doi_data)
+    else:
+        app.logger.debug(f"\t\t  cache hit: {cache_key}")
+
+    return jsonify(doi_data)
 
 
 @app.route('/api/v1/reviews/<path:doi>', methods=['GET', 'POST'])

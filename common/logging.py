@@ -10,7 +10,7 @@ import logging.config
 import os
 
 # Where all log files are stored
-LOGGING_BASE_DIR = 'log'
+LOGGING_BASE_DIR = '/app/log'
 
 # The non-duplicated portion of the logging configuration. This object is (deep-) copied in configure_logging() and
 # extended with the very duplicated configuration for each package.

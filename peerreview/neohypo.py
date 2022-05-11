@@ -279,6 +279,7 @@ class PeerReviewFinder:
             # fetch metadata from bioRxiv and CrossRef
             data = self.crossref_doi.details(doi)
             if data:
+                logger.info(f"parsing metadata for doi={doi}")
                 prelim = JSONNode(data, CROSSREF_PREPRINT_API_GRAPH_MODEL)
                 # using biorxiv api here because abstract is plain text while CrossRef has jats namespaced formatting tags
                 biorxiv_medrxiv = prelim.properties['journal_title']
