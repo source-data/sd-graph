@@ -64,7 +64,7 @@
             p(v-html="mdRender(review.text)").md-content
         v-expansion-panel(v-if="article.review_process.response" focusable)
           v-expansion-panel-header
-            span
+            span(:id="responseId()")
               v-icon(small class="px-1" color="indigo lighten-3") mdi-message-text-outline
               |   Response to the Reviewers
           v-expansion-panel-content
@@ -165,7 +165,10 @@ export default {
     },
     reviewId(review) {
       return this.article.doi + '#rev0-pr' + review.review_idx
-    }
+    },
+    responseId() {
+      return this.article.doi + '#rev0-ar'
+    },
   },
   computed: {
     authorList () {
@@ -176,12 +179,21 @@ export default {
     },
   },
   mounted() {
+    var idExpandedElem;
     if (this.expandedReview >= 0) {
-      let idReviewElem = this.reviewId(this.article.review_process.reviews[this.expandedReview]),
-        reviewElem = document.getElementById(idReviewElem);
-      if (reviewElem) {
-        let dims = reviewElem.getBoundingClientRect();
-        window.scrollTo(window.scrollX, dims.top - 100);
+      let numReviews = this.article.review_process.reviews.length;
+      if (this.expandedReview < numReviews) {
+        idExpandedElem = this.reviewId(this.article.review_process.reviews[this.expandedReview]);
+      } else if (this.expandedReview === numReviews) {
+        idExpandedElem = this.responseId();
+      }
+
+      if (idExpandedElem != null) {
+        let expandedElem = document.getElementById(idExpandedElem);
+        if (expandedElem) {
+          let dims = expandedElem.getBoundingClientRect();
+          window.scrollTo(window.scrollX, dims.top - 100);
+        }
       }
     }
   }
