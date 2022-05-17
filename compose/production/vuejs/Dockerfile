@@ -1,9 +1,9 @@
 # build stage
 # FROM node:lts-alpine as build-stage
-FROM node:14.19-bullseye as build-stage
+FROM node:13.12 as build-stage
 WORKDIR /app
 COPY ./frontend/package*.json ./
-RUN npm ci --production
+RUN npm install
 COPY ./frontend .
 RUN npm run build
 
