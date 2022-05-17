@@ -1,8 +1,13 @@
 name: Docker Image CI
+description: Builds the necessary Docker images for the sd-graph production system.
+
+# The images are built on every push to master and dev, which are the two branches used for deployment to the prod and
+# staging servers. The images are versioned with the branch name, which discards any older builds, but they are not
+# needed at the moment and could simply be rebuilt with the commands below.
 
 on:
   push:
-    branches: ['master', 'dev', 'github-actions-setup']
+    branches: ['master', 'dev']
 
 env:
   REGISTRY: ghcr.io

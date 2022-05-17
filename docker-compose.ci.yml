@@ -1,3 +1,7 @@
+# This file is used by the CI system (Github Actions) to build three of the five images that comprise the production
+# system as defined in production.yml (the other two use plain, pre-built images).
+# They are stored in the Github Container Registry under the image tag specified here. See the Github Actions workflow
+# definition for information on the environment variables used here.
 services:
   flask:
     image: ghcr.io/source-data/sd-graph_flask:${IMAGE_TAG}
