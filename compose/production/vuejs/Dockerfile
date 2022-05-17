@@ -3,7 +3,7 @@
 FROM node:14.19-bullseye as build-stage
 WORKDIR /app
 COPY ./frontend/package*.json ./
-RUN npm install
+RUN npm ci --production
 COPY ./frontend .
 RUN npm run build
 
