@@ -62,13 +62,19 @@
                   | ({{ displayDate(review.posting_date) }})
           v-expansion-panel-content
             p(v-html="mdRender(review.text)").md-content
+            a(v-if="review.doi && review.reviewed_by == 'review commons'" :href="href(review.doi)" target="_blank" rel="noopener")
+              |
+              | {{ href(review.doi) }}
         v-expansion-panel(v-if="article.review_process.response" focusable)
           v-expansion-panel-header
-            span
+            span(:id="responseId()")
               v-icon(small class="px-1" color="indigo lighten-3") mdi-message-text-outline
               |   Response to the Reviewers
           v-expansion-panel-content
             p(v-html="mdRender(article.review_process.response.text)").md-content
+            a(v-if="article.review_process.response.doi && article.review_process.response.reviewed_by == 'review commons'" :href="href(article.review_process.response.doi)" target="_blank" rel="noopener")
+              |
+              | {{href(article.review_process.response.doi) }}
         //- v-expansion-panel(v-if="article.review_process.annot")
         //- CHECK annot
         v-expansion-panel(v-for="(annot, i) in article.review_process.annot" :key="article.review_process.reviews.length + i")
@@ -165,7 +171,10 @@ export default {
     },
     reviewId(review) {
       return this.article.doi + '#rev0-pr' + review.review_idx
-    }
+    },
+    responseId() {
+      return this.article.doi + '#rev0-ar'
+    },
   },
   computed: {
     authorList () {
@@ -176,12 +185,21 @@ export default {
     },
   },
   mounted() {
+    var idExpandedElem;
     if (this.expandedReview >= 0) {
-      let idReviewElem = this.reviewId(this.article.review_process.reviews[this.expandedReview]),
-        reviewElem = document.getElementById(idReviewElem);
-      if (reviewElem) {
-        let dims = reviewElem.getBoundingClientRect();
-        window.scrollTo(window.scrollX, dims.top - 100);
+      let numReviews = this.article.review_process.reviews.length;
+      if (this.expandedReview < numReviews) {
+        idExpandedElem = this.reviewId(this.article.review_process.reviews[this.expandedReview]);
+      } else if (this.expandedReview === numReviews) {
+        idExpandedElem = this.responseId();
+      }
+
+      if (idExpandedElem != null) {
+        let expandedElem = document.getElementById(idExpandedElem);
+        if (expandedElem) {
+          let dims = expandedElem.getBoundingClientRect();
+          window.scrollTo(window.scrollX, dims.top - 100);
+        }
       }
     }
   }
