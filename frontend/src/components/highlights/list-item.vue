@@ -62,6 +62,9 @@
                   | ({{ displayDate(review.posting_date) }})
           v-expansion-panel-content
             p(v-html="mdRender(review.text)").md-content
+            a(v-if="review.doi && review.reviewed_by == 'review commons'" :href="href(review.doi)" target="_blank" rel="noopener")
+              |
+              | {{ href(review.doi) }}
         v-expansion-panel(v-if="article.review_process.response" focusable)
           v-expansion-panel-header
             span(:id="responseId()")
@@ -69,6 +72,9 @@
               |   Response to the Reviewers
           v-expansion-panel-content
             p(v-html="mdRender(article.review_process.response.text)").md-content
+            a(v-if="article.review_process.response.doi && article.review_process.response.reviewed_by == 'review commons'" :href="href(article.review_process.response.doi)" target="_blank" rel="noopener")
+              |
+              | {{href(article.review_process.response.doi) }}
         //- v-expansion-panel(v-if="article.review_process.annot")
         //- CHECK annot
         v-expansion-panel(v-for="(annot, i) in article.review_process.annot" :key="article.review_process.reviews.length + i")
