@@ -27,6 +27,7 @@ sub_production(){
         cd sd-graph/                                   && \
         git checkout master                            && \
         git pull                                       && \
+        export IMAGE_TAG="master"                      && \
         docker-compose -f production.yml build         && \
         docker-compose -f production.yml up -d
 EOF
@@ -39,6 +40,7 @@ sub_staging(){
         cd sd-graph/                                       && \
         git checkout dev                                   && \
         git pull                                           && \
+        export IMAGE_TAG="dev"                             && \
         docker-compose -f production.yml build             && \
         docker-compose -f production.yml up -d
 EOF

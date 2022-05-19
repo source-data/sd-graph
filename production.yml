@@ -10,10 +10,7 @@ volumes:
 
 services:
   flask:
-    build:
-      context: .
-      dockerfile: ./compose/production/flask/Dockerfile
-    image: neoflask_production_flask
+    image: ghcr.io/source-data/sd-graph_flask:${IMAGE_TAG}
     depends_on:
       - neo4j
     volumes:
@@ -43,10 +40,7 @@ services:
     #   - "7687:7687"
 
   traefik:
-    build:
-      context: .
-      dockerfile: ./compose/production/traefik/Dockerfile
-    image: neoflask_production_traefik
+    image: ghcr.io/source-data/sd-graph_traefik:${IMAGE_TAG}
     depends_on:
       - flask
     env_file: .env
@@ -59,10 +53,7 @@ services:
       - "0.0.0.0:443:443"
 
   vuejs:
-    build:
-      context: .
-      dockerfile: ./compose/production/vuejs/Dockerfile
-    image: neoflask_production_vuejs
+    image: ghcr.io/source-data/sd-graph_vuejs:${IMAGE_TAG}
     depends_on: 
       - flask
     env_file:
