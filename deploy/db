@@ -12,7 +12,7 @@ mail_developers(){
   local body=$2
 
   if [ ! -z $LOG_FILE ]; then
-    local body="$2\n\n----------\n\nLast 50 lines of the log file @ $LOG_FILE\n\n$(tail -50 $LOG_FILE)"
+    local body="$2\n\nlog file: $LOG_FILE\n\nImportant messages in the log:\n\n$(grep -i error $LOG_FILE)----------\n\nLast 50 lines of the log:\n\n$(tail -50 $LOG_FILE)"
   fi
 
   echo -e "$body" | mail -s "[sd-graph deploy/db] $subject" $developers_emails
