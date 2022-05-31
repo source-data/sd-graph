@@ -41,7 +41,7 @@ sub_staging(){
         git checkout dev                                   && \
         git pull                                           && \
         export IMAGE_TAG="dev"                             && \
-        docker-compose -f production.yml build             && \
+        docker-compose -f production.yml pull              && \
         docker-compose -f production.yml up -d
 EOF
     echo "[deploy:staging] DONE :)"
