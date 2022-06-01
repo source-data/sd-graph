@@ -3,8 +3,7 @@
 
 name: Linting & Testing
 
-on:
-  push
+on: push
 
 permissions:
   contents: read
