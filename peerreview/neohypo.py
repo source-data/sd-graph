@@ -308,20 +308,54 @@ class Hypothelink(PeerReviewFinder):
 
     def run(self, group_ids):
         for group_id in group_ids:
-            hypo_rows = self.get_annot_from_hypo(group_id)
-            # neo_rows def get_annot_from_neo(self, group_id: str):
-            # diff: +add and -remove to sync
-            for row in hypo_rows:
-                peer_review_node = self.hypo2node(row)
-                if peer_review_node is not None and peer_review_node.properties['related_article_doi'] is not None:
-                    peer_review_node.update_properties({'reviewed_by': HYPO_GROUP_IDS[group_id]})
-                    self.db.node(peer_review_node, clause="MERGE")
-                    logger.info(f"loaded {peer_review_node.label} for {peer_review_node.properties['related_article_doi']}")
-                    # check if article node missing and add temporary one with source='biorxiv_crossref'
-                    self.add_prelim_article(peer_review_node.related_doi)
-                else:
-                    logger.warning(f"null or orphan review with annotation: {row['links']}")
+            all_peer_review_nodes = self.get_peer_review_nodes(group_id)
+            peer_review_nodes = self.filter_duplicates(all_peer_review_nodes)
+            self.merge_peer_review_nodes(peer_review_nodes)
         self.make_relationships()
+
+    def get_peer_review_nodes(self, group_id):
+        hypo_rows = self.get_annot_from_hypo(group_id)
+        peer_review_nodes = []
+        for row in hypo_rows:
+            peer_review_node = self.hypo2node(row)
+            if peer_review_node is not None and peer_review_node.properties['related_article_doi'] is not None:
+                peer_review_node.update_properties({'reviewed_by': HYPO_GROUP_IDS[group_id]})
+                peer_review_nodes.append(peer_review_node)
+            else:
+                logger.warning(f"null or orphan review with annotation: {row['links']}")
+        return peer_review_nodes
+
+    def filter_duplicates(self, peer_review_nodes):
+        # group reviews by the article they review
+        reviews_by_article_doi = {}
+        for review in peer_review_nodes:
+            related_article_doi = review.properties['related_article_doi']
+            reviews_by_article_doi.setdefault(related_article_doi, [])
+            reviews_by_article_doi[related_article_doi].append(review)
+
+        non_duplicates = []
+        # for each review group: check for duplicates by comparing the review index and text
+        for related_article_doi, reviews in reviews_by_article_doi.items():
+            review_hashes = set([
+                hash((review.properties.get('review_idx', None), review.properties['text']))
+                for review in reviews
+            ])
+            has_duplicates = len(review_hashes) != len(reviews)
+            # if any duplicates are found within a group, put all reviews from that group into the duplicates
+            if has_duplicates:
+                logger.error(f"Article with DOI {related_article_doi} has multiple reviews posted on hypothes.is")
+            else:
+                non_duplicates.extend(reviews)
+
+        return non_duplicates
+
+    def merge_peer_review_nodes(self, peer_review_nodes):
+        for peer_review_node in peer_review_nodes:
+            self.db.node(peer_review_node, clause="MERGE")
+            logger.info(f"loaded {peer_review_node.label} for {peer_review_node.properties['related_article_doi']}")
+            # check if article node missing and add temporary one with source='biorxiv_crossref'
+            self.add_prelim_article(peer_review_node.related_doi)
+
 
     @staticmethod
     def hypo2node(hypo_row):

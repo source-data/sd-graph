@@ -1,0 +1,41 @@
+name: Docker Image CI
+
+# This workflow builds the necessary Docker images for the sd-graph production system. The images are built on every
+# push to master and dev, which are the two branches used for deployment to the prod and staging servers. The images
+# are versioned with the branch name, which discards any older builds, but they are not needed at the moment and could
+# simply be rebuilt with the commands below.
+
+on:
+  push:
+    branches: ['master', 'dev']
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_SOURCE: https://github.com/source-data/sd-graph
+  IMAGE_REVISION: ${{ github.sha }}
+  IMAGE_TAG: ${{ github.ref_name }}
+
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Log in to the Container registry
+      uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build the Docker images
+      run: docker-compose -f docker-compose.ci.yml build
+
+    - name: Push the Docker images
+      run: docker-compose -f docker-compose.ci.yml push

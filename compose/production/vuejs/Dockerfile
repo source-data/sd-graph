@@ -3,7 +3,7 @@
 FROM node:13.12 as build-stage
 WORKDIR /app
 COPY ./frontend/package*.json ./
-RUN npm install
+RUN npm ci
 COPY ./frontend .
 RUN npm run build
 
