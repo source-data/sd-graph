@@ -7,7 +7,9 @@ name: Docker Image CI
 
 on:
   push:
-    branches: ['master', 'dev']
+    branches:
+      - dev
+      - master
 
 env:
   REGISTRY: ghcr.io
