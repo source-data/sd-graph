@@ -58,7 +58,7 @@ def doi_from_uri(uri):
         doi = doi.group(0)
     else:
         message = f"doi of related article could not be extracted from uri={uri}"
-        logger.error(message)
+        logger.warning(message)
     return doi
 
 
