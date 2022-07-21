@@ -48,7 +48,6 @@ class MecadoiImporter:
                     articles = safe_load(f)
                 logger.info(f"{len(articles)} articles found in {deposition_file}")
 
-                queries_to_execute = []
                 for article in articles:
                     article_doi = article["doi"]
                     logger.info(f"processing {article_doi}")
@@ -57,6 +56,8 @@ class MecadoiImporter:
                     if len(review_process) != 1:
                         logger.warning(f"review process doesn't have exactly one revision round")
                     revision_round = review_process[0]
+
+                    queries_to_execute = []
 
                     author_reply = revision_round.get("author_reply", None)
                     if author_reply is not None:
@@ -68,8 +69,8 @@ class MecadoiImporter:
                         query = FIND_REVIEW(params={"related_article_doi": article_doi, "review_idx": str(review_idx)})
                         queries_to_execute.append((query, review["doi"]))
 
-                for query, doi in queries_to_execute:
-                    self.update_node_with_doi(query, doi, dry_run=dry_run)
+                    for query, doi in queries_to_execute:
+                        self.update_node_with_doi(query, doi, dry_run=dry_run)
 
 
 def main():
