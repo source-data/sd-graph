@@ -90,9 +90,8 @@ update_local_neo4j() {
     docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.neohypo rrc19
     docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.neohypo pci
 
-    DEPOSITIONS_DIR="/mnt/usb01/shared/mecadoi-depositions"
-    aws s3 sync s3://mecadoi-archives/batch/deposited "${DEPOSITIONS_DIR}"
-    docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.mecadoi --input-dir "${DEPOSITIONS_DIR}"
+    aws s3 sync s3://mecadoi-archives/batch/deposited "${MECADOI_PATH}"
+    docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.mecadoi --input-dir "/app/mecadoi"
   }
 
   mark_peer_reviews_as_published() {

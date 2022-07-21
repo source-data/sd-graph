@@ -13,6 +13,7 @@ services:
       - .:/app
       - ./log:/log
       - ${BIORXIV_PATH}:/app/biorxiv # to be provided in .env
+      - ${MECADOI_PATH}:/app/mecadoi
       - /tmp/.X11-unix:/tmp/.X11-unix
       - /tmp:/tmp
     environment:
