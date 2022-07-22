@@ -74,16 +74,21 @@ class MecadoiImporter:
 
 
 def main():
-    parser = ArgumentParser(description="Load peer reviews from MECADOI deposition files.")
+    parser = ArgumentParser(
+        description="""Load peer reviews from MECADOI deposition files.
+
+By default this command only outputs what would happen.
+Pass --no-dry-run to actually update the database."""
+    )
     parser.add_argument("--input-dir", help="The directory containing the MECADOI deposition files.")
     parser.add_argument(
-        "--non-dry-run",
+        "--no-dry-run",
         action='store_true',
         help="Actually update the database instead of just outputting what would be changed."
     )
     args = parser.parse_args()
     input_dir = args.input_dir
-    dry_run = not args.non_dry_run
+    dry_run = not args.no_dry_run
     MecadoiImporter(DB).run(input_dir, dry_run=dry_run)
 
 
