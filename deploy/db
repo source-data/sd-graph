@@ -267,6 +267,20 @@ cache_warmup(){
   docker-compose -f docker-compose.deploy.yml run --rm flask python -m neoflask.cache_warm_up $SERVER_ADDRESS --no-progress
 }
 
+send_notifications(){
+  log "sending notifications"
+
+  # this file stores the time when the last notifications were sent. We need to send out notifications for all reviews posted after this point.
+  file_last_notification="peerreview/last_notification.txt"
+  date_format="--iso-8601=s"
+  # if the file exists and has a valid date, use that. Otherwise use yesterday's date.
+  after=$(date -f "${file_last_notification}" "${date_format}" || date --date "yesterday" "${date_format}")
+  reviewed_by="review commons"
+  docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.notify --after "${after}" --reviewed-by "${reviewed_by}" --no-dry-run
+  # Update the time when the last notifications were sent to now.
+  date "${date_format}" > "${file_last_notification}"
+}
+
 main() {
 
   # parse arguments
@@ -366,6 +380,7 @@ main() {
     deploy_database $REMOTE_HOST dumps/$NEO4J_DUMP_NAME
     rotate_backup
     cache_warmup $REMOTE_HOST
+    send_notifications
   ) 9>${LOCK_FILE}
 
   log "##"

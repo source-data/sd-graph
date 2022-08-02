@@ -61,3 +61,31 @@ MERGE (a)-[r:HasAnnot]->(annot)
 RETURN COUNT(DISTINCT r) AS N
     '''
     returns = ['N']
+
+
+class REFEREED_PREPRINTS_POSTED_AFTER(Query):
+
+    code = '''
+MATCH (a:Article)
+MATCH (a)-[:HasReview]->(review:Review)
+OPTIONAL MATCH (a)-[:HasResponse]->(response:Response)
+OPTIONAL MATCH (a)-[:HasAnnot]->(annot:PeerReviewMaterial)
+OPTIONAL MATCH (a)-->(auth:Contrib)
+OPTIONAL MATCH (auth)-[:has_orcid]->(auth_id:Contrib_id)
+WITH DISTINCT a, review, response, annot, auth, auth_id
+WHERE review.posting_date >= $after AND review.reviewed_by = $reviewed_by
+WITH
+  id(a) AS id,
+  a.publication_date AS pub_date,
+  a.title AS title,
+  a.abstract AS abstract,
+  a.version AS version,
+  a.doi AS doi,
+  a.journalName as journal,
+  COLLECT(DISTINCT auth {.surname, .given_names, .position_idx, .corresp, orcid: auth_id.text}) AS authors,
+  {reviews: COLLECT(DISTINCT review {.*}), response: response {.*}, annot: COLLECT(DISTINCT annot {.*})} AS review_process
+RETURN id, pub_date, title, abstract, version, doi, journal, authors, review_process
+ORDER BY pub_date DESC
+    '''
+    map = {'after': [], 'reviewed_by': []}
+    returns = ['id', 'pub_date', 'title', 'abstract', 'version', 'doi', 'journal', 'authors', 'review_process']
