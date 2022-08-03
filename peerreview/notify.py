@@ -8,7 +8,7 @@ from ssl import SSLContext
 
 import common.logging
 from peerreview.queries import REFEREED_PREPRINTS_POSTED_AFTER
-from . import DB, SMTP_HOST, SMTP_PASSWORD, SMTP_USERNAME
+from . import DB, SMTP_HOST, SMTP_STARTTLS_PORT, SMTP_PASSWORD, SMTP_USERNAME
 
 LOGGER = common.logging.get_logger(__name__)
 
@@ -131,7 +131,7 @@ class Notify:
             return
 
         try:
-            with SMTP(SMTP_HOST) as server:
+            with SMTP(SMTP_HOST, SMTP_STARTTLS_PORT) as server:
                 server.starttls(context=SSLContext())
                 server.login(SMTP_USERNAME, SMTP_PASSWORD)
                 for msg in messages:
