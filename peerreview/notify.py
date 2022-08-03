@@ -144,10 +144,13 @@ class Notify:
             params={"after": after, "reviewed_by": reviewed_by}
         )
         refereed_preprints = self.db.query(query)
-        LOGGER.info(
-            f"Notifying {TO} about {len(refereed_preprints)} new preprints refereed by {reviewed_by} since {after}"
-        )
-        self.send_mails(refereed_preprints, dry_run)
+        if refereed_preprints:
+            LOGGER.info(
+                f"Notifying {TO} about {len(refereed_preprints)} new preprints refereed by {reviewed_by} since {after}"
+            )
+            self.send_mails(refereed_preprints, dry_run)
+        else:
+            LOGGER.info(f"No new preprints refereed by {reviewed_by} since {after}")
 
 
 def main():
