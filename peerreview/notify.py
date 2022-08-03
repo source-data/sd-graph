@@ -3,11 +3,12 @@ from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from jinja2 import Environment
-from smtplib import SMTP_SSL, SMTPException
+from smtplib import SMTP, SMTPException
+from ssl import SSLContext
 
 import common.logging
 from peerreview.queries import REFEREED_PREPRINTS_POSTED_AFTER
-from . import DB, SMTP_HOST, SMTP_PORT, SMTP_PASSWORD, SMTP_USERNAME
+from . import DB, SMTP_HOST, SMTP_PASSWORD, SMTP_USERNAME
 
 LOGGER = common.logging.get_logger(__name__)
 
@@ -130,13 +131,13 @@ class Notify:
             return
 
         try:
-            with SMTP_SSL(SMTP_HOST, SMTP_PORT) as server:
+            with SMTP(SMTP_HOST) as server:
+                server.starttls(context=SSLContext())
                 server.login(SMTP_USERNAME, SMTP_PASSWORD)
                 for msg in messages:
                     server.sendmail(FROM, TO, msg.as_string())
-                server.close()
         except SMTPException as e:
-            print("Error: ", e)
+            LOGGER.exception(e)
 
     def run(self, after: datetime, reviewed_by: str, dry_run: bool = False):
         query = REFEREED_PREPRINTS_POSTED_AFTER(
