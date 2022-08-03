@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 from datetime import datetime
+from dateutil.parser import parse
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from jinja2 import Environment
@@ -47,7 +48,13 @@ template = """New Review Commons refereed preprint posted:
     <a href="https://doi.org/{{ doi }}">{{ doi }}</a>
 
 <p>
-    <b>Peer reviews:</b>
+    <b>Peer reviews</b> (
+    {%- if review_process_dates.earliest == review_process_dates.latest -%}
+        published on {{ review_process_dates.earliest }}
+    {%- else -%}
+        published between {{ review_process_dates.earliest }} and {{ review_process_dates.latest }}
+    {%- endif -%}
+    ):
     <ol>
         {%- for review in reviews %}
         <li>
@@ -58,7 +65,7 @@ template = """New Review Commons refereed preprint posted:
 {% if author_response %}
 
 <p>
-    <b>Author response:</b>
+    <b>Author response</b> (published on {{ review_process_dates.response }}):
     <pre style="white-space: pre-wrap;">{{ author_response }}</pre>
 {% endif %}
 """
@@ -81,7 +88,9 @@ class Notify:
         title = preprint["title"]
         doi = preprint["doi"]
         review_process = preprint["review_process"]
+        reviews = review_process["reviews"]
         response = review_process["response"]
+        review_posting_dates = sorted([parse(review["posting_date"]).date() for review in reviews])
 
         len_review_preamble = 203
         len_response_preamble = 204
@@ -96,10 +105,15 @@ class Notify:
             ),
             abstract=preprint["abstract"],
             doi=doi,
+            review_process_dates={
+                "earliest": review_posting_dates[0],
+                "latest": review_posting_dates[-1],
+                "response": parse(response["posting_date"]).date()
+            },
             reviews=[
                 limit(review["text"][len_review_preamble:], max_text_length)
                 for review in sorted(
-                    review_process["reviews"], key=lambda r: r["review_idx"]
+                    reviews, key=lambda r: r["review_idx"]
                 )
             ],
             author_response=f'{limit(response["text"][len_response_preamble:], max_text_length)}'
@@ -155,11 +169,11 @@ class Notify:
 
 def main():
     parser = ArgumentParser(
-        description="""Send email notifications about (newly) posted refereed preprints."""
+        description="""Send email notifications about (newly) published refereed preprints."""
     )
     parser.add_argument(
         "--after",
-        help="Only send notifications about preprints with reviews posted after this date. Required. Use an ISO8601 date/time format (2022-01-01, 2022-08-01T16:13:55+02:00, etc).",
+        help="Only send notifications about preprints with reviews published after this date. Required. Use an ISO8601 date/time format (2022-01-01, 2022-08-01T16:13:55+02:00, etc).",
         required=True,
     )
     parser.add_argument(
