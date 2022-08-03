@@ -11,83 +11,101 @@ from . import DB, SMTP_HOST, SMTP_PORT, SMTP_PASSWORD, SMTP_USERNAME
 
 LOGGER = common.logging.get_logger(__name__)
 
-FROM = 'reviewcommons-updates@embl.de'
-TO = 'reviewcommons-updates@embl.de'
+FROM = "reviewcommons-updates@embl.de"
+TO = "reviewcommons-updates@embl.de"
 
-template = '''New Review Commons refereed preprint posted:
-
-<a href="{{ eeb_link }}">{{ eeb_link }}</a>
+template = """New Review Commons refereed preprint posted:
 
 <p>
-Title: {{ title }}
+    <a href="{{ eeb_link }}">{{ eeb_link }}</a>
 
 <p>
-Authors: {{ authors }}
+    <b>Title:</b>
+    {{ title }}
 
 <p>
-Abstract: {{ abstract }}
+    <b>Authors:</b>
+    {% for author in authors -%}
+        {%- if author.orcid -%}
+            <a href="{{ author.orcid }}">
+        {%- endif -%}
+        {{ author.surname }} {{ author.given_names }}
+        {%- if author.orcid -%}
+            </a>
+        {%- endif -%}
+        {%- if author.corresp == "yes" -%}*{%- endif -%}
+        {%- if not loop.last %}, {% endif -%}
+    {%- endfor %}
 
 <p>
-DOI: <a href="https://doi.org/{{ doi }}">{{ doi }}</a>
+    <b>Abstract:</b>
+    {{ abstract }}
 
 <p>
-Peer reviews:
+    <b>DOI:</b>
+    <a href="https://doi.org/{{ doi }}">{{ doi }}</a>
 
-<ol>
-    {% for review in reviews %}
-    <li>
-      {{ review }}
-    </li>
-    {% endfor %}
-</ol>
+<p>
+    <b>Peer reviews:</b>
+    <ol>
+        {%- for review in reviews %}
+        <li>
+            <pre style="white-space: pre-wrap;">{{ review }}</pre>
+        </li>
+        {% endfor -%}
+    </ol>
 {% if author_response %}
 
 <p>
-Author response:
-
-<p>
-    {{ author_response }}
-</p>
+    <b>Author response:</b>
+    <pre style="white-space: pre-wrap;">{{ author_response }}</pre>
 {% endif %}
-'''
+"""
+
+
+def limit(text, length):
+    text = text.strip()
+    text_length = len(text)
+    if text_length <= length:
+        return text
+    ellipsis = " [...]"
+    return text[: length - len(ellipsis)] + ellipsis
 
 
 class Notify:
-
     def __init__(self, db):
         self.db = db
 
     def create_message(self, preprint):
-        def limit(text, length):
-            text = text.strip()[203:]
-            text_length = len(text)
-            if text_length <= length:
-                return text
-            ellipsis = ' [...]'
-            return text[: length - len(ellipsis)] + ellipsis
+        title = preprint["title"]
+        doi = preprint["doi"]
+        review_process = preprint["review_process"]
+        response = review_process["response"]
 
-        title = preprint['title']
-        doi = preprint['doi']
-        review_process = preprint['review_process']
-        response = review_process['response']
+        len_review_preamble = 203
+        len_response_preamble = 204
+        max_text_length = 10 ** 6
 
         body_template = Environment(autoescape=True).from_string(template)
         body = body_template.render(
-            eeb_link=f'https://eeb.embo.org/doi/{doi}',
+            eeb_link=f"https://eeb.embo.org/doi/{doi}",
             title=title,
-            authors=', '.join([
-                f'{author["surname"]}, {author["given_names"]}'
-                for author in sorted(preprint['authors'], key=lambda a: a['position_idx'])
-            ]),
+            authors=reversed(
+                sorted(preprint["authors"], key=lambda a: a["position_idx"])
+            ),
             abstract=preprint["abstract"],
             doi=doi,
             reviews=[
-                limit(review["text"], 560)
-                for review in sorted(review_process['reviews'], key=lambda r: r['review_idx'])
+                limit(review["text"][len_review_preamble:], max_text_length)
+                for review in sorted(
+                    review_process["reviews"], key=lambda r: r["review_idx"]
+                )
             ],
-            author_response=f'{limit(response["text"], 560)}' if response else None
+            author_response=f'{limit(response["text"][len_response_preamble:], max_text_length)}'
+            if response
+            else None,
         )
-        subject = f'New refereed preprint: {title}'
+        subject = f"New refereed preprint: {title}"
 
         return subject, body
 
@@ -95,15 +113,20 @@ class Notify:
         messages = []
         for preprint in preprints:
             subject, body = self.create_message(preprint)
-            msg = MIMEMultipart('alternative')
-            msg['Subject'] = subject
-            msg['From'] = FROM
-            msg['To'] = TO
-            msg.attach(MIMEText(body, 'html'))
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = subject
+            msg["From"] = FROM
+            msg["To"] = TO
+            msg.attach(MIMEText(body, "html"))
             messages.append(msg)
 
         if dry_run:
-            LOGGER.info("This is a dry run, these messages would be sent: %s", [msg.as_string() for msg in messages])
+            linebreak = """
+"""
+            LOGGER.info(
+                "This is a dry run, these messages would be sent: %s",
+                linebreak.join([limit(msg.as_string(), 500) for msg in messages]),
+            )
             return
 
         try:
@@ -116,9 +139,13 @@ class Notify:
             print("Error: ", e)
 
     def run(self, after: datetime, reviewed_by: str, dry_run: bool = False):
-        query = REFEREED_PREPRINTS_POSTED_AFTER(params={'after': after, 'reviewed_by': reviewed_by})
+        query = REFEREED_PREPRINTS_POSTED_AFTER(
+            params={"after": after, "reviewed_by": reviewed_by}
+        )
         refereed_preprints = self.db.query(query)
-        LOGGER.info(f'Notifying {TO} about {len(refereed_preprints)} new preprints refereed by {reviewed_by} since {after}')
+        LOGGER.info(
+            f"Notifying {TO} about {len(refereed_preprints)} new preprints refereed by {reviewed_by} since {after}"
+        )
         self.send_mails(refereed_preprints, dry_run)
 
 
@@ -138,7 +165,7 @@ def main():
     )
     parser.add_argument(
         "--no-dry-run",
-        action='store_true',
+        action="store_true",
         help="Actually send emails. Without this flag, the messages that would be sent are only logged.",
     )
     args = parser.parse_args()
@@ -146,6 +173,7 @@ def main():
     reviewed_by = args.reviewed_by
     dry_run = not args.no_dry_run
     Notify(DB).run(after, reviewed_by, dry_run=dry_run)
+
 
 if __name__ == "__main__":
     common.logging.configure_logging()
