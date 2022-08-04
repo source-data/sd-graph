@@ -276,7 +276,8 @@ send_notifications(){
   # if the file exists and has a valid date, use that. Otherwise use yesterday's date.
   after=$(date -f "${file_last_notification}" "${date_format}" || date --date "yesterday" "${date_format}")
   reviewed_by="review commons"
-  docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.notify --after "${after}" --reviewed-by "${reviewed_by}" --no-dry-run
+  recipient="${NOTIFICATIONS_RECIPIENT}"
+  docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.notify --after "${after}" --reviewed-by "${reviewed_by}" --recipient "${recipient}" --no-dry-run
   # Update the time when the last notifications were sent to now.
   date "${date_format}" > "${file_last_notification}"
 }
@@ -380,10 +381,7 @@ main() {
     deploy_database $REMOTE_HOST dumps/$NEO4J_DUMP_NAME
     rotate_backup
     cache_warmup $REMOTE_HOST
-
-    if [ "${STAGE_NAME}" == "production" ]; then
-      send_notifications
-    fi
+    send_notifications $STAGE_NAME
   ) 9>${LOCK_FILE}
 
   log "##"
