@@ -381,7 +381,7 @@ main() {
     deploy_database $REMOTE_HOST dumps/$NEO4J_DUMP_NAME
     rotate_backup
     cache_warmup $REMOTE_HOST
-    send_notifications $STAGE_NAME
+    send_notifications
   ) 9>${LOCK_FILE}
 
   log "##"
