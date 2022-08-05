@@ -8,6 +8,7 @@ from smtplib import SMTP, SMTPException
 from ssl import SSLContext
 
 import common.logging
+from neoflask.queries import BY_DOIS
 from peerreview.queries import REFEREED_PREPRINTS_POSTED_AFTER
 from . import DB, SMTP_HOST, SMTP_STARTTLS_PORT, SMTP_PASSWORD, SMTP_USERNAME
 
@@ -152,11 +153,15 @@ class Notify:
         except SMTPException as e:
             LOGGER.exception(e)
 
-    def run(self, after: datetime, reviewed_by: str, recipient: str, dry_run: bool = False):
+    def find_refereed_preprints(self, after: datetime, reviewed_by: str):
         query = REFEREED_PREPRINTS_POSTED_AFTER(
             params={"after": after, "reviewed_by": reviewed_by}
         )
-        refereed_preprints = self.db.query(query)
+        dois_of_matching_refereed_preprints = [r["doi"] for r in self.db.query(query)]
+        return self.db.query(BY_DOIS(params={"dois": dois_of_matching_refereed_preprints}))
+
+    def run(self, after: datetime, reviewed_by: str, recipient: str, dry_run: bool = False):
+        refereed_preprints = self.find_refereed_preprints(after, reviewed_by)
         if refereed_preprints:
             LOGGER.info(
                 f"Notifying {recipient} about {len(refereed_preprints)} new preprints refereed by {reviewed_by} since {after}"
