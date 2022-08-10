@@ -262,9 +262,8 @@ rotate_backup(){
 }
 
 cache_warmup(){
-  local HOST=$1
-  local SERVER_ADDRESS="https://$HOST/api/v1/"
-  docker-compose -f docker-compose.deploy.yml run --rm flask python -m neoflask.cache_warm_up $SERVER_ADDRESS --no-progress
+  local SERVER_ADDRESS="ec2-user@$1"
+  ssh $SERVER_ADDRESS "cd /home/ec2-user/sd-graph && ./deploy/cache_warmup --no-progress"
 }
 
 send_notifications(){
