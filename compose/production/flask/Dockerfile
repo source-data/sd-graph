@@ -45,6 +45,9 @@ RUN chmod +x /start
 RUN chown flask /start
 
 COPY --chown=flask:flask . /app
+# make sure the log dir is owned by flask
+RUN mkdir /app/log
+RUN chown flask:flask /app/log
 
 USER flask
 
