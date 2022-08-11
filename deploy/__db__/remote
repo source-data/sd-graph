@@ -6,7 +6,7 @@
 export IMAGE_TAG="$(git branch --show-current)"
 
 echo '  * [remote] stopping docker'
-docker-compose -f production.yml down
+sudo systemctl stop sd-graph
 
 echo '  * [remote] loading dump'
 docker run --rm \
@@ -22,4 +22,4 @@ docker run --rm \
 mv neo4j.dump ../
 
 echo '  * [remote] starting docker'
-docker-compose -f production.yml up -d
+sudo systemctl start sd-graph
