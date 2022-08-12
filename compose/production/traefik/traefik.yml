@@ -1,4 +1,5 @@
 log:
+  filePath: /var/log/traefik/traefik.log
   level: INFO
 
 accessLog:
