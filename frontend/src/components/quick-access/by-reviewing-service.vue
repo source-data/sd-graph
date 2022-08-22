@@ -89,13 +89,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-  .router-link-active {
-    color: #FFFFFF;
-    background-color: #409EFF;
-    border-color: #409EFF;
-
-    &:hover {
-      color: #EEE;
-    }
-  }
+/* After the user clicks on a reviewing service's button, all rev service buttons are disabled.
+ * This makes the clicked-on-but-disabled button distinct from all the other disabled buttons.
+ */
+.v-btn--active.v-btn--disabled::before {
+  opacity: 0.5 !important;
+}
 </style>
