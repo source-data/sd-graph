@@ -20,30 +20,31 @@ help(){
     echo ""
 }
 
+update() {
+    IMAGE_TAG="$1"
+    REMOTE_HOST="$2"
+    # Use shell heredoc to make long command more readable
+    ssh ec2-user@${REMOTE_HOST} << EOF
+        cd sd-graph/                                   && \
+        git pull                                       && \
+        export IMAGE_TAG="${IMAGE_TAG}"                && \
+        docker-compose -f production.yml pull          && \
+        sudo systemctl restart sd-graph
+EOF
+}
+
 sub_production(){
     echo "[deploy:production] START"
-    # Use shell heredoc to make long command more readable
-    ssh ec2-user@eeb.sourcedata.io << EOF
-        cd sd-graph/                                   && \
-        git checkout master                            && \
-        git pull                                       && \
-        export IMAGE_TAG="master"                      && \
-        docker-compose -f production.yml build         && \
-        docker-compose -f production.yml up -d
-EOF
+    IMAGE_TAG=master
+    REMOTE_HOST=eeb.embo.org
+    update $IMAGE_TAG $REMOTE_HOST
     echo "[deploy:production] DONE :)"
 }
 sub_staging(){
     echo "[deploy:staging] START"
-    # Use shell heredoc to make long command more readable
-    ssh ec2-user@eeb-dev.sourcedata.io << EOF
-        cd sd-graph/                                       && \
-        git checkout dev                                   && \
-        git pull                                           && \
-        export IMAGE_TAG="dev"                             && \
-        docker-compose -f production.yml pull              && \
-        docker-compose -f production.yml up -d
-EOF
+    IMAGE_TAG=dev
+    REMOTE_HOST=eeb-dev.embo.org
+    update $IMAGE_TAG $REMOTE_HOST
     echo "[deploy:staging] DONE :)"
 }
 
