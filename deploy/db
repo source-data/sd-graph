@@ -5,14 +5,51 @@ set -e
 # enable !! command completion
 # set -o history -o histexpand
 
+describe_length() {
+  local num="$1"
+  local max="$2"
+  if [ ${num} -gt ${max} ]; then
+    echo "First ${max} of ${num}"
+  else
+    echo "All"
+  fi
+}
+
 mail_developers(){
-  local developers_emails="mainar@embl.de,lemberge@embl.de,eidens@embl.de"
-  # local developers_emails="mainar@embl.de"
+  #local developers_emails="mainar@embl.de,lemberge@embl.de,eidens@embl.de"
+  local developers_emails="eidens@embl.de"
   local subject=$1
-  local body=$2
+  local body_prefix=$2
 
   if [ ! -z $LOG_FILE ]; then
-    local body="$2\n\nlog file: $LOG_FILE\n\nImportant messages in the log:\n\n$(grep -i error $LOG_FILE)\n\n----------\n\nLast 50 lines of the log:\n\n$(tail -50 $LOG_FILE)"
+    local num_errors=$(grep -i error ${LOG_FILE} | wc -l)
+    local max_errors=20
+    local error_desc="$(describe_length ${num_errors} ${max_errors})"
+    local errors_snippet="$(grep -i error ${LOG_FILE} | head -${max_errors})"
+
+    local num_log_lines=$(cat ${LOG_FILE} | wc -l)
+    local max_log_lines=100
+    local log_desc="$(describe_length ${num_log_lines} ${max_log_lines})"
+    local log_snippet=$(tail -${max_log_lines} "${LOG_FILE}")
+
+    local body=$(cat <<END_HEREDOC
+${body_prefix}
+
+log file: ${LOG_FILE}
+
+----------
+
+${error_desc} error messages in the log:
+
+${errors_snippet}
+
+----------
+
+${log_desc} lines from the log:
+
+${log_snippet}
+END_HEREDOC
+)
   fi
 
   echo -e "$body" | mail -s "[sd-graph deploy/db] $subject" $developers_emails
