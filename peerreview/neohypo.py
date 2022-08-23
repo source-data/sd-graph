@@ -1,8 +1,6 @@
-from logging import error
-from os import pread
 import re
-import math
 import time
+from random import randint
 from string import Template
 from argparse import ArgumentParser
 from typing import Dict
@@ -371,23 +369,70 @@ class Hypothelink(PeerReviewFinder):
 
     def get_annot_from_hypo(self, group_id: str):
         # https://api.hypothes.is/api/search?group=NEGQVabn
-        rows = []
+        num_annotations_fetched = 0
         limit = 200
-        offset = 0
-        N = 1
-        while offset < N:
-            logger.info(f"offset={offset}, limit={limit}")
-            response = self.hypo.annotations.search(group=group_id, limit=limit, offset=offset)
-            if response.status_code == 200:
-                response = response.json()
-                logger.info(f"{len(response.get('rows'))} annotations found for group {HYPO_GROUP_IDS[group_id]}")
-                rows += response['rows']
-                N = response['total']  # does not change
-                offset += limit
-            else:
-                logger.error(f"Fetching annotations from hypothes.is failed for group {HYPO_GROUP_IDS[group_id]}: {response.status_code}, {response.text}")
-                return []
-        return rows
+        sort = 'updated'
+        order = 'asc'
+        search_after = ''
+        while True:
+            response = self.hypo.annotations.search(
+                group=group_id,
+                limit=limit,
+                sort=sort,
+                order=order,
+                search_after=search_after,
+            )
+            if response.status_code != 200:
+                logger.error(
+                    'Fetching annotations after %s from hypothes.is failed for group %s: %s, %s',
+                    search_after,
+                    HYPO_GROUP_IDS[group_id],
+                    response.status_code,
+                    response.text,
+                )
+                return
+
+            response_json = response.json()
+            num_annotations_reported_by_hypothesis = response_json['total']
+            annotations = response_json['rows']
+            num_annotations = len(annotations)
+            # no annotations in the result means we've gotten all annotations.
+            if num_annotations == 0:
+                if num_annotations_fetched == num_annotations_reported_by_hypothesis:
+                    logger.info(
+                        'Fetched all %s annotations for group %s',
+                        num_annotations_fetched,
+                        HYPO_GROUP_IDS[group_id],
+                    )
+                else:
+                    logger.error(
+                        'hypothes.is reported having %s annotations for group %s but we fetched %s',
+                        num_annotations_reported_by_hypothesis,
+                        HYPO_GROUP_IDS[group_id],
+                        num_annotations_fetched,
+                    )
+                return
+
+            num_annotations_fetched += num_annotations
+            logger.info(
+                'Fetched %s of %s annotations for group %s',
+                num_annotations_fetched,
+                num_annotations_reported_by_hypothesis,
+                HYPO_GROUP_IDS[group_id],
+            )
+            for annotation in annotations:
+                yield annotation
+
+            # The annotations are sorted in ascending order by their last update,
+            # therefore the newest annotation of this page is the last one.
+            newest_annotation = annotations[-1]
+            # update the search parameter to only find annotations after the newest
+            # annotation on this page. The hypothes.is API says it returns "the record
+            # immediately subsequent to the annotation created at [the search_after
+            # parameter]". It does not comment on annotations updated at the same time
+            # so we might have a possible bug: if two annotations were updated at the
+            # same time but sit on different pages we might not get the 2nd one.
+            search_after = newest_annotation['updated']
 
 
 def is_cross_ref_review(r, target_prefixes):
