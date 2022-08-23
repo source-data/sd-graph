@@ -385,8 +385,8 @@ class Hypothelink(PeerReviewFinder):
                 N = response['total']  # does not change
                 offset += limit
             else:
-                logger.error(f"PROBLEM: {response.status_code}")
-                rows = None
+                logger.error(f"Fetching annotations from hypothes.is failed for group {HYPO_GROUP_IDS[group_id]}: {response.status_code}, {response.text}")
+                return []
         return rows
 
 
