@@ -16,8 +16,8 @@ describe_length() {
 }
 
 mail_developers(){
-  #local developers_emails="mainar@embl.de,lemberge@embl.de,eidens@embl.de"
-  local developers_emails="eidens@embl.de"
+  local developers_emails="mainar@embl.de,lemberge@embl.de,eidens@embl.de"
+  # local developers_emails="mainar@embl.de"
   local subject=$1
   local body_prefix=$2
 
