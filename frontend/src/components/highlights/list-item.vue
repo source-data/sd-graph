@@ -177,8 +177,12 @@ export default {
     },
   },
   computed: {
-    authorList () {
-      return this.article.authors.map(author => `${author.surname?author.surname+' ':''}${author.given_names?author.given_names:''}${author.collab?author.collab:''}${(author.corresp=='yes'?'*':'')}`).join(', ')
+    authorList() {
+      function byPosition(a, b) {
+        return a['position_idx'] - b['position_idx']
+      }
+      const authorsSortedByPosition = this.article.authors.sort(byPosition);
+      return authorsSortedByPosition.map(author => `${author.surname ? author.surname + ' ' : ''}${author.given_names ? author.given_names : ''}${author.collab ? author.collab : ''}${(author.corresp == 'yes' ? '*' : '')}`).join(', ')
     },
     info () {
       return this.article.info
