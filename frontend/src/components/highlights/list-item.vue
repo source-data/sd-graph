@@ -178,10 +178,12 @@ export default {
   },
   computed: {
     authorList() {
+      // first, clone the authors array because sort() operates in-place on the array it's called on.
+      const authorsSortedByPosition = this.article.authors.slice(0);
       function byPosition(a, b) {
         return a['position_idx'] - b['position_idx']
       }
-      const authorsSortedByPosition = this.article.authors.sort(byPosition);
+      authorsSortedByPosition.sort(byPosition);
       return authorsSortedByPosition.map(author => `${author.surname ? author.surname + ' ' : ''}${author.given_names ? author.given_names : ''}${author.collab ? author.collab : ''}${(author.corresp == 'yes' ? '*' : '')}`).join(', ')
     },
     info () {
