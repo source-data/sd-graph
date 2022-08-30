@@ -140,6 +140,13 @@ WITH
   a,
   review_process,
   nb_figures,
+  auth,
+  auth_id
+ORDER BY auth.position_idx
+WITH
+  a,
+  review_process,
+  nb_figures,
   COLLECT(DISTINCT auth {.surname, .given_names, .position_idx, .corresp, orcid: auth_id.text}) AS authors
 
 OPTIONAL MATCH (vzp:VizPaper {doi: a.doi})
