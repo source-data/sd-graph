@@ -10,6 +10,7 @@ from .sdnode import (
 from smtag.predict.cartridges import CARTRIDGE
 from smtag.predict.engine import SmtagEngine
 from . import EEB_PUBLIC_API
+from typing import Dict
 
 logger = common.logging.get_logger(__name__)
 
@@ -90,7 +91,7 @@ class SDPanel(BasePanel):
 
 
 class SDTag(BaseTag):
-    def __init__(self, data):
+    def __init__(self, data: Dict):
         super().__init__(data)
         self.category_score = self.get('category_score', '')
         self.type_score = self.get('type_score', '')
