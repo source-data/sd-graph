@@ -22,9 +22,9 @@ TAGGING_ENGINE = SmartTagger()
 def tag_it(text: str, format: str='xml'):
     text = cleanup(text)
     # tags = TAGGING_ENGINE.smtag(text, 'sd-tag', format)[0]  # a single example is submitted to the engine
-    tagged_text = TAGGING_ENGINE(text)
+    tags = TAGGING_ENGINE(text)
     if format == 'json':
-        tags = json.loads(tagged_text)
+        tags = json.loads(tags)
         tags = tags['smtag']
     return tags
 
