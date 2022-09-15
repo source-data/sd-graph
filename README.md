@@ -107,6 +107,7 @@ docker run --rm --name neo4j-load --env-file .env --mount type=bind,source=$PWD/
 # if there is no pre-existing graph.db, then the option --force needs to me ommitted to avoid "command failed: unable to load database: NoSuchFileException"
 ```
 
+
 Cache warm up in development, local:
 
 ```bash
