@@ -11,6 +11,7 @@ from smtag.predict.cartridges import CARTRIDGE
 from smtag.predict.engine import SmtagEngine
 from . import EEB_PUBLIC_API
 from typing import Dict
+from smtag.
 
 logger = common.logging.get_logger(__name__)
 
@@ -18,9 +19,10 @@ logger = common.logging.get_logger(__name__)
 TAGGING_ENGINE = SmtagEngine(CARTRIDGE)
 
 
-def tag_it(text, format='xml'):
+def tag_it(text: str, format: str='xml'):
     text = cleanup(text)
     tags = TAGGING_ENGINE.smtag(text, 'sd-tag', format)[0]  # a single example is submitted to the engine
+
     if format == 'json':
         tags = json.loads(tags)
         tags = tags['smtag']
