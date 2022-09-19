@@ -65,7 +65,8 @@ class MecadoiImporter:
                             (FIND_RESPONSE(params={"related_article_doi": article_doi}), author_reply["doi"])
                         )
 
-                    for review_idx, review in enumerate(revision_round["reviews"], start=1):
+                    for default_review_idx, review in enumerate(revision_round["reviews"], start=1):
+                        review_idx = review.get("review_idx", default_review_idx)
                         query = FIND_REVIEW(params={"related_article_doi": article_doi, "review_idx": str(review_idx)})
                         queries_to_execute.append((query, review["doi"]))
 
