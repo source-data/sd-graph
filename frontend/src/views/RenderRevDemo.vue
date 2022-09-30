@@ -31,7 +31,7 @@ v-container
                                         |
                                         | {{ href(article.doi) }}
                             v-col(sm=12 md=8 lg=7)
-                                render-rev(:doi='article.doi')
+                                render-rev(:doi='article.doi' :options='renderRevOptions')
                 v-card-text
                     v-card
                         v-card-title Abstract
@@ -50,7 +50,10 @@ export default {
     name: 'RenderRevDemo',
     data() {
         return {
-            articles: []
+            articles: [],
+            renderRevOptions: {
+                source: 'eeb-docmaps'
+            }
         }
     },
     methods: {
