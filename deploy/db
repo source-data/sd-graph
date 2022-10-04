@@ -109,8 +109,10 @@ update_local_neo4j() {
     log "updating meca archives"
     aws s3 sync \
       --request-payer requester \
-      --exclude "*" --include "*.meca" \  # only download MECA archives
-      --exclude "*_2018/*" --exclude "*_2019/*" --exclude "*_2020/*" \  # only download files from 2021 onwards
+      # only download MECA archives
+      --exclude "*" --include "*.meca" \
+      # only download files from 2021 onwards
+      --exclude "*_2018/*" --exclude "*_2019/*" --exclude "*_2020/*" \
       s3://biorxiv-src-monthly/Current_Content $BIORXIV_PATH #/mnt/usb01/shared/biorxiv-src-monthly
 
     log "remove prelim articles obtained from the CrossRef and bioRxiv APIs"
