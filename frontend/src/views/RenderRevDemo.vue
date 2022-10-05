@@ -14,7 +14,7 @@ v-container
                     router-link(:to='`/doi/${article.doi}`')
                         v-icon(color='indigo lighten-3') mdi-link-variant
                 v-card-subtitle
-                    v-container-fluid
+                    v-container(fluid)
                         v-row
                             v-col(sm=12 md=4 lg=5)
                                 p {{ authorList(article) }}
@@ -31,7 +31,8 @@ v-container
                                         |
                                         | {{ href(article.doi) }}
                             v-col(sm=12 md=8 lg=7)
-                                render-rev(:doi='article.doi' :options='renderRevOptions')
+                                p {{ renderRevOptions }}
+                                render-rev(:renderRevOptions='renderRevOptions' :doi='article.doi')
                 v-card-text
                     v-card
                         v-card-title Abstract
@@ -43,8 +44,7 @@ v-container
 <script>
 import httpClient from '../lib/http'
 
-import { RenderRev } from '@source-data/render-rev';
-window.customElements.define('render-rev', RenderRev);
+import '@source-data/render-rev';
 
 export default {
     name: 'RenderRevDemo',
