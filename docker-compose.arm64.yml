@@ -11,4 +11,6 @@ services:
   neo4j:
     # The standard Neo4j 4.1 image doesn't run on M1 Macbooks even with the `platform` flag (not sure why, but probably
     # due to the plugins). Instead, they provide an experimental but working image for arm64.
-    image: neo4j/neo4j-arm64-experimental:4.1.10-arm64
+    build:
+      args:
+        - NEO4J_IMAGE=neo4j/neo4j-arm64-experimental:4.1.10-arm64
