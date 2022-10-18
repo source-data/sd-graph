@@ -16,7 +16,7 @@ services:
     image: ghcr.io/source-data/sd-graph_neo4j:${IMAGE_TAG}
     build:
       context: .
-      dockerfile: ./compose/production/neo4j/Dockerfile
+      dockerfile: ./compose/local/neo4j/Dockerfile
       labels:
         org.opencontainers.image.source: ${IMAGE_SOURCE}
         org.opencontainers.image.revision: ${IMAGE_REVISION}
