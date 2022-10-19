@@ -12,7 +12,6 @@ from smtag.predict.engine import SmtagEngine
 from smtag.pipeline import SmartTagger
 from . import EEB_PUBLIC_API
 from typing import Dict
-from smtag.
 
 logger = common.logging.get_logger(__name__)
 
