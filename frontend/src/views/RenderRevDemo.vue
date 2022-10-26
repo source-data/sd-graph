@@ -43,8 +43,7 @@ v-container
 <script>
 import httpClient from '../lib/http'
 
-import { RenderRev } from '@source-data/render-rev';
-window.customElements.define('render-rev', RenderRev);
+import '@source-data/render-rev';
 
 export default {
     name: 'RenderRevDemo',
