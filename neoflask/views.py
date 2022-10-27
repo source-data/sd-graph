@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+import pdb
 from dateutil.relativedelta import relativedelta
 from flask import (
     abort,
@@ -9,7 +10,7 @@ from flask import (
     url_for,
 )
 from .sitemap import create_sitemap
-from .converter import LuceneQueryConverter, ReviewServiceConverter
+from .converter import LuceneQueryConverter, ReviewServiceConverter, ListConverter
 from .queries import (
     STATS, BY_DOIS, FIG_BY_DOI_IDX,
     DESCRIBE_REVIEWING_SERVICES,
@@ -19,7 +20,8 @@ from .queries import (
     BY_AUTO_TOPICS, BY_REVIEWING_SERVICE, AUTOMAGIC,
     LUCENE_SEARCH, SEARCH_DOI,
     COVID19, REFEREED_PREPRINTS,
-    COLLECTION_NAMES, SUBJECT_COLLECTIONS,
+    COLLECTION_NAMES, 
+    SUBJECT_COLLECTIONS,
 )
 from neotools.db import Query
 from typing import Dict
@@ -31,6 +33,7 @@ DOI_REGEX = re.compile(r'10.\d{4,9}/[-._;()/:A-Z0-9]+$', flags=re.IGNORECASE)
 
 app.url_map.converters['escape_lucene'] = LuceneQueryConverter
 app.url_map.converters['service_name'] = ReviewServiceConverter
+app.url_map.converters['list'] = ListConverter
 
 def n_months_ago(n):
     n_months_ago = date.today() + relativedelta(months=-n)
@@ -48,6 +51,7 @@ def ask_neo(query: Query, **kwargs) -> Dict:
     # use the map of name of substitution variable in cypher to the name and default value of the var in the request
     for var_in_cypher, var_in_request in query.map.items():
         query.params[var_in_cypher] = kwargs.get(var_in_request['req_param'], var_in_request['default'])
+        app.logger.debug(f"ask neo with params: {query.params}")
     data = DB.query_with_tx_funct(tx_funct, query)
     return data
 
@@ -122,12 +126,12 @@ def reviewing_services():
     return jsonify(ask_neo(DESCRIBE_REVIEWING_SERVICES()))
 
 
-@app.route('/api/v1/by_reviewing_service/', defaults={'limit_date': '1900-01-01'}, methods=['GET', 'POST'])
-@app.route('/api/v1/by_reviewing_service/<limit_date>', methods=['GET', 'POST'])
+@app.route('/api/v1/by_reviewing_service/', defaults={'limit_date': '1900-01-01', 'published_in': ''}, methods=['GET', 'POST'])
+@app.route('/api/v1/by_reviewing_service/published_in/<limit_date>', methods=['GET', 'POST'])
 @cache.cached()
-def by_reviewing_service(limit_date):
+def by_reviewing_service(published_in, limit_date):
     app.logger.info(f"list by by_reviewing_service")
-    return jsonify(ask_neo(BY_REVIEWING_SERVICE(), limit_date=limit_date))
+    return jsonify(ask_neo(BY_REVIEWING_SERVICE(), limit_date=limit_date, published_in=published_in))
 
 
 @app.route('/api/v1/automagic/', defaults={'limit_date': '1900-01-01'}, methods=['GET', 'POST'])
@@ -153,15 +157,16 @@ def by_dois():
     if not 'dois' in request.json:
         abort(400) # required parameter is missing
     dois = request.json.get('dois', [])
+    published_in = request.json.get('published_in', [])
     num_dois = len(dois)
     dois_info = f'{dois}' if num_dois < 4 else f'["{dois[0]}", "{dois[1]}", ..., "{dois[-1]}"] ({num_dois} in total)'
-    app.logger.info(f"lookup dois: {dois_info}")
+    app.logger.info(f"lookup dois: {dois_info} {' published in '+published_in if published_in else ''}")
 
     cache_key = f'/api/v1/dois/{hash(frozenset(dois))}'
     doi_data = cache.get(cache_key)
     if doi_data is None:
         app.logger.debug(f"\t\t cache miss: {cache_key}")
-        doi_data = ask_neo(BY_DOIS(), dois=dois)
+        doi_data = ask_neo(BY_DOIS(), dois=dois, published_in=published_in)
         cache.add(cache_key, doi_data)
     else:
         app.logger.debug(f"\t\t  cache hit: {cache_key}")
@@ -228,10 +233,43 @@ def covid19():
     return jsonify(ask_neo(COVID19()))
 
 
-@app.route('/api/v1/collection/refereed-preprints', methods=['GET', 'POST'])
+
+@app.route('/api/v1/collection/refereed-preprints/<service_name:reviewing_service>/<published_in>', methods=['GET', 'POST'])
 @cache.cached()
-def refereed_preprints():
-    return jsonify(ask_neo(REFEREED_PREPRINTS()))
+def refereed_preprints(reviewing_service, published_in):
+    app.logger.info(f"refereed preprints from: '{reviewing_service if reviewing_service else ''}' published in: '{published_in if published_in else ''}'")
+    if request.method == "GET":
+        return jsonify(
+            ask_neo(
+                REFEREED_PREPRINTS(),
+                reviewing_service=reviewing_service,
+                published_in=published_in
+            )
+        )
+
+
+@app.route('/api/v1/collection/refereed-preprints', methods=['POST'])
+@cache.cached()
+def refereed_preprints_post():
+    app.logger.debug(f"request json: {request.json}")
+    if not request.is_json:
+        abort(415) # unsupported media type
+    reviewing_service = request.json.get('reviewing_service', [])
+    published_in = request.json.get('published_in', [])
+    app.logger.info(f"refereed preprints from: '{reviewing_service if reviewing_service else ''}' published in: '{published_in if published_in else ''}'")
+    return jsonify(
+        ask_neo(REFEREED_PREPRINTS(),
+            reviewing_service=reviewing_service,
+            published_in=published_in
+        )
+    )
+
+
+@app.route('/api/v1/collection/<subject>', methods=['GET', 'POST'])
+@cache.cached()
+def subject_collection(subject: str):
+    app.logger.info(f"subject collection for subject: '{subject}'")
+    return jsonify(ask_neo(SUBJECT_COLLECTIONS(), subject=subject))
 
 
 @app.route('/api/v1/subjects', methods=['GET', 'POST'])
@@ -239,13 +277,6 @@ def refereed_preprints():
 def subjects():
     app.logger.info(f"subjects names")
     return jsonify(ask_neo(COLLECTION_NAMES()))
-
-
-@app.route('/api/v1/collection/<subject>', methods=['GET', 'POST'])
-@cache.cached()
-def subject_collection(subject: str):
-    app.logger.info(f"collection '{subject}'")
-    return jsonify(ask_neo(SUBJECT_COLLECTIONS(), subject=subject))
 
 
 @app.route('/api/v2/review_material/<int:node_id>', methods=['GET', 'POST'])

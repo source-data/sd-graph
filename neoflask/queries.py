@@ -55,20 +55,32 @@ OPTIONAL MATCH (a)-[:HasReview]->(review:Review)
 OPTIONAL MATCH (a)-[:HasResponse]->(response:Response)
 OPTIONAL MATCH (a)-[:HasAnnot]->(annot:PeerReviewMaterial)
 WITH DISTINCT a, review, response, annot
-WHERE review IS NOT NULL OR annot IS NOT NULL
-WITH
+WHERE 
+  (review IS NOT NULL OR annot IS NOT NULL) AND
+  (
+    (review.reviewed_by = $reviewing_service OR $reviewing_service = '') OR
+    (annot.reviewed_by = $reviewing_service OR $reviewing_service = '')
+  ) AND
+  (toLower(apoc.convert.toString(a.published_journal_title)) = toLower($published_in))
+WITH DISTINCT
   id(a) AS id,
   a.publication_date AS pub_date,
   a.title AS title,
   a.abstract AS abstract,
   a.version AS version,
   a.doi AS doi,
-  a.journalName as journal,
-  {reviews: COLLECT(DISTINCT review {.*}), response: response {.*}, annot: COLLECT(DISTINCT annot {.*})} AS review_process
-RETURN id, pub_date, title, abstract, version, doi, journal, review_process
+  a.journal_title as journal,
+  a.published_journal_title as published_journal_title,
+  {reviews: COLLECT(DISTINCT review{.*}), response: response{.*}, annot: COLLECT(DISTINCT annot{.*})} AS review_process
+RETURN id, pub_date, title, abstract, version, doi, journal, published_journal_title, review_process
 ORDER BY pub_date DESC
     '''
-    returns = ['id', 'pub_date', 'title', 'abstract', 'version', 'doi', 'journal', 'nb_figures', 'review_process']
+    map = {
+      'reviewing_service': {'req_param': 'reviewing_service', 'default': ''},
+      'published_in': {'req_param': 'published_in', 'default': ''},
+    }
+
+    returns = ['id', 'pub_date', 'title', 'abstract', 'version', 'doi', 'journal', 'published_journal_title', 'nb_figures', 'review_process']
 
 
 class COLLECTION_NAMES(Query):
@@ -104,9 +116,15 @@ class BY_DOIS(Query):
     code = '''
 // Get the most recent version of each article that has one of the given DOIs
 UNWIND $dois as doi
+WITH
+  doi
 CALL {
     WITH doi
     MATCH (article:Article {doi: doi})
+    WHERE
+      (
+        toLower(apoc.convert.toString(article.published_journal_title)) = toLower($published_in)
+      ) OR ($published_in = '')
     WITH article
     ORDER BY article.version DESC
     return COLLECT(article)[0] AS a
@@ -216,7 +234,10 @@ RETURN
   assays,
   entities
 '''
-    map = {'dois': {'req_param': 'dois', 'default': []}}
+    map = {
+      'dois': {'req_param': 'dois', 'default': []},
+      'published_in': {'req_param': 'published_in', 'default': ''}
+    }
     returns = [
       'id',
       'doi',
@@ -236,6 +257,8 @@ RETURN
       'assays',
       'main_topics',
       'highlighted_entities',
+      'published_in',
+      'dois'
     ]
 
 
@@ -678,7 +701,9 @@ RETURN
     descriptor{.*} AS reviewing_service_description,
     COLLECT(DISTINCT paper_j) as papers
     '''
-    map = {'limit_date': {'req_param': 'limit_date', 'default':'1900-01-01'}}
+    map = {
+      'limit_date': {'req_param': 'limit_date', 'default':'1900-01-01'}
+    }
     returns = ['id', 'papers', 'reviewing_service_description']
 
 

@@ -5,6 +5,15 @@ import re
 from werkzeug.routing import BaseConverter
 
 
+class ListConverter(BaseConverter):
+
+    def to_python(self, value):
+        return value.split(',')
+
+    def to_url(self, values):
+        return ','.join(BaseConverter.to_url(value) for value in values)
+
+
 class LuceneQueryConverter(BaseConverter):
     """
     Quotes and unquote Lucene search strings.
@@ -23,6 +32,7 @@ class LuceneQueryConverter(BaseConverter):
         """
         unquoted = re.sub(r'"([\+\-!\(\)\{\}\[\]\^\"~\*\?\:\\/&\|])"', r'\1', text)
         return super().to_url(unquoted)
+
 
 class ReviewServiceConverter(BaseConverter):
     """
