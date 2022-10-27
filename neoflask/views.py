@@ -157,7 +157,7 @@ def by_dois():
     if not 'dois' in request.json:
         abort(400) # required parameter is missing
     dois = request.json.get('dois', [])
-    published_in = request.json.get('published_in', [])
+    published_in = request.json.get('published_in', '')
     num_dois = len(dois)
     dois_info = f'{dois}' if num_dois < 4 else f'["{dois[0]}", "{dois[1]}", ..., "{dois[-1]}"] ({num_dois} in total)'
     app.logger.info(f"lookup dois: {dois_info} {' published in '+published_in if published_in else ''}")
