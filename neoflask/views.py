@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from functools import wraps
 import pdb
 from dateutil.relativedelta import relativedelta
 from flask import (
@@ -232,38 +233,118 @@ def search(search_string: str):
 def covid19():
     return jsonify(ask_neo(COVID19()))
 
-
-
-@app.route('/api/v1/collection/refereed-preprints/<service_name:reviewing_service>/<published_in>', methods=['GET', 'POST'])
-@cache.cached()
-def refereed_preprints(reviewing_service, published_in):
-    app.logger.info(f"refereed preprints from: '{reviewing_service if reviewing_service else ''}' published in: '{published_in if published_in else ''}'")
-    if request.method == "GET":
-        return jsonify(
-            ask_neo(
-                REFEREED_PREPRINTS(),
-                reviewing_service=reviewing_service,
-                published_in=published_in
-            )
-        )
-
-
-@app.route('/api/v1/collection/refereed-preprints', methods=['POST'])
-@cache.cached()
-def refereed_preprints_post():
-    app.logger.debug(f"request json: {request.json}")
-    if not request.is_json:
-        abort(415) # unsupported media type
-    reviewing_service = request.json.get('reviewing_service', [])
-    published_in = request.json.get('published_in', [])
-    app.logger.info(f"refereed preprints from: '{reviewing_service if reviewing_service else ''}' published in: '{published_in if published_in else ''}'")
+def _fetch_refereed_preprints(reviewing_service, published_in, pagesize, page):
+    app.logger.info(
+        "refereed preprints from '%s' published in '%s' (page %s of size %s)",
+        reviewing_service,
+        published_in,
+        page,
+        pagesize,
+    )
     return jsonify(
-        ask_neo(REFEREED_PREPRINTS(),
+        ask_neo(
+            REFEREED_PREPRINTS(),
             reviewing_service=reviewing_service,
-            published_in=published_in
+            published_in=published_in,
+            pagesize=int(pagesize),
+            page=int(page),
         )
     )
 
+DEFAULT_PAGESIZE = 20
+DEFAULT_PAGE = 0
+def paged(view_func):
+    """
+    Decorator that simplifies paged views.
+
+    Reads parameters named `pagesize` and `page` from the request data and puts their
+    values into a dict called `paging` on the request object. The values can be
+    retrieved like so: `request.paging['pagesize'], request.paging['page']`.
+    If one or both parameters are not present, default values are used.
+
+    For GET requests, the parameters are retrieved from the query string.
+    For POST requests with JSON request bodies, they are read from the request body.
+    In any other case a warning is logged and the defaults are used.
+    """
+
+    param_name_pagesize = 'pagesize'
+    param_name_page = 'page'
+
+    @wraps(view_func)
+    def inner(*args, **kwargs):
+        if request.method == 'GET':
+            param_dict = request.args
+        elif request.method == 'POST' and request.is_json:
+            param_dict = request.json
+        else:
+            app.logger.warning(
+                'Failed to retrieve paging parameters for route %s: not implemented for request method %s or mime type %s',
+                request.url,
+                request.method,
+                request.mimetype,
+            )
+            param_dict = {}
+
+        pagesize = param_dict.get(param_name_pagesize, DEFAULT_PAGESIZE)
+        page = param_dict.get(param_name_page, DEFAULT_PAGE)
+        request.paging = {
+            'pagesize': pagesize,
+            'page': page,
+        }
+
+        return view_func(*args, **kwargs)
+
+    return inner
+
+@app.route(
+    '/api/v1/collection/refereed-preprints/<service_name:reviewing_service>/<published_in>',
+    methods=['GET'],
+)
+@paged
+def refereed_preprints_get(reviewing_service, published_in):
+    """
+    Returns all refereed preprints that were reviewed by `reviewing_service` and
+    published in `published_in`.
+    
+    Results are sorted by publication date of the preprint and paged. Use the query
+    parameters `pagesize` and `page` to adjust the paging:
+    /api/v1/collection/refereed-preprints/reviewcommons/elife?pagesize=100&page=3
+
+    For more control, e.g. not filtering by reviewing service or publisher, use the POST
+    version of this route.
+    """
+    return _fetch_refereed_preprints(
+        reviewing_service=reviewing_service,
+        published_in=published_in,
+        pagesize=request.paging['pagesize'],
+        page=request.paging['page'],
+    )
+
+DEFAULT_REVIEWING_SERVICE = ''
+DEFAULT_PUBLISHER = ''
+@app.route('/api/v1/collection/refereed-preprints', methods=['POST'])
+@paged
+def refereed_preprints_post():
+    """
+    Returns all refereed preprints. Results can be filtered by reviewing service and
+    publisher.
+
+    The request body must be JSON, or empty. If empty, all refereed preprints are returned.
+    The results can be filtered by which reviewing service reviewed them (`reviewing_service`)
+    and/or where they were published (`published_in`):
+    `{ "reviewing_service": "review commons", "published_in": "Life Science Alliance" }`.
+
+    Results are sorted by publication date of the preprint and paged. Use the parameters
+    `pagesize` and `page` to adjust the paging: `{ "pagesize": 100, "page": 3 }`
+    """
+    if not request.is_json:
+        abort(415) # unsupported media type
+    return _fetch_refereed_preprints(
+        reviewing_service=request.json.get('reviewing_service', DEFAULT_REVIEWING_SERVICE),
+        published_in=request.json.get('published_in', DEFAULT_PUBLISHER),
+        pagesize=request.paging['pagesize'],
+        page=request.paging['page'],
+    )
 
 @app.route('/api/v1/collection/<subject>', methods=['GET', 'POST'])
 @cache.cached()
