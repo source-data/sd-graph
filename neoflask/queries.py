@@ -50,17 +50,13 @@ ORDER BY DATETIME(pub_date) DESC, score DESC
 class REFEREED_PREPRINTS(Query):
 
     code = '''
-MATCH (a:Article)
-OPTIONAL MATCH (a)-[:HasReview]->(review:Review)
-OPTIONAL MATCH (a)-[:HasResponse]->(response:Response)
-OPTIONAL MATCH (a)-[:HasAnnot]->(annot:PeerReviewMaterial)
-WITH DISTINCT a, review, response, annot
-WHERE 
-  (review IS NOT NULL OR annot IS NOT NULL) AND
-  (
-    (review.reviewed_by = $reviewing_service OR $reviewing_service = '') OR
-    (annot.reviewed_by = $reviewing_service OR $reviewing_service = '')
-  ) AND
+MATCH (refprep:VizCollection {name: "refereed-preprints"})-[:HasSubCol]->(revservice:VizSubCollection)
+WHERE (revservice.name = $reviewing_service) OR ($reviewing_service = '')
+MATCH (revservice)-[:HasPaper]->(vizpaper:VizPaper)
+WITH vizpaper.doi AS doi
+MATCH (a:Article {doi: doi})
+WITH a
+WHERE
   (toLower(apoc.convert.toString(a.published_journal_title)) = toLower($published_in))
 WITH DISTINCT
   id(a) AS id,
@@ -70,9 +66,8 @@ WITH DISTINCT
   a.version AS version,
   a.doi AS doi,
   a.journal_title as journal,
-  a.published_journal_title as published_journal_title,
-  {reviews: COLLECT(DISTINCT review{.*}), response: response{.*}, annot: COLLECT(DISTINCT annot{.*})} AS review_process
-RETURN id, pub_date, title, abstract, version, doi, journal, published_journal_title, review_process
+  a.published_journal_title as published_journal_title
+RETURN id, pub_date, title, abstract, version, doi, journal, published_journal_title
 ORDER BY pub_date DESC
     '''
     map = {
@@ -80,7 +75,7 @@ ORDER BY pub_date DESC
       'published_in': {'req_param': 'published_in', 'default': ''},
     }
 
-    returns = ['id', 'pub_date', 'title', 'abstract', 'version', 'doi', 'journal', 'published_journal_title', 'nb_figures', 'review_process']
+    returns = ['id', 'pub_date', 'title', 'abstract', 'version', 'doi', 'journal', 'published_journal_title', 'nb_figures'] #, 'review_process']
 
 
 class COLLECTION_NAMES(Query):
