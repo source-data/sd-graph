@@ -66,8 +66,9 @@ WITH DISTINCT
   a.version AS version,
   a.doi AS doi,
   a.journal_title as journal,
-  a.published_journal_title as published_journal_title
-RETURN id, pub_date, title, abstract, version, doi, journal, published_journal_title
+  a.published_journal_title as published_journal_title,
+  a.journal_doi as journal_doi
+RETURN id, pub_date, title, abstract, version, doi, journal, published_journal_title, journal_doi
 ORDER BY pub_date DESC
 SKIP $page * $pagesize
 LIMIT $pagesize
@@ -79,7 +80,10 @@ LIMIT $pagesize
       'page': {'req_param': 'page', 'default': 0},
     }
 
-    returns = ['id', 'pub_date', 'title', 'abstract', 'version', 'doi', 'journal', 'published_journal_title', 'nb_figures'] #, 'review_process']
+    returns = [
+      'id', 'pub_date', 'title', 'abstract', 'version', 'doi', 'journal', 'published_journal_title',
+      'journal_doi', 'nb_figures'
+    ] #, 'review_process']
 
 
 class COLLECTION_NAMES(Query):
