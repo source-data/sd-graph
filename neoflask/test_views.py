@@ -45,10 +45,11 @@ def test_collection_refereed_preprints_get(client):
     """
     fixtures = [
         # review service,  publisher, pagesize, page
-        ('review commons', 'elife',   None,     None),
-        ('elife',         'lsa',      30,       None),
-        ('review commons', 'emboj',   None,     4),
-        ('review commons', 'embor',   100,      10),
+        ('review commons', 'elife',   None,     None), # no paging parameters
+        ('elife',         'lsa',      30,       None), # no page parameter
+        ('review commons', 'emboj',   None,     4),    # no pagesize parameter
+        ('review commons', 'embor',   100,      10),   # all paging parameter
+        ('review commons', 'embor',   20,      3),     # check that caching is aware of paging
     ]
     for reviewing_service, published_in, pagesize, page in fixtures:
         url = f'/api/v1/collection/refereed-preprints/{reviewing_service}/{published_in}'
@@ -80,12 +81,15 @@ def test_collection_refereed_preprints_post(client):
     """
     fixtures = [
         # review service,  publisher, pagesize, page
-        (None,             None,      None,     None),
-        ('review commons', None,      None,     None),
-        ('review commons', 'elife',   None,     None),
-        ('elife',         'lsa',      30,       None),
-        ('review commons', 'emboj',   None,     4),
-        ('review commons', 'embor',   100,      10),
+        (None,             None,      None,     None), # no filtering or paging
+        ('review commons', None,      None,     None), # no paging, filter by review service
+        (None,             'elife',   None,     None), # no paging, filter by publisher
+        ('review commons', 'elife',   None,     None), # no paging, filter by review service & publisher
+        (None,             None,      100,      None), # no filtering, only pagesize parameter
+        ('elife',          'lsa',     30,       None), # no page parameter
+        ('review commons', 'emboj',   None,     4),    # no pagesize parameter
+        ('review commons', 'embor',   100,      10),   # all filtering & paging parameters
+        ('review commons', 'embor',   20,      2),     # check that caching is aware of paging
     ]
     for reviewing_service, published_in, pagesize, page in fixtures:
         url = f'/api/v1/collection/refereed-preprints'

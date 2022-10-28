@@ -1,3 +1,4 @@
+from collections import namedtuple
 from datetime import date, timedelta
 from functools import wraps
 import pdb
@@ -251,6 +252,9 @@ def _fetch_refereed_preprints(reviewing_service, published_in, pagesize, page):
         )
     )
 
+PagingParameters = namedtuple('PagingParameters', ['page', 'pagesize'])
+"""The container for the paging parameters, i.e. the page number and page size."""
+
 DEFAULT_PAGESIZE = 20
 DEFAULT_PAGE = 0
 def paged(view_func):
@@ -285,22 +289,33 @@ def paged(view_func):
             )
             param_dict = {}
 
-        pagesize = param_dict.get(param_name_pagesize, DEFAULT_PAGESIZE)
-        page = param_dict.get(param_name_page, DEFAULT_PAGE)
-        request.paging = {
-            'pagesize': pagesize,
-            'page': page,
-        }
+        request.paging = PagingParameters(
+            page=param_dict.get(param_name_page, DEFAULT_PAGE),
+            pagesize=param_dict.get(param_name_pagesize, DEFAULT_PAGESIZE),
+        )
 
         return view_func(*args, **kwargs)
 
     return inner
+
+def paging_aware_cache_key():
+    """
+    Function to generate a paging-aware cache key.
+
+    Use it as the `make_cache_key` parameter to @cached and in conjunction with @paged.
+
+    Adds the paging parameters set by the @paged decorator to the cache key. Otherwise,
+    requesting the same URL with different paging parameters returns the first, cached,
+    result.
+    """
+    return f'view/{request.path}/page-{hash(request.paging)}'
 
 @app.route(
     '/api/v1/collection/refereed-preprints/<service_name:reviewing_service>/<published_in>',
     methods=['GET'],
 )
 @paged
+@cache.cached(key_prefix=paging_aware_cache_key)
 def refereed_preprints_get(reviewing_service, published_in):
     """
     Returns all refereed preprints that were reviewed by `reviewing_service` and
@@ -316,8 +331,8 @@ def refereed_preprints_get(reviewing_service, published_in):
     return _fetch_refereed_preprints(
         reviewing_service=reviewing_service,
         published_in=published_in,
-        pagesize=request.paging['pagesize'],
-        page=request.paging['page'],
+        pagesize=request.paging.pagesize,
+        page=request.paging.page,
     )
 
 DEFAULT_REVIEWING_SERVICE = ''
@@ -342,8 +357,8 @@ def refereed_preprints_post():
     return _fetch_refereed_preprints(
         reviewing_service=request.json.get('reviewing_service', DEFAULT_REVIEWING_SERVICE),
         published_in=request.json.get('published_in', DEFAULT_PUBLISHER),
-        pagesize=request.paging['pagesize'],
-        page=request.paging['page'],
+        pagesize=request.paging.pagesize,
+        page=request.paging.page,
     )
 
 @app.route('/api/v1/collection/<subject>', methods=['GET', 'POST'])
