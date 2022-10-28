@@ -69,10 +69,14 @@ WITH DISTINCT
   a.published_journal_title as published_journal_title
 RETURN id, pub_date, title, abstract, version, doi, journal, published_journal_title
 ORDER BY pub_date DESC
+SKIP $pagenum * $pagesize
+LIMIT $pagesize
     '''
     map = {
       'reviewing_service': {'req_param': 'reviewing_service', 'default': ''},
       'published_in': {'req_param': 'published_in', 'default': ''},
+      'pagesize': {'req_param': 'published_in', 'default': 20},
+      'pagenum': {'req_param': 'published_in', 'default': 0},
     }
 
     returns = ['id', 'pub_date', 'title', 'abstract', 'version', 'doi', 'journal', 'published_journal_title', 'nb_figures'] #, 'review_process']
