@@ -53,7 +53,6 @@ def ask_neo(query: Query, **kwargs) -> Dict:
     # use the map of name of substitution variable in cypher to the name and default value of the var in the request
     for var_in_cypher, var_in_request in query.map.items():
         query.params[var_in_cypher] = kwargs.get(var_in_request['req_param'], var_in_request['default'])
-        app.logger.debug(f"ask neo with params: {query.params}")
     data = get_db().query_with_tx_funct(tx_funct, query)
     return data
 
@@ -128,12 +127,12 @@ def reviewing_services():
     return jsonify(ask_neo(DESCRIBE_REVIEWING_SERVICES()))
 
 
-@app.route('/api/v1/by_reviewing_service/', defaults={'limit_date': '1900-01-01', 'published_in': ''}, methods=['GET', 'POST'])
-@app.route('/api/v1/by_reviewing_service/published_in/<limit_date>', methods=['GET', 'POST'])
+@app.route('/api/v1/by_reviewing_service/', defaults={'limit_date': '1900-01-01'}, methods=['GET', 'POST'])
+@app.route('/api/v1/by_reviewing_service/<limit_date>', methods=['GET', 'POST'])
 @cache.cached()
-def by_reviewing_service(published_in, limit_date):
+def by_reviewing_service(limit_date):
     app.logger.info(f"list by by_reviewing_service")
-    return jsonify(ask_neo(BY_REVIEWING_SERVICE(), limit_date=limit_date, published_in=published_in))
+    return jsonify(ask_neo(BY_REVIEWING_SERVICE(), limit_date=limit_date))
 
 
 @app.route('/api/v1/automagic/', defaults={'limit_date': '1900-01-01'}, methods=['GET', 'POST'])
