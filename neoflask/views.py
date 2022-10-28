@@ -26,7 +26,7 @@ from .queries import (
 from neotools.db import Query
 from typing import Dict
 import re
-from . import DB, app, cache
+from . import app, cache, get_db
 
 
 DOI_REGEX = re.compile(r'10.\d{4,9}/[-._;()/:A-Z0-9]+$', flags=re.IGNORECASE)
@@ -52,7 +52,7 @@ def ask_neo(query: Query, **kwargs) -> Dict:
     for var_in_cypher, var_in_request in query.map.items():
         query.params[var_in_cypher] = kwargs.get(var_in_request['req_param'], var_in_request['default'])
         app.logger.debug(f"ask neo with params: {query.params}")
-    data = DB.query_with_tx_funct(tx_funct, query)
+    data = get_db().query_with_tx_funct(tx_funct, query)
     return data
 
 
