@@ -71,30 +71,64 @@ template = """New Review Commons refereed preprint posted:
 """
 
 
-def limit(text, length):
-    text = text.strip()
-    text_length = len(text)
-    if text_length <= length:
-        return text
-    ellipsis = " [...]"
-    return text[: length - len(ellipsis)] + ellipsis
+def _limit(text, prefix_length, max_length, ellipsis):
+    """
+    Strips `text` of the first `prefix_length` characters and truncates the remainder to `max_length`.
 
+    `ellipsis` is added to the truncated string to indicate that parts were removed (e.g. "[...]").
+    The length of the returned string including `ellipsis` is `max_length`.
+    
+    After removing the prefix, any trailing whitespace is stripped.
+    Therefore, more characters than `prefix_length` may be removed.
+    """
+    assert text is not None
+    assert len(text) > prefix_length
+
+    ellipsis_length = len(ellipsis)
+    assert max_length > ellipsis_length
+
+    stripped_text = text[prefix_length:].strip()
+    if len(stripped_text) <= max_length:
+        return stripped_text
+
+    return stripped_text[: max_length - len(ellipsis)] + ellipsis
+
+
+def _parse_date(date_string):
+    return parse(date_string).date()
 
 class Notify:
     def __init__(self, db):
         self.db = db
+        self.max_text_length = 10 ** 6
+        self.len_review_preamble = 203
+        self.len_response_preamble = 204
+        self.ellipsis = " [...]"
 
     def create_message(self, preprint):
         title = preprint["title"]
         doi = preprint["doi"]
         review_process = preprint["review_process"]
-        reviews = review_process["reviews"]
-        response = review_process["response"]
-        review_posting_dates = sorted([parse(review["posting_date"]).date() for review in reviews])
 
-        len_review_preamble = 203
-        len_response_preamble = 204
-        max_text_length = 10 ** 6
+        reviews = review_process["reviews"]
+        review_texts = [
+            _limit(review["text"], self.len_review_preamble, self.max_text_length, self.ellipsis)
+            for review in sorted(
+                reviews, key=lambda r: r["review_idx"]
+            )
+        ]
+        review_posting_dates = sorted([_parse_date(review["posting_date"]) for review in reviews])
+        review_process_dates = {
+            "earliest": review_posting_dates[0],
+            "latest": review_posting_dates[-1],
+        }
+
+        response = review_process["response"]
+        if response:
+            review_process_dates["response"] = _parse_date(response["posting_date"])
+            response_text = _limit(response["text"], self.len_response_preamble, self.max_text_length, self.ellipsis)
+        else:
+            response_text = None
 
         body_template = Environment(autoescape=True).from_string(template)
         body = body_template.render(
@@ -105,20 +139,9 @@ class Notify:
             ),
             abstract=preprint["abstract"],
             doi=doi,
-            review_process_dates={
-                "earliest": review_posting_dates[0],
-                "latest": review_posting_dates[-1],
-                "response": parse(response["posting_date"]).date()
-            },
-            reviews=[
-                limit(review["text"][len_review_preamble:], max_text_length)
-                for review in sorted(
-                    reviews, key=lambda r: r["review_idx"]
-                )
-            ],
-            author_response=f'{limit(response["text"][len_response_preamble:], max_text_length)}'
-            if response
-            else None,
+            review_process_dates=review_process_dates,
+            reviews=review_texts,
+            author_response=response_text,
         )
         subject = f"New refereed preprint: {title}"
 
@@ -140,7 +163,7 @@ class Notify:
 """
             LOGGER.info(
                 "This is a dry run, these messages would be sent: %s",
-                linebreak.join([limit(msg.as_string(), 500) for msg in messages]),
+                linebreak.join([_limit(msg.as_string(), 500) for msg in messages]),
             )
             return
 
