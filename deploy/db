@@ -107,13 +107,12 @@ update_local_neo4j() {
     # run monthly
 
     log "updating meca archives"
+    # only downloads MECA archives from 2021 onwards
     aws s3 sync \
       --request-payer requester \
-      # only download MECA archives
       --exclude "*" --include "*.meca" \
-      # only download files from 2021 onwards
       --exclude "*_2018/*" --exclude "*_2019/*" --exclude "*_2020/*" \
-      s3://biorxiv-src-monthly/Current_Content $BIORXIV_PATH #/mnt/usb01/shared/biorxiv-src-monthly
+      s3://biorxiv-src-monthly/Current_Content $BIORXIV_PATH
 
     log "remove prelim articles obtained from the CrossRef and bioRxiv APIs"
     cat neotools/purge_prelim.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
