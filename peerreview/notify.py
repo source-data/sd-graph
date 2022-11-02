@@ -163,7 +163,7 @@ class Notify:
 """
             LOGGER.info(
                 "This is a dry run, these messages would be sent: %s",
-                linebreak.join([_limit(msg.as_string(), 500) for msg in messages]),
+                linebreak.join([_limit(msg.as_string(), 0, 500, " [...]") for msg in messages]),
             )
             return
 
@@ -181,7 +181,10 @@ class Notify:
             params={"after": after, "reviewed_by": reviewed_by}
         )
         dois_of_matching_refereed_preprints = [r["doi"] for r in self.db.query(query)]
-        return self.db.query(BY_DOIS(params={"dois": dois_of_matching_refereed_preprints}))
+        return self.db.query(BY_DOIS(params={
+            "dois": dois_of_matching_refereed_preprints,
+            "published_in": "",
+        }))
 
     def run(self, after: datetime, reviewed_by: str, recipient: str, dry_run: bool = False):
         refereed_preprints = self.find_refereed_preprints(after, reviewed_by)
