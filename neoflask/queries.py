@@ -50,25 +50,40 @@ ORDER BY DATETIME(pub_date) DESC, score DESC
 class REFEREED_PREPRINTS(Query):
 
     code = '''
-MATCH (a:Article)
-OPTIONAL MATCH (a)-[:HasReview]->(review:Review)
-OPTIONAL MATCH (a)-[:HasResponse]->(response:Response)
-OPTIONAL MATCH (a)-[:HasAnnot]->(annot:PeerReviewMaterial)
-WITH DISTINCT a, review, response, annot
-WHERE review IS NOT NULL OR annot IS NOT NULL
-WITH
+MATCH (refprep:VizCollection {name: "refereed-preprints"})-[:HasSubCol]->(revservice:VizSubCollection)
+WHERE (revservice.name = $reviewing_service) OR ($reviewing_service = '')
+MATCH (revservice)-[:HasPaper]->(vizpaper:VizPaper)
+WITH vizpaper.doi AS doi
+MATCH (a:Article {doi: doi})
+WITH a
+WHERE
+  (toLower(apoc.convert.toString(a.published_journal_title)) = toLower($published_in))
+WITH DISTINCT
   id(a) AS id,
   a.publication_date AS pub_date,
   a.title AS title,
   a.abstract AS abstract,
   a.version AS version,
   a.doi AS doi,
-  a.journalName as journal,
-  {reviews: COLLECT(DISTINCT review {.*}), response: response {.*}, annot: COLLECT(DISTINCT annot {.*})} AS review_process
-RETURN id, pub_date, title, abstract, version, doi, journal, review_process
+  a.journal_title as journal,
+  a.published_journal_title as published_journal_title,
+  a.journal_doi as journal_doi
+RETURN id, pub_date, title, abstract, version, doi, journal, published_journal_title, journal_doi
 ORDER BY pub_date DESC
+SKIP $page * $pagesize
+LIMIT $pagesize
     '''
-    returns = ['id', 'pub_date', 'title', 'abstract', 'version', 'doi', 'journal', 'nb_figures', 'review_process']
+    map = {
+      'reviewing_service': {'req_param': 'reviewing_service', 'default': ''},
+      'published_in': {'req_param': 'published_in', 'default': ''},
+      'pagesize': {'req_param': 'pagesize', 'default': 20},
+      'page': {'req_param': 'page', 'default': 0},
+    }
+
+    returns = [
+      'id', 'pub_date', 'title', 'abstract', 'version', 'doi', 'journal', 'published_journal_title',
+      'journal_doi', 'nb_figures'
+    ] #, 'review_process']
 
 
 class COLLECTION_NAMES(Query):
@@ -104,9 +119,15 @@ class BY_DOIS(Query):
     code = '''
 // Get the most recent version of each article that has one of the given DOIs
 UNWIND $dois as doi
+WITH
+  doi
 CALL {
     WITH doi
     MATCH (article:Article {doi: doi})
+    WHERE
+      (
+        toLower(apoc.convert.toString(article.published_journal_title)) = toLower($published_in)
+      ) OR ($published_in = '')
     WITH article
     ORDER BY article.version DESC
     return COLLECT(article)[0] AS a
@@ -216,7 +237,10 @@ RETURN
   assays,
   entities
 '''
-    map = {'dois': {'req_param': 'dois', 'default': []}}
+    map = {
+      'dois': {'req_param': 'dois', 'default': []},
+      'published_in': {'req_param': 'published_in', 'default': ''}
+    }
     returns = [
       'id',
       'doi',
@@ -236,6 +260,8 @@ RETURN
       'assays',
       'main_topics',
       'highlighted_entities',
+      'published_in',
+      'dois'
     ]
 
 
@@ -678,7 +704,9 @@ RETURN
     descriptor{.*} AS reviewing_service_description,
     COLLECT(DISTINCT paper_j) as papers
     '''
-    map = {'limit_date': {'req_param': 'limit_date', 'default':'1900-01-01'}}
+    map = {
+      'limit_date': {'req_param': 'limit_date', 'default':'1900-01-01'}
+    }
     returns = ['id', 'papers', 'reviewing_service_description']
 
 

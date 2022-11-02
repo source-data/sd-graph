@@ -42,6 +42,11 @@ const routes = [
     component: () => import(/* webpackChunkName: "about" */ '../views/Contact.vue')
   },
   {
+    path: '/render-rev',
+    name: 'RenderRev Demo',
+    component: () => import('../views/RenderRevDemo.vue')
+  },
+  {
     path: '/:collection/:service',
     name: 'Home',
     component: Home,

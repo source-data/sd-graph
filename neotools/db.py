@@ -60,6 +60,15 @@ class Query:
     def params(self, p: Dict):
         self._params = p
 
+    def __eq__(self, other):
+        return (
+            self.code == other.code
+            and self.map == other.map
+            and self.returns == other.returns
+            and self.params == other.params
+        )
+    def __hash__(self):
+        return hash((self.code, self.map, self.returns, self.params))
 
 class Instance:
 
