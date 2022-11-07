@@ -309,6 +309,9 @@ def paging_aware_cache_key():
     """
     return f'view/{request.path}/page-{hash(request.paging)}'
 
+DEFAULT_REVIEWING_SERVICE = ''
+DEFAULT_PUBLISHER = ''
+
 @app.route(
     '/api/v1/collection/refereed-preprints/<service_name:reviewing_service>/<published_in>',
     methods=['GET'],
@@ -334,8 +337,22 @@ def refereed_preprints_get(reviewing_service, published_in):
         page=request.paging.page,
     )
 
-DEFAULT_REVIEWING_SERVICE = ''
-DEFAULT_PUBLISHER = ''
+@app.route('/api/v1/collection/refereed-preprints', methods=['GET'])
+@cache.cached()
+def refereed_preprints_get_all():
+    """
+    Returns all refereed preprints sorted by publication date of the preprint.
+
+    For more control, e.g. not filtering by reviewing service or publisher, use the POST
+    version of this route.
+    """
+    return _fetch_refereed_preprints(
+        reviewing_service=DEFAULT_REVIEWING_SERVICE,
+        published_in=DEFAULT_PUBLISHER,
+        pagesize=10 ** 7,
+        page=DEFAULT_PAGE,
+    )
+
 @app.route('/api/v1/collection/refereed-preprints', methods=['POST'])
 @paged
 def refereed_preprints_post():
