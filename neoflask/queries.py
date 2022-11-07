@@ -57,7 +57,9 @@ WITH vizpaper.doi AS doi
 MATCH (a:Article {doi: doi})
 WITH a
 WHERE
-  (toLower(apoc.convert.toString(a.published_journal_title)) = toLower($published_in))
+  (
+    toLower(apoc.convert.toString(a.published_journal_title)) = toLower($published_in)
+  ) OR ($published_in = '')
 WITH DISTINCT
   id(a) AS id,
   a.publication_date AS pub_date,
