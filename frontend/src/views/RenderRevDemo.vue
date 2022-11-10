@@ -31,7 +31,7 @@ v-container
                                         |
                                         | {{ href(article.doi) }}
                             v-col(sm=12 md=8 lg=7)
-                                render-rev(:doi='article.doi')
+                                render-rev(:doi='article.doi' :ref='article.doi')
                 v-card-text
                     v-card
                         v-card-title Abstract
@@ -78,10 +78,10 @@ export default {
     created() {
         const dois = [
             '10.1101/2020.07.20.212886',
-            '10.1101/2022.03.25.485742',
+            // '10.1101/2022.03.25.485742',
             '10.1101/2022.02.24.481763',
             '10.1101/2021.10.26.465695',
-            '10.1101/2022.07.22.22277924',
+            // '10.1101/2022.07.22.22277924',
         ];
         const self = this;
         httpClient
@@ -90,6 +90,28 @@ export default {
             .then(articles => {
                 self.articles = articles
             })
+    },
+    watch: {
+        articles: function configureRenderRev(articles) {
+            const self = this;
+            this.$nextTick(function () {
+                articles.forEach(article => {
+                    const doi = article.doi;
+                    const el = self.$refs[doi][0];
+                    const display = {
+                        publisherName: name => {
+                            const nameMap = {
+                                'embo press': 'EMBO Press',
+                                'peer ref': 'Peer Ref',
+                                'review commons': 'Review Commons',
+                            };
+                            return nameMap[name] || name;
+                        },
+                    };
+                    el.configure({ doi, display });
+                });
+            });
+        }
     }
 }
 </script>
