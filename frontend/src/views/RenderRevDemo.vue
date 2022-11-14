@@ -41,8 +41,8 @@ v-container
 
 
 <script>
-import httpClient from '../lib/http'
-
+import httpClient from '../lib/http';
+import MarkdownIt from 'markdown-it';
 import '@source-data/render-rev';
 
 export default {
@@ -95,6 +95,11 @@ export default {
         articles: function configureRenderRev(articles) {
             const self = this;
             this.$nextTick(function () {
+                const md = new MarkdownIt({
+                    html: true,
+                    linkify: true,
+                    typographer: true
+                });
                 articles.forEach(article => {
                     const doi = article.doi;
                     const el = self.$refs[doi][0];
@@ -107,6 +112,7 @@ export default {
                             };
                             return nameMap[name] || name;
                         },
+                        renderMarkdown: src => md.render(src),
                     };
                     el.configure({ doi, display });
                 });
