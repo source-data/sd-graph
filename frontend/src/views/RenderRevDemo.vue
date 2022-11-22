@@ -16,7 +16,7 @@ v-container
                 v-card-subtitle
                     v-container(fluid)
                         v-row
-                            v-col(sm=12 md=4 lg=5)
+                            v-col
                                 p {{ authorList(article) }}
                                 p
                                     | Posted
@@ -30,7 +30,7 @@ v-container
                                     a(:href='href(article.doi)' target='_blank' rel='noopener')
                                         |
                                         | {{ href(article.doi) }}
-                            v-col(sm=12 md=8 lg=7)
+                            v-col
                                 render-rev(:doi='article.doi' :ref='article.doi')
                 v-card-text
                     v-card
