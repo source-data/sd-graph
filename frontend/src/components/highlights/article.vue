@@ -43,7 +43,7 @@ export default {
         {name: 'og:site_name', property: 'og:site_name', content: 'Early Evidence Base'},
         {name: 'og:type', property: 'og:type', content: 'article'},
         {name: 'og:url', property: 'og:url', content: this.generateMyUrl(this.article_doi)},
-        {name: 'og:image', property: 'og:image', content: `${this.publicPath}/EEB_E_LOGO.png`},
+        {name: 'og:image', property: 'og:image', content: `${this.publicPath}/EMBO_logo.svg`},
         {name: 'og:description', property: 'og:description', content: this.article.abstract},
 
         // Twitter card
@@ -52,7 +52,7 @@ export default {
         {name: 'twitter:title', content: this.article.title},
         {name: 'twitter:description', content: this.article.abstract},
         {name: 'twitter:creator', content: '@EarlyEvidenceBase'},
-        {name: 'twitter:image:src', content: `${this.publicPath}/EEB_E_LOGO.png`},
+        {name: 'twitter:image:src', content: `${this.publicPath}/EMBO_logo.svg`},
       ],
     }
   },
