@@ -100,6 +100,8 @@ MERGE (action)<-[:outputs]-(rev:RefereeReport {
   published: review.posting_date,
   uri: "https://eeb.embo.org/api/v2/review_material/" + id(review)
 })
+// review.doi can be null and must therefore be set outside the merge query
+ON CREATE SET rev.doi = review.doi
 // realization on eeb as json
 MERGE (rev)<-[:content]-(content_on_eeb:Content {
   type: "web-page", 
@@ -175,6 +177,8 @@ MERGE (action)<-[:outputs]-(reply:AuthorReply {
   published: response.posting_date,
   uri: "https://eeb.embo.org/api/v2/review_material/" + id(response)
 })
+// as above with reviews, response.doi can be null and must be set outside the merge query
+ON CREATE SET reply.doi = response.doi
 MERGE (reply)<-[:content]-(content:Content {
   type: "web-page",
   url: "https://eeb.embo.org/api/v2/review_material/" + id(response),
