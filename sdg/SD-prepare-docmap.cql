@@ -98,6 +98,7 @@ MERGE (step)<-[:assertions]-(assertion:Assertion {
 MERGE (step)<-[:actions]-(action:Action {id: action_uuid})
 MERGE (action)<-[:outputs]-(rev:RefereeReport {
   published: review.posting_date,
+  type: "review",
   uri: "https://eeb.embo.org/api/v2/review_material/" + id(review)
 })
 // review.doi can be null and must therefore be set outside the merge query
@@ -175,6 +176,7 @@ WITH
 MERGE (step)<-[:actions]-(action:Action {id: action_uuid})
 MERGE (action)<-[:outputs]-(reply:AuthorReply {
   published: response.posting_date,
+  type: "author-response",
   uri: "https://eeb.embo.org/api/v2/review_material/" + id(response)
 })
 // as above with reviews, response.doi can be null and must be set outside the merge query
