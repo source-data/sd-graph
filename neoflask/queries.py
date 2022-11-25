@@ -354,9 +354,7 @@ CALL {
           (stepNode)<-[:actions]-(actionNode)
         CALL {
             WITH actionNode
-            MATCH
-                (actionNode)<-[:participants]-(participantNode),
-                (actionNode)<-[:outputs]-(outputNode)
+            MATCH (actionNode)<-[:outputs]-(outputNode)
             CALL {
               WITH outputNode
               MATCH (outputNode)<-[:content]-(contentNode)
@@ -365,36 +363,50 @@ CALL {
                   content: COLLECT(DISTINCT contentNode{.*})
               } AS output
             }
-            RETURN {
-                participants: COLLECT(
-                    DISTINCT {
-                        actor: CASE WHEN participantNode.name = "anonymous" THEN {
-                            type: "person",
-                            name: "anonymous"
-                        } ELSE {
-                            type: "person",
-                            firstName: participantNode.firstName,
-                            familyName: participantNode.familyName
-                        } END,
-                        role: participantNode.role
+            WITH
+                actionNode,
+                { outputs: COLLECT(DISTINCT output) } AS action
+            OPTIONAL MATCH (actionNode)<-[:participants]-(participantNode)
+            WITH
+                CASE WHEN participantNode IS NULL THEN
+                    action
+                ELSE
+                    action{
+                        .*,
+                        participants: COLLECT(
+                            DISTINCT {
+                                actor: CASE WHEN participantNode.name = "anonymous" THEN {
+                                    type: "person",
+                                    name: "anonymous"
+                                } ELSE {
+                                    type: "person",
+                                    firstName: participantNode.firstName,
+                                    familyName: participantNode.familyName
+                                } END,
+                                role: participantNode.role
+                            }
+                        )
                     }
-                ),
-                outputs: COLLECT(DISTINCT output)
-            } AS action
+                END AS action
+            RETURN action
         }
         WITH
             stepNode,
-            COLLECT(DISTINCT assertionNode{.*}) AS assertions,
-            COLLECT(DISTINCT inputNode{.*}) AS inputs,
-            COLLECT(DISTINCT action) AS actions
+            {
+                inputs: COLLECT(DISTINCT inputNode{.*}),
+                assertions: COLLECT(DISTINCT assertionNode{.*}),
+                actions: COLLECT(DISTINCT action)
+            } AS step
+        WITH
+            stepNode,
+            CASE WHEN stepNode.next_step IS NULL THEN
+                step
+            ELSE
+                step{.*, `next-step`: stepNode.next_step}
+            END AS step
         RETURN [
             stepNode.id,
-            {
-                inputs: inputs,
-                assertions: assertions,
-                actions: actions,
-                `next-step`: stepNode.next_step
-            }
+            step
         ] AS id_and_step
     }
     RETURN {
