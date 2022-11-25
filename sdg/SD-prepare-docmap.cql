@@ -58,6 +58,58 @@ MERGE (step)<-[:inputs]-(preprint)
 RETURN COUNT(docmap) AS `docmap generated`;
 :commit
 
+// Create Docmaps for published articles
+:begin
+MATCH (a:Article)
+WHERE
+  a.journal_doi IS NOT NULL
+  AND a.published_journal_title IS NOT NULL
+WITH DISTINCT
+  a.doi as preprint_doi,
+  a.publication_date as preprint_publication_date,
+  a.journal_doi as published_article_doi,
+  a.published_journal_title as publisher_title
+ORDER BY DATETIME(preprint_publication_date)
+WITH DISTINCT
+  preprint_doi,
+  COLLECT(preprint_publication_date)[0] as preprint_publication_date,
+  published_article_doi,
+  publisher_title,
+  "_:b-"+apoc.create.uuid() as id_first_step,
+  "_:b-"+apoc.create.uuid() AS id_action
+MERGE (preprint:Preprint {
+  uri: "https://doi.org/" + preprint_doi,
+  doi: preprint_doi,
+  published: toString(DATETIME(preprint_publication_date))
+})
+MERGE (docmap:Docmap {
+  type: "docmap",
+  created: toString(DATETIME()),
+  generatedAt: toString(DATETIME()),
+  provider: "https://eeb.embo.org",
+  publisher_name: publisher_title,
+  id: "https://eeb.embo.org/api/v2/docmap/" + preprint_doi,
+  first_step: id_first_step
+})
+MERGE (docmap)<-[:steps]-(step:Step {id: id_first_step})
+MERGE (step)<-[:inputs]-(preprint)
+MERGE (step)<-[:assertions]-(assertion:Assertion {
+  item: preprint.uri,
+  status: "published"
+})
+MERGE (step)<-[:actions]-(action:Action {id: id_action})
+MERGE (action)<-[:outputs]-(pub:PublishedArticle {
+  doi: published_article_doi,
+  uri: "https://doi.org/" + published_article_doi
+})
+MERGE (rev)<-[:content]-(doi:Content {
+  type: "web-page", 
+  url: pub.uri,
+  id: published_article_doi,
+  service: "https://doi.org/"
+})
+RETURN COUNT(docmap) AS `docmap generated`;
+:commit
 
 // RefereeReports
 :begin
