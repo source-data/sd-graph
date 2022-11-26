@@ -9,6 +9,7 @@ MATCH (n:Docmap) DETACH DELETE n;
 MATCH (n:Preprint) DETACH DELETE n;
 MATCH (n:RefereeReport) DETACH DELETE n;
 MATCH (n:AuthorReply) DETACH DELETE n;
+MATCH (n:PublishedArticle) DETACH DELETE n;
 MATCH (n:Person) DETACH DELETE n;
 MATCH (n:Creator) DETACH DELETE n;
 MATCH (n:Content) DETACH DELETE n;
