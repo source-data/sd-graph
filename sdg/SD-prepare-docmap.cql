@@ -64,6 +64,7 @@ MATCH (a:Article)
 WHERE
   a.journal_doi IS NOT NULL
   AND a.published_journal_title IS NOT NULL
+  AND a.publication_date IS NOT NULL
 WITH DISTINCT
   a.doi as preprint_doi,
   a.publication_date as preprint_publication_date,
