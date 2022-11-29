@@ -357,11 +357,17 @@ CALL {
             MATCH (actionNode)<-[:outputs]-(outputNode)
             CALL {
               WITH outputNode
-              MATCH (outputNode)<-[:content]-(contentNode)
-              RETURN outputNode{
-                  .*,
-                  content: COLLECT(DISTINCT contentNode{.*})
-              } AS output
+              OPTIONAL MATCH (outputNode)<-[:content]-(contentNode)
+              WITH
+                  CASE WHEN contentNode IS NULL THEN
+                      outputNode{.*}
+                  ELSE
+                      outputNode{
+                          .*,
+                          content: COLLECT(DISTINCT contentNode{.*})
+                      }
+                  END AS output
+              RETURN output
             }
             WITH
                 actionNode,
