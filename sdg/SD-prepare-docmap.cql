@@ -49,67 +49,13 @@ MERGE (docmap:Docmap {
   generatedAt: toString(DATETIME()),
   provider: "https://eeb.embo.org",
   publisher_url: rs.url,
-  publisher_name: rs.name,
+  publisher_name: TOLOWER(rs.name),
   publisher_peer_review_policy: rs.peer_review_policy,
   id: "https://eeb.embo.org/api/v2/docmap/" + doi,
   first_step: first_step
 })
 MERGE (docmap)<-[:steps]-(step:Step {id: first_step})
 MERGE (step)<-[:inputs]-(preprint)
-RETURN COUNT(docmap) AS `docmap generated`;
-:commit
-
-// Create Docmaps for published articles
-:begin
-MATCH (a:Article)
-WHERE
-  a.journal_doi IS NOT NULL
-  AND a.published_journal_title IS NOT NULL
-  AND a.publication_date IS NOT NULL
-WITH DISTINCT
-  a.doi as preprint_doi,
-  a.publication_date as preprint_publication_date,
-  a.journal_doi as published_article_doi,
-  a.published_journal_title as publisher_title
-ORDER BY DATETIME(preprint_publication_date)
-WITH DISTINCT
-  preprint_doi,
-  COLLECT(preprint_publication_date)[0] as preprint_publication_date,
-  published_article_doi,
-  publisher_title,
-  "_:b-"+apoc.create.uuid() as id_first_step,
-  "_:b-"+apoc.create.uuid() AS id_action
-MERGE (preprint:Preprint {
-  uri: "https://doi.org/" + preprint_doi,
-  doi: preprint_doi,
-  published: toString(DATETIME(preprint_publication_date))
-})
-MERGE (docmap:Docmap {
-  type: "docmap",
-  created: toString(DATETIME()),
-  generatedAt: toString(DATETIME()),
-  provider: "https://eeb.embo.org",
-  publisher_name: publisher_title,
-  id: "https://eeb.embo.org/api/v2/docmap/" + preprint_doi,
-  first_step: id_first_step
-})
-MERGE (docmap)<-[:steps]-(step:Step {id: id_first_step})
-MERGE (step)<-[:inputs]-(preprint)
-MERGE (step)<-[:assertions]-(assertion:Assertion {
-  item: preprint.uri,
-  status: "published"
-})
-MERGE (step)<-[:actions]-(action:Action {id: id_action})
-MERGE (action)<-[:outputs]-(pub:PublishedArticle {
-  doi: published_article_doi,
-  uri: "https://doi.org/" + published_article_doi
-})
-MERGE (rev)<-[:content]-(doi:Content {
-  type: "web-page", 
-  url: pub.uri,
-  id: published_article_doi,
-  service: "https://doi.org/"
-})
 RETURN COUNT(docmap) AS `docmap generated`;
 :commit
 
@@ -281,6 +227,76 @@ MERGE (reply_action)<-[:participants]-(person:Person {
 })
 MERGE (preprint)-[:has_author]->(person)
 RETURN COUNT(person) AS `authors linked to replies`;
+:commit
+
+// Create Docmaps or add steps for published articles
+:begin
+MATCH
+  (a:Article),
+  (Docmap)<-[:steps]-(Step)<-[:inputs]-(preprint:Preprint)
+WHERE
+  // only update or create docmaps for preprints that have reviews/replies from one of the reviewing services.
+  // If they do, a Docmap has been created above in the first step, and that is the one found here.
+  a.doi = preprint.doi
+  // these are fields needed to construct the new docmap.
+  AND a.journal_doi IS NOT NULL
+  AND a.published_journal_title IS NOT NULL
+  AND a.publication_date IS NOT NULL
+WITH DISTINCT
+  preprint,
+  a.publication_date as preprint_publication_date,
+  a.journal_doi as published_article_doi,
+  a.published_journal_title as publisher_title
+// order by and collect (below) to get the newest version
+ORDER BY DATETIME(preprint_publication_date)
+WITH DISTINCT
+  preprint,
+  COLLECT(preprint_publication_date)[0] as preprint_publication_date,
+  published_article_doi,
+  publisher_title,
+  "_:b-"+apoc.create.uuid() as id_step,
+  "_:b-"+apoc.create.uuid() AS id_action
+MERGE (docmap:Docmap {
+  type: "docmap",
+  provider: "https://eeb.embo.org",
+  publisher_name: TOLOWER(publisher_title),
+  id: "https://eeb.embo.org/api/v2/docmap/" + preprint.doi
+})
+// if no docmap for this publisher exists, set the necessary properties
+ON CREATE
+  SET
+    docmap.created = toString(DATETIME()),
+    docmap.generatedAt = toString(DATETIME()),
+    docmap.first_step = id_step
+MERGE (docmap)<-[:steps]-(step:Step {id: id_step})
+MERGE (step)<-[:inputs]-(preprint)
+MERGE (step)<-[:assertions]-(assertion:Assertion {
+  item: preprint.uri,
+  status: "published"
+})
+MERGE (step)<-[:actions]-(action:Action {id: id_action})
+MERGE (action)<-[:outputs]-(pub:PublishedArticle {
+  doi: published_article_doi,
+  type: "journal-publication",
+  uri: "https://doi.org/" + published_article_doi
+})
+MERGE (rev)<-[:content]-(doi:Content {
+  type: "web-page", 
+  url: pub.uri,
+  id: published_article_doi,
+  service: "https://doi.org/"
+})
+// If we updated an existing docmap, add our newly added step as the next step after the so-far final step.
+WITH
+  COUNT(docmap) AS num_docmaps_updated_or_created,
+  docmap,
+  step AS new_step
+OPTIONAL MATCH (docmap)<-[:steps]-(existing_step:Step)
+WHERE
+  ID(existing_step) <> ID(new_step)
+  AND existing_step.next_step IS NULL
+SET existing_step.next_step = new_step.id
+RETURN num_docmaps_updated_or_created AS `docmap generated or updated with publication`;
 :commit
 
 // :begin
