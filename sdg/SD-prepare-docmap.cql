@@ -246,7 +246,7 @@ WITH DISTINCT
   preprint,
   a.publication_date as preprint_publication_date,
   a.journal_doi as published_article_doi,
-  a.published_journal_title as publisher_title
+  apoc.convert.toString(a.published_journal_title) as publisher_title
 // order by and collect (below) to get the newest version
 ORDER BY DATETIME(preprint_publication_date)
 WITH DISTINCT
