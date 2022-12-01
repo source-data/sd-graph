@@ -104,13 +104,17 @@ export default {
                     const doi = article.doi;
                     const el = self.$refs[doi][0];
                     const display = {
-                        publisherName: name => {
-                            const nameMap = {
-                                'embo press': 'EMBO Press',
-                                'peer ref': 'Peer Ref',
-                                'review commons': 'Review Commons',
+                        publisherLogo: name => {
+                            const urlMap = {
+                                'bioRxiv': 'https://www.biorxiv.org/sites/default/files/images/favicon.ico',
+                                'elife': 'https://elifesciences.org/assets/favicons/favicon-32x32.56d32e31.png',
+                                'embo press': 'https://www.embopress.org/favicon.ico',
+                                'embo reports': 'https://www.embopress.org/favicon.ico',
+                                'life science alliance': 'https://www.embopress.org/favicon.ico',
+                                'review commons': 'https://www.reviewcommons.org/wp-content/uploads/2019/11/cropped-favicon-192x192.png',
+                                'the embo journal': 'https://www.embopress.org/favicon.ico',
                             };
-                            return nameMap[name] || name;
+                            return urlMap[name] || null;
                         },
                         renderMarkdown: src => md.render(src),
                     };
