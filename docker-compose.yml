@@ -31,9 +31,7 @@ services:
     command: /start
 
   neo4j:
-    build:
-      context: .
-      dockerfile: ./compose/local/neo4j/Dockerfile
+    image: neo4j:4.1
     environment:
       - NEO4JLABS_PLUGINS=["apoc", "graph-data-science"]
     ulimits:
@@ -44,6 +42,7 @@ services:
       - ./data/neo4j-data:/data
       - ./data/neo4j-logs:/logs
       - ./data/neo4j-plugins:/plugins
+      - ./data/neo4j-import:/import
     env_file:
       - ./.env
     ports:

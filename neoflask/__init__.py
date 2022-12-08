@@ -8,9 +8,6 @@ from flask_caching import Cache
 
 
 load_dotenv()
-NEO_URI = os.getenv('NEO_URI')
-NEO_USERNAME = os.getenv("NEO_USERNAME")
-NEO_PASSWORD = os.getenv("NEO_PASSWORD")
 EEB_PUBLIC_API = os.getenv("EEB_PUBLIC_API")
 
 app = Flask(__name__)
@@ -38,6 +35,11 @@ cache.init_app(app)
 with app.app_context():
     cache.clear()
 
-DB = Instance(NEO_URI, NEO_USERNAME, NEO_PASSWORD)
+
+def get_db():
+    NEO_URI = os.getenv('NEO_URI')
+    NEO_USERNAME = os.getenv("NEO_USERNAME")
+    NEO_PASSWORD = os.getenv("NEO_PASSWORD")
+    return Instance(NEO_URI, NEO_USERNAME, NEO_PASSWORD)
 
 from . import views

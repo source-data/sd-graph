@@ -1,5 +1,5 @@
-# This file is used by the CI system (Github Actions) to build four of the five images that comprise the production
-# system as defined in production.yml (the other one uses a plain, pre-built image).
+# This file is used by the CI system (Github Actions) to build three of the five images that comprise the production
+# system as defined in production.yml (the other two use plain, pre-built images).
 # They are stored in the Github Container Registry under the image tag specified here. See the Github Actions workflow
 # definition for information on the environment variables used here.
 services:
@@ -8,15 +8,6 @@ services:
     build:
       context: .
       dockerfile: ./compose/production/flask/Dockerfile
-      labels:
-        org.opencontainers.image.source: ${IMAGE_SOURCE}
-        org.opencontainers.image.revision: ${IMAGE_REVISION}
-
-  neo4j:
-    image: ghcr.io/source-data/sd-graph_neo4j:${IMAGE_TAG}
-    build:
-      context: .
-      dockerfile: ./compose/local/neo4j/Dockerfile
       labels:
         org.opencontainers.image.source: ${IMAGE_SOURCE}
         org.opencontainers.image.revision: ${IMAGE_REVISION}

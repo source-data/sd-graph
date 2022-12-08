@@ -1,4 +1,7 @@
+from collections import namedtuple
 from datetime import date, timedelta
+from functools import wraps
+import pdb
 from dateutil.relativedelta import relativedelta
 from flask import (
     abort,
@@ -9,7 +12,7 @@ from flask import (
     url_for,
 )
 from .sitemap import create_sitemap
-from .converter import LuceneQueryConverter, ReviewServiceConverter
+from .converter import LuceneQueryConverter, ReviewServiceConverter, ListConverter
 from .queries import (
     STATS, BY_DOIS, FIG_BY_DOI_IDX,
     DESCRIBE_REVIEWING_SERVICES,
@@ -19,18 +22,20 @@ from .queries import (
     BY_AUTO_TOPICS, BY_REVIEWING_SERVICE, AUTOMAGIC,
     LUCENE_SEARCH, SEARCH_DOI,
     COVID19, REFEREED_PREPRINTS,
-    COLLECTION_NAMES, SUBJECT_COLLECTIONS,
+    COLLECTION_NAMES, 
+    SUBJECT_COLLECTIONS,
 )
 from neotools.db import Query
 from typing import Dict
 import re
-from . import DB, app, cache
+from . import app, cache, get_db
 
 
 DOI_REGEX = re.compile(r'10.\d{4,9}/[-._;()/:A-Z0-9]+$', flags=re.IGNORECASE)
 
 app.url_map.converters['escape_lucene'] = LuceneQueryConverter
 app.url_map.converters['service_name'] = ReviewServiceConverter
+app.url_map.converters['list'] = ListConverter
 
 def n_months_ago(n):
     n_months_ago = date.today() + relativedelta(months=-n)
@@ -48,7 +53,7 @@ def ask_neo(query: Query, **kwargs) -> Dict:
     # use the map of name of substitution variable in cypher to the name and default value of the var in the request
     for var_in_cypher, var_in_request in query.map.items():
         query.params[var_in_cypher] = kwargs.get(var_in_request['req_param'], var_in_request['default'])
-    data = DB.query_with_tx_funct(tx_funct, query)
+    data = get_db().query_with_tx_funct(tx_funct, query)
     return data
 
 
@@ -153,15 +158,16 @@ def by_dois():
     if not 'dois' in request.json:
         abort(400) # required parameter is missing
     dois = request.json.get('dois', [])
+    published_in = request.json.get('published_in', '')
     num_dois = len(dois)
     dois_info = f'{dois}' if num_dois < 4 else f'["{dois[0]}", "{dois[1]}", ..., "{dois[-1]}"] ({num_dois} in total)'
-    app.logger.info(f"lookup dois: {dois_info}")
+    app.logger.info(f"lookup dois: {dois_info} {' published in '+published_in if published_in else ''}")
 
     cache_key = f'/api/v1/dois/{hash(frozenset(dois))}'
     doi_data = cache.get(cache_key)
     if doi_data is None:
         app.logger.debug(f"\t\t cache miss: {cache_key}")
-        doi_data = ask_neo(BY_DOIS(), dois=dois)
+        doi_data = ask_neo(BY_DOIS(), dois=dois, published_in=published_in)
         cache.add(cache_key, doi_data)
     else:
         app.logger.debug(f"\t\t  cache hit: {cache_key}")
@@ -227,11 +233,155 @@ def search(search_string: str):
 def covid19():
     return jsonify(ask_neo(COVID19()))
 
+def _fetch_refereed_preprints(reviewing_service, published_in, pagesize, page):
+    app.logger.info(
+        "refereed preprints from '%s' published in '%s' (page %s of size %s)",
+        reviewing_service,
+        published_in,
+        page,
+        pagesize,
+    )
+    return jsonify(
+        ask_neo(
+            REFEREED_PREPRINTS(),
+            reviewing_service=reviewing_service,
+            published_in=published_in,
+            pagesize=int(pagesize),
+            page=int(page),
+        )
+    )
 
-@app.route('/api/v1/collection/refereed-preprints', methods=['GET', 'POST'])
+PagingParameters = namedtuple('PagingParameters', ['page', 'pagesize'])
+"""The container for the paging parameters, i.e. the page number and page size."""
+
+DEFAULT_PAGESIZE = 20
+DEFAULT_PAGE = 0
+def paged(view_func):
+    """
+    Decorator that simplifies paged views.
+
+    Reads parameters named `pagesize` and `page` from the request data and puts their
+    values into a dict called `paging` on the request object. The values can be
+    retrieved like so: `request.paging['pagesize'], request.paging['page']`.
+    If one or both parameters are not present, default values are used.
+
+    For GET requests, the parameters are retrieved from the query string.
+    For POST requests with JSON request bodies, they are read from the request body.
+    In any other case a warning is logged and the defaults are used.
+    """
+
+    param_name_pagesize = 'pagesize'
+    param_name_page = 'page'
+
+    @wraps(view_func)
+    def inner(*args, **kwargs):
+        if request.method == 'GET':
+            param_dict = request.args
+        elif request.method == 'POST' and request.is_json:
+            param_dict = request.json
+        else:
+            app.logger.warning(
+                'Failed to retrieve paging parameters for route %s: not implemented for request method %s or mime type %s',
+                request.url,
+                request.method,
+                request.mimetype,
+            )
+            param_dict = {}
+
+        request.paging = PagingParameters(
+            page=param_dict.get(param_name_page, DEFAULT_PAGE),
+            pagesize=param_dict.get(param_name_pagesize, DEFAULT_PAGESIZE),
+        )
+
+        return view_func(*args, **kwargs)
+
+    return inner
+
+def paging_aware_cache_key():
+    """
+    Function to generate a paging-aware cache key.
+
+    Use it as the `make_cache_key` parameter to @cached and in conjunction with @paged.
+
+    Adds the paging parameters set by the @paged decorator to the cache key. Otherwise,
+    requesting the same URL with different paging parameters returns the first, cached,
+    result.
+    """
+    return f'view/{request.path}/page-{hash(request.paging)}'
+
+DEFAULT_REVIEWING_SERVICE = ''
+DEFAULT_PUBLISHER = ''
+
+@app.route(
+    '/api/v1/collection/refereed-preprints/<service_name:reviewing_service>/<published_in>',
+    methods=['GET'],
+)
+@paged
+@cache.cached(key_prefix=paging_aware_cache_key)
+def refereed_preprints_get(reviewing_service, published_in):
+    """
+    Returns all refereed preprints that were reviewed by `reviewing_service` and
+    published in `published_in`.
+    
+    Results are sorted by publication date of the preprint and paged. Use the query
+    parameters `pagesize` and `page` to adjust the paging:
+    /api/v1/collection/refereed-preprints/reviewcommons/elife?pagesize=100&page=3
+
+    For more control, e.g. not filtering by reviewing service or publisher, use the POST
+    version of this route.
+    """
+    return _fetch_refereed_preprints(
+        reviewing_service=reviewing_service,
+        published_in=published_in,
+        pagesize=request.paging.pagesize,
+        page=request.paging.page,
+    )
+
+@app.route('/api/v1/collection/refereed-preprints', methods=['GET'])
 @cache.cached()
-def refereed_preprints():
-    return jsonify(ask_neo(REFEREED_PREPRINTS()))
+def refereed_preprints_get_all():
+    """
+    Returns all refereed preprints sorted by publication date of the preprint.
+
+    For more control, e.g. not filtering by reviewing service or publisher, use the POST
+    version of this route.
+    """
+    return _fetch_refereed_preprints(
+        reviewing_service=DEFAULT_REVIEWING_SERVICE,
+        published_in=DEFAULT_PUBLISHER,
+        pagesize=10 ** 7,
+        page=DEFAULT_PAGE,
+    )
+
+@app.route('/api/v1/collection/refereed-preprints', methods=['POST'])
+@paged
+def refereed_preprints_post():
+    """
+    Returns all refereed preprints. Results can be filtered by reviewing service and
+    publisher.
+
+    The request body must be JSON, or empty. If empty, all refereed preprints are returned.
+    The results can be filtered by which reviewing service reviewed them (`reviewing_service`)
+    and/or where they were published (`published_in`):
+    `{ "reviewing_service": "review commons", "published_in": "Life Science Alliance" }`.
+
+    Results are sorted by publication date of the preprint and paged. Use the parameters
+    `pagesize` and `page` to adjust the paging: `{ "pagesize": 100, "page": 3 }`
+    """
+    if not request.is_json:
+        abort(415) # unsupported media type
+    return _fetch_refereed_preprints(
+        reviewing_service=request.json.get('reviewing_service', DEFAULT_REVIEWING_SERVICE),
+        published_in=request.json.get('published_in', DEFAULT_PUBLISHER),
+        pagesize=request.paging.pagesize,
+        page=request.paging.page,
+    )
+
+@app.route('/api/v1/collection/<subject>', methods=['GET', 'POST'])
+@cache.cached()
+def subject_collection(subject: str):
+    app.logger.info(f"subject collection for subject: '{subject}'")
+    return jsonify(ask_neo(SUBJECT_COLLECTIONS(), subject=subject))
 
 
 @app.route('/api/v1/subjects', methods=['GET', 'POST'])
@@ -239,13 +389,6 @@ def refereed_preprints():
 def subjects():
     app.logger.info(f"subjects names")
     return jsonify(ask_neo(COLLECTION_NAMES()))
-
-
-@app.route('/api/v1/collection/<subject>', methods=['GET', 'POST'])
-@cache.cached()
-def subject_collection(subject: str):
-    app.logger.info(f"collection '{subject}'")
-    return jsonify(ask_neo(SUBJECT_COLLECTIONS(), subject=subject))
 
 
 @app.route('/api/v2/review_material/<int:node_id>', methods=['GET', 'POST'])

@@ -16,7 +16,7 @@ v-container
                 v-card-subtitle
                     v-container(fluid)
                         v-row
-                            v-col(sm=12 md=4 lg=5)
+                            v-col
                                 p {{ authorList(article) }}
                                 p
                                     | Posted
@@ -30,8 +30,8 @@ v-container
                                     a(:href='href(article.doi)' target='_blank' rel='noopener')
                                         |
                                         | {{ href(article.doi) }}
-                            v-col(sm=12 md=8 lg=7)
-                                render-rev(:doi='article.doi')
+                            v-col
+                                render-rev(:doi='article.doi' :ref='article.doi')
                 v-card-text
                     v-card
                         v-card-title Abstract
@@ -41,8 +41,8 @@ v-container
 
 
 <script>
-import httpClient from '../lib/http'
-
+import httpClient from '../lib/http';
+import MarkdownIt from 'markdown-it';
 import '@source-data/render-rev';
 
 export default {
@@ -78,10 +78,10 @@ export default {
     created() {
         const dois = [
             '10.1101/2020.07.20.212886',
-            '10.1101/2022.03.25.485742',
+            // '10.1101/2022.03.25.485742',
             '10.1101/2022.02.24.481763',
             '10.1101/2021.10.26.465695',
-            '10.1101/2022.07.22.22277924',
+            // '10.1101/2022.07.22.22277924',
         ];
         const self = this;
         httpClient
@@ -90,6 +90,38 @@ export default {
             .then(articles => {
                 self.articles = articles
             })
+    },
+    watch: {
+        articles: function configureRenderRev(articles) {
+            const self = this;
+            this.$nextTick(function () {
+                const md = new MarkdownIt({
+                    html: true,
+                    linkify: true,
+                    typographer: true
+                });
+                articles.forEach(article => {
+                    const doi = article.doi;
+                    const el = self.$refs[doi][0];
+                    const display = {
+                        publisherLogo: name => {
+                            const urlMap = {
+                                'bioRxiv': 'https://www.biorxiv.org/sites/default/files/images/favicon.ico',
+                                'elife': 'https://elifesciences.org/assets/favicons/favicon-32x32.56d32e31.png',
+                                'embo press': 'https://www.embopress.org/favicon.ico',
+                                'embo reports': 'https://www.embopress.org/favicon.ico',
+                                'life science alliance': 'https://www.embopress.org/favicon.ico',
+                                'review commons': 'https://www.reviewcommons.org/wp-content/uploads/2019/11/cropped-favicon-192x192.png',
+                                'the embo journal': 'https://www.embopress.org/favicon.ico',
+                            };
+                            return urlMap[name] || null;
+                        },
+                        renderMarkdown: src => md.render(src),
+                    };
+                    el.configure({ doi, display });
+                });
+            });
+        }
     }
 }
 </script>

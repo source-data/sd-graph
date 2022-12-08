@@ -9,94 +9,26 @@
       router-link(:to="`/doi/${article.doi}`")
         v-icon(color="indigo lighten-3") mdi-link-variant
     v-card-subtitle
-      p {{ authorList }}
-      p
-        | Posted
-        |
-        b {{ displayDate(article.pub_date) }}
-        |  on
-        |
-        i {{ article.journal }}
-      p
-        b doi:
-        a(:href="href(article.doi)" target="_blank" rel="noopener")
-          |
-          | https://doi.org/{{ article.doi }}
-    v-card-text
-      v-expansion-panels(v-if="article.review_process" focusable v-model="expandedReview")
-        v-expansion-panel(v-for="(review, i) in article.review_process.reviews" :key="i")
-          v-expansion-panel-header()
-            div(:id="reviewId(review)")
-              div(v-if="review.highlight")
-                v-tooltip(
-                  v-if="review.highlight"
-                  top
-                  max-width="500px"
-                )
-                  template(v-slot:activator="{ on, attrs }")
-                    span(text v-bind="attrs" v-on="on")
-                      v-icon(small class="px-1" color="indigo lighten-3") mdi-text-box-check-outline
-                      |   Reviewed by
-                      |
-                      i {{ serviceId2Name(review.reviewed_by) }}
-                      |  | Review
-                      |
-                      span(v-if="review.review_idx") #
-                        |{{ review.review_idx }}
-                      |
-                      | ({{ displayDate(review.posting_date) }})
-                  b Significance
-                  p {{ review.highlight }}
-                  b Click on tab to read full review.
-              div(v-else)
-                span
-                  v-icon(small class="px-1" color="indigo lighten-3") mdi-text-box-check-outline
-                  |   Reviewed by
-                  |
-                  i {{ serviceId2Name(review.reviewed_by) }}
-                  |  | Review
-                  |
-                  span(v-if="review.review_idx") #
-                    | {{ review.review_idx }}
-                  |
-                  | ({{ displayDate(review.posting_date) }})
-          v-expansion-panel-content
-            p(v-html="mdRender(review.text)").md-content
-            a(v-if="review.doi && review.reviewed_by == 'review commons'" :href="href(review.doi)" target="_blank" rel="noopener")
+      v-container(fluid)
+        v-row
+          v-col
+            p {{ authorList }}
+            p
+              | Posted
               |
-              | {{ href(review.doi) }}
-        v-expansion-panel(v-if="article.review_process.response" focusable)
-          v-expansion-panel-header
-            span(:id="responseId()")
-              v-icon(small class="px-1" color="indigo lighten-3") mdi-message-text-outline
-              |   Response to the Reviewers
-          v-expansion-panel-content
-            p(v-html="mdRender(article.review_process.response.text)").md-content
-            a(v-if="article.review_process.response.doi && article.review_process.response.reviewed_by == 'review commons'" :href="href(article.review_process.response.doi)" target="_blank" rel="noopener")
+              b {{ displayDate(article.pub_date) }}
+              |  on
               |
-              | {{href(article.review_process.response.doi) }}
-        //- v-expansion-panel(v-if="article.review_process.annot")
-        //- CHECK annot
-        v-expansion-panel(v-for="(annot, i) in article.review_process.annot" :key="article.review_process.reviews.length + i")
-          v-expansion-panel-header
-            span
-              v-icon(small class="px-1" color="indigo lighten-3") mdi-text-box-check-outline
-              |  Reviewed by
-              i  {{ serviceId2Name(annot.reviewed_by) }}
-              |  | Review Process File
-              | ({{ displayDate(annot.posting_date) }})
-          v-expansion-panel-content
-            p(v-html="mdRender(annot.text)").md-content
-      v-expansion-panels(v-if="article.journal_doi")
-        .v-expansion-panel
-          .v-expansion-panel-header
-            span
-              v-icon(small class="px-1" color="indigo lighten-3") mdi-certificate-outline
-              | Published in:
-              i  {{ article.published_journal_title }}
-              b  doi:
-              a(:href="href(article.journal_doi)" target="_blank" rel="noopener")  https://doi.org/{{ article.journal_doi }}
+              i {{ article.journal }}
+            p
+              b doi:
+              a(:href="href(article.doi)" target="_blank" rel="noopener")
+                |
+                | https://doi.org/{{ article.doi }}
+          v-col
+            render-rev(:doi='article.doi' :ref='article.doi')
 
+    v-card-text
       v-row
         v-col
           v-card
@@ -123,7 +55,7 @@
 <script>
 import MarkdownIt from 'markdown-it'
 import { serviceId2Name } from '../../store/by-reviewing-service'
-
+import '@source-data/render-rev'
 
 export default {
   props: {
@@ -137,7 +69,7 @@ export default {
   },
   methods: {
     href(doi) {
-      return new URL(doi,"https://doi.org/").href
+      return new URL(doi, "https://doi.org/").href
     },
     displayDate(date_str) {
         // date_str needs to be in ISO 8601 format for Safari; YYYY-M-DD instead of YYYY-MM-DD will NOT work!
@@ -191,23 +123,29 @@ export default {
     },
   },
   mounted() {
-    var idExpandedElem;
-    if (this.expandedReview >= 0) {
-      let numReviews = this.article.review_process.reviews.length;
-      if (this.expandedReview < numReviews) {
-        idExpandedElem = this.reviewId(this.article.review_process.reviews[this.expandedReview]);
-      } else if (this.expandedReview === numReviews) {
-        idExpandedElem = this.responseId();
-      }
-
-      if (idExpandedElem != null) {
-        let expandedElem = document.getElementById(idExpandedElem);
-        if (expandedElem) {
-          let dims = expandedElem.getBoundingClientRect();
-          window.scrollTo(window.scrollX, dims.top - 100);
-        }
-      }
-    }
+    const md = new MarkdownIt({
+      html: true,
+      linkify: true,
+      typographer: true
+    });
+    const doi = this.article.doi;
+    const el = this.$refs[doi];
+    const display = {
+      publisherLogo: name => {
+        const urlMap = {
+          'bioRxiv': 'https://www.biorxiv.org/sites/default/files/images/favicon.ico',
+          'elife': 'https://elifesciences.org/assets/favicons/favicon-32x32.56d32e31.png',
+          'embo press': 'https://www.embopress.org/favicon.ico',
+          'embo reports': 'https://www.embopress.org/favicon.ico',
+          'life science alliance': 'https://www.embopress.org/favicon.ico',
+          'review commons': 'https://www.reviewcommons.org/wp-content/uploads/2019/11/cropped-favicon-192x192.png',
+          'the embo journal': 'https://www.embopress.org/favicon.ico',
+        };
+        return urlMap[name] || null;
+      },
+      renderMarkdown: src => md.render(src),
+    };
+    el.configure({ doi, display });
   }
 }
 </script>

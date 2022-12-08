@@ -16,7 +16,7 @@
           v-row.align-center.pa-0
             .mr-auto
               a(href="https://embo.org" target="_blank" rel="noopener").pa-2
-                img(src="../assets/EEB_E_LOGO.png" alt="EMBO Logo").logo-EMBO
+                img(src="../assets/EMBO_logo.svg" alt="EMBO Logo").logo-EMBO
             .d-flex
               a(href="https://embopress.org" target="_blank" rel="noopener").pa-2
                 img(src="../assets/EEB_EP_LOGO.png" alt="EMBO Press Logo").logo-EP
@@ -36,13 +36,11 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
 .logo-EMBO {
-  max-height: 60px;
+  height: 55px;
 }
 
 .logo-EP {
   max-height: 80px;
 }
-
 </style>
