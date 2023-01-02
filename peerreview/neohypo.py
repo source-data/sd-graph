@@ -463,7 +463,11 @@ class CrossRefReviewFinder(PeerReviewFinder):
         items = self.crossref_peer_review.details(source_prefix, type_filter, limit)
         for item in items:
             if is_cross_ref_review(item, target_prefixes):
-                peer_review_node = CrossRefReviewNode(item, self.MODELS[source_prefix])
+                try:
+                    peer_review_node = CrossRefReviewNode(item, self.MODELS[source_prefix])
+                except Exception as e:
+                    logger.error("Failed to parse Crossref data into CrossRefReviewNode: %s", item, exc_info=1)
+                    continue
                 logger.debug(peer_review_node)
                 build_neo_graph(peer_review_node, 'cross_ref', self.db)
                 self.add_prelim_article(peer_review_node.properties['related_article_doi'])
