@@ -7,8 +7,8 @@ from .sdnode import (
     API,
     BaseCollection, BaseArticle, BaseFigure, BasePanel, BaseTag
 )
-from smtag.predict.cartridges import CARTRIDGE
-from smtag.predict.engine import SmtagEngine
+# from smtag.predict.cartridges import CARTRIDGE
+# from smtag.predict.engine import SmtagEngine
 from smtag.pipeline import SmartTagger
 from . import EEB_PUBLIC_API
 from typing import Dict
@@ -19,38 +19,50 @@ logger = common.logging.get_logger(__name__)
 TAGGING_ENGINE = SmartTagger()
 
 def tag_it(text: str, format: str='xml'):
+#    logger.debug("tag_it(%s)", text)
     text = cleanup(text)
     # tags = TAGGING_ENGINE.smtag(text, 'sd-tag', format)[0]  # a single example is submitted to the engine
-    tags = TAGGING_ENGINE(text)
-    if format == 'json':
-        tags = json.loads(tags)
-        tags = tags['smtag']
+    tags_json = TAGGING_ENGINE(text)
+    tags = json.loads(tags_json)
+    tags = tags['smtag']
+    tags = tags[0]
+#    logger.debug("tag_it -> %s", tags)
     return tags
 
 
-def xml2json(xml_str: str):
-    e = fromstring(xml_str)
-    panels = e.xpath('sd-panel')
+def get_score(t, score_name, default):
+    try:
+        score = t.get(score_name)
+    except:
+        return default
+    try:
+        score_as_percent = int(score * 100)
+    except:
+        return default
+    return str(score_as_percent)
+
+def smtag2json(caption: str, tagging_result: str):
+#    logger.debug("smtag2json(%s)", tagging_result)
+    panels = tagging_result["panel_group"]
     j = []
-    for i, p in enumerate(panels):
-        caption = inner_text(p)
-        tags = p.xpath('sd-tag')
+    for i, panel_tags in enumerate(panels):
         j_tags = []
-        for t in tags:
+        for t in panel_tags:
             j_tags.append({
-                'text': t.text,
+                'text': t.get('text'),
                 'category': t.get('category', ''),
                 'type': t.get('type', ''),
                 'role': t.get('role', ''),
-                'category_score': t.get('category_score', ''),
-                'type_score': t.get('type_score', ''),
-                'role_score': t.get('role_score', ''),
+                'category_score': get_score(t, 'category_score', ''),
+                'type_score': get_score(t, 'type_score', ''),
+                'role_score': get_score(t, 'role_score', ''),
             })
         j.append({
             'caption': caption,
             'label': str(i),
             'tags': j_tags
         })
+#    logger.debug("smtag2json -> %s", j)
     return j
 
 
@@ -73,12 +85,11 @@ class SDFigure(BaseFigure):
     def __init__(self, data):
         super().__init__(data)
         if self.caption:
-            self.formatted_caption = tag_it(self.caption, format='xml')
             self.update_properties({
-                'formatted_caption': self.formatted_caption,
                 'source': 'eebapi',
             })
-            panels = xml2json(self.formatted_caption)
+            tagging_result = tag_it(self.caption)
+            panels = smtag2json(self.caption, tagging_result)
             self.children = panels
         # self.children = [SDPanel(self)]  # provisional until we fix automatic panelization in general case
 
