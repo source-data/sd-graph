@@ -24,5 +24,5 @@ jinja2<3.1.0 # fix for breaking API change: https://stackoverflow.com/a/71721006
 PyYAML==6.0
 
 -e git+https://github.com/source-data/ai.git#egg=ai
--e git+https://github.com/source-data/py-smtag.git@dev#egg=smtag
+-e git+https://github.com/source-data/soda-roberta.git#egg=smtag
 -e git+https://github.com/embo-press/hypothepy#egg=hypothepy
