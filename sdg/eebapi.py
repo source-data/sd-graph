@@ -7,27 +7,22 @@ from .sdnode import (
     API,
     BaseCollection, BaseArticle, BaseFigure, BasePanel, BaseTag
 )
-# from smtag.predict.cartridges import CARTRIDGE
-# from smtag.predict.engine import SmtagEngine
 from smtag.pipeline import SmartTagger
 from . import EEB_PUBLIC_API
 from typing import Dict
 
 logger = common.logging.get_logger(__name__)
 
-# TAGGING_ENGINE = SmtagEngine(CARTRIDGE)
 TAGGING_ENGINE = SmartTagger()
 
-def tag_it(text: str, format: str='xml'):
-#    logger.debug("tag_it(%s)", text)
+def tag_and_panelize(text: str):
+    logger.debug("tag_it(%s)", text)
     text = cleanup(text)
-    # tags = TAGGING_ENGINE.smtag(text, 'sd-tag', format)[0]  # a single example is submitted to the engine
-    tags_json = TAGGING_ENGINE(text)
-    tags = json.loads(tags_json)
-    tags = tags['smtag']
-    tags = tags[0]
-#    logger.debug("tag_it -> %s", tags)
-    return tags
+    tagging_result_json = TAGGING_ENGINE(text)
+    tagging_result = json.loads(tagging_result_json)
+    tagged_panels = smtag2json(tagging_result)
+    logger.debug("tag_it -> %s", tagged_panels)
+    return tagged_panels
 
 
 def get_score(t, score_name, default):
@@ -41,13 +36,23 @@ def get_score(t, score_name, default):
         return default
     return str(score_as_percent)
 
-def smtag2json(caption: str, tagging_result: str):
-#    logger.debug("smtag2json(%s)", tagging_result)
-    panels = tagging_result["panel_group"]
+def smtag2json(tagging_result: str):
+    logger.debug("smtag2json(%s)", tagging_result)
+    panels = tagging_result["smtag"]
     j = []
-    for i, panel_tags in enumerate(panels):
+    for i, panel in enumerate(panels):
+        panel_group = panel["panel_group"]
+
+        panel_caption = panel_group["panel_text"]
+        for meta_markers in ["[CLS]", "[SEP]"]:
+            panel_caption = panel_caption.replace(meta_markers, "")
+        panel_caption = panel_caption.strip()
+
+        if i == 0 and panel_caption == "figure":
+            continue
+
         j_tags = []
-        for t in panel_tags:
+        for t in panel_group["entities"][0]:  # yes, [0] is not an error: it's a list nested inside another list
             j_tags.append({
                 'text': t.get('text'),
                 'category': t.get('category', ''),
@@ -58,11 +63,11 @@ def smtag2json(caption: str, tagging_result: str):
                 'role_score': get_score(t, 'role_score', ''),
             })
         j.append({
-            'caption': caption,
+            'caption': panel_caption,
             'label': str(i),
             'tags': j_tags
         })
-#    logger.debug("smtag2json -> %s", j)
+    logger.debug("smtag2json -> %s", j)
     return j
 
 
@@ -88,8 +93,7 @@ class SDFigure(BaseFigure):
             self.update_properties({
                 'source': 'eebapi',
             })
-            tagging_result = tag_it(self.caption)
-            panels = smtag2json(self.caption, tagging_result)
+            panels = tag_and_panelize(self.caption)
             self.children = panels
         # self.children = [SDPanel(self)]  # provisional until we fix automatic panelization in general case
 
