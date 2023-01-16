@@ -1,8 +1,10 @@
 version: '3'
-# volumes:
-#   local_neo4j_data: {}
-#   local_neo4j_logs: {}
 
+volumes:
+  neo4j-data:
+  neo4j-logs:
+  neo4j-plugins:
+  redis-data:
 
 services:
   flask:
@@ -39,9 +41,9 @@ services:
         soft: 40000
         hard: 40000
     volumes:
-      - ./data/neo4j-data:/data
-      - ./data/neo4j-logs:/logs
-      - ./data/neo4j-plugins:/plugins
+      - neo4j-data:/data
+      - neo4j-logs:/logs
+      - neo4j-plugins:/plugins
       - ./data/neo4j-import:/import
     env_file:
       - ./.env
@@ -66,4 +68,4 @@ services:
   redis:
     image: redis:6
     volumes:
-      - ./data/redis-data:/data
+      - redis-data:/data
