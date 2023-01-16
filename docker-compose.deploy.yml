@@ -1,5 +1,12 @@
 version: '3'
 
+volumes:
+  flask-logs:
+  neo4j-data:
+  neo4j-logs:
+  neo4j-plugins:
+  redis-data:
+
 services:
   flask:
     build:
@@ -11,7 +18,7 @@ services:
       - redis
     volumes:
       - .:/app
-      - ./log:/log
+      - flask-logs:/log
       - ${BIORXIV_PATH}:/app/biorxiv # to be provided in .env
       - ${MECADOI_PATH}:/app/mecadoi
       - /tmp/.X11-unix:/tmp/.X11-unix
@@ -33,13 +40,13 @@ services:
         soft: 40000
         hard: 40000
     volumes:
-      - ./data/neo4j-data:/data
-      - ./data/neo4j-logs:/logs
-      - ./data/neo4j-plugins:/plugins
+      - neo4j-data:/data
+      - neo4j-logs:/logs
+      - neo4j-plugins:/plugins
     env_file:
       - ./.env
 
   redis:
     image: redis:6
     volumes:
-      - ./data/redis-data:/data
+      - redis-data:/data
