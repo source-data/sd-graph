@@ -247,11 +247,16 @@ WITH DISTINCT
   a.publication_date as preprint_publication_date,
   a.journal_doi as published_article_doi,
   apoc.convert.toString(a.published_journal_title) as publisher_title
-// order by and collect (below) to get the newest version
+// order by and collect to get the newest version
 ORDER BY DATETIME(preprint_publication_date)
 WITH DISTINCT
   preprint,
   COLLECT(preprint_publication_date)[0] as preprint_publication_date,
+  published_article_doi,
+  publisher_title
+WITH 
+  preprint,
+  preprint_publication_date,
   published_article_doi,
   publisher_title,
   "_:b-"+apoc.create.uuid() as id_step,
