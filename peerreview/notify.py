@@ -14,8 +14,6 @@ from . import DB, SMTP_HOST, SMTP_STARTTLS_PORT, SMTP_PASSWORD, SMTP_USERNAME
 
 LOGGER = common.logging.get_logger(__name__)
 
-FROM = "reviewcommons-updates@embl.de"
-
 template = """New Review Commons refereed preprint posted:
 
 <p>
@@ -147,13 +145,13 @@ class Notify:
 
         return subject, body
 
-    def send_mails(self, preprints, recipient, dry_run):
+    def send_mails(self, preprints, recipient, sender, dry_run):
         messages = []
         for preprint in preprints:
             subject, body = self.create_message(preprint)
             msg = MIMEMultipart("alternative")
             msg["Subject"] = subject
-            msg["From"] = FROM
+            msg["From"] = sender
             msg["To"] = recipient
             msg.attach(MIMEText(body, "html"))
             messages.append(msg)
@@ -172,7 +170,7 @@ class Notify:
                 server.starttls(context=SSLContext())
                 server.login(SMTP_USERNAME, SMTP_PASSWORD)
                 for msg in messages:
-                    server.sendmail(FROM, recipient, msg.as_string())
+                    server.sendmail(sender, recipient, msg.as_string())
         except SMTPException as e:
             LOGGER.exception(e)
 
@@ -186,13 +184,13 @@ class Notify:
             "published_in": "",
         }))
 
-    def run(self, after: datetime, reviewed_by: str, recipient: str, dry_run: bool = False):
+    def run(self, after: datetime, reviewed_by: str, recipient: str, sender: str, dry_run: bool = False):
         refereed_preprints = self.find_refereed_preprints(after, reviewed_by)
         if refereed_preprints:
             LOGGER.info(
                 f"Notifying {recipient} about {len(refereed_preprints)} new preprints refereed by {reviewed_by} since {after}"
             )
-            self.send_mails(refereed_preprints, recipient, dry_run)
+            self.send_mails(refereed_preprints, recipient, sender, dry_run)
         else:
             LOGGER.info(f"No new preprints refereed by {reviewed_by} since {after}")
 
@@ -217,6 +215,11 @@ def main():
         required=True,
     )
     parser.add_argument(
+        "--sender",
+        help="Send notifications from this email address. Required.",
+        required=True,
+    )
+    parser.add_argument(
         "--no-dry-run",
         action="store_true",
         help="Actually send emails. Without this flag, the messages that would be sent are only logged.",
@@ -225,8 +228,9 @@ def main():
     after = args.after
     reviewed_by = args.reviewed_by
     recipient = args.recipient
+    sender = args.sender
     dry_run = not args.no_dry_run
-    Notify(DB).run(after, reviewed_by, recipient, dry_run=dry_run)
+    Notify(DB).run(after, reviewed_by, recipient, sender, dry_run=dry_run)
 
 
 if __name__ == "__main__":

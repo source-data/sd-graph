@@ -320,7 +320,8 @@ send_notifications(){
   after=$(date -f "${file_last_notification}" "${date_format}" || date --date "yesterday" "${date_format}")
   reviewed_by="review commons"
   recipient="${NOTIFICATIONS_RECIPIENT}"
-  docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.notify --after "${after}" --reviewed-by "${reviewed_by}" --recipient "${recipient}" --no-dry-run
+  sender="${NOTIFICATIONS_SENDER}"
+  docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.notify --after "${after}" --reviewed-by "${reviewed_by}" --recipient "${recipient}" --sender "${sender}" --no-dry-run
   # Update the time when the last notifications were sent to now.
   date "${date_format}" > "${file_last_notification}"
 }
