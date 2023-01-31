@@ -83,7 +83,11 @@ load_dotenv(){
   if [ -f .env ]
   then
     log "loading .env file"
-    export $(cat .env | sed 's/#.*//g' | xargs)
+    # allexport automatically exports all variables that are assigned, i.e. `FOO=bar` would be equivalent to `export FOO=bar`.
+    # We temporarily enable it for loading the .env file to export all the variables in there.
+    set -o allexport
+    source .env
+    set +o allexport
   else
     log ".env file missing. Aborting"
     exit 1
