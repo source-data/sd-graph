@@ -13,11 +13,7 @@
     "@fortawesome/fontawesome-free": "5.2.0",
     "@source-data/render-rev": "^0.1.24",
     "axios": "^0.21.4",
-    "core-js": "^3.6.4",
-    "lodash": "^4.17.21",
     "markdown-it": "^13.0.0",
-    "pug": "^3.0.1",
-    "pug-plain-loader": "^1.0.0",
     "vue": "^2.6.11",
     "vue-meta": "^2.4.0",
     "vue-router": "^3.1.6",
@@ -35,6 +31,8 @@
     "chai": "^4.0.0",
     "eslint": "^8.0.0",
     "eslint-plugin-vue": "^9.0.0",
+    "pug": "^3.0.0",
+    "pug-plain-loader": "^1.0.0",
     "sass": "^1.0.0",
     "sass-loader": "^13.0.0"
   }
