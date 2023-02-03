@@ -29,19 +29,13 @@
     "@vue/cli": "^5.0.0",
     "@vue/cli-plugin-babel": "^5.0.0",
     "@vue/cli-plugin-eslint": "^5.0.0",
-    "@vue/cli-plugin-router": "^5.0.0",
     "@vue/cli-plugin-unit-mocha": "^5.0.0",
-    "@vue/cli-plugin-vuex": "^5.0.0",
     "@vue/cli-service": "^5.0.0",
     "@vue/test-utils": "^1.0.0",
     "chai": "^4.0.0",
     "eslint": "^8.0.0",
     "eslint-plugin-vue": "^9.0.0",
     "sass": "^1.0.0",
-    "sass-loader": "^13.0.0",
-    "vue-cli-plugin-element": "^1.0.0",
-    "vue-cli-plugin-vuetify": "^2.0.0",
-    "vue-template-compiler": "^2.0.0",
-    "vuetify-loader": "^1.0.0"
+    "sass-loader": "^13.0.0"
   }
 }
