@@ -60,7 +60,7 @@ import '@source-data/render-rev'
 export default {
   props: {
     article: Object,
-    expandedReview: Number,
+    expandedReview: Object,
   },
   data() {
     return {
@@ -129,6 +129,7 @@ export default {
       typographer: true
     });
     const doi = this.article.doi;
+    const highlightDoi = this.expandedReview ? this.expandedReview.doi : null;
     const el = this.$refs[doi];
     const display = {
       publisherLogo: name => {
@@ -145,7 +146,7 @@ export default {
       },
       renderMarkdown: src => md.render(src),
     };
-    el.configure({ doi, display });
+    el.configure({ doi, display, highlightDoi });
   }
 }
 </script>
