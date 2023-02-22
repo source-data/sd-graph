@@ -185,6 +185,8 @@ update_local_neo4j() {
     log "precompute pilot docmap graph"
     cat sdg/SD-prepare-docmap.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
 
+    log "generate stats report"
+    cat sdg/SD-stats.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
   }
 
   update_close() {
