@@ -165,10 +165,10 @@ update_local_neo4j() {
   merge_and_precompute_graph() {
     # daily
     log "generate merged graph"
-    cat sdg/SD-processing.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
+    docker-compose -f docker-compose.deploy.yml run --rm flask python -m sdg.sd_processing
 
     log "neo4j graph data science"
-    cat sdg/SD-gds.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
+    docker-compose -f docker-compose.deploy.yml run --rm flask python -m sdg.sd_gds
 
     log "advanced graph data science"
     docker-compose -f docker-compose.deploy.yml run --rm flask python -m sdg.algonet
