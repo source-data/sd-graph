@@ -1,4 +1,4 @@
-
+-r ./base.txt
 
 cdlib==0.1.9
 infomap==1.2.1
