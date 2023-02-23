@@ -70,16 +70,8 @@ export default {
         return undefined;
       }
 
-      /* If we want to expand the author response, return the number of reviews. The author response, if it exists, is
-       * treated like an additional review internally, therefore its 0-based index is equal to the number of reviews.
-       */
-      let numReviews = this.article.review_process.reviews.length;
       if (hash === '#rev0-ar') {
-        // Check if there even is an author response to expand...
-        if (this.article.review_process.response != null) {
-          return numReviews;
-        }
-        return undefined;
+        return this.article.review_process.response;
       }
 
       let match = hash.match(/^#rev0-rr([0-9]+)$/);
@@ -88,10 +80,11 @@ export default {
       }
 
       let reviewIdx = Number(match[1]);
+      let numReviews = this.article.review_process.reviews.length;
       if (reviewIdx <= 0 || reviewIdx > numReviews) {
         return undefined;
       }
-      return reviewIdx - 1;
+      return this.article.review_process.reviews[reviewIdx - 1];
     },
   },
   methods: {
