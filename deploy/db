@@ -22,10 +22,10 @@ mail_developers(){
   local body_prefix=$2
 
   if [ ! -z $LOG_FILE ]; then
-    local num_errors=$(grep -i error ${LOG_FILE} | wc -l)
-    local max_errors=20
+    local num_errors=$(grep ERROR ${LOG_FILE} | wc -l)
+    local max_errors=100
     local error_desc="$(describe_length ${num_errors} ${max_errors})"
-    local errors_snippet="$(grep -i error ${LOG_FILE} | head -${max_errors})"
+    local errors_snippet="$(grep ERROR ${LOG_FILE} | head -${max_errors})"
 
     local num_log_lines=$(cat ${LOG_FILE} | wc -l)
     local max_log_lines=100
