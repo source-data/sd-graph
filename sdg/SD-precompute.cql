@@ -26,6 +26,21 @@ MERGE (preprint:VizPaper {doi: a.doi, pub_date: toString(DATETIME(a.pub_date)), 
 RETURN COUNT(preprint) AS `biorxiv/medrxiv preprints vizPapers`;
 :commit
 
+// Add VizPaper slugs
+:begin
+UNWIND [
+  "10.1101/067876",
+  "10.1101/138537",
+  "10.1101/2021.09.22.461393",
+  "10.1101/2022.04.08.487678"
+] as doi
+MATCH (a:SDArticle {doi: $doi}), (p:VizPaper {doi: $doi})
+WITH p, apoc.text.slug(a.title) AS slug
+WITH p, LEFT(slug, 256) AS limited_slug
+SET p.slug = limited_slug
+RETURN COUNT(p) AS `VizPapers with slugs`;
+:commit
+
 // BY REVIEWING SERVICE
 :begin
 UNWIND [
