@@ -115,10 +115,11 @@ class VerifyTask(DbTask):
     To e.g. verify that all nodes without a certain attribute have been deleted, pass the __init__ function a description of the task, a query like `MATCH (n) WHERE n.prop IS NULL RETURN n`, and an expected result of 0.
     """
 
-    def __init__(self, description, verify_query, expected_result):
+    def __init__(self, description, verify_query, expected_result, raise_error=False):
         super().__init__(description)
         self.verify_query = verify_query
         self.expected_result = expected_result
+        self.raise_error = raise_error
 
     def _run(self, tx):
         self.logger.debug("Running query to verify results")
@@ -131,6 +132,8 @@ class VerifyTask(DbTask):
         self.logger.debug("Expected: %s", expected_result)
 
         if not verify_result == self.expected_result:
-            raise Exception(
-                f'Task "{self.description}" failed to verify: {verify_result} != {self.expected_result}'
-            )
+            message = f'Task "{self.description}" failed to verify: {verify_result} != {self.expected_result}'
+            if self.raise_error:
+                raise Exception(message)
+            else:
+                self.logger.error(message)
