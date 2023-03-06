@@ -6,6 +6,7 @@ from dateutil.relativedelta import relativedelta
 from flask import (
     abort,
     jsonify,
+    redirect,
     render_template,
     request,
     Response,
@@ -78,11 +79,20 @@ def root():
     return render_template('index.html')
 
 
-@app.route('/doi/<doi>', methods=['GET'])
+@app.route('/doi/<path:doi>', methods=['GET'])
 def doi_redirect(doi):
-    paper = ask_neo(BY_DOIS(), dois=[doi])
-    if paper and paper['slug']:
-        return app.redirect('/p/' + paper['slug'])
+    papers = ask_neo(BY_DOIS(), dois=[doi])
+    if len(papers) == 0:
+        app.logger.debug("tried to redirect DOI %s to slug, no matching paper found", doi)
+        return abort(404)
+    if len(papers) > 1:
+        app.logger.warning("found multiple VizPapers for DOI %s, using first one: %s", doi, papers)
+
+    paper = papers[0]
+    slug = paper.get('slug', None)
+    if slug:
+        app.logger.debug("redirecting DOI %s to slug %s", doi, slug)
+        return redirect('/p/' + slug, code=301)
     return render_template('index.html')
 
 
