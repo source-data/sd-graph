@@ -321,7 +321,7 @@ CROSSREF_PCI_REVIEW_GRAPH_MODEL = {
     },
     'properties': {
         'doi': lambda d: d['DOI'],
-        'reviewed_by': lambda d: d['container-title'][0],
+        'reviewed_by': lambda d: d['publisher'],
         'posting_date': lambda d: get_posting_date(d),
         'highlight': lambda d: d['title'][0],
         'related_article_doi': lambda d: d['relation']['is-review-of'][0]['id'],
