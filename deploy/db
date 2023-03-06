@@ -124,11 +124,23 @@ update_local_neo4j() {
     cat neotools/purge_prelim.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
 
     log "import full text biorxiv preprints"
-    # this is missing the July_2020
-    #docker-compose run --rm -v /usb01/shared/biorxiv-src-monthly:/biorxiv-src-monthly flask python -m neotools.rxiv2neo /biorxiv-src-monthly/July_2020 --type meca
-    local PREVIOUS_MONTH=`LC_TIME=en_US.UTF-8 date --date='-1 month' +%B` # Biorxiv only publishes monthly updates when the month is over, meaning the 1st of September we get access to August content
-    local YEAR=`date --date='-1 month' +%Y` # Biorxiv only publishes monthly updates when the month is over, meaning the 1st of September we get access to August content
-    docker-compose -f docker-compose.deploy.yml run --rm flask python -m neotools.rxiv2neo /app/biorxiv/"$PREVIOUS_MONTH"_"$YEAR" --type meca
+    biorxiv_folder_name() {
+      local month_delta="$1"
+      local MONTH=`LC_TIME=en_US.UTF-8 date --date="-$month_delta month" +%B`
+      local YEAR=`date --date="-$month_delta month" +%Y`
+      echo "${MONTH}_${YEAR}"
+    }
+    # Biorxiv only publishes monthly updates when the month is over, meaning the 1st of September we get access to August content
+    local delta_last_month=1
+    # But their S3 archive might not update at the exact right time so try to import the 2nd- and 3rd-to-last month's archives as well
+    local delta_2nd_to_last_month=2
+    local delta_3rd_to_last_month=3
+
+    for delta in "${delta_3rd_to_last_month}" "${delta_2nd_to_last_month}" "${delta_last_month}"; do
+      folder_name=`biorxiv_folder_name "${delta}"`
+      log "importing full text biorxiv preprints from ${BIORXIV_PATH}/${folder_name}"
+      docker-compose -f docker-compose.deploy.yml run --rm flask python -m neotools.rxiv2neo "/app/biorxiv/$folder_name" --type meca
+    done
   }
 
   import_peer_reviews() {
