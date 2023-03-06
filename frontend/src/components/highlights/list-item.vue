@@ -6,7 +6,7 @@
   )
     v-card-title
       | {{ article.title }}
-      router-link(:to="`/doi/${article.doi}`")
+      router-link(:to="generateMyUrl()")
         v-icon(color="indigo lighten-3") mdi-link-variant
     v-card-subtitle
       v-container(fluid)
@@ -106,6 +106,12 @@ export default {
     },
     responseId() {
       return this.article.doi + '#rev0-ar'
+    },
+    generateMyUrl () {
+      if (this.article.slug) {
+        return `/p/${this.article.slug}`
+      }
+      return `/doi/${this.article.doi}`
     },
   },
   computed: {

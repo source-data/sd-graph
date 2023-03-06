@@ -13,10 +13,14 @@ const routes = [
   },
   {
     path: '/doi/:doi(.*)',
-    name: 'ArticleShow',
+    name: 'ArticleShowByDoi',
     component: () => import(/* webpackChunkName: "ArticleShow" */ '../components/highlights/article.vue')
   },
-
+  {
+    path: '/p/:slug(.*)',
+    name: 'ArticleShowBySlug',
+    component: () => import(/* webpackChunkName: "ArticleShow" */ '../components/highlights/article.vue')
+  },
   {
     path: '/about',
     name: 'About',

@@ -12,7 +12,7 @@ def add_url(root, loc, **kwargs):
         ET.SubElement(doc, key).text = value
 
 
-def create_sitemap(dois):
+def create_sitemap(dois_and_slugs):
     root = ET.Element('urlset')
     # root.attrib['xmlns:xsi']="http://www.w3.org/2001/XMLSchema-instance"
     # root.attrib['xsi:schemaLocation']="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"
@@ -33,7 +33,10 @@ def create_sitemap(dois):
     add_url(root, loc=f"{BASE_URL}/all/auto-topics", lastmod=dt, changefreq="monthly", priority="1.0")
     add_url(root, loc=f"{BASE_URL}/all/automagic", lastmod=dt, changefreq="monthly", priority="1.0")
 
-    for doi in dois:
-        add_url(root, loc=f"{BASE_URL}/doi/{doi}", priority="0.9")
+    for doi, slug in dois_and_slugs:
+        if slug:
+            add_url(root, loc=f"{BASE_URL}/p/{slug}", priority="0.95")
+        else:
+            add_url(root, loc=f"{BASE_URL}/doi/{doi}", priority="0.9")
     xml_document = ET.tostring(root, xml_declaration=True, encoding='utf-8').decode("utf-8")
     return xml_document
