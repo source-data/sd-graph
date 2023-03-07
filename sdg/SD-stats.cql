@@ -1,8 +1,10 @@
 MATCH (n)
-RETURN LABELS(n), COUNT(n);
+RETURN LABELS(n) AS labels, COUNT(n)
+ORDER BY labels ASC;
 
 MATCH ()-[r]->()
-RETURN TYPE(r), COUNT(r);
+RETURN TYPE(r) AS type, COUNT(r)
+ORDER BY type ASC;
 
 //statistics by entity type
 MATCH (t:SDTag)
@@ -20,7 +22,8 @@ ORDER BY tags DESC;
 MATCH (t:SDTag)
 WHERE t.type <> "" and t.role <> ""
 WITH DISTINCT t.type AS type, t.role AS role, COUNT(DISTINCT t) AS N
-RETURN type,reduce(s="",r in collect(role+":"+toString(N)) | s+r+" | ") AS list;
+RETURN type,reduce(s="",r in collect(role+":"+toString(N)) | s+r+" | ") AS list
+ORDER BY type DESC;
 
 //most frequent tags by type
 MATCH (tag:SDTag {type:"molecule"}) RETURN DISTINCT toLower(tag.text) AS small_mol, COUNT(tag) AS n ORDER BY n DESC LIMIT 100;
@@ -54,7 +57,8 @@ role, type,
 WITH
 role, type, 
 `p(role)` * `p(type | role)` / `p(type)` AS `p(role | type)`, `p(role)`,`p(type | role)`,`p(type)`
-RETURN role, type, `p(role | type)`, `p(role)`,`p(type | role)`,`p(type)`;
+RETURN role, type, `p(role | type)`, `p(role)`,`p(type | role)`,`p(type)`
+ORDER BY role, type;
 
 //fraction of panels with at least one intervention assayed pair
 MATCH (p:SDPanel)
