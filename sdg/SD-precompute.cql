@@ -22,7 +22,7 @@ RETURN "purge" as `completed`;
 :begin
 MATCH (a:SDArticle)
 WHERE a.journalName IN ['biorxiv', 'medrxiv']
-MERGE (preprint:VizPaper {doi: a.doi, pub_date: toString(DATETIME(a.pub_date)), slug: NULL})
+MERGE (preprint:VizPaper {doi: a.doi, pub_date: toString(DATETIME(a.pub_date))})
 RETURN COUNT(preprint) AS `biorxiv/medrxiv preprints vizPapers`;
 :commit
 
