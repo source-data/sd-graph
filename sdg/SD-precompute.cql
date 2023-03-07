@@ -34,7 +34,14 @@ UNWIND [
   "10.1101/2021.09.22.461393",
   "10.1101/2022.04.08.487678"
 ] as doi
-MATCH (a:SDArticle {doi: doi}), (p:VizPaper {doi: doi})
+CALL {
+  WITH doi
+  MATCH (article:Article {doi: doi})
+  WITH article
+  ORDER BY article.version DESC
+  RETURN COLLECT(article)[0] AS a
+}
+MATCH (p:VizPaper {doi: doi})
 WITH p, apoc.text.slug(a.title) AS slug
 WITH p, LEFT(slug, 256) AS limited_slug
 SET p.slug = limited_slug
