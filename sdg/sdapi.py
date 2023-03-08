@@ -105,7 +105,6 @@ class SDTag(BaseTag):
             'source': 'sdapi',
         })
 
-
 class SDAPI(API):
 
     GET_COLLECTION = 'collection/'
