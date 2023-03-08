@@ -116,6 +116,155 @@ ORDER BY DATETIME(pub_date) DESC, score DESC
     returns = ['id', 'pub_date', 'title', 'abstract', 'version', 'doi', 'journal', 'score']
 
 
+class BY_SLUG(Query):
+
+    code = '''
+// Get the most recent version of the article with the given slug
+MATCH (p:VizPaper {slug: $slug})
+WITH p.doi AS doi
+CALL {
+    WITH doi
+    MATCH (article:Article {doi: doi})
+    WHERE
+      (
+        toLower(apoc.convert.toString(article.published_journal_title)) = toLower($published_in)
+      ) OR ($published_in = '')
+    WITH article
+    ORDER BY article.version DESC
+    return COLLECT(article)[0] AS a
+}
+
+OPTIONAL MATCH (a)-[r:HasReview]->(review:Review)
+OPTIONAL MATCH (a)-[:HasResponse]->(response:Response)
+OPTIONAL MATCH (a)-[:HasAnnot]->(annot:PeerReviewMaterial)
+WITH
+  a,
+  review,
+  response,
+  annot
+ORDER BY
+  a.publication_date DESC,
+  review.review_idx ASC,
+  annot.review_idx ASC
+WITH
+  a,
+  {reviews: COLLECT(DISTINCT review {.*}), response: COLLECT(DISTINCT response {.*})[0], annot: COLLECT(DISTINCT annot {.*})} AS review_process
+
+OPTIONAL MATCH (a)-->(f:Fig)
+WITH
+  a,
+  review_process,
+  COUNT(DISTINCT f) AS nb_figures
+
+OPTIONAL MATCH (a)-->(auth:Contrib)
+OPTIONAL MATCH (auth)-[:has_orcid]->(auth_id:Contrib_id)
+WITH
+  a,
+  review_process,
+  nb_figures,
+  auth,
+  auth_id
+ORDER BY auth.position_idx
+WITH
+  a,
+  review_process,
+  nb_figures,
+  COLLECT(DISTINCT auth {.surname, .given_names, .position_idx, .corresp, orcid: auth_id.text}) AS authors
+
+OPTIONAL MATCH (vzp:VizPaper {doi: a.doi})
+OPTIONAL MATCH (vzp)-[:HasReviewDate]->(revdate:VizReviewDate)
+WITH
+  a,
+  review_process,
+  nb_figures,
+  authors,
+  vzp,
+  COLLECT(revdate)[0].date AS revdate // There are possibly multiple review dates. Let's just grab the first one.
+
+OPTIONAL MATCH (VizCollection {name: "by-auto-topics"})-->(autotopics:VizSubCollection)-[rel_autotopics_paper]->(vzp)-[:HasEntityHighlight]->(highlight:VizEntity {category: 'entity'})
+WITH
+  a,
+  review_process,
+  nb_figures,
+  authors,
+  vzp,
+  revdate,
+  COLLECT(DISTINCT autotopics.topics) AS main_topics,
+  COLLECT(DISTINCT highlight.text) AS highlighted_entities
+
+OPTIONAL MATCH (vzp)-[:HasEntity]->(assay:VizEntity {category: 'assay'})
+WITH
+  a,
+  review_process,
+  nb_figures,
+  authors,
+  vzp,
+  revdate,
+  main_topics,
+  highlighted_entities,
+  COLLECT(DISTINCT assay.text) AS assays
+
+OPTIONAL MATCH (vzp)-[:HasEntity]->(entity:VizEntity {category: 'entity'})
+// don't duplicate entities if they are in the topic highlight set
+WHERE not((vzp)-[:HasEntityHighlight]->(entity))
+WITH
+  a,
+  review_process,
+  nb_figures,
+  authors,
+  revdate,
+  main_topics,
+  highlighted_entities,
+  assays,
+  COLLECT(DISTINCT entity.text) AS entities,
+  vzp.slug AS slug
+
+RETURN
+  id(a) AS id,
+  a.doi AS doi,
+  a.version AS version,
+  a.source AS source,
+  a.journal_title AS journal, // this is the preprint server
+  a.title AS title,
+  a.abstract AS abstract,
+  a.journal_doi AS journal_doi,
+  a.published_journal_title AS published_journal_title, // this is the journal of final publication
+  toString(DATETIME(a.publication_date)) AS pub_date, // pub date as preprint!
+  review_process,
+  nb_figures,
+  authors,
+  revdate,
+  main_topics,
+  highlighted_entities,
+  assays,
+  entities,
+  slug
+'''
+    map = {
+      'slug': {'req_param': 'slug', 'default': ''},
+      'published_in': {'req_param': 'published_in', 'default': ''}
+    }
+    returns = [
+      'id',
+      'doi',
+      'version',
+      'source',
+      'journal',
+      'title',
+      'abstract',
+      'journal_doi',
+      'published_journal_title',
+      'pub_date',
+      'review_process',
+      'nb_figures',
+      'authors',
+      'revdate',
+      'entities',
+      'assays',
+      'main_topics',
+      'highlighted_entities',
+      'slug'
+    ]
 class BY_DOIS(Query):
 
     code = '''
@@ -217,7 +366,8 @@ WITH
   main_topics,
   highlighted_entities,
   assays,
-  COLLECT(DISTINCT entity.text) AS entities
+  COLLECT(DISTINCT entity.text) AS entities,
+  vzp.slug AS slug
 
 RETURN
   id(a) AS id,
@@ -237,7 +387,8 @@ RETURN
   main_topics,
   highlighted_entities,
   assays,
-  entities
+  entities,
+  slug
 '''
     map = {
       'dois': {'req_param': 'dois', 'default': []},
@@ -262,8 +413,7 @@ RETURN
       'assays',
       'main_topics',
       'highlighted_entities',
-      'published_in',
-      'dois'
+      'slug'
     ]
 
 

@@ -6,6 +6,7 @@ from dateutil.relativedelta import relativedelta
 from flask import (
     abort,
     jsonify,
+    redirect,
     render_template,
     request,
     Response,
@@ -14,7 +15,7 @@ from flask import (
 from .sitemap import create_sitemap
 from .converter import LuceneQueryConverter, ReviewServiceConverter, ListConverter
 from .queries import (
-    STATS, BY_DOIS, FIG_BY_DOI_IDX,
+    STATS, BY_DOIS, BY_SLUG, FIG_BY_DOI_IDX,
     DESCRIBE_REVIEWING_SERVICES,
     REVIEW_PROCESS_BY_DOI, REVIEW_MATERIAL_BY_ID,
     DOCMAP_BY_DOI, DOCMAPS_FROM_REVSERVICE_IN_INTERVAL,
@@ -57,31 +58,41 @@ def ask_neo(query: Query, **kwargs) -> Dict:
     return data
 
 
-def get_all_dois():
-
+def get_all_dois_and_slugs():
     refereed_preprints = ask_neo(BY_REVIEWING_SERVICE(), limit_date='1900-01-01')
     by_auto_topics = ask_neo(BY_AUTO_TOPICS(), limit_date='1900-01-01')
     automagic = ask_neo(AUTOMAGIC(), limit_date='1900-01-01')
     app.logger.info("gathering all dois")
-    dois = []
-    for collection in refereed_preprints:
-        papers = collection['papers']
-        new_dois = [paper['doi'] for paper in papers]
-        dois += new_dois
-    for collection in by_auto_topics:
-        papers = collection['papers']
-        new_dois = [paper['doi'] for paper in papers]
-        dois += new_dois
-    for collection in automagic:
-        papers = collection['papers']
-        new_dois = [paper['doi'] for paper in papers]
-        dois += new_dois
-    dois = set(dois)  # remove duplicates
-    return dois
+
+    dois_and_slugs = []
+    for collection in refereed_preprints, by_auto_topics, automagic:
+        for sub_collection in collection:
+            papers = sub_collection['papers']
+            new_dois_and_slugs = [(paper['doi'], paper.get('slug', None)) for paper in papers]
+            dois_and_slugs += new_dois_and_slugs
+    dois_and_slugs = set(dois_and_slugs)  # remove duplicates
+    return dois_and_slugs
 
 
 @app.route('/')
 def root():
+    return render_template('index.html')
+
+
+@app.route('/doi/<path:doi>', methods=['GET'])
+def doi_redirect(doi):
+    papers = ask_neo(BY_DOIS(), dois=[doi])
+    if len(papers) == 0:
+        app.logger.debug("tried to redirect DOI %s to slug, no matching paper found", doi)
+        return abort(404)
+    if len(papers) > 1:
+        app.logger.warning("found multiple VizPapers for DOI %s, using first one: %s", doi, papers)
+
+    paper = papers[0]
+    slug = paper.get('slug', None)
+    if slug:
+        app.logger.debug("redirecting DOI %s to slug %s", doi, slug)
+        return redirect('/p/' + slug, code=301)
     return render_template('index.html')
 
 
@@ -96,9 +107,9 @@ def sitemap():
     """
     Generate dynamically a sitemap.
     """
-    dois = get_all_dois()
-    app.logger.info(f"generating sitemap with {len(dois)} links.")
-    sitemap = create_sitemap(dois)
+    dois_and_slugs = get_all_dois_and_slugs()
+    app.logger.info(f"generating sitemap with {len(dois_and_slugs)} links.")
+    sitemap = create_sitemap(dois_and_slugs)
     return Response(sitemap, mimetype='text/xml')
 
 
@@ -148,6 +159,14 @@ def automagic(limit_date):
 def by_doi(doi: str):
     app.logger.info(f"lookup doi: {doi}")
     result = ask_neo(BY_DOIS(), dois=[doi])
+    return jsonify(result)
+
+
+@app.route('/api/v1/slug/<path:slug>', methods=['GET', 'POST'])
+@cache.cached()
+def by_slug(slug: str):
+    app.logger.info(f"lookup slug: {slug}")
+    result = ask_neo(BY_SLUG(), slug=slug)
     return jsonify(result)
 
 

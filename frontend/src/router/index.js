@@ -13,10 +13,14 @@ const routes = [
   },
   {
     path: '/doi/:doi(.*)',
-    name: 'ArticleShow',
+    name: 'ArticleShowByDoi',
     component: () => import(/* webpackChunkName: "ArticleShow" */ '../components/highlights/article.vue')
   },
-
+  {
+    path: '/p/:slug(.*)',
+    name: 'ArticleShowBySlug',
+    component: () => import(/* webpackChunkName: "ArticleShow" */ '../components/highlights/article.vue')
+  },
   {
     path: '/about',
     name: 'About',
@@ -40,11 +44,6 @@ const routes = [
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
     component: () => import(/* webpackChunkName: "about" */ '../views/Contact.vue')
-  },
-  {
-    path: '/render-rev',
-    name: 'RenderRev Demo',
-    component: () => import('../views/RenderRevDemo.vue')
   },
   {
     path: '/:collection/:service',
