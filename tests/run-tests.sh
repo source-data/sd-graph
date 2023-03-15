@@ -9,7 +9,13 @@ source .env.ci
 set +o allexport
 
 eeb() {
-    docker-compose -f docker-compose.deploy.yml -f docker-compose.arm64.yml -f docker-compose.tests.yml $@
+    # check if we're on an arm64 machine (specifically an M1/M2/etc Macbook), and use the corresponding file in that case
+    local arch_flag=""
+    local architecture=`uname -m`
+    if [[ "$architecture" == "arm64" ]]; then
+        local arch_flag="--file=docker-compose.arm64.yml"
+    fi
+    docker-compose --file=docker-compose.deploy.yml ${arch_flag} --file=docker-compose.tests.yml $@
 }
 
 eeb up -d

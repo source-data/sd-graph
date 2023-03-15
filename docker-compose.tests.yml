@@ -2,12 +2,15 @@ services:
   flask:
     env_file:
       - ./.env.ci
-    volumes:
-      - ./tests/resources/biorxiv:/app/biorxiv
-      - ./tests/resources/mecadoi:/app/mecadoi
 
   neo4j:
     env_file:
       - ./.env.ci
     volumes:
       - ./tests/data/neo4j-data:/data
+      - ./tests/data/neo4j-logs:/logs
+      - ./tests/data/neo4j-plugins:/plugins
+
+  redis:
+    volumes:
+      - ./tests/data/redis-data:/data
