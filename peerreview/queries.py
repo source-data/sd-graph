@@ -73,3 +73,63 @@ RETURN DISTINCT a.doi AS doi
     '''
     map = {'after': [], 'reviewed_by': []}
     returns = ['doi']
+
+
+class REVIEWS_WITHOUT_SUMMARIES(Query):
+    code = """
+MATCH (r:Review)
+WHERE
+    r.reviewed_by = $reviewed_by
+    AND NOT((r)-[:HasSummary]->(:Summary))
+WITH r.related_article_doi AS article_doi
+MATCH (r:Review {related_article_doi: article_doi})
+WITH article_doi, r
+ORDER BY r.review_idx ASC
+RETURN article_doi, COLLECT(DISTINCT r) AS reviews
+    """
+    map = {"reviewed_by": []}
+    returns = ["article_doi", "reviews"]
+
+
+class CREATE_SUMMARY(Query):
+    code = """
+MATCH (summarization_config:SummarizationConfig)
+WHERE ID(summarization_config) = $id_summarization_config
+
+CREATE (summary:Summary {
+    reviews_text: $reviews_text,
+    summary_text: $summary_text,
+    created_at: datetime()
+})
+CREATE (summary)-[:GeneratedWith]->(summarization_config)
+
+WITH summary, $article_doi AS article_doi
+MATCH (:Article {doi: article_doi})-[:HasReview]->(review:Review)
+MERGE (review)-[:HasSummary]->(summary)
+
+RETURN summary
+    """
+    map = {
+        "article_doi": [],
+        "reviews_text": [],
+        "summary_text": [],
+        "id_summarization_config": [],
+    }
+    returns = ["summary"]
+
+
+class MERGE_SUMMARIZATION_CONFIG(Query):
+    code = """
+MERGE (summarization_config:SummarizationConfig {
+    parameters: $parameters,
+    prompt: $prompt
+})
+ON CREATE SET summarization_config.created_at = datetime()
+RETURN summarization_config
+    """
+
+    map = {
+        "parameters": [],
+        "prompt": [],
+    }
+    returns = ["summarization_config"]
