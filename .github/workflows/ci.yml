@@ -39,7 +39,7 @@ jobs:
     - run: flake8 check .  || true
     - run: black --check . || true
     # this script also runs the three tools above, but restricts them to the files that must pass linting.
-    - run: scripts/lint.sh || true
+    - run: scripts/lint.sh
 
   test:
     needs: lint
