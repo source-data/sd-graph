@@ -124,6 +124,12 @@ MERGE (rev)<-[:content]-(content_incontext:Content {
   id: doi,
   service: "https://biorxiv.org"
 })
+MERGE (rev)<-[:content]-(:Content {
+  type: "text", 
+  text: review.text,
+  id: toString(id(review)),
+  service: "https://eeb.embo.org/"
+})
 WITH DISTINCT action, review
 WHERE review.review_idx IS NOT NULL
 MERGE (action)<-[:participants]-(reviewer:Person {
@@ -218,6 +224,12 @@ MERGE (reply)<-[:content]-(content_incontext:Content {
   url: "https://biorxiv.org/content/" + doi + "#review",
   id: doi,
   service: "https://biorxiv.org"
+})
+MERGE (reply)<-[:content]-(:Content {
+  type: "text", 
+  text: response.text,
+  id: toString(id(response)),
+  service: "https://eeb.embo.org/"
 })
 RETURN COUNT(DISTINCT response) AS `response linked`;
 :commit
