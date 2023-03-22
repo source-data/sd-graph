@@ -135,6 +135,26 @@ SET action.index = review.review_idx
 RETURN DISTINCT COUNT(DISTINCT review) AS `reviews linked`;
 :commit
 
+// RefereeReportsSummary
+:begin
+MATCH
+  (rs:ReviewingService),
+  (:Docmap {publisher_url: rs.url})<-[:steps]-(step:Step)<-[:inputs]-(preprint:Preprint),
+  (:Article {doi: preprint.doi})-[:HasReview]->(:Review {reviewed_by: rs.name})-[:HasSummary]->(summary:Summary)
+WITH DISTINCT step, summary
+MERGE (step)<-[:actions]-(action:Action {id: "_:b-"+apoc.create.uuid()})
+MERGE (action)<-[:outputs]-(revSummary:RefereeReportsSummary {
+  published: apoc.temporal.format(summary.created_at, "ISO_LOCAL_DATE_TIME"),
+  type: "reviews-summary"
+})
+MERGE (revSummary)<-[:content]-(:Content {
+  type: "text", 
+  text: summary.summary_text,
+  id: toString(id(summary)),
+  service: "https://eeb.embo.org/"
+})
+RETURN DISTINCT COUNT(DISTINCT revSummary) AS `review summaries linked`;
+:commit
 
 // Reply
 :begin
