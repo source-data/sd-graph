@@ -3,10 +3,12 @@
     v-row(v-if="article")
       v-col
         HighlightedListItem(:article="article" :expandedReview="expandedReview")
-    v-row(v-else="article")
+    v-row(v-else)
       v-col
         v-card
-          v-card-title 
+          v-card-title(v-if="article_slug")
+            | The requested article was not found.
+          v-card-title(v-else)
             | The article with doi:
             |
             code {{ article_doi }}
@@ -35,14 +37,14 @@ export default {
     return {
       title: this.article.title,
       link: [
-        {rel: 'canonical', href: this.generateMyUrl(this.article_doi)}
+        {rel: 'canonical', href: this.generateMyUrl()}
       ] ,
       meta: [
         {vmid: 'description', name: 'description', content: this.article.abstract},
         {name: 'og:title', property: 'og:title', content: this.article.title},
         {name: 'og:site_name', property: 'og:site_name', content: 'Early Evidence Base'},
         {name: 'og:type', property: 'og:type', content: 'article'},
-        {name: 'og:url', property: 'og:url', content: this.generateMyUrl(this.article_doi)},
+        {name: 'og:url', property: 'og:url', content: this.generateMyUrl()},
         {name: 'og:image', property: 'og:image', content: `${this.publicPath}/EMBO_logo.svg`},
         {name: 'og:description', property: 'og:description', content: this.article.abstract},
 
@@ -60,6 +62,7 @@ export default {
     return {
       article: undefined,
       article_doi: undefined,
+      article_slug: undefined,
       publicPath: 'https://eeb.embo.org',
     }
   },
@@ -70,16 +73,8 @@ export default {
         return undefined;
       }
 
-      /* If we want to expand the author response, return the number of reviews. The author response, if it exists, is
-       * treated like an additional review internally, therefore its 0-based index is equal to the number of reviews.
-       */
-      let numReviews = this.article.review_process.reviews.length;
       if (hash === '#rev0-ar') {
-        // Check if there even is an author response to expand...
-        if (this.article.review_process.response != null) {
-          return numReviews;
-        }
-        return undefined;
+        return this.article.review_process.response;
       }
 
       let match = hash.match(/^#rev0-rr([0-9]+)$/);
@@ -88,15 +83,24 @@ export default {
       }
 
       let reviewIdx = Number(match[1]);
+      let numReviews = this.article.review_process.reviews.length;
       if (reviewIdx <= 0 || reviewIdx > numReviews) {
         return undefined;
       }
-      return reviewIdx - 1;
+      return this.article.review_process.reviews[reviewIdx - 1];
     },
   },
   methods: {
-    getArticle (doi) {
-      httpClient.get(`/api/v1/doi/${doi}`).then((response) => {
+    getArticle (params) {
+      let url = null;
+      if (params.slug) {
+        this.article_slug = params.slug
+        url = `/api/v1/slug/${params.slug}`
+      } else if (params.doi) {
+        this.article_doi = params.doi
+        url = `/api/v1/doi/${params.doi}`
+      }
+      httpClient.get(url).then((response) => {
         let article = response.data[0]
         if (article.doi) {  // if the backend doesn't find the article it
                             // returns an article with all its properties set to null
@@ -111,8 +115,11 @@ export default {
       //   }
       // })
     },
-    generateMyUrl (doi) {
-      return `${this.publicPath}/doi/${doi}`
+    generateMyUrl () {
+      if (this.article_slug) {
+        return `${this.publicPath}/p/${this.article_slug}`
+      }
+      return `${this.publicPath}/doi/${this.article_doi}`
     },
     generateKeywords (article) {
       const assays = article.assays
@@ -155,13 +162,11 @@ export default {
   },
   beforeRouteEnter (to, from, next) {
     next((vm) => {
-      vm.article_doi = to.params.doi
-      vm.getArticle(to.params.doi)
+      vm.getArticle(to.params)
     })
   },
   beforeRouteUpdate (to, from, next) {
-    this.article_doi = to.params.doi
-    this.getArticle(to.params.doi)
+    this.getArticle(to.params)
     next()
   },
 }

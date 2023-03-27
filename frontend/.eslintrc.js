@@ -8,7 +8,7 @@ module.exports = {
     'eslint:recommended'
   ],
   parserOptions: {
-    parser: 'babel-eslint'
+    parser: '@babel/eslint-parser'
   },
   rules: {
     'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
@@ -22,6 +22,15 @@ module.exports = {
       ],
       env: {
         mocha: true
+      }
+    },
+    {
+      files: [
+        '**/*'
+      ],
+      rules: {
+        "vue/multi-word-component-names": "off",
+        "vue/no-reserved-component-names": "off"
       }
     }
   ]

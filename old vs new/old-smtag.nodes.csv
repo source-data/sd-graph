@@ -1,0 +1,15 @@
+// MATCH (n) WITH DISTINCT LABELS(n) AS type, COUNT(n) AS num RETURN type, num ORDER BY type;
+type,num
+Article,4290
+CondTag,441231
+Contrib,34570
+Contrib_id,12762
+Fig,32652
+H_Entity,42660
+SDArticle,5931
+SDCollection,28
+SDFigure,42205
+SDPanel,118541
+SDTag,904265
+Subject,4290
+Term,40973

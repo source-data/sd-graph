@@ -9,7 +9,7 @@
         hide-on-scroll
         fade-img-on-scroll
         scroll-threshold="80"
-        src="../assets/EEB_HP_Banner.svg"
+        :src='require("@/assets/EEB_HP_Banner.jpg")'
       )
         Banner
         v-container(fluid).fill-height.align-end.pa-0

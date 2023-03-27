@@ -22,10 +22,10 @@ mail_developers(){
   local body_prefix=$2
 
   if [ ! -z $LOG_FILE ]; then
-    local num_errors=$(grep -i error ${LOG_FILE} | wc -l)
-    local max_errors=20
+    local num_errors=$(grep ERROR ${LOG_FILE} | wc -l)
+    local max_errors=100
     local error_desc="$(describe_length ${num_errors} ${max_errors})"
-    local errors_snippet="$(grep -i error ${LOG_FILE} | head -${max_errors})"
+    local errors_snippet="$(grep ERROR ${LOG_FILE} | head -${max_errors})"
 
     local num_log_lines=$(cat ${LOG_FILE} | wc -l)
     local max_log_lines=100
@@ -83,7 +83,11 @@ load_dotenv(){
   if [ -f .env ]
   then
     log "loading .env file"
-    export $(cat .env | sed 's/#.*//g' | xargs)
+    # allexport automatically exports all variables that are assigned, i.e. `FOO=bar` would be equivalent to `export FOO=bar`.
+    # We temporarily enable it for loading the .env file to export all the variables in there.
+    set -o allexport
+    source .env
+    set +o allexport
   else
     log ".env file missing. Aborting"
     exit 1
@@ -120,11 +124,23 @@ update_local_neo4j() {
     cat neotools/purge_prelim.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
 
     log "import full text biorxiv preprints"
-    # this is missing the July_2020
-    #docker-compose run --rm -v /usb01/shared/biorxiv-src-monthly:/biorxiv-src-monthly flask python -m neotools.rxiv2neo /biorxiv-src-monthly/July_2020 --type meca
-    local PREVIOUS_MONTH=`LC_TIME=en_US.UTF-8 date --date='-1 month' +%B` # Biorxiv only publishes monthly updates when the month is over, meaning the 1st of September we get access to August content
-    local YEAR=`date --date='-1 month' +%Y` # Biorxiv only publishes monthly updates when the month is over, meaning the 1st of September we get access to August content
-    docker-compose -f docker-compose.deploy.yml run --rm flask python -m neotools.rxiv2neo /app/biorxiv/"$PREVIOUS_MONTH"_"$YEAR" --type meca
+    biorxiv_folder_name() {
+      local month_delta="$1"
+      local MONTH=`LC_TIME=en_US.UTF-8 date --date="-$month_delta month" +%B`
+      local YEAR=`date --date="-$month_delta month" +%Y`
+      echo "${MONTH}_${YEAR}"
+    }
+    # Biorxiv only publishes monthly updates when the month is over, meaning the 1st of September we get access to August content
+    local delta_last_month=1
+    # But their S3 archive might not update at the exact right time so try to import the 2nd- and 3rd-to-last month's archives as well
+    local delta_2nd_to_last_month=2
+    local delta_3rd_to_last_month=3
+
+    for delta in "${delta_3rd_to_last_month}" "${delta_2nd_to_last_month}" "${delta_last_month}"; do
+      folder_name=`biorxiv_folder_name "${delta}"`
+      log "importing full text biorxiv preprints from ${BIORXIV_PATH}/${folder_name}"
+      docker-compose -f docker-compose.deploy.yml run --rm flask python -m neotools.rxiv2neo "/app/biorxiv/$folder_name" --type meca
+    done
   }
 
   import_peer_reviews() {
@@ -161,10 +177,10 @@ update_local_neo4j() {
   merge_and_precompute_graph() {
     # daily
     log "generate merged graph"
-    cat sdg/SD-processing.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
+    docker-compose -f docker-compose.deploy.yml run --rm flask python -m sdg.sd_processing
 
     log "neo4j graph data science"
-    cat sdg/SD-gds.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
+    docker-compose -f docker-compose.deploy.yml run --rm flask python -m sdg.sd_gds
 
     log "advanced graph data science"
     docker-compose -f docker-compose.deploy.yml run --rm flask python -m sdg.algonet
@@ -181,6 +197,8 @@ update_local_neo4j() {
     log "precompute pilot docmap graph"
     cat sdg/SD-prepare-docmap.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
 
+    log "generate stats report"
+    cat sdg/SD-stats.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
   }
 
   update_close() {
@@ -320,7 +338,8 @@ send_notifications(){
   after=$(date -f "${file_last_notification}" "${date_format}" || date --date "yesterday" "${date_format}")
   reviewed_by="review commons"
   recipient="${NOTIFICATIONS_RECIPIENT}"
-  docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.notify --after "${after}" --reviewed-by "${reviewed_by}" --recipient "${recipient}" --no-dry-run
+  sender="${NOTIFICATIONS_SENDER}"
+  docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.notify --after "${after}" --reviewed-by "${reviewed_by}" --recipient "${recipient}" --sender "${sender}" --no-dry-run
   # Update the time when the last notifications were sent to now.
   date "${date_format}" > "${file_last_notification}"
 }

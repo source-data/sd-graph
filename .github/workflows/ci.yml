@@ -1,0 +1,77 @@
+# This workflow lints the codebase, runs tests, and builds the necessary Docker images for the sd-graph production system.
+# The images are built on every push to master and dev, which are the two branches used for deployment to the prod and staging servers.
+# The images are versioned with the branch name.
+# This means that any older builds will be immediately discarded when this succeeds, but they are not needed at the moment.
+
+
+name: Lint, Test, & Build Images
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_SOURCE: https://github.com/source-data/sd-graph
+  IMAGE_REVISION: ${{ github.sha }}
+  IMAGE_TAG: ${{ github.ref_name }}
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.7"
+    - uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: pip-cache
+    - run: pip install -r requirements/ci.txt
+    # these three steps will fail at the moment, but should not abort the build.
+    - run: ruff check .    || true
+    - run: flake8 check .  || true
+    - run: black --check . || true
+    # this script also runs the three tools above, but restricts them to the files that must pass linting.
+    - run: scripts/lint.sh
+
+  test:
+    needs: lint
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - run: sudo apt-get install -y zsh
+    - run: cp .env.ci .env
+    - run: scripts/run-tests.sh -vv
+
+  build-and-push-image:
+    needs: test
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Log in to the Container registry
+      uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build the Docker images
+      run: docker-compose -f docker-compose.ci.yml build
+
+    - name: Push the Docker images
+      run: docker-compose -f docker-compose.ci.yml push

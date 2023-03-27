@@ -1,28 +1,15 @@
-neo4j==4.1.1
+python-dateutil==2.8.2
 flask-cors
 Flask==1.1.2
 Flask-Caching==1.8.0
-redis==3.5.2
 Flask-DotEnv==0.1.1
-python-dotenv==0.10.1
-lxml==4.5.0
-requests==2.23.0
-pandas==1.0.3
-tweepy==3.8.0
-networkx==2.5
-infomap==1.2.1
-scikit-learn==0.23.2
-cdlib==0.1.9
-# omega_index_py3 is required by cdlib, but the latest version (0.3.2) is broken (see #15)
-omega_index_py3==0.3.1
-python-igraph==0.8.3
-tqdm==4.62.2
-wurlitzer==2.0.1
-Werkzeug < 2.0.0
 itsdangerous==2.0.1 # fix for Flask < 2: https://stackoverflow.com/q/71189819
 jinja2<3.1.0 # fix for breaking API change: https://stackoverflow.com/a/71721006
+lxml==4.5.0
+neo4j==4.1.1
+python-dotenv==0.10.1
 PyYAML==6.0
-
--e git+https://github.com/source-data/ai.git#egg=ai
--e git+https://github.com/source-data/soda-roberta.git#egg=smtag
--e git+https://github.com/embo-press/hypothepy#egg=hypothepy
+redis==3.5.2
+requests==2.23.0
+tqdm==4.62.2
+Werkzeug < 2.0.0

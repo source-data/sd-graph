@@ -32,7 +32,7 @@ COPY requirements/ requirements
 RUN pip install cmake \
   && pip install cython
 RUN pip install --upgrade pip  \
-  && pip install -r requirements/base.txt
+  && pip install -r requirements/deploy.txt
 
 COPY ./compose/production/flask/entrypoint /entrypoint
 RUN sed -i 's/\r$//g' /entrypoint

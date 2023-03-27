@@ -24,6 +24,7 @@ CREATE INDEX h_entity_geneprod_concept_name IF NOT EXISTS FOR (h:H_Entity) ON (h
 CREATE INDEX review_reviewed_by IF NOT EXISTS FOR (n:Review) ON (n.reviewed_by);
 CREATE INDEX peer_review_material_reviewed_by IF NOT EXISTS FOR (n:PeerReviewMaterial) ON (n.reviewed_by);
 CREATE INDEX vizpaper_doi IF NOT EXISTS FOR (n:VizPaper) ON (n.doi);
+CREATE INDEX vizpaper_slug IF NOT EXISTS FOR (n:VizPaper) ON (n.slug);
 CREATE INDEX vizentity_category IF NOT EXISTS FOR (n:VizEntity) ON (n.category);
 CREATE INDEX vizentity_text_category IF NOT EXISTS FOR (n:VizEntity) ON (n.text, n.category);
 

@@ -6,7 +6,7 @@
   )
     v-card-title
       | {{ article.title }}
-      router-link(:to="`/doi/${article.doi}`")
+      router-link(:to="generateMyUrl()")
         v-icon(color="indigo lighten-3") mdi-link-variant
     v-card-subtitle
       v-container(fluid)
@@ -60,7 +60,7 @@ import '@source-data/render-rev'
 export default {
   props: {
     article: Object,
-    expandedReview: Number,
+    expandedReview: Object,
   },
   data() {
     return {
@@ -107,6 +107,12 @@ export default {
     responseId() {
       return this.article.doi + '#rev0-ar'
     },
+    generateMyUrl () {
+      if (this.article.slug) {
+        return `/p/${this.article.slug}`
+      }
+      return `/doi/${this.article.doi}`
+    },
   },
   computed: {
     authorList() {
@@ -129,6 +135,7 @@ export default {
       typographer: true
     });
     const doi = this.article.doi;
+    const highlightDoi = this.expandedReview ? this.expandedReview.doi : null;
     const el = this.$refs[doi];
     const display = {
       publisherLogo: name => {
@@ -145,7 +152,7 @@ export default {
       },
       renderMarkdown: src => md.render(src),
     };
-    el.configure({ doi, display });
+    el.configure({ doi, display, highlightDoi });
   }
 }
 </script>
