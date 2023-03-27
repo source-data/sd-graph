@@ -98,6 +98,7 @@ MERGE (step)<-[:assertions]-(assertion:Assertion {
 MERGE (step)<-[:actions]-(action:Action {id: action_uuid})
 MERGE (action)<-[:outputs]-(rev:RefereeReport {
   published: review.posting_date,
+  runningNumber: review.review_idx,
   type: "review",
   uri: "https://eeb.embo.org/api/v2/review_material/" + id(review)
 })
