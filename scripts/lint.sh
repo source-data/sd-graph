@@ -4,19 +4,24 @@
 set -eo pipefail
 
 # use a bash array to pass multiple dirs as arguments
-sources=(
-    "peerreview/summarization.py"
+lintable_sources=(
     "peerreview/gpt.py"
-    "peerreview/test_summarization.py"
+    "peerreview/mecadoi.py"
     "peerreview/queries.py"
+    "peerreview/summarization.py"
+    "peerreview/test_mecadoi.py"
+    "peerreview/test_summarization.py"
+    "tests/"
 )
 
-ruff check "${sources[@]}"
+echo "checking ${lintable_sources[@]}"
+
+ruff check "${lintable_sources[@]}"
 echo "ruff passed!"
 
 # ca. 90 is the max line length for black & ruff
-flake8 --max-line-length 90 "${sources[@]}"
+flake8 --max-line-length 90 "${lintable_sources[@]}"
 echo "flake8 passed!"
 
-black --check "${sources[@]}"
+black --check "${lintable_sources[@]}"
 echo "black passed!"

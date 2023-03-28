@@ -11,7 +11,6 @@ logger = common.logging.get_logger(__name__)
 
 
 class MecadoiImporter:
-
     def __init__(self, db):
         self.db = db
 
@@ -19,7 +18,11 @@ class MecadoiImporter:
         matching_nodes = [r["r"] for r in self.db.query(query)]
 
         if matching_nodes is None or len(matching_nodes) != 1:
-            logger.warning(f"Found {len(matching_nodes)} matching node(s) when updating node with DOI")
+            logger.warning(
+                "Found %s matching node(s) when updating node with DOI %s",
+                len(matching_nodes),
+                doi,
+            )
 
         for node in matching_nodes:
             existing_doi = node["doi"]
@@ -28,33 +31,44 @@ class MecadoiImporter:
                 continue
 
             if existing_doi:
-                logger.info(f"Updating DOI of node {node.id} from \"{existing_doi}\" to \"{doi}\"")
+                logger.info(
+                    'Updating DOI of node %s from "%s" to "%s"',
+                    node.id,
+                    existing_doi,
+                    doi,
+                )
             else:
-                logger.info(f"Setting DOI of node {node.id} to \"{doi}\"")
+                logger.info('Setting DOI of node %s to "%s"', node.id, doi)
 
             if not dry_run:
-                result = self.db.update_node(node.id, {"doi": doi})
+                self.db.update_node(node.id, {"doi": doi})
 
     def run(self, input_dir: str, dry_run=True):
         deposition_files = [f for f in Path(input_dir).glob("*.yml")]
-        logger.info(f"{len(deposition_files)} file found in MECADOI deposition dir at {input_dir}.")
+        logger.info(
+            "%s file found in MECADOI deposition dir at %s.",
+            len(deposition_files),
+            input_dir,
+        )
 
         if dry_run:
-            logger.info(f"Doing a dry run, the database will not be changed.")
+            logger.info("Doing a dry run, the database will not be changed.")
 
         with logging_redirect_tqdm():
             for deposition_file in tqdm(deposition_files):
                 with open(deposition_file, "r") as f:
                     articles = safe_load(f)
-                logger.info(f"{len(articles)} articles found in {deposition_file}")
+                logger.info("%s articles found in %s", len(articles), deposition_file)
 
                 for article in articles:
                     article_doi = article["doi"]
-                    logger.info(f"processing {article_doi}")
+                    logger.info("processing %s", article_doi)
 
                     review_process = article["review_process"]
                     if len(review_process) != 1:
-                        logger.warning(f"review process doesn't have exactly one revision round")
+                        logger.warning(
+                            "review process doesn't have exactly one revision round"
+                        )
                     revision_round = review_process[0]
 
                     queries_to_execute = []
@@ -62,12 +76,24 @@ class MecadoiImporter:
                     author_reply = revision_round.get("author_reply", None)
                     if author_reply is not None:
                         queries_to_execute.append(
-                            (FIND_RESPONSE(params={"related_article_doi": article_doi}), author_reply["doi"])
+                            (
+                                FIND_RESPONSE(
+                                    params={"related_article_doi": article_doi}
+                                ),
+                                author_reply["doi"],
+                            )
                         )
 
-                    for default_review_idx, review in enumerate(revision_round["reviews"], start=1):
+                    for default_review_idx, review in enumerate(
+                        revision_round["reviews"], start=1
+                    ):
                         review_idx = review.get("review_idx", default_review_idx)
-                        query = FIND_REVIEW(params={"related_article_doi": article_doi, "review_idx": str(review_idx)})
+                        query = FIND_REVIEW(
+                            params={
+                                "related_article_doi": article_doi,
+                                "review_idx": str(review_idx),
+                            }
+                        )
                         queries_to_execute.append((query, review["doi"]))
 
                     for query, doi in queries_to_execute:
@@ -81,11 +107,16 @@ def main():
 By default this command only outputs what would happen.
 Pass --no-dry-run to actually update the database."""
     )
-    parser.add_argument("--input-dir", help="The directory containing the MECADOI deposition files.")
+    parser.add_argument(
+        "--input-dir", help="The directory containing the MECADOI deposition files."
+    )
     parser.add_argument(
         "--no-dry-run",
-        action='store_true',
-        help="Actually update the database instead of just outputting what would be changed."
+        action="store_true",
+        help=(
+            "Actually update the database instead of just"
+            " outputting what would be changed."
+        ),
     )
     args = parser.parse_args()
     input_dir = args.input_dir
