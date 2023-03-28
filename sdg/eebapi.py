@@ -36,23 +36,12 @@ def get_score(t, score_name, default):
         return default
     return str(score_as_percent)
 
-def smtag2json(tagging_result: str):
-    logger.debug("smtag2json(%s)", tagging_result)
-    panels = tagging_result["smtag"]
+def smtag2json(panels):
+    logger.debug("smtag2json(%s)", panels)
     j = []
     for i, panel in enumerate(panels):
-        panel_group = panel["panel_group"]
-
-        panel_caption = panel_group["panel_text"]
-        for meta_markers in ["[CLS]", "[SEP]"]:
-            panel_caption = panel_caption.replace(meta_markers, "")
-        panel_caption = panel_caption.strip()
-
-        if i == 0 and panel_caption == "figure":
-            continue
-
         j_tags = []
-        for t in panel_group["entities"][0]:  # yes, [0] is not an error: it's a list nested inside another list
+        for t in panel["entities"]:
             j_tags.append({
                 'text': t.get('text'),
                 'category': t.get('category', ''),
@@ -63,7 +52,7 @@ def smtag2json(tagging_result: str):
                 'role_score': get_score(t, 'role_score', ''),
             })
         j.append({
-            'caption': panel_caption,
+            'caption': panel.get('text', ''),
             'label': str(i),
             'tags': j_tags
         })
