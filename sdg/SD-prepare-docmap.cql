@@ -98,12 +98,13 @@ MERGE (step)<-[:assertions]-(assertion:Assertion {
 MERGE (step)<-[:actions]-(action:Action {id: action_uuid})
 MERGE (action)<-[:outputs]-(rev:RefereeReport {
   published: review.posting_date,
-  runningNumber: review.review_idx,
   type: "review",
   uri: "https://eeb.embo.org/api/v2/review_material/" + id(review)
 })
-// review.doi can be null and must therefore be set outside the merge query
-ON CREATE SET rev.doi = review.doi
+// review.doi and .runningNumber can be null and must therefore be set outside the merge query
+ON CREATE SET
+  rev.doi = review.doi,
+  rev.runningNumber = review.review_idx
 // realization on eeb as json
 MERGE (rev)<-[:content]-(content_on_eeb:Content {
   type: "web-page", 
