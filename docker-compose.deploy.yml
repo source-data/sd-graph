@@ -1,22 +1,11 @@
 version: '3'
 
 services:
-  smtag:
-    image: nvcr.io/nvidia/pytorch:22.01-py3
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - capabilities: [gpu]
-    volumes:
-      - .:/app
-    env_file:
-      - ./.env
   flask:
     build:
       context: .
       dockerfile: ./compose/local/flask/Dockerfile
-    image: neoflask_new_smtag_flask
+    image: neoflask_local_flask
     depends_on:
       - neo4j
       - redis
