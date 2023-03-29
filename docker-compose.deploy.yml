@@ -2,10 +2,7 @@ version: '3'
 
 services:
   flask:
-    build:
-      context: .
-      dockerfile: ./compose/local/flask/Dockerfile
-    image: neoflask_local_flask
+    image: ghcr.io/source-data/sd-graph_deploy_flask:${IMAGE_TAG}
     depends_on:
       - neo4j
       - redis

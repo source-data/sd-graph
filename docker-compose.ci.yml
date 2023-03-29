@@ -2,7 +2,17 @@
 # system as defined in production.yml (the other two use plain, pre-built images).
 # They are stored in the Github Container Registry under the image tag specified here. See the Github Actions workflow
 # definition for information on the environment variables used here.
+version: '3'
 services:
+  flask_deploy:
+    image: ghcr.io/source-data/sd-graph_deploy_flask:${IMAGE_TAG}
+    build:
+      context: .
+      dockerfile: ./compose/local/flask/Dockerfile
+    labels:
+      org.opencontainers.image.source: ${IMAGE_SOURCE}
+      org.opencontainers.image.revision: ${IMAGE_REVISION}
+
   flask:
     image: ghcr.io/source-data/sd-graph_flask:${IMAGE_TAG}
     build:
