@@ -1,7 +1,8 @@
-# This file is used by the CI system (Github Actions) to build three of the five images that comprise the production
-# system as defined in production.yml (the other two use plain, pre-built images).
-# They are stored in the Github Container Registry under the image tag specified here. See the Github Actions workflow
-# definition for information on the environment variables used here.
+# This file is used by the CI system (Github Actions) to build three of the five images
+# that comprise the production system as defined in production.yml as well as one of the
+# images used during database updating (the other services use plain, pre-built images).
+# They are stored in the Github Container Registry under the image tag specified here.
+# See the Github Actions workflow for information on the environment variables used here.
 version: '3'
 services:
   flask_deploy:
