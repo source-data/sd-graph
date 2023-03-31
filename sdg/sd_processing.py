@@ -27,17 +27,21 @@ delete_all_terms = DetachDeleteAll("Term")
 
 normalize_journal_name = UpdateOrCreateTask(
     "Normalize journal names",
-    "MATCH (a:SDArticle) WHERE a.journalName <> toLower(a.journalName) RETURN a",
+    "MATCH (a:SDArticle) RETURN a",
     "SET a.journalName = toLower(a.journalName)",
 )
 
 normalize_tag_text = UpdateOrCreateTask(
     "trim and tolower text",
-    "MATCH(t:SDTag) WHERE t.norm_text <> toLower(trim(t.text)) RETURN t",
+    "MATCH(t:SDTag) RETURN t",
     "SET t.norm_text = toLower(trim(t.text))",
 )
 
-set_default_sd_tag_text = UpdateAttrIfNull("SDTag", "text")
+set_default_sd_tag_text = UpdateOrCreateTask(
+    "trim and tolower text",
+    "MATCH(t:SDTag) WHERE t.text = '' RETURN t",
+    "SET t.text = toLower(t.ext_names)",
+)
 
 delete_empty_tags = UpdateOrCreateTask(
     "remove sick tags with no name and no ext_names",
