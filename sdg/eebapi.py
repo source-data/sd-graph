@@ -16,12 +16,10 @@ logger = common.logging.get_logger(__name__)
 TAGGING_ENGINE = SmartTagger()
 
 def tag_and_panelize(text: str):
-    logger.debug("tag_it(%s)", text)
     text = cleanup(text)
     tagging_result_json = TAGGING_ENGINE(text)
     tagging_result = json.loads(tagging_result_json)
     tagged_panels = smtag2json(tagging_result)
-    logger.debug("tag_it -> %s", tagged_panels)
     return tagged_panels
 
 
@@ -36,17 +34,35 @@ def get_score(t, score_name, default):
         return default
     return str(score_as_percent)
 
+AttrConversion = {
+    "CELL": "cell",
+    "GENEPROD": "geneprod",
+    "SMALL_MOLECULE": "small_molecule",
+    "SUBCELLULAR": "subcellular",
+    "ORGANISM": "organism",
+    "TISSUE": "tissue",
+    "MEASURED_VAR": "assayed",
+    "CONTROLLED_VAR": "intervention",
+}
+def get_entity_attribute(entity, attr_name, default):
+    attr_value = entity.get(attr_name, None)
+    # attr_name can be absent from entity, or it can contain an empty string. We're not interested in either.
+    if attr_value is None:
+        return default
+    return AttrConversion.get(attr_value, attr_value)
+
 def smtag2json(panels):
-    logger.debug("smtag2json(%s)", panels)
     j = []
     for i, panel in enumerate(panels):
         j_tags = []
         for t in panel["entities"]:
             j_tags.append({
                 'text': t.get('text'),
-                'category': t.get('category', ''),
-                'type': t.get('type', ''),
-                'role': t.get('role', ''),
+                'start': t.get('start'),
+                'end': t.get('end'),
+                'category': get_entity_attribute(t, 'category', ''),
+                'type': get_entity_attribute(t, 'type', ''),
+                'role': get_entity_attribute(t, 'role', ''),
                 'category_score': get_score(t, 'category_score', ''),
                 'type_score': get_score(t, 'type_score', ''),
                 'role_score': get_score(t, 'role_score', ''),
@@ -56,7 +72,6 @@ def smtag2json(panels):
             'label': str(i),
             'tags': j_tags
         })
-    logger.debug("smtag2json -> %s", j)
     return j
 
 
