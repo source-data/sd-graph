@@ -72,7 +72,7 @@ class SDNeo:
             logger.warning(f"!!!! skipped creating any figure for {doi}")
         else:
             for f, f_nodes in zip(figures, figure_nodes):
-                logger.info(f"    figure {f.fig_label}")
+                logger.debug(f"    figure {f.fig_label}")
                 panel_nodes = self.create_panels(f.children)
                 self.create_relationships(f_nodes, panel_nodes, 'has_panel')
         return figure_nodes
@@ -85,7 +85,7 @@ class SDNeo:
             logger.warning(f"!!!! skipped creating any panels.")
         else:
             for p, p_node in zip(panels, panel_nodes):
-                logger.info(f"        panel {p.panel_label}")
+                logger.debug(f"        panel {p.panel_label}")
                 tag_nodes = self.create_tags(p.children)
                 self.create_relationships(p_node, tag_nodes, 'has_tag')
         return panel_nodes
