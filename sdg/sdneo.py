@@ -40,8 +40,8 @@ class SDNeo:
                     results = self.db.query(SDARTICLE_LOADING_STATUS(params={'doi': doi}))  # 'complete' | 'partial' | 'absent'
                     if results:
                         if results[0]['status'] == 'partial':
-                            self.db.query(DELETE_TREE(params={'doi': doi}))
-                            logger.info(f"deleted tree for {doi}")
+                            delete_result = self.db.query(DELETE_TREE(params={'doi': doi}))
+                            logger.info(f"{delete_result[0][0]} trees deleted for {doi}")
                             filtered_list.append(doi)
                     else:
                         filtered_list.append(doi)
