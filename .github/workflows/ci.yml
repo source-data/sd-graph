@@ -52,9 +52,12 @@ jobs:
     - run: scripts/run-tests.sh -vv
 
   build-and-push-image:
+    strategy:
+      matrix:
+        image: ['smtag_deploy', 'flask_deploy', 'flask', 'traefik', 'vuejs']
     needs: test
     runs-on: ubuntu-latest
-    
+
     permissions:
       contents: read
       packages: write
@@ -71,7 +74,7 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Build the Docker images
-      run: docker-compose -f docker-compose.ci.yml build
+      run: docker-compose -f docker-compose.ci.yml build {{ matrix.image }}
 
     - name: Push the Docker images
       run: docker-compose -f docker-compose.ci.yml push
