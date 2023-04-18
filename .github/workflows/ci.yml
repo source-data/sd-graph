@@ -74,7 +74,7 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Build the Docker images
-      run: docker-compose -f docker-compose.ci.yml build {{ matrix.image }}
+      run: docker-compose -f docker-compose.ci.yml build ${{ matrix.image }}
 
     - name: Push the Docker images
       run: docker-compose -f docker-compose.ci.yml push
