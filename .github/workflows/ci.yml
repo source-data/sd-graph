@@ -77,4 +77,4 @@ jobs:
       run: docker-compose -f docker-compose.ci.yml build ${{ matrix.image }}
 
     - name: Push the Docker images
-      run: docker-compose -f docker-compose.ci.yml push
+      run: docker-compose -f docker-compose.ci.yml push ${{ matrix.image }}
