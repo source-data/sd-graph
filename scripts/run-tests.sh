@@ -48,7 +48,7 @@ source "$env_file"
 set +o allexport
 
 echo "Starting docker-compose service"
-eeb up -d
+eeb up -d flask
 
 # waits until neo4j is ready by trying to execute a cypher query using the cypher-shell interface
 wait_for_neo4j=$(
