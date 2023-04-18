@@ -26,7 +26,7 @@
                 |
                 | https://doi.org/{{ article.doi }}
           v-col
-            render-rev(:doi='article.doi' :ref='article.doi')
+            render-rev(:ref='article.doi')
 
     v-card-text
       v-row
@@ -129,30 +129,21 @@ export default {
     },
   },
   mounted() {
+    const docmapsUrl = doi => `/api/v2/docmap/${doi}`;
+    const doi = this.article.doi;
+    const highlightDoi = this.expandedReview ? this.expandedReview.doi : null;
+
     const md = new MarkdownIt({
       html: true,
       linkify: true,
       typographer: true
     });
-    const doi = this.article.doi;
-    const highlightDoi = this.expandedReview ? this.expandedReview.doi : null;
-    const el = this.$refs[doi];
     const display = {
-      publisherLogo: name => {
-        const urlMap = {
-          'bioRxiv': 'https://www.biorxiv.org/sites/default/files/images/favicon.ico',
-          'elife': 'https://elifesciences.org/assets/favicons/favicon-32x32.56d32e31.png',
-          'embo press': 'https://www.embopress.org/favicon.ico',
-          'embo reports': 'https://www.embopress.org/favicon.ico',
-          'life science alliance': 'https://www.embopress.org/favicon.ico',
-          'review commons': 'https://www.reviewcommons.org/wp-content/uploads/2019/11/cropped-favicon-192x192.png',
-          'the embo journal': 'https://www.embopress.org/favicon.ico',
-        };
-        return urlMap[name] || null;
-      },
       renderMarkdown: src => md.render(src),
     };
-    el.configure({ doi, display, highlightDoi });
+
+    const el = this.$refs[doi];
+    el.configure({ docmapsUrl, doi, display, highlightDoi });
   }
 }
 </script>
