@@ -54,7 +54,7 @@ http:
         # https://docs.traefik.io/master/routing/routers/#certresolver
         certResolver: letsencrypt
     web-secure-api-router:
-      rule: "( Host(`{{env "EEB_HOSTNAME" }}`) )  && (PathPrefix(`/api`) || PathPrefix(`/sitemap.xml`) || PathPrefix(`/doi/10.1101/067876`) || PathPrefix(`/doi/10.1101/138537`) || PathPrefix(`/doi/10.1101/2021.09.22.461393`) || PathPrefix(`/doi/10.1101/2022.04.08.487678`))"
+      rule: "( Host(`{{env "EEB_HOSTNAME" }}`) )  && (PathPrefix(`/api`) || PathPrefix(`/sitemap.xml`) || PathPrefix(`/doi`))"
       entryPoints:
         - web-secure
       middlewares:
