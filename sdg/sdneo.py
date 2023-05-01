@@ -40,8 +40,8 @@ class SDNeo:
                     results = self.db.query(SDARTICLE_LOADING_STATUS(params={'doi': doi}))  # 'complete' | 'partial' | 'absent'
                     if results:
                         if results[0]['status'] == 'partial':
-                            self.db.query(DELETE_TREE(params={'doi': doi}))
-                            logger.info(f"deleted tree for {doi}")
+                            delete_result = self.db.query(DELETE_TREE(params={'doi': doi}))
+                            logger.info(f"{delete_result[0][0]} trees deleted for {doi}")
                             filtered_list.append(doi)
                     else:
                         filtered_list.append(doi)
@@ -72,7 +72,7 @@ class SDNeo:
             logger.warning(f"!!!! skipped creating any figure for {doi}")
         else:
             for f, f_nodes in zip(figures, figure_nodes):
-                logger.info(f"    figure {f.fig_label}")
+                logger.debug(f"    figure {f.fig_label}")
                 panel_nodes = self.create_panels(f.children)
                 self.create_relationships(f_nodes, panel_nodes, 'has_panel')
         return figure_nodes
@@ -85,7 +85,7 @@ class SDNeo:
             logger.warning(f"!!!! skipped creating any panels.")
         else:
             for p, p_node in zip(panels, panel_nodes):
-                logger.info(f"        panel {p.panel_label}")
+                logger.debug(f"        panel {p.panel_label}")
                 tag_nodes = self.create_tags(p.children)
                 self.create_relationships(p_node, tag_nodes, 'has_tag')
         return panel_nodes

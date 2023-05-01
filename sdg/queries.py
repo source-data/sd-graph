@@ -61,21 +61,14 @@ RETURN DISTINCT subject.text AS subject
 
 class DELETE_TREE(Query):
     code = '''
-MATCH (a:SDArticle {doi: $doi})-[r1]->(f:SDFigure)-[r2]->(p:SDPanel)-[r3]->(t:SDTag)
-WITH a, f, p, t, r1, r2, r3
-DELETE r3
-WITH a, f, p, t, r1, r2
-DELETE t
-WITH a, f, p, r1, r2
-DELETE r2
-WITH a, f, p, r1
-DELETE p
-WITH a, f, r1
-DELETE r1
-WITH a, f
-DELETE f
-WITH a
-DELETE a
+MATCH (a:SDArticle {doi: $doi})
+OPTIONAL MATCH (a)--(f:SDFigure)
+OPTIONAL MATCH (f)--(p:SDPanel)
+OPTIONAL MATCH (p)--(t:SDTag)
+DETACH DELETE t
+DETACH DELETE p
+DETACH DELETE f
+DETACH DELETE a
 RETURN COUNT(DISTINCT a) AS article_deleted
     '''
     map = {'doi': []}

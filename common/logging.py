@@ -14,15 +14,16 @@ LOGGING_BASE_DIR = '/app/log'
 
 # The non-duplicated portion of the logging configuration. This object is (deep-) copied in configure_logging() and
 # extended with the very duplicated configuration for each package.
+BASE_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 BASE_CONFIG = {
    'version': 1,
    'disable_existing_loggers': False,
    'formatters': {
       'console': {
-         'format': '%(asctime)s - %(levelname)s - %(message)s'
+         'format': BASE_FORMAT
       },
       'simple': {
-         'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+         'format': BASE_FORMAT
       }
    },
    'handlers': {
@@ -72,6 +73,17 @@ def configure_logging():
             # once from the root logger after propagation.
             'propagate': False,
         }
+    
+    # As each module's logger name we're using the __name__ variable, which is set to
+    # '__main__' if e.g. the module is run as a script. Therefore we need to configure
+    # the logging for that logger name as well.
+    config['loggers']['__main__'] = {
+        'level': 'DEBUG',
+        'handlers': [
+            'console',
+        ],
+        'propagate': False,
+    }
     logging.config.dictConfig(config)
     
     root_logger = get_logger(name=None)

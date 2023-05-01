@@ -5,9 +5,11 @@ infomap==1.2.1
 networkx==2.5
 # omega_index_py3 is required by cdlib, but the latest version (0.3.2) is broken (see #15)
 omega_index_py3==0.3.1
+openai==0.27.2
 pandas==1.0.3
 python-igraph==0.8.3
 scikit-learn==0.23.2
+tenacity==8.2.2
 tweepy==3.8.0
 wurlitzer==2.0.1
 
