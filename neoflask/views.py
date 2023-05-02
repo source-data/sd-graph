@@ -80,6 +80,7 @@ def root():
 
 
 @app.route('/doi/<path:doi>', methods=['GET'])
+@cache.cached()
 def doi_redirect(doi):
     papers = ask_neo(BY_DOIS(), dois=[doi])
     if len(papers) == 0:
