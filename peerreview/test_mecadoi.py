@@ -36,10 +36,20 @@ class MecadoiImportTestCase(DbTestCase):
                                 {
                                     "doi": "10.1234/567890-review-1",
                                     "review_idx": "1",
+                                    "text": {
+                                        "Significance (Required)": (
+                                            "This review's significance section"
+                                        ),
+                                    },
                                 },
                                 {
                                     "doi": "10.1234/567890-review-2",
                                     "review_idx": "2",
+                                    "text": {
+                                        "Full": (
+                                            "This review has no significance section"
+                                        ),
+                                    },
                                 },
                             ]
                         }
@@ -54,14 +64,16 @@ class MecadoiImportTestCase(DbTestCase):
                 doi: "10.1234/567890-review-1",
                 related_article_doi: a1.doi,
                 reviewed_by: "review commons",
-                review_idx: "1"
+                review_idx: "1",
+                text_significance: "This review's significance section"
             })
-            MATCH (a1)-[:HasReview]->(:Review {
+            MATCH (a1)-[:HasReview]->(r2:Review {
                 doi: "10.1234/567890-review-2",
                 related_article_doi: a1.doi,
                 reviewed_by: "review commons",
                 review_idx: "2"
             })
+            WHERE r2.text_significance IS NULL
             RETURN
                 CASE WHEN COUNT(*) = 1
                     THEN $good_result
