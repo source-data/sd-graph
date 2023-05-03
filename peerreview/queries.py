@@ -83,13 +83,13 @@ class REVIEWS_WITHOUT_SUMMARIES(Query):
 MATCH (r:Review)
 WHERE
     r.reviewed_by = $reviewed_by
+    AND r.text_significance IS NOT NULL
     AND NOT((r)-[:HasSummary]->(:Summary))
 WITH r.related_article_doi AS article_doi
 MATCH (r:Review {related_article_doi: article_doi})
 WITH article_doi, r
 ORDER BY r.review_idx ASC
 RETURN article_doi, COLLECT(DISTINCT r) AS reviews
-LIMIT 5
     """
     map = {"reviewed_by": []}
     returns = ["article_doi", "reviews"]

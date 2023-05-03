@@ -33,9 +33,6 @@ def _filter_significance_sections(significance_sections):
     """
     filtered_significance_sections = []
     for significance_section in significance_sections:
-        if len(significance_section) < 25:
-            continue
-
         text = significance_section
         start_of_cross_commenting = search(
             r"\*\*.*?cross-comment", text, flags=IGNORECASE
@@ -44,8 +41,12 @@ def _filter_significance_sections(significance_sections):
             text = text[: start_of_cross_commenting.start()]
 
         text = sub(r"\*\*significance:?\*\*", "", text, flags=IGNORECASE)
+        text = sub(r"####\s*significance:?", "", text, flags=IGNORECASE)
         text = sub(r"\*{1,4}(.+?)\*{1,4}", r"\1", text)
         text = text.strip()
+
+        if len(text) < 25:
+            continue
 
         filtered_significance_sections.append(text)
 
@@ -79,21 +80,17 @@ def _get_significance_sections(summarizable_reviews):
     If no significance section can be found for a review, the article and its
     reviews are not included in the returned dict.
     """
-    sig_section_header = "#### Significance"
-
     sig_sections_by_article_doi = {}
     for article_doi, reviews in summarizable_reviews.items():
         significance_sections = []
         reviews_without_sig_section = []
         for review in reviews:
-            text = review["text"]
+            significance_section = review.get("text_significance", None)
 
-            if sig_section_header not in text:
+            if significance_section is None:
                 reviews_without_sig_section.append(review)
                 continue
 
-            idx_sig_section = text.find(sig_section_header) + len(sig_section_header)
-            significance_section = text[idx_sig_section:].strip()
             significance_sections.append(significance_section)
 
         if len(reviews_without_sig_section) > 0:
@@ -121,7 +118,7 @@ class Summarizer:
     def __init__(self, db):
         self.db = db
 
-    def run(self, input_dir: str, dry_run=True):
+    def run(self, dry_run=True):
         """Summarize all not-yet-summarized peer reviews in the database.
 
         This method...
@@ -252,13 +249,12 @@ class Summarizer:
 
 def main():
     parser = ArgumentParser(
-        description="""Generate summaries of peer reviews from MECADOI deposition files.
+        description=(
+            """Generate summaries of peer reviews from their significance sections.
 
 By default this command only outputs what would happen.
 Pass --no-dry-run to actually update the database."""
-    )
-    parser.add_argument(
-        "--input-dir", help="The directory containing the MECADOI deposition files."
+        )
     )
     parser.add_argument(
         "--no-dry-run",
@@ -269,9 +265,8 @@ Pass --no-dry-run to actually update the database."""
         ),
     )
     args = parser.parse_args()
-    input_dir = args.input_dir
     dry_run = not args.no_dry_run
-    Summarizer(DB).run(input_dir, dry_run=dry_run)
+    Summarizer(DB).run(dry_run=dry_run)
 
 
 if __name__ == "__main__":
