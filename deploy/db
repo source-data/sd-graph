@@ -152,6 +152,8 @@ update_local_neo4j() {
 
     aws s3 sync s3://mecadoi-archives/batch/deposited "${MECADOI_PATH}"
     docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.mecadoi --input-dir "/app/mecadoi" --no-dry-run
+
+    docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.summarization --no-dry-run
   }
 
   mark_peer_reviews_as_published() {
