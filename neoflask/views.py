@@ -424,7 +424,7 @@ def review_material_by_id(node_id: int):
 @app.route('/api/v2/docmap/<path:doi>', methods=['GET', 'POST'])
 @cache.cached()
 def docmap_semantic_doi(doi: str):
-    app.logger.info(f"docmap for id {doi}")
+    app.logger.debug(f"docmap for id {doi}")
     root = url_for('root', _external=True)
     j = ask_neo(DOCMAP_BY_DOI(), doi=doi, root=root)
     return jsonify(j)
