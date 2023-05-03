@@ -158,7 +158,7 @@ def automagic(limit_date):
 @app.route('/api/v1/doi/<path:doi>', methods=['GET', 'POST'])
 @cache.cached()
 def by_doi(doi: str):
-    app.logger.info(f"lookup doi: {doi}")
+    app.logger.debug(f"lookup doi: {doi}")
     result = ask_neo(BY_DOIS(), dois=[doi])
     return jsonify(result)
 
@@ -166,7 +166,7 @@ def by_doi(doi: str):
 @app.route('/api/v1/slug/<path:slug>', methods=['GET', 'POST'])
 @cache.cached()
 def by_slug(slug: str):
-    app.logger.info(f"lookup slug: {slug}")
+    app.logger.debug(f"lookup slug: {slug}")
     result = ask_neo(BY_SLUG(), slug=slug)
     return jsonify(result)
 
@@ -181,7 +181,7 @@ def by_dois():
     published_in = request.json.get('published_in', '')
     num_dois = len(dois)
     dois_info = f'{dois}' if num_dois < 4 else f'["{dois[0]}", "{dois[1]}", ..., "{dois[-1]}"] ({num_dois} in total)'
-    app.logger.info(f"lookup dois: {dois_info} {' published in '+published_in if published_in else ''}")
+    app.logger.debug(f"lookup dois: {dois_info} {' published in '+published_in if published_in else ''}")
 
     cache_key = f'/api/v1/dois/{hash(frozenset(dois))}'
     doi_data = cache.get(cache_key)
