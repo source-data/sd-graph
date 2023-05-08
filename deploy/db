@@ -64,8 +64,6 @@ on_exit(){
   else
     mail_developers "$STAGE_NAME $PERIODICITY: errors" "$last_cmd exited with code $last_exit_code on line $line_number"
   fi
-
-  docker-compose -f docker-compose.deploy.yml down
 }
 
 # https://medium.com/@dirk.avery/the-bash-trap-trap-ce6083f36700
@@ -346,6 +344,10 @@ send_notifications(){
   date "${date_format}" > "${file_last_notification}"
 }
 
+cleanup() {
+  docker-compose -f docker-compose.deploy.yml down
+}
+
 main() {
 
   # parse arguments
@@ -446,6 +448,7 @@ main() {
     rotate_backup
     cache_warmup $REMOTE_HOST
     send_notifications
+    cleanup
   ) 9>${LOCK_FILE}
 
   log "##"
