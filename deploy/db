@@ -286,8 +286,8 @@ dump_local_neo4j(){
   docker run --rm --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data --mount type=bind,source=$PWD/dumps,target=/dumps neo4j:4.1 bin/neo4j-admin dump --database=neo4j --to=/dumps/$DUMP_NAME
   log "[dumping neo4j] - done"
 
-  # log "  * restarting docker-compose"
-  # docker-compose -f docker-compose.deploy.yml up -d
+  log "  * restarting docker-compose"
+  docker-compose -f docker-compose.deploy.yml up -d
 
 }
 
