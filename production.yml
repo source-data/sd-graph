@@ -23,7 +23,7 @@ services:
     command: /start
 
   neo4j:
-    image: neo4j:4.4
+    image: neo4j:4.1
     environment:
       - NEO4JLABS_PLUGINS=["apoc", "graph-data-science"]
     ulimits:
