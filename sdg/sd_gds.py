@@ -4,6 +4,13 @@ from common.logging import configure_logging
 from neotools.flow import run_flow, SimpleDbTask, UpdateOrCreateTask
 from sdg import DB
 
+class TryDropProjection(SimpleDbTask):
+    def __init__(self, projection_name):
+        super().__init__(
+            f"Try to drop projection {projection_name}",
+            f"CALL gds.graph.drop('{projection_name}', false) YIELD graphName",
+        )
+
 
 assay_quasi_synonyms_task = UpdateOrCreateTask(
     "H_Entity - Term - H_Entity network for quasi-synonyms",
@@ -24,15 +31,30 @@ reset_assay_conecpt_id_task = UpdateOrCreateTask(
     "SET h.assay_concept_id = Null",
 )
 
+gds_drop_projection_for_assay_quasi_synonyms_task = TryDropProjection("assay-quasi-synonyms")
+gds_projection_for_assay_quasi_synonyms_task = SimpleDbTask(
+    "Create the necessary GDS projection for community detection of assay quasi-synonyms",
+    """
+    CALL gds.graph.project.cypher(
+        // projection name
+        'assay-quasi-synonyms',
+        // nodeQuery
+        'MATCH (h:H_Entity {category: "assay"}) RETURN id(h) AS id',
+        // relationshipQuery
+        'MATCH (h1:H_Entity {category: "assay"})-[:related_concept]-(h2:H_Entity {category: "assay"}) RETURN id(h1) AS source, id(h2) AS target'
+    )
+    """,
+)
 community_detection_for_assay_quasi_synonyms_task = SimpleDbTask(
     "Community detection for assay quasi-synonyms",
     """
-    CALL gds.louvain.write({
-        nodeQuery: 'MATCH (h:H_Entity {category: "assay"}) RETURN id(h) AS id',
-        relationshipQuery: 'MATCH (h1:H_Entity {category: "assay"})-[:related_concept]-(h2:H_Entity {category: "assay"}) RETURN id(h1) AS source, id(h2) AS target',
-        writeProperty: 'assay_concept_id',
-        concurrency: 4
-    })
+    CALL gds.louvain.write(
+        'assay-quasi-synonyms',
+        {
+            writeProperty: 'assay_concept_id',
+            logProgress: False
+        }
+    )
     """,
 )
 
@@ -86,24 +108,38 @@ reset_geneprod_concept_id_task = UpdateOrCreateTask(
     "SET h.geneprod_concept_id = Null",
 )
 
-community_detection_for_geneprod_quasi_synonyms_task = SimpleDbTask(
-    "geneprod communities",
+gds_drop_projection_for_geneprod_quasi_synonyms_task = TryDropProjection("geneprod-quasi-synonyms")
+gds_projection_for_geneprod_quasi_synonyms_task = SimpleDbTask(
+    "Create the necessary GDS projection for community detection of assay quasi-synonyms",
     """
-    CALL gds.louvain.stream(
-    {
-        nodeQuery: 
+    CALL gds.graph.drop('geneprod-quasi-synonyms', false) YIELD graphName;  // drop projection if it exists
+    CALL gds.graph.project.cypher(
+        // projection name
+        'geneprod-quasi-synonyms',
+        // nodeQuery
         'MATCH (h:H_Entity)
         WHERE h.type IN ["gene", "protein", "geneprod"]
         RETURN id(h) AS id',
-        relationshipQuery: 
+        // relationshipQuery
         'MATCH (h1:H_Entity)-[:related_geneprod]-(h2:H_Entity)
         WHERE
         h1.type IN ["gene", "protein", "geneprod"] AND 
         h2.type IN ["gene", "protein", "geneprod"]
-        RETURN id(h1) AS source, id(h2) AS target',
-        includeIntermediateCommunities: True
-    }
-    ) YIELD nodeId, communityId, intermediateCommunityIds
+        RETURN id(h1) AS source, id(h2) AS target'
+    )
+    """,
+)
+community_detection_for_geneprod_quasi_synonyms_task = SimpleDbTask(
+    "geneprod communities",
+    """
+    CALL gds.louvain.stream(
+        'geneprod-quasi-synonyms',
+        {
+            includeIntermediateCommunities: True,
+            logProgress: False
+        }
+    )
+    YIELD nodeId, communityId, intermediateCommunityIds
     WITH gds.util.asNode(nodeId) AS node, intermediateCommunityIds[0] AS subcommunityId
     SET node.geneprod_concept_id = subcommunityId
     """,
@@ -225,11 +261,15 @@ add_weights_to_hypotheses_nodes_task = UpdateOrCreateTask(
 tasks = [
     assay_quasi_synonyms_task,
     reset_assay_conecpt_id_task,
+    gds_drop_projection_for_assay_quasi_synonyms_task,
+    gds_projection_for_assay_quasi_synonyms_task,
     community_detection_for_assay_quasi_synonyms_task,
     reset_assay_concept_name_and_ext_ids_task,
     named_clusters_of_assay_related_concepts_task,
     geneprod_quasi_synonyms_task,
     reset_geneprod_concept_id_task,
+    gds_drop_projection_for_geneprod_quasi_synonyms_task,
+    gds_projection_for_geneprod_quasi_synonyms_task,
     community_detection_for_geneprod_quasi_synonyms_task,
     reset_geneprod_concept_id_name_task,
     set_geneprod_concept_name_task,

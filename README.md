@@ -86,9 +86,7 @@ Inspired by https://serverfault.com/questions/835092/how-do-you-perform-a-dump-o
 docker-compose down
 
 # dump the contents of your database using a temporary container
-docker-compose run --rm --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data --it neo4j:4.1 bin/neo4j-admin dump --database=neo4j --to=dumps/sourcedata_v0-0-0.db.dump.`date +%Y-%m-%d-%H.%M.%S`
-
-docker-compose run --rm --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data --it neo4j:4.1 bin/neo4j-admin dump --database=neo4j --to=dumps/sourcedata_v0-1-0.db.dump.`date +%Y-%m-%d-%H.%M.%S`
+docker compose run --rm --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data -it neo4j:4.4 bin/neo4j-admin dump --database=neo4j --to=data/neo4j.db.dump.`date +%Y-%m-%d-%H.%M.%S`
 ```
 docker run --rm --name neo4j-dump --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data --mount type=bind,source=$PWD/dumps,target=/dumps neo4j:4.1 bin/neo4j-admin dump --database=neo4j --to=/dumps/sourcedata_v0-0-0.db.dump.`date +%Y-%m-%d-%H.%M.%S`
 
@@ -105,8 +103,7 @@ In development:
 
 ```bash
 # load the contents of your database using a temporary container
-docker run --rm --name neo4j-load --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data --mount type=bind,source=$PWD/dumps,target=/dumps -it neo4j:4.1 bin/neo4j-admin load --database=neo4j --from=/dumps/<dump_filename>
-# docker run --rm --name neo4j-load --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data --mount type=bind,source=/home/eeb/sd-graph--cron-prod/dumps,target=/dumps -it neo4j:4.1 bin/neo4j-admin load --database=neo4j --from=/dumps/neo4j.dump.2023-02-16-07.07.43
+docker run --rm --name neo4j-load --env-file .env --mount type=bind,source=$PWD/data/neo4j-data,target=/data --mount type=bind,source=$PWD/dumps,target=/dumps -it neo4j:4.4 bin/neo4j-admin load --database=neo4j --from=/dumps/<dump_filename>
  # --force # ADDING --force WILL OVERWRITE EXISTING DB!
 # if there is no pre-existing graph.db, then the option --force needs to me ommitted to avoid "command failed: unable to load database: NoSuchFileException"
 ```
@@ -131,7 +128,7 @@ docker run --rm \
     --env-file .env \
     --mount type=bind,source=$PWD/dumps,target=/dumps \
     --mount type=volume,source=sd-graph_production_neo4j_data,target=/data \
-    -it neo4j:4.1 \
+    -it neo4j:4.4 \
     bin/neo4j-admin load --database=neo4j --from=/dumps/<dump_filename>
 ```
 
@@ -150,7 +147,7 @@ docker run --rm \
     --env-file .env \
     --mount type=bind,source=$PWD/dumps/,target=/dumps \
     --mount type=volume,source=sd-graph_production_neo4j_data,target=/data \
-    -it neo4j:4.1 \
+    -it neo4j:4.4 \
     bin/neo4j-admin dump --to=/dumps/neo4j.`date +%Y-%m-%d-%H.%M.%S` --database=neo4j
 
 ```
@@ -192,7 +189,7 @@ docker run --rm \
  --env-file .env \
  --mount type=bind,source=$PWD,target=/app \
  --mount type=volume,source=sd-graph_production_neo4j_data,target=/data \
- -it neo4j:4.1 \
+ -it neo4j:4.4 \
  bin/neo4j-admin load --from=/app/download --database=neo4j --force  # WILL OVERWRITE!
 
 # start the services
