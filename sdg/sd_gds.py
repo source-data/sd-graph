@@ -112,7 +112,6 @@ gds_drop_projection_for_geneprod_quasi_synonyms_task = TryDropProjection("genepr
 gds_projection_for_geneprod_quasi_synonyms_task = SimpleDbTask(
     "Create the necessary GDS projection for community detection of assay quasi-synonyms",
     """
-    CALL gds.graph.drop('geneprod-quasi-synonyms', false) YIELD graphName;  // drop projection if it exists
     CALL gds.graph.project.cypher(
         // projection name
         'geneprod-quasi-synonyms',
