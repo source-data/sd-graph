@@ -473,7 +473,7 @@ class _DOCMAP(Query):
     That is to be implemented in subclasses by using the class variables
     `code_docmap_filtering` and `map_docmap_filtering`.
     
-    `code_docmap_filtering` has to provide a `doi` variable by which preprints
+    `code_docmap_filtering` has to provide a `preprint` variable by which Docmaps
     are filtered. It can be provided as either a single variable or a list
     using the `UNWIND` Cypher syntax. See DOCMAP_BY_DOI and
     DOCMAP_BY_REVSERVICE_AND_INTERVAL for examples.
@@ -481,7 +481,7 @@ class _DOCMAP(Query):
 
     code_docmap_creation = '''
 // Find all Docmaps that have as input in one of their steps the preprint we're interested in
-MATCH (docmapNode:Docmap)<-[:steps]-(:Step)<-[:inputs]-(:Preprint {doi: doi})
+MATCH (preprint)-[:inputs]->(:Step)-[:steps]->(docmapNode:Docmap)
 WITH DISTINCT docmapNode
 
 // Paging: keep ordering stable through sorting by internal ID, then skip & limit to go to the requested page.
@@ -608,7 +608,8 @@ RETURN docmap
 
 class DOCMAP_BY_DOI(_DOCMAP):
     code_docmap_filtering = '''
-WITH $doi AS doi
+MATCH (preprint:Preprint {doi: $doi})
+WITH DISTINCT preprint
     '''
     map_docmap_filtering = {'doi': {'req_param': 'doi', 'default': ''}}
 
@@ -623,8 +624,7 @@ WHERE col.name = "refereed-preprints"
 WITH preprint, DATETIME(review.published) AS review_publish_date
 WHERE review_publish_date >= DATETIME($start_date)
   AND review_publish_date < DATETIME($end_date)
-WITH COLLECT(DISTINCT preprint.doi) AS doiList
-UNWIND doiList AS doi
+WITH DISTINCT preprint
     '''
     map_docmap_filtering = {
       'reviewing_service': {
@@ -647,8 +647,7 @@ MATCH (preprint:Preprint)-[:inputs]->(Step)<-[:actions]-(Action)<-[:outputs]-(re
 WITH preprint, DATETIME(review.published) AS review_publish_date
 WHERE review_publish_date >= DATETIME($start_date)
   AND review_publish_date < DATETIME($end_date)
-WITH COLLECT(DISTINCT preprint.doi) AS doiList
-UNWIND doiList AS doi
+WITH DISTINCT preprint
     '''
     map_docmap_filtering = {
       'start_date': {
