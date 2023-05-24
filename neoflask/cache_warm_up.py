@@ -1,7 +1,8 @@
 import json
 from argparse import ArgumentParser
+from datetime import datetime
 import requests
-from tqdm import tqdm
+from tqdm import tqdm, trange
 from tqdm.contrib.logging import logging_redirect_tqdm
 import common.logging
 from . import EEB_PUBLIC_API
@@ -9,16 +10,16 @@ from . import EEB_PUBLIC_API
 logger = common.logging.get_logger(__name__)
 
 def cache_warm_up(base_url, no_progress=False):
-
     logger.info(f"Warming up cache using base URL {base_url}")
     dois = []
+    slugs = []
     # warm up the stats method
-    url = base_url + 'stats'
+    url = base_url + '/v1/stats'
     r = requests.get(url)
     logger.info(f"Method /stats warmed up: {r.status_code == 200}")
     for method in ['by_reviewing_service/', 'automagic/', 'by_auto_topics/']:
         logger.info(f'Warming up collections for method "{method}"')
-        url = base_url + method
+        url = base_url + '/v1/' + method
         # warm up of the main methods
         response = requests.get(url)
         if response.status_code == 200:
@@ -35,25 +36,43 @@ def cache_warm_up(base_url, no_progress=False):
                     new_dois = [paper['doi'] for paper in papers]
                     logger.info(f'  Warming up collection \"{collection["id"]}\" with {len(new_dois)} DOIs')
                     # warm up of the multiple doi method
-                    multi_dois_url = base_url + "dois/"
+                    multi_dois_url = base_url + "/v1/dois/"
                     r = requests.post(multi_dois_url, json={'dois': new_dois})
                     if r.status_code == 200:
                         dois += new_dois
+                        slugs += [paper['slug'] for paper in papers]
                     else:
                         logger.warning(f"  Failed to warm up collection \"{collection['id']}\" of method \"{method}\"! Status code: {r.status_code}, message: {r.text}")
         else:
             logger.warning(f"Failed to fetch collections of method \"{method}\"! Status code: {response.status_code}, message: {response.text}")
-    dois = set(dois)  # remove duplicates
+
+    # remove duplicates
+    dois = set(dois)
+    slugs = set(slugs)
+
     N_dois = len(dois)
-    logger.info(f"fetched {N_dois} unique dois.")
+    N_slugs = len(slugs)
+    logger.info(f"fetched {N_dois} unique dois, {N_slugs} unique slugs.")
+
+    num_slug_successes = warmup_individual_method(lambda slug: f"{base_url}/v1/slug/{slug}", slugs, no_progress)
+    logger.info(f"cache warmed up with {num_slug_successes} out of {N_slugs} slugs.")
+
+    num_docmap_successes = warmup_individual_method(lambda doi: f"{base_url}/v2/docmap/{doi}", dois, no_progress)
+    logger.info(f"cache warmed up with {num_docmap_successes} out of {N_dois} DOIs.")
+
+
+def warmup_individual_method(get_url, params, no_progress):
     successes = 0
+    logger.info(f"Warming up cache for {get_url('{param}')} with {len(params)} params.")
     with logging_redirect_tqdm():
-        for doi in tqdm(dois, disable=no_progress):
-            # warm up of the individual doi method
-            doi_url = base_url + f"doi/{doi}"
-            r = requests.get(doi_url)
-            successes += 1 if r.status_code == 200 else 0
-    logger.info(f"cache warmed up with {successes} out of {N_dois} dois.")
+        for param in tqdm(params, disable=no_progress):
+            url = get_url(param)
+            r = requests.get(url)
+            if r.status_code == 200:
+                successes += 1
+            else:
+                logger.warning(f"Failed to warm up cache for {url}! Status code: {r.status_code}, message: {r.text}")
+    return successes
 
 
 if __name__ == '__main__':
