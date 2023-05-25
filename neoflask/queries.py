@@ -523,27 +523,26 @@ CALL {
                 actionNode,
                 { outputs: COLLECT(DISTINCT output) } AS action
             OPTIONAL MATCH (actionNode)<-[:participants]-(participantNode)
-            WITH
-                CASE WHEN participantNode IS NULL THEN
-                    action
+            WITH action{
+                .*,
+                participants: CASE WHEN participantNode IS NULL THEN
+                    []
                 ELSE
-                    action{
-                        .*,
-                        participants: COLLECT(
-                            DISTINCT {
-                                actor: CASE WHEN participantNode.name = "anonymous" THEN {
-                                    type: "person",
-                                    name: "anonymous"
-                                } ELSE {
-                                    type: "person",
-                                    firstName: participantNode.firstName,
-                                    familyName: participantNode.familyName
-                                } END,
-                                role: participantNode.role
-                            }
-                        )
-                    }
-                END AS action
+                    COLLECT(
+                        DISTINCT {
+                            actor: CASE WHEN participantNode.name = "anonymous" THEN {
+                                type: "person",
+                                name: "anonymous"
+                            } ELSE {
+                                type: "person",
+                                firstName: participantNode.firstName,
+                                familyName: participantNode.familyName
+                            } END,
+                            role: participantNode.role
+                        }
+                    )
+                END
+            } AS action
             RETURN action
         }
         WITH
