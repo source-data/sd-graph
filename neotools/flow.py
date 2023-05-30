@@ -1,6 +1,6 @@
 """Utilities for building the db deployment pipeline."""
 
-from time import time
+from time import perf_counter
 from common.logging import get_logger
 
 Logger = get_logger(__name__)
@@ -14,10 +14,10 @@ def run_flow(db, tasks, description):
     """
     with db._driver.session() as session:
         Logger.info('Running flow "%s" with %s tasks', description, len(tasks))
-        start = time()
+        start = perf_counter()
         for task in tasks:
             task.run_task(session)
-        end = time()
+        end = perf_counter()
         delta = end - start
         Logger.info('Flow "%s" took %.2f s', description, delta)
 
@@ -37,20 +37,21 @@ class DbTask:
     def run_query_with_single_result(self, tx, query):
         """Run the given query and return the single result record."""
         self.logger.debug("Query: %s", query)
-        start = time()
         result = tx.run(query)
-        end = time()
         record = result.single()
-        delta = end - start
-        self.logger.debug("Result (took %.2f s): %s", delta, str(record))
+        self.logger.debug("Result: %s", str(record))
         return record
 
     def run_task(self, db_session):
         """Runs the task in a new transaction within the given database session."""
         self.logger.info('Running task "%s"', self.description)
+        start = perf_counter()
         with db_session.begin_transaction() as tx:
             self._run(tx)
             tx.commit()
+        end = perf_counter()
+        delta = end - start
+        Logger.info('Task "%s" took %.2f s', self.description, delta)
 
     def _run(self, _):
         raise NotImplementedError("Subclasses must implement this method")
