@@ -118,24 +118,27 @@ create_by_rev_service_collections = SimpleDbTask(
     """,
 )
 
-link_exp_assays = SimpleDbTask(
+link_exp_assays = UpdateOrCreateTask(
     "linking assays for visualization",
     """
     MATCH (a:SDArticle)-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity)-[:Has_text]->(name:Term)
     WHERE
         a.journalName IN ['biorxiv', 'medrxiv']
-        AND entity.category = "assay"
-        AND t.category = "assay"
+        AND entity.category = 'assay'
+        AND t.category = 'assay'
         AND size(name.text) > 1  // exclude embarassing artefacts of the not so AI engine
-    WITH
+    RETURN
         // keep only necessary fields and ndoe ids to minimze memory requirements
         a.doi AS doi,
         id(p) AS panel_id,
         id(t) AS t_id,
         name
+    """,
+    """
+    WITH doi, panel_id, t_id, name
     // link to entity network
     MATCH (name)<-[:Has_text]-(bridge:H_Entity)
-    WHERE bridge.category = "assay"
+    WHERE bridge.category = 'assay'
     // find respective concept id
     WITH
         doi,
@@ -163,26 +166,29 @@ link_exp_assays = SimpleDbTask(
 )
 
 
-link_geneprod = SimpleDbTask(
+link_geneprod = UpdateOrCreateTask(
     "linking geneprods for visualization",
     """
     MATCH (a:SDArticle)-[:has_fig]->(f:SDFigure)-[:has_panel]->(p:SDPanel)-[:HasCondTag]->(t:CondTag)-[:Identified_by]->(entity:H_Entity)-[:Has_text]->(name:Term)
     WHERE
         a.journalName IN ['biorxiv', 'medrxiv']
-        AND entity.type IN ["gene", "protein", "geneprod"]
-        AND t.type IN ["gene", "protein", "geneprod"]
-    WITH
+        AND entity.type IN ['gene', 'protein', 'geneprod']
+        AND t.type IN ['gene', 'protein', 'geneprod']
+        AND (size(name.text) > 1 OR name.text = 's' )  // exclude embarassing artefacts of the not so AI engine but keep spike S SARS protein
+    RETURN
         // keep only necessary fields and ndoe ids to minimze memory requirements
         a.doi AS doi,
         id(p) AS panel_id,
         id(t) AS t_id,
         name,
         entity
-    WHERE (size(name.text) > 1 OR name.text = "s" )  // exclude embarassing artefacts of the not so AI engine but keep spike S SARS protein
+    """,
+    """
+    WITH doi, panel_id, t_id, name, entity
     // link to entity network
     MATCH (name)<-[:Has_text]-(bridge:H_Entity)
     // geneprod or  protein or genes
-    WHERE bridge.type IN ["gene", "protein", "geneprod"]
+    WHERE bridge.type IN ['gene', 'protein', 'geneprod']
     // find respective concept id
     WITH
         doi,
