@@ -150,6 +150,8 @@ update_local_neo4j() {
 
     aws s3 sync s3://mecadoi-archives/batch/deposited "${MECADOI_PATH}"
     docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.mecadoi --input-dir "/app/mecadoi" --no-dry-run
+
+    docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.summarization --no-dry-run
   }
 
   mark_peer_reviews_as_published() {
@@ -190,7 +192,7 @@ update_local_neo4j() {
     cat sdg/describe_review_services.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
 
     log "precompute the graph used by front end"
-    cat sdg/SD-precompute.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
+    docker-compose -f docker-compose.deploy.yml run --rm flask python -m sdg.sd_precompute
 
     log "precompute pilot docmap graph"
     cat sdg/SD-prepare-docmap.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD

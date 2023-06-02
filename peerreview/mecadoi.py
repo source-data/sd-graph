@@ -14,34 +14,24 @@ class MecadoiImporter:
     def __init__(self, db):
         self.db = db
 
-    def update_node_with_doi(self, query, doi, dry_run=True):
+    def update_node_with_doi(self, query, attributes, dry_run=True):
         matching_nodes = [r["r"] for r in self.db.query(query)]
 
         if matching_nodes is None or len(matching_nodes) != 1:
             logger.warning(
-                "Found %s matching node(s) when updating node with DOI %s",
+                "Found %s matching node(s) when updating node with attributes %s",
                 len(matching_nodes),
-                doi,
+                attributes,
             )
 
         for node in matching_nodes:
-            existing_doi = node["doi"]
-            if existing_doi == doi:
-                # correct DOI is already set
-                continue
-
-            if existing_doi:
-                logger.info(
-                    'Updating DOI of node %s from "%s" to "%s"',
-                    node.id,
-                    existing_doi,
-                    doi,
-                )
-            else:
-                logger.info('Setting DOI of node %s to "%s"', node.id, doi)
-
+            logger.debug(
+                "Updating node %s with %s",
+                node.id,
+                attributes,
+            )
             if not dry_run:
-                self.db.update_node(node.id, {"doi": doi})
+                self.db.update_node(node.id, attributes)
 
     def run(self, input_dir: str, dry_run=True):
         deposition_files = [f for f in Path(input_dir).glob("*.yml")]
@@ -80,7 +70,7 @@ class MecadoiImporter:
                                 FIND_RESPONSE(
                                     params={"related_article_doi": article_doi}
                                 ),
-                                author_reply["doi"],
+                                {"doi": author_reply["doi"]},
                             )
                         )
 
@@ -94,10 +84,16 @@ class MecadoiImporter:
                                 "review_idx": str(review_idx),
                             }
                         )
-                        queries_to_execute.append((query, review["doi"]))
+                        attributes = {
+                            "doi": review["doi"],
+                            "text_significance": review.get("text", {}).get(
+                                "Significance (Required)", None
+                            ),
+                        }
+                        queries_to_execute.append((query, attributes))
 
-                    for query, doi in queries_to_execute:
-                        self.update_node_with_doi(query, doi, dry_run=dry_run)
+                    for query, attributes in queries_to_execute:
+                        self.update_node_with_doi(query, attributes, dry_run=dry_run)
 
 
 def main():
@@ -108,7 +104,9 @@ By default this command only outputs what would happen.
 Pass --no-dry-run to actually update the database."""
     )
     parser.add_argument(
-        "--input-dir", help="The directory containing the MECADOI deposition files."
+        "--input-dir",
+        help="The directory containing the MECADOI deposition files.",
+        required=True,
     )
     parser.add_argument(
         "--no-dry-run",

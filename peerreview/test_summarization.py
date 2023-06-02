@@ -7,9 +7,8 @@ from tests.utils import DbTestCase
 
 review_texts = {
     "a1": {
-        "reviews": [
-            """This is the start of the review. Here's the significance:
-#### Significance
+        "significance": [
+            """#### Significance
 **Major Points**
 Significance of review #1 of the psychoceramics of Theory.""",
             """#### Significance
@@ -27,12 +26,10 @@ Review #2:
 Significance of review #2 of the psychoceramics of Theory.""",
     },
     "a2": {
-        "reviews": [
-            """This is the start of the review. Here's the significance:
-#### Significance
-Significance of review #1 of the psyceramics of Chotheory.""",
+        "significance": [
             """#### Significance
-Significance of review #2 of the psyceramics of Chotheory.""",
+Significance of review #1 of the psyceramics of Chotheory.""",
+            "Significance of review #2 of the psyceramics of Chotheory.",
         ],
         "concated": """Review #1:
 Significance of review #1 of the psyceramics of Chotheory.
@@ -41,10 +38,9 @@ Review #2:
 Significance of review #2 of the psyceramics of Chotheory.""",
     },
     "a3": {
-        "reviews": [
-            """This is the start of the review. While the review mentions significance,
-there is markdown heading of that name so this review should not be used.""",
-            """This review also has no significance section.""",
+        "significance": [
+            "Significance of review #1 of the theories of psychoceramics.",
+            None,  # no significance section for one of the reviews
         ],
         "concated": None,
     },
@@ -68,13 +64,13 @@ class CreateSummarizationFixtures(Query):
     def __init__(self):
         super().__init__(
             params={
-                "a1_r1": review_texts["a1"]["reviews"][0],
-                "a1_r2": review_texts["a1"]["reviews"][1],
-                "a1_r3": review_texts["a1"]["reviews"][2],
-                "a2_r1": review_texts["a2"]["reviews"][0],
-                "a2_r2": review_texts["a2"]["reviews"][1],
-                "a3_r1": review_texts["a3"]["reviews"][0],
-                "a3_r2": review_texts["a3"]["reviews"][1],
+                "a1_r1": review_texts["a1"]["significance"][0],
+                "a1_r2": review_texts["a1"]["significance"][1],
+                "a1_r3": review_texts["a1"]["significance"][2],
+                "a2_r1": review_texts["a2"]["significance"][0],
+                "a2_r2": review_texts["a2"]["significance"][1],
+                "a3_r1": review_texts["a3"]["significance"][0],
+                "a3_r2": review_texts["a3"]["significance"][1],
             }
         )
 
@@ -84,19 +80,19 @@ class CreateSummarizationFixtures(Query):
         related_article_doi: a1.doi,
         reviewed_by: "review commons",
         review_idx: 1,
-        text: $a1_r1
+        text_significance: $a1_r1
     })
     CREATE (a1)-[:HasReview]->(:Review {
         related_article_doi: a1.doi,
         reviewed_by: "review commons",
         review_idx: 2,
-        text: $a1_r2
+        text_significance: $a1_r2
     })
     CREATE (a1)-[:HasReview]->(:Review {
         related_article_doi: a1.doi,
         reviewed_by: "review commons",
         review_idx: 3,
-        text: $a1_r3
+        text_significance: $a1_r3
     })
 
     CREATE (a2v1:Article {doi: "10.asdf/ghjkl", version: "1"})
@@ -105,13 +101,13 @@ class CreateSummarizationFixtures(Query):
         related_article_doi: a2v1.doi,
         reviewed_by: "review commons",
         review_idx: 1,
-        text: $a2_r1
+        text_significance: $a2_r1
     })
     CREATE (a1r2:Review {
         related_article_doi: a2v1.doi,
         reviewed_by: "review commons",
         review_idx: 2,
-        text: $a2_r2
+        text_significance: $a2_r2
     })
     CREATE (a2v1)-[:HasReview]->(a1r1)
     CREATE (a2v1)-[:HasReview]->(a1r2)
@@ -123,13 +119,13 @@ class CreateSummarizationFixtures(Query):
         related_article_doi: a3.doi,
         reviewed_by: "review commons",
         review_idx: 1,
-        text: $a3_r1
+        text_significance: $a3_r1
     })
     CREATE (a3)-[:HasReview]->(:Review {
         related_article_doi: a3.doi,
         reviewed_by: "review commons",
         review_idx: 2,
-        text: $a3_r2
+        text_significance: $a3_r2
     })
 """
 
@@ -243,7 +239,6 @@ class VerifyNoSummariesGenerated(Query):
 class SummarizationTestCase(DbTestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.input_dir = "/app/mecadoi"
 
     @patch("peerreview.summarization.chat", return_value=MockSummaryText)
     def test_basic_summarization(self, chat_mock):
@@ -279,10 +274,9 @@ class SummarizationTestCase(DbTestCase):
 
     def run_summarization(self, dry_run=False):
         summarizer = peerreview.summarization.Summarizer(peerreview.summarization.DB)
-        summarizer.run(self.input_dir, dry_run=dry_run)
+        summarizer.run(dry_run=dry_run)
 
     def verify_chat_mock_calls(self, chat_mock, dry_run=False):
-        print(chat_mock.mock_calls)
         chat_mock.assert_has_calls(
             [
                 call(
