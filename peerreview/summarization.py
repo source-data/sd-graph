@@ -8,6 +8,7 @@ from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 
 import common.logging
+from neotools.feature_flags import is_auto_summarization_enabled
 from . import DB
 from .gpt import chat, review_summarization_parameters, review_summarization_prompt
 from .queries import (
@@ -266,7 +267,11 @@ Pass --no-dry-run to actually update the database."""
     )
     args = parser.parse_args()
     dry_run = not args.no_dry_run
-    Summarizer(DB).run(dry_run=dry_run)
+    if is_auto_summarization_enabled():
+        logger.info("Running auto summarization.")
+        Summarizer(DB).run(dry_run=dry_run)
+    else:
+        logger.info("Auto summarization is disabled, skipping.")
 
 
 if __name__ == "__main__":
