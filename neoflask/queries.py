@@ -55,11 +55,13 @@ WHERE (revservice.name = $reviewing_service) OR ($reviewing_service = '')
 MATCH (revservice)-[:HasPaper]->(vizpaper:VizPaper)
 WITH vizpaper.doi AS doi
 MATCH (a:Article {doi: doi})
-WITH a
 WHERE
   (
     toLower(apoc.convert.toString(a.published_journal_title)) = toLower($published_in)
   ) OR ($published_in = '')
+WITH a
+ORDER BY a.version DESC
+WITH a.doi AS doi, COLLECT(a)[0] AS a
 WITH DISTINCT
   id(a) AS id,
   a.publication_date AS pub_date,
