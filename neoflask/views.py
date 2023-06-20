@@ -295,18 +295,10 @@ def paged(view_func):
 
     @wraps(view_func)
     def inner(*args, **kwargs):
-        if request.method == 'GET':
-            param_dict = request.args
-        elif request.method == 'POST' and request.is_json:
+        if request.method == 'POST' and request.is_json:
             param_dict = request.json
         else:
-            app.logger.warning(
-                'Failed to retrieve paging parameters for route %s: not implemented for request method %s or mime type %s',
-                request.url,
-                request.method,
-                request.mimetype,
-            )
-            param_dict = {}
+            param_dict = request.args
 
         request.paging = PagingParameters(
             page=param_dict.get(param_name_page, DEFAULT_PAGE),

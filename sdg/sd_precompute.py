@@ -5,9 +5,7 @@ from neotools.flow import (
     DetachDeleteAll,
     run_flow,
     SimpleDbTask,
-    UpdateAttrIfNull,
     UpdateOrCreateTask,
-    VerifyTask,
 )
 from sdg import DB
 
@@ -281,7 +279,7 @@ create_automagic_collection = SimpleDbTask(
     // recent papers
     WHERE
         a.journalName IN ['biorxiv', 'medrxiv']
-        AND DATETIME(a.pub_date) > (DATETIME() - duration({months: 3}))
+        AND DATETIME(a.pub_date) > (DATETIME() - duration({months: 2}))
     WITH a.doi AS doi
     // IMPORTANT: when in a tie, preprints will still be ordered by pub date
     ORDER BY DATETIME(a.pub_date) DESC
@@ -308,7 +306,7 @@ create_automagic_collection = SimpleDbTask(
     MATCH (a:SDArticle)
     WHERE
         a.journalName IN ['biorxiv', 'medrxiv']
-        AND DATETIME(a.pub_date) > (DATETIME() - duration({months: 3}))
+        AND DATETIME(a.pub_date) > (DATETIME() - duration({months: 2}))
     WITH
         ranked_by_assays,
         a.doi AS doi
@@ -348,7 +346,7 @@ create_automagic_collection = SimpleDbTask(
     // recent papers
     WHERE
         a.journalName IN ['biorxiv', 'medrxiv']
-        AND DATETIME(a.pub_date) > (DATETIME() - duration({months: 3}))
+        AND DATETIME(a.pub_date) > (DATETIME() - duration({months: 2}))
     WITH
         ranked_by_assays,
         ranked_by_entities,
@@ -378,7 +376,7 @@ create_automagic_collection = SimpleDbTask(
     MATCH (col:VizCollection {name: "refereed-preprints"})-->(sub:VizSubCollection)-->(viza:VizPaper)
 
     // recent papers
-    WHERE DATETIME(viza.pub_date) > (DATETIME() - duration({months: 3}))
+    WHERE DATETIME(viza.pub_date) > (DATETIME() - duration({months: 2}))
     WITH DISTINCT
         ranked_by_assays,
         ranked_by_entities,
