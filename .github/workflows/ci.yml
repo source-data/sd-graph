@@ -54,7 +54,7 @@ jobs:
   build-and-push-image:
     strategy:
       matrix:
-        image: ['flask_deploy', 'flask', 'traefik', 'vuejs']
+        image: ['smtag_deploy', 'flask_deploy', 'flask', 'traefik', 'vuejs']
     needs: test
     runs-on: ubuntu-latest
 

@@ -14,5 +14,5 @@ tweepy==3.8.0
 wurlitzer==2.0.1
 
 -e git+https://github.com/source-data/ai.git#egg=ai
--e git+https://github.com/source-data/py-smtag.git@dev#egg=smtag
+-e git+https://github.com/source-data/soda-roberta.git#egg=smtag
 -e git+https://github.com/embo-press/hypothepy#egg=hypothepy

@@ -119,7 +119,7 @@ class BaseTag(SDNode):
         super().__init__(data)
         self.tag_id = self._data.get('id', '')
         self.category = self.get('category', 'entity')
-        self.type = self.get_type()#_data.get('type', '')
+        self.type = self._data.get('type', '')
         self.role = self._data.get('role', '')
         self.text = self._data.get('text', '')
         self.update_properties({
@@ -129,24 +129,6 @@ class BaseTag(SDNode):
             'role': self.role,
             'text': self.text
         })
-
-    ## We need to change this it cant be type, but either external db or something. Set a trace to check
-    def get_type(self):
-        entity = self._data.get("type", "")
-        if entity:
-            if entity == "cell":
-                if "CVCL" in self._data.get("external_databases", []):
-                    return "cell_line"
-                elif self._data.get("external_databases", "") in [[], ""]:
-                    return "cell"
-                else:
-                    return "cell_type"
-            else:
-                return entity
-        else:
-            return ""
-
-
 
 
 class API:

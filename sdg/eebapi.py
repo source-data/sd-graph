@@ -7,45 +7,68 @@ from .sdnode import (
     API,
     BaseCollection, BaseArticle, BaseFigure, BasePanel, BaseTag
 )
-from smtag.predict.cartridges import CARTRIDGE
-from smtag.predict.engine import SmtagEngine
+from smtag.pipeline import SmartTagger
 from . import EEB_PUBLIC_API
+from typing import Dict
 
 logger = common.logging.get_logger(__name__)
 
+TAGGING_ENGINE = SmartTagger()
 
-TAGGING_ENGINE = SmtagEngine(CARTRIDGE)
-
-
-def tag_it(text, format='xml'):
+def tag_and_panelize(text: str):
     text = cleanup(text)
-    tags = TAGGING_ENGINE.smtag(text, 'sd-tag', format)[0]  # a single example is submitted to the engine
-    if format == 'json':
-        tags = json.loads(tags)
-        tags = tags['smtag']
-    return tags
+    tagging_result_json = TAGGING_ENGINE(text)
+    tagging_result = json.loads(tagging_result_json)
+    tagged_panels = smtag2json(tagging_result)
+    return tagged_panels
 
 
-def xml2json(xml_str: str):
-    e = fromstring(xml_str)
-    panels = e.xpath('sd-panel')
+def get_score(t, score_name, default):
+    try:
+        score = t.get(score_name)
+    except:
+        return default
+    try:
+        score_as_percent = int(score * 100)
+    except:
+        return default
+    return str(score_as_percent)
+
+AttrConversion = {
+    "CELL": "cell",
+    "GENEPROD": "geneprod",
+    "SMALL_MOLECULE": "small_molecule",
+    "SUBCELLULAR": "subcellular",
+    "ORGANISM": "organism",
+    "TISSUE": "tissue",
+    "MEASURED_VAR": "assayed",
+    "CONTROLLED_VAR": "intervention",
+}
+def get_entity_attribute(entity, attr_name, default):
+    attr_value = entity.get(attr_name, None)
+    # attr_name can be absent from entity, or it can contain an empty string. We're not interested in either.
+    if attr_value is None:
+        return default
+    return AttrConversion.get(attr_value, attr_value)
+
+def smtag2json(panels):
     j = []
-    for i, p in enumerate(panels):
-        caption = inner_text(p)
-        tags = p.xpath('sd-tag')
+    for i, panel in enumerate(panels):
         j_tags = []
-        for t in tags:
+        for t in panel["entities"]:
             j_tags.append({
-                'text': t.text,
-                'category': t.get('category', ''),
-                'type': t.get('type', ''),
-                'role': t.get('role', ''),
-                'category_score': t.get('category_score', ''),
-                'type_score': t.get('type_score', ''),
-                'role_score': t.get('role_score', ''),
+                'text': t.get('text'),
+                'start': t.get('start'),
+                'end': t.get('end'),
+                'category': get_entity_attribute(t, 'category', ''),
+                'type': get_entity_attribute(t, 'type', ''),
+                'role': get_entity_attribute(t, 'role', ''),
+                'category_score': get_score(t, 'category_score', ''),
+                'type_score': get_score(t, 'type_score', ''),
+                'role_score': get_score(t, 'role_score', ''),
             })
         j.append({
-            'caption': caption,
+            'caption': panel.get('text', ''),
             'label': str(i),
             'tags': j_tags
         })
@@ -71,12 +94,10 @@ class SDFigure(BaseFigure):
     def __init__(self, data):
         super().__init__(data)
         if self.caption:
-            self.formatted_caption = tag_it(self.caption, format='xml')
             self.update_properties({
-                'formatted_caption': self.formatted_caption,
                 'source': 'eebapi',
             })
-            panels = xml2json(self.formatted_caption)
+            panels = tag_and_panelize(self.caption)
             self.children = panels
         # self.children = [SDPanel(self)]  # provisional until we fix automatic panelization in general case
 
@@ -90,7 +111,7 @@ class SDPanel(BasePanel):
 
 
 class SDTag(BaseTag):
-    def __init__(self, data):
+    def __init__(self, data: Dict):
         super().__init__(data)
         self.category_score = self.get('category_score', '')
         self.type_score = self.get('type_score', '')
