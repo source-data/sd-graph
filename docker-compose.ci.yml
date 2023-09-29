@@ -5,15 +5,6 @@
 # See the Github Actions workflow for information on the environment variables used here.
 version: '3'
 services:
-  smtag_deploy:
-    image: ghcr.io/source-data/sd-graph_deploy_smtag:${IMAGE_TAG}
-    build:
-      context: .
-      dockerfile: ./compose/local/smtag/Dockerfile
-    labels:
-      org.opencontainers.image.source: ${IMAGE_SOURCE}
-      org.opencontainers.image.revision: ${IMAGE_REVISION}
-
   flask_deploy:
     image: ghcr.io/source-data/sd-graph_deploy_flask:${IMAGE_TAG}
     build:

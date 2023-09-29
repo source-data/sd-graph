@@ -1,22 +1,6 @@
 version: '3'
 
 services:
-  smtag:
-    image: ghcr.io/source-data/sd-graph_deploy_smtag:${IMAGE_TAG}
-    depends_on:
-      - neo4j
-      - redis
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - capabilities: [gpu]
-    volumes:
-      - .:/app
-    env_file:
-      - ./.env
-    working_dir: /app
-
   flask:
     image: ghcr.io/source-data/sd-graph_deploy_flask:${IMAGE_TAG}
     depends_on:
