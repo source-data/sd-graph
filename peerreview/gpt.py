@@ -24,7 +24,7 @@ def review_summarization_prompt(reviews_text):
 
 
 review_summarization_parameters = {
-    "model": "gpt-3.5-turbo",
+    "model": "gpt-4",
     "temperature": 0.7,
     "max_tokens": 1024,
     "top_p": 1,
