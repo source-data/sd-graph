@@ -39,7 +39,8 @@ class SDNeo:
                 else:
                     results = self.db.query(SDARTICLE_LOADING_STATUS(params={'doi': doi}))  # 'complete' | 'partial' | 'absent'
                     if results:
-                        if results[0]['status'] == 'partial':
+                        status = results[0]['status']
+                        if status in {'partial', 'error'}:
                             delete_result = self.db.query(DELETE_TREE(params={'doi': doi}))
                             logger.info(f"{delete_result[0][0]} trees deleted for {doi}")
                             filtered_list.append(doi)
@@ -59,9 +60,13 @@ class SDNeo:
                 logger.warning(f"!!!! Article '{a.title}'' has no doi.")
             else:
                 logger.info(f"article {a.doi}")
-                figure_nodes = self.create_figures(a.children, a.doi)
-                self.create_relationships(a_node, figure_nodes, 'has_fig')
-                self.db.query(SET_STATUS(params={'doi': a.doi, 'status': 'complete'}))
+                try:
+                    figure_nodes = self.create_figures(a.children, a.doi)
+                    self.create_relationships(a_node, figure_nodes, 'has_fig')
+                    self.db.query(SET_STATUS(params={'doi': a.doi, 'status': 'complete'}))
+                except Exception as e:
+                    logger.error("!!!! Error creating figures for %s", a.doi, exc_info=True)
+                    self.db.query(SET_STATUS(params={'doi': a.doi, 'status': 'error'}))
         return article_nodes
 
     def create_figures(self, figure_list, doi):
