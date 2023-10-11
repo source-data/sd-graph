@@ -283,6 +283,7 @@ create_automagic_collection = SimpleDbTask(
     WITH a.doi AS doi
     // IMPORTANT: when in a tie, preprints will still be ordered by pub date
     ORDER BY DATETIME(a.pub_date) DESC
+    LIMIT 5000
     MATCH (viza:VizPaper {doi: doi})-[:HasEntity]->(assay:VizEntity {category: 'assay'})
     WITH DISTINCT
         viza,
@@ -312,6 +313,7 @@ create_automagic_collection = SimpleDbTask(
         a.doi AS doi
     // IMPORTANT: when ties, preprint will still be ordered by pub date...  
     ORDER BY DATETIME(a.pub_date) DESC
+    LIMIT 5000
     MATCH (viza:VizPaper {doi: doi})-[:HasEntity]->(entity:VizEntity {category: 'entity'})
     WITH
         ranked_by_assays,
@@ -351,6 +353,8 @@ create_automagic_collection = SimpleDbTask(
         ranked_by_assays,
         ranked_by_entities,
         a.doi AS doi
+    ORDER BY DATETIME(a.pub_date) DESC
+    LIMIT 5000
     MATCH (col:VizCollection {name: "by-auto-topics"})-->(topic:VizSubCollection)-[rel_autotopics_paper]->(viza:VizPaper {doi: doi})
     WHERE rel_autotopics_paper.overlap_size >= 2
     WITH DISTINCT
