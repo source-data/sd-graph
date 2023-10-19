@@ -1,8 +1,8 @@
 <template lang="pug">
   v-app
-    v-main
-      LeftSideBar
-      TopNavBar
+    LeftSideBar
+    TopNavBar
+    v-main(style="padding-left:56px")
       router-view
     v-footer
       Footer
