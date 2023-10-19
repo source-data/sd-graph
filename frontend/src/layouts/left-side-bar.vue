@@ -1,6 +1,10 @@
 <template lang="pug">
-  v-navigation-drawer(app clipped permanent
-        expand-on-hover)
+  v-navigation-drawer(
+    app
+    clipped
+    expand-on-hover
+    permanent
+  )
     v-list(nav)
       router-link(to="/" active-class="is-active")
         v-list-item(index="0")

@@ -3,10 +3,10 @@
     v-row(justify="center" v-if="loadingRecords")
       v-progress-circular(:size="70" :width="7" color="purple" indeterminate)
     div(v-else="loadingRecords")
-    v-container(v-if="records.length > 0" :class="{'highlights-loading': loadingRecords}")
+    v-container(fluid v-if="records.length > 0" :class="{'highlights-loading': loadingRecords}")
       h1 {{ records.length }} articles found:
     h1(v-if="records.length == 0 && !loadingRecords") No results
-    v-container(:class="{'highlights-loading': loadingRecords}")
+    v-container(fluid :class="{'highlights-loading': loadingRecords}")
       v-row(align="center" justify="start")
         v-col(cols=1)
            .text-right 
