@@ -129,7 +129,7 @@ export default {
     },
   },
   mounted() {
-    const docmapsUrl = doi => `https://eeb.embo.org/api/v2/docmap/${doi}`;
+    const docmapsUrl = doi => `/api/v2/docmap/${doi}`;
     const doi = this.article.doi;
     const highlightDoi = this.expandedReview ? this.expandedReview.doi : null;
 
