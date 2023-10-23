@@ -1,4 +1,3 @@
-from typing import Dict
 from neotools.db import Query
 from neotools.flow import run_flow
 from sdg.sd_prepare_docmap import Tasks as PrepareDocmapTasks

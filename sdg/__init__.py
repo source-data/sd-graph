@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 from dotenv import load_dotenv
 from neotools.db import Instance
 
@@ -12,3 +11,4 @@ SD_API_USERNAME = os.getenv("SD_API_USERNAME")
 SD_API_PASSWORD = os.getenv("SD_API_PASSWORD")
 DB = Instance(NEO_URI, NEO_USERNAME, NEO_PASSWORD)
 EEB_INTERNAL_API = os.getenv("EEB_INTERNAL_API")
+EEB_PUBLIC_API = os.getenv("EEB_PUBLIC_API")
