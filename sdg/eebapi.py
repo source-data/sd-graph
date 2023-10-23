@@ -8,7 +8,7 @@ from .sdnode import (
     BaseCollection, BaseArticle, BaseFigure, BasePanel, BaseTag
 )
 from smtag.pipeline import SmartTagger
-from . import EEB_PUBLIC_API
+from . import EEB_INTERNAL_API
 from typing import Dict
 
 logger = common.logging.get_logger(__name__)
@@ -133,13 +133,13 @@ class EEBAPI(API):
     def collection(self, collection_names):
         data = {}
         for name in collection_names:
-            url = EEB_PUBLIC_API + self.GET_COLLECTION + name
+            url = EEB_INTERNAL_API + self.GET_COLLECTION + name
             data[name] = self.rest2data(url)
         collection = SDCollection(data)
         return collection
 
     def article(self, doi):
-        url = EEB_PUBLIC_API + self.GET_ARTICLE + doi
+        url = EEB_INTERNAL_API + self.GET_ARTICLE + doi
         data = self.rest2data(url)
         if data:
             article = SDArticle(data)  # most recent version should be first item in list
@@ -149,7 +149,7 @@ class EEBAPI(API):
 
     def figure(self, figure_index=0, doi=''):
         params = {'doi': doi, 'position_idx': figure_index}
-        url = EEB_PUBLIC_API + self.GET_FIGURE
+        url = EEB_INTERNAL_API + self.GET_FIGURE
         data = self.rest2data(url, params)
         if data:
             figure = SDFigure(data)
