@@ -23,7 +23,7 @@
       v-container(fluid).article-content
         //- Vertical 1-col layout with review process first, abstract second on smaller screens, horizontal 2-col layout
         //-  with abstract left, review process right on larger screens. Entities always at the bottom in single column.
-        v-row
+        v-row(v-if="showReviewProcess")
           v-col(order="2" order-md="1" cols="12" md="7")
             v-card.article-card
               v-card-title Abstract
@@ -67,6 +67,7 @@ export default {
   props: {
     article: Object,
     expandedReview: Object,
+    showReviewProcess: Boolean,
   },
   data() {
     return {
@@ -135,21 +136,23 @@ export default {
     },
   },
   mounted() {
-    const docmapsUrl = doi => `/api/v2/docmap/${doi}`;
-    const doi = this.article.doi;
-    const highlightDoi = this.expandedReview ? this.expandedReview.doi : null;
+    if (this.showReviewProcess) {
+      const docmapsUrl = doi => `http://localhost:5050/api/v2/docmap/${doi}`;
+      const doi = this.article.doi;
+      const highlightDoi = this.expandedReview ? this.expandedReview.doi : null;
 
-    const md = new MarkdownIt({
-      html: true,
-      linkify: true,
-      typographer: true
-    });
-    const display = {
-      renderMarkdown: src => md.render(src),
-    };
+      const md = new MarkdownIt({
+        html: true,
+        linkify: true,
+        typographer: true
+      });
+      const display = {
+        renderMarkdown: src => md.render(src),
+      };
 
-    const el = this.$refs[doi];
-    el.configure({ docmapsUrl, doi, display, highlightDoi });
+      const el = this.$refs[doi];
+      el.configure({ docmapsUrl, doi, display, highlightDoi });
+    }
   }
 }
 </script>
