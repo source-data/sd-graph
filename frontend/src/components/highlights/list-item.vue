@@ -137,7 +137,7 @@ export default {
   },
   mounted() {
     if (this.showReviewProcess) {
-      const docmapsUrl = doi => `http://localhost:5050/api/v2/docmap/${doi}`;
+      const docmapsUrl = doi => `/api/v2/docmap/${doi}`;
       const doi = this.article.doi;
       const highlightDoi = this.expandedReview ? this.expandedReview.doi : null;
 
