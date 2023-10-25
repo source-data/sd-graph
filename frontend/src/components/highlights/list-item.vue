@@ -1,9 +1,5 @@
 <template lang="pug">
-  v-card(
-    v-if="article"
-    class="pa-5"
-    color="blue-grey lighten-5"
-  )
+  v-card(v-if="article" color="blue-grey lighten-5")
     v-card-title
       div
         | {{ article.title }}
@@ -24,18 +20,28 @@
           | doi.org/{{ article.doi }}
 
     v-card-text
-      v-container(fluid)
+      v-container(fluid).article-content
+        //- Vertical 1-col layout with review process first, abstract second on smaller screens, horizontal 2-col layout
+        //-  with abstract left, review process right on larger screens. Entities always at the bottom in single column.
         v-row
+          v-col(order="2" order-md="1" cols="12" md="7")
+            v-card.article-card
+              v-card-title Abstract
+              v-card-text
+                p(class="text--primary") {{ article.abstract }}
+
+          v-col(order="1" order-md="2" cols="12" md="5")
+            div.review-process
+              render-rev(:ref='article.doi')
+        v-row(v-else)
           v-col
             v-card.article-card
               v-card-title Abstract
               v-card-text
                 p(class="text--primary") {{ article.abstract }}
 
-          v-col.basic-info
-            div.review-process
-              render-rev(:ref='article.doi')
-
+        v-row
+          v-col
             v-card.article-card(v-if="(article.assays.length > 0) || (article.entities.length > 0) || (article.highlighted_entities.length > 0)")
               v-card-title From the figures
               v-card-text
@@ -149,33 +155,23 @@ export default {
 </script>
 
 <style scoped>
-  .md-content {
-    font-family:'Courier New', Courier, monospace;
-    font-size: 14px;
-    max-height:800px;
-    overflow: scroll;
-  }
-  .md-content img {
-    max-height: 60px;
-  }
-
-  .fig-img {
-    max-width: 300px;
-    max-height: 300px;
-  }
   .v-card__text, .v-card__title { /* bug fix; see https://github.com/vuetifyjs/vuetify/issues/9130 */
     word-break: normal; /* maybe !important  */
   }
-  .basic-info {
-    max-width: 526px;
-  }
+
   .review-process {
-    margin-bottom: 32px;
     --rr-timeline-summary-bg-color: white;
     --rr-timeline-summary-text-color: black;
+    --rr-timeline-width: 100%;
   }
   .v-sheet.v-card.article-card {
     box-shadow: unset;
     border-radius: 0;
+  }
+
+  @media screen and (max-width: 1080px) {
+    .container.container--fluid.article-content {
+      padding: 0;
+    }
   }
 </style>
