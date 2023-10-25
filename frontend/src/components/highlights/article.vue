@@ -1,5 +1,5 @@
 <template lang="pug">
-  v-container
+  v-container(fluid)
     v-row(v-if="article")
       v-col
         HighlightedListItem(:article="article" :expandedReview="expandedReview")

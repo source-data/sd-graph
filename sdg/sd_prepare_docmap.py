@@ -6,7 +6,10 @@ from neotools.flow import (
     run_flow,
     UpdateOrCreateTask,
 )
-from sdg import DB
+from sdg import DB, EEB_PUBLIC_API
+
+DOCMAPS_API_URL = EEB_PUBLIC_API + "docmaps/v1/docmap/"
+REVIEW_MATERIAL_API_URL = EEB_PUBLIC_API + "v2/review_material/"
 
 purge_docmap_graph_tasks = [
     DetachDeleteAll("Resource"),
@@ -22,7 +25,6 @@ purge_docmap_graph_tasks = [
     DetachDeleteAll("Action"),
     DetachDeleteAll("Step"),
     DetachDeleteAll("WebPage"),
-
 ]
 
 
@@ -59,12 +61,12 @@ create_preprint_docmaps = UpdateOrCreateTask(
         publisher_url: rs.url,
         publisher_name: TOLOWER(rs.name),
         publisher_peer_review_policy: rs.peer_review_policy,
-        id: 'https://eeb.embo.org/api/v2/docmap/' + doi,
+        id: '%(docmaps_api_url)s' + apoc.create.uuid(),
         first_step: first_step
     })
     MERGE (docmap)<-[:steps]-(step:Step {id: first_step})
     MERGE (step)<-[:inputs]-(preprint)
-    """,
+    """ % {"docmaps_api_url": DOCMAPS_API_URL},
 )
 
 
@@ -112,7 +114,7 @@ create_referee_report_actions = UpdateOrCreateTask(
     MERGE (action)<-[:outputs]-(rev:RefereeReport {
         published: review.posting_date,
         type: 'review',
-        uri: 'https://eeb.embo.org/api/v2/review_material/' + id(review)
+        uri: '%(review_material_api_url)s' + id(review)
     })
     // review.doi and .runningNumber can be null and must therefore be set outside the merge query
     ON CREATE SET
@@ -121,7 +123,7 @@ create_referee_report_actions = UpdateOrCreateTask(
     // realization on eeb as json
     MERGE (rev)<-[:content]-(content_on_eeb:Content {
         type: 'web-page', 
-        url: 'https://eeb.embo.org/api/v2/review_material/' + id(review),
+        url: '%(review_material_api_url)s' + id(review),
         id: toString(id(review)),
         service: 'https://eeb.embo.org/'
     })
@@ -153,7 +155,7 @@ create_referee_report_actions = UpdateOrCreateTask(
         role: 'peer-reviewer'
     })
     SET action.index = review.review_idx
-    """,
+    """ % {"review_material_api_url": REVIEW_MATERIAL_API_URL},
 )
 
 
@@ -238,13 +240,13 @@ create_response_actions = UpdateOrCreateTask(
     MERGE (action)<-[:outputs]-(reply:AuthorReply {
         published: response.posting_date,
         type: 'author-response',
-        uri: 'https://eeb.embo.org/api/v2/review_material/' + id(response)
+        uri: '%(review_material_api_url)s' + id(response)
     })
     // as above with reviews, response.doi can be null and must be set outside the merge query
     ON CREATE SET reply.doi = response.doi
     MERGE (reply)<-[:content]-(content:Content {
         type: 'web-page',
-        url: 'https://eeb.embo.org/api/v2/review_material/' + id(response),
+        url: '%(review_material_api_url)s' + id(response),
         id: toString(id(response)),
         service: 'https://eeb.embo.org'
     })
@@ -266,7 +268,7 @@ create_response_actions = UpdateOrCreateTask(
         id: toString(id(response)),
         service: 'https://eeb.embo.org/'
     })
-    """,
+    """ % {"review_material_api_url": REVIEW_MATERIAL_API_URL},
 )
 
 
@@ -346,7 +348,7 @@ create_published_article_docmaps = UpdateOrCreateTask(
         type: 'docmap',
         provider: 'https://eeb.embo.org',
         publisher_name: TOLOWER(publisher_title),
-        id: 'https://eeb.embo.org/api/v2/docmap/' + preprint.doi
+        id: '%(docmaps_api_url)s' + apoc.create.uuid(),
     })
     // if no docmap for this publisher exists, set the necessary properties
     ON CREATE SET
@@ -381,7 +383,7 @@ create_published_article_docmaps = UpdateOrCreateTask(
         ID(existing_step) <> ID(new_step)
         AND existing_step.next_step IS NULL
     SET existing_step.next_step = new_step.id
-    """,
+    """ % {"docmaps_api_url": DOCMAPS_API_URL},
 )
 
 

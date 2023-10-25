@@ -1,55 +1,61 @@
 <template lang="pug">
-  v-card(
-    v-if="article"
-    class="pa-5"
-    color="blue-grey lighten-5"
-  )
+  v-card(v-if="article" color="blue-grey lighten-5")
     v-card-title
-      | {{ article.title }}
-      router-link(:to="generateMyUrl()")
-        v-icon(color="indigo lighten-3") mdi-link-variant
+      div
+        | {{ article.title }}
+        router-link(:to="generateMyUrl()")
+          v-icon(color="indigo lighten-3") mdi-link-variant
     v-card-subtitle
-      v-container(fluid)
-        v-row
-          v-col
-            p {{ authorList }}
-            p
-              | Posted
-              |
-              b {{ displayDate(article.pub_date) }}
-              |  on
-              |
-              i {{ article.journal }}
-            p
-              b doi:
-              a(:href="href(article.doi)" target="_blank" rel="noopener")
-                |
-                | https://doi.org/{{ article.doi }}
-          v-col
-            render-rev(:ref='article.doi')
+      p {{ authorList }}
+      p
+        | Posted
+        |
+        b {{ displayDate(article.pub_date) }}
+        |  on
+        |
+        i {{ article.journal }}
+        |
+        a(:href="href(article.doi)" target="_blank" rel="noopener" class="ml-2")
+          |
+          | doi.org/{{ article.doi }}
 
     v-card-text
-      v-row
-        v-col
-          v-card
-            v-card-title Abstract
-            v-card-text
-              p(class="text--primary") {{ article.abstract }}
-        v-col
-          v-card(v-if="(article.assays.length > 0) || (article.entities.length > 0) || (article.highlighted_entities.length > 0)")
-            v-card-title From the figures
-            v-card-text
-                v-list-item
-                  v-chip-group(v-if="article.main_topics.length > 0" :key="0" column)
-                    v-chip(v-for="(item, index) in article.main_topics" small outlined :key="`topics-${index}`").purple--text {{ item.slice(0,3).join(", ") }}
-                  v-chip-group(v-if="article.highlighted_entities.length > 0" :key="1" column)
-                    v-chip(v-for="(item, index) in article.highlighted_entities" small outlined :key="`highlighted-entities-${index}`").red--text {{ item }}
-                  v-chip-group(v-if="article.entities.length > 0" :key="2" column)
-                    v-chip(v-for="(item, index) in article.entities" small outlined :key="`entities-${index}`").orange--text {{ item }}
-                  v-chip-group(v-if="article.assays.length > 0" :key="3" column)
-                    v-chip(v-for="(item, index) in article.assays" small outlined :key="`assays-${index}`").green--text {{ item }}
-          v-card(v-else)
-            v-card-subtitle Figure not yet processed
+      v-container(fluid).article-content
+        //- Vertical 1-col layout with review process first, abstract second on smaller screens, horizontal 2-col layout
+        //-  with abstract left, review process right on larger screens. Entities always at the bottom in single column.
+        v-row(v-if="showReviewProcess")
+          v-col(order="2" order-md="1" cols="12" md="7")
+            v-card.article-card
+              v-card-title Abstract
+              v-card-text
+                p(class="text--primary") {{ article.abstract }}
+
+          v-col(order="1" order-md="2" cols="12" md="5")
+            div.review-process
+              render-rev(:ref='article.doi')
+        v-row(v-else)
+          v-col
+            v-card.article-card
+              v-card-title Abstract
+              v-card-text
+                p(class="text--primary") {{ article.abstract }}
+
+        v-row
+          v-col
+            v-card.article-card(v-if="(article.assays.length > 0) || (article.entities.length > 0) || (article.highlighted_entities.length > 0)")
+              v-card-title From the figures
+              v-card-text
+                  v-list-item
+                    v-chip-group(v-if="article.main_topics.length > 0" :key="0" column)
+                      v-chip(v-for="(item, index) in article.main_topics" small outlined :key="`topics-${index}`").purple--text {{ item.slice(0,3).join(", ") }}
+                    v-chip-group(v-if="article.highlighted_entities.length > 0" :key="1" column)
+                      v-chip(v-for="(item, index) in article.highlighted_entities" small outlined :key="`highlighted-entities-${index}`").red--text {{ item }}
+                    v-chip-group(v-if="article.entities.length > 0" :key="2" column)
+                      v-chip(v-for="(item, index) in article.entities" small outlined :key="`entities-${index}`").orange--text {{ item }}
+                    v-chip-group(v-if="article.assays.length > 0" :key="3" column)
+                      v-chip(v-for="(item, index) in article.assays" small outlined :key="`assays-${index}`").green--text {{ item }}
+            v-card.article-card(v-else)
+              v-card-subtitle Figure not yet processed
 </template>
 
 <script>
@@ -61,6 +67,7 @@ export default {
   props: {
     article: Object,
     expandedReview: Object,
+    showReviewProcess: Boolean,
   },
   data() {
     return {
@@ -129,43 +136,45 @@ export default {
     },
   },
   mounted() {
-    const docmapsUrl = doi => `/api/v2/docmap/${doi}`;
-    const doi = this.article.doi;
-    const highlightDoi = this.expandedReview ? this.expandedReview.doi : null;
+    if (this.showReviewProcess) {
+      const docmapsUrl = doi => `/api/v2/docmap/${doi}`;
+      const doi = this.article.doi;
+      const highlightDoi = this.expandedReview ? this.expandedReview.doi : null;
 
-    const md = new MarkdownIt({
-      html: true,
-      linkify: true,
-      typographer: true
-    });
-    const display = {
-      renderMarkdown: src => md.render(src),
-    };
+      const md = new MarkdownIt({
+        html: true,
+        linkify: true,
+        typographer: true
+      });
+      const display = {
+        renderMarkdown: src => md.render(src),
+      };
 
-    const el = this.$refs[doi];
-    el.configure({ docmapsUrl, doi, display, highlightDoi });
+      const el = this.$refs[doi];
+      el.configure({ docmapsUrl, doi, display, highlightDoi });
+    }
   }
 }
 </script>
 
 <style scoped>
-
-
-  .md-content {
-    font-family:'Courier New', Courier, monospace;
-    font-size: 14px;
-    max-height:800px;
-    overflow: scroll;
-  }
-  .md-content img {
-    max-height: 60px;
-  }
-
-  .fig-img {
-    max-width: 300px;
-    max-height: 300px;
-  }
   .v-card__text, .v-card__title { /* bug fix; see https://github.com/vuetifyjs/vuetify/issues/9130 */
     word-break: normal; /* maybe !important  */
+  }
+
+  .review-process {
+    --rr-timeline-summary-bg-color: white;
+    --rr-timeline-summary-text-color: black;
+    --rr-timeline-width: 100%;
+  }
+  .v-sheet.v-card.article-card {
+    box-shadow: unset;
+    border-radius: 0;
+  }
+
+  @media screen and (max-width: 1080px) {
+    .container.container--fluid.article-content {
+      padding: 0;
+    }
   }
 </style>

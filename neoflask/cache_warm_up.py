@@ -5,7 +5,7 @@ import requests
 from tqdm import tqdm, trange
 from tqdm.contrib.logging import logging_redirect_tqdm
 import common.logging
-from . import EEB_PUBLIC_API
+from . import EEB_INTERNAL_API
 
 logger = common.logging.get_logger(__name__)
 
@@ -78,7 +78,7 @@ def warmup_individual_method(get_url, params, no_progress):
 if __name__ == '__main__':
     common.logging.configure_logging()
     parser = ArgumentParser(description='Loading meca or CORD-19 archives into neo4j.')
-    parser.add_argument('base_url', default=EEB_PUBLIC_API,help='Host address to be warmed up')
+    parser.add_argument('base_url', default=EEB_INTERNAL_API,help='Host address to be warmed up')
     parser.add_argument('--no-progress', action='store_true', help='Do not output progress bars')
     args = parser.parse_args()
     cache_warm_up(args.base_url, no_progress=args.no_progress)

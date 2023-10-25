@@ -8,7 +8,7 @@ import common.logging
 from sdg.sdnode import API
 from .queries import TWEET_BY_DOI, ADD_TWITTER_STATUS
 from typing import Dict
-from . import DB, TWITTER, EEB_PUBLIC_API
+from . import DB, TWITTER, EEB_INTERNAL_API
 
 logger = common.logging.get_logger(__name__)
 
@@ -94,7 +94,7 @@ class AutomagicSelectionContent(Content):
 
 class EEB_API(API):
 
-    BASE_URL = EEB_PUBLIC_API
+    BASE_URL = EEB_INTERNAL_API
     BY_REVIEWING_SERVICE = 'by_reviewing_service/'
     BY_HYP = 'by_hyp/'
     AUTOMAGIC = 'automagic/'

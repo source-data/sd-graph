@@ -8,7 +8,7 @@ from flask_caching import Cache
 
 
 load_dotenv()
-EEB_PUBLIC_API = os.getenv("EEB_PUBLIC_API")
+EEB_INTERNAL_API = os.getenv("EEB_INTERNAL_API")
 
 app = Flask(__name__)
 

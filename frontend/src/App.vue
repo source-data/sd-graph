@@ -1,9 +1,10 @@
 <template lang="pug">
   v-app
-    v-main
-      LeftSideBar
-      TopNavBar
-      router-view
+    LeftSideBar
+    TopNavBar
+    v-main(style="padding-left:56px")
+      v-container(fluid).main-content
+        router-view
     v-footer
       Footer
 </template>
@@ -12,7 +13,7 @@
 import TopNavBar from './layouts/top-nav-bar'
 import Banner from './layouts/banner'
 import LeftSideBar from './layouts/left-side-bar'
-import Footer from './layouts/footer' 
+import Footer from './layouts/footer'
 
 export default {
   name: 'App',
@@ -43,18 +44,6 @@ export default {
 
 
 <style lang="scss">
-
-// /* Portrait */
-// @media only screen
-//   and (min-device-width: 375px)
-//   and (max-device-width: 812px)
-//   and (-webkit-min-device-pixel-ratio: 3)
-//   and (orientation: portrait) {
-//     .v-main.my-main {
-//       padding: 0;
-//     }
-// }
-
 html, body {
   padding:0;
   margin:0;
@@ -69,5 +58,9 @@ a {
   cursor: pointer;
 }
 
+// make the main container fluid up to a certain size
+.container.container--fluid.main-content {
+  max-width: 1200px;
+  padding: 0;
+}
 </style>
-
