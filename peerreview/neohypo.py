@@ -30,7 +30,7 @@ HYPO_GROUP_IDS = {
 
 
 REVIEWER_REGEX = re.compile(r'^.{,300}(referee|reviewer)\W+(\d)', re.IGNORECASE | re.DOTALL)
-RESPONSE_REGEX = re.compile(r'^.{,100}This rebuttal was posted by the corresponding author to \*Review Commons\*', re.IGNORECASE | re.DOTALL)
+RESPONSE_REGEX = re.compile(r'^.{,100}This (rebuttal|response) was posted by the corresponding author to \*Review Commons\*', re.IGNORECASE | re.DOTALL)
 
 
 def type_of_annotation(hypo_row):
