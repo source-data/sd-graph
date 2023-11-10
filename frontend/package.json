@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "5.2.0",
-    "@source-data/render-rev": "^0.1.34",
+    "@source-data/render-rev": "^0.1.35",
     "axios": "^0.21.4",
     "markdown-it": "^13.0.0",
     "vue": "^2.6.11",
