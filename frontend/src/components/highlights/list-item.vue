@@ -68,7 +68,6 @@ export default {
   props: {
     article: Object,
     expandedReview: Object,
-    showReviewProcess: Boolean,
   },
   data() {
     return {
@@ -135,6 +134,13 @@ export default {
     info () {
       return this.article.info
     },
+    showReviewProcess() {
+      return this.article.review_process && (
+        this.article.review_process.reviews.length > 0
+        || this.article.review_process.response
+        || this.article.review_process.annot.length > 0
+      )
+    }
   },
   mounted() {
     if (this.showReviewProcess) {

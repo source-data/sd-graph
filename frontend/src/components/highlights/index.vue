@@ -37,10 +37,7 @@
               v-icon(dense) mdi-sort-ascending
       v-row(v-for="article in paginatedRecords" :key="article.id")
         v-col
-          HighlightedListItem(
-            :article="article"
-            :showReviewProcess="selectedTab == refereedPreprintsTabName"
-          )
+          HighlightedListItem(:article="article")
       v-row(justify="start")
         v-col(cols=1)
            .text-right Pages:
