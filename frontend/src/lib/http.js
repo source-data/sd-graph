@@ -1,6 +1,16 @@
 import axios from 'axios'
 
-const BASE_URL = process.env.NODE_ENV == "production" ? '' : 'http://localhost:5050'
+function baseUrl(node_env) {
+  switch (node_env) {
+    case 'production':
+      return ''
+    case 'serverless':
+      return 'https://eeb-dev.embo.org'
+    default:
+      return 'http://localhost:5050'
+  }
+}
+export const BASE_URL = baseUrl(process.env.NODE_ENV)
 
 const httpClient = axios.create({
   baseURL: BASE_URL,

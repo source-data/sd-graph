@@ -60,6 +60,7 @@
 
 <script>
 import MarkdownIt from 'markdown-it'
+import { BASE_URL } from '../../lib/http'
 import { serviceId2Name } from '../../store/by-reviewing-service'
 import '@source-data/render-rev'
 
@@ -137,7 +138,7 @@ export default {
   },
   mounted() {
     if (this.showReviewProcess) {
-      const docmapsUrl = doi => `/api/v2/docmap/${doi}`;
+      const docmapsUrl = doi => `${BASE_URL}/api/v2/docmap/${doi}`;
       const doi = this.article.doi;
       const highlightDoi = this.expandedReview ? this.expandedReview.doi : null;
 
