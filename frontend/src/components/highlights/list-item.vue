@@ -1,61 +1,65 @@
 <template lang="pug">
-  v-card(v-if="article" color="blue-grey lighten-5")
-    v-card-title
-      div
-        | {{ article.title }}
-        router-link(:to="generateMyUrl()")
-          v-icon(color="indigo lighten-3") mdi-link-variant
-    v-card-subtitle
-      p {{ authorList }}
-      p
-        | Posted
-        |
-        b {{ displayDate(article.pub_date) }}
-        |  on
-        |
-        i {{ article.journal }}
-        |
-        a(:href="href(article.doi)" target="_blank" rel="noopener" class="ml-2")
-          |
-          | doi.org/{{ article.doi }}
+v-card(v-if="article" color="blue-grey lighten-5")
+  v-card-title
+    div
+      | {{ article.title }}
+      router-link(:to="generateMyUrl()")
+        v-icon(color="indigo lighten-3").ml-1 mdi-link-variant
+  v-card-subtitle
+    p.mb-0 {{ authorList }}
 
-    v-card-text
-      v-container(fluid).article-content
-        //- Vertical 1-col layout with review process first, abstract second on smaller screens, horizontal 2-col layout
-        //-  with abstract left, review process right on larger screens. Entities always at the bottom in single column.
-        v-row(v-if="showReviewProcess")
-          v-col(order="2" order-md="1" cols="12" md="7")
-            v-card.article-card
-              v-card-title Abstract
-              v-card-text
-                p(class="text--primary") {{ article.abstract }}
+    div.d-flex.flex-row.align-center
+      v-list-item.px-0
+        span.d-flex.flex-row.no-pointer-events
+          v-chip-group(v-if="article.main_topics.length > 0" :key="0" column)
+            v-chip(v-for="(item, index) in article.main_topics" small outlined :key="`topics-${index}`").purple--text {{ item.slice(0,3).join(", ") }}
+          v-chip-group(v-if="article.highlighted_entities.length > 0" :key="1" column)
+            v-chip(v-for="(item, index) in article.highlighted_entities" small outlined :key="`highlighted-entities-${index}`").red--text {{ item }}
+          v-chip-group(v-if="article.entities.length > 0" :key="2" column)
+            v-chip(v-for="(item, index) in article.entities" small outlined :key="`entities-${index}`").orange--text {{ item }}
+          v-chip-group(v-if="article.assays.length > 0" :key="3" column)
+            v-chip(v-for="(item, index) in article.assays" small outlined :key="`assays-${index}`").green--text {{ item }}
+        
+        v-tooltip(bottom)
+          template(v-slot:activator="{ on, hover, attrs }")
+            span(v-bind="attrs" v-on="on")
+                v-icon(color="grey-lighten-1") mdi-information-outline
+          span
+            h3 Keywords deduced from the figures. 
+            p(style="max-width: 200px;") Green text means this, orange text means that...
 
-          v-col(order="1" order-md="2" cols="12" md="5")
-            div.review-process
-              render-rev(:ref='article.doi')
-        v-row(v-else)
-          v-col
-            v-card.article-card
-              v-card-title Abstract
-              v-card-text
-                p(class="text--primary") {{ article.abstract }}
+    p
+      | Posted
+      |
+      b {{ displayDate(article.pub_date) }}
+      |  on
+      |
+      i {{ article.journal }}
+      |
+      a(:href="href(article.doi)" target="_blank" rel="noopener" class="ml-2")
+        |
+        | doi.org/{{ article.doi }}
 
-        v-row
-          v-col
-            v-card.article-card(v-if="(article.assays.length > 0) || (article.entities.length > 0) || (article.highlighted_entities.length > 0)")
-              v-card-title From the figures
-              v-card-text
-                  v-list-item
-                    v-chip-group(v-if="article.main_topics.length > 0" :key="0" column)
-                      v-chip(v-for="(item, index) in article.main_topics" small outlined :key="`topics-${index}`").purple--text {{ item.slice(0,3).join(", ") }}
-                    v-chip-group(v-if="article.highlighted_entities.length > 0" :key="1" column)
-                      v-chip(v-for="(item, index) in article.highlighted_entities" small outlined :key="`highlighted-entities-${index}`").red--text {{ item }}
-                    v-chip-group(v-if="article.entities.length > 0" :key="2" column)
-                      v-chip(v-for="(item, index) in article.entities" small outlined :key="`entities-${index}`").orange--text {{ item }}
-                    v-chip-group(v-if="article.assays.length > 0" :key="3" column)
-                      v-chip(v-for="(item, index) in article.assays" small outlined :key="`assays-${index}`").green--text {{ item }}
-            v-card.article-card(v-else)
-              v-card-subtitle Figure not yet processed
+  v-card-text
+    v-container(fluid).article-content
+      //- Vertical 1-col layout with review process first, abstract second on smaller screens, horizontal 2-col layout
+      //-  with abstract left, review process right on larger screens. Entities always at the bottom in single column.
+      v-row(v-if="showReviewProcess")
+        v-col(order="2" order-md="1" cols="12" md="7")
+          v-card.article-card
+            v-card-title Abstract
+            v-card-text
+              p(class="text--primary") {{ article.abstract }}
+
+        v-col(order="1" order-md="2" cols="12" md="5")
+          div.review-process
+            render-rev(:ref='article.doi')
+      v-row(v-else)
+        v-col
+          v-card.article-card
+            v-card-title Abstract
+            v-card-text
+              p(class="text--primary") {{ article.abstract }}
 </template>
 
 <script>
@@ -183,5 +187,13 @@ export default {
     .container.container--fluid.article-content {
       padding: 0;
     }
+  }
+
+  .v-chip.v-chip--outlined.v-chip.v-chip {
+    background-color: white !important;
+  }
+
+  .no-pointer-events {
+    pointer-events: none;
   }
 </style>
