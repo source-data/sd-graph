@@ -1,12 +1,11 @@
 <template lang="pug">
-  v-app
-    LeftSideBar
-    TopNavBar
-    v-main(style="padding-left:56px")
-      v-container(fluid).main-content
-        router-view
-    v-footer
-      Footer
+v-app
+  TopNavBar
+  v-main
+    v-container.main-content
+      router-view
+  v-footer
+    Footer
 </template>
 
 <script>
@@ -59,8 +58,9 @@ a {
 }
 
 // make the main container fluid up to a certain size
-.container.container--fluid.main-content {
-  max-width: 1200px;
+.container.main-content {
+  max-width: 100%;
+  width: 100%;
   padding: 0;
 }
 </style>

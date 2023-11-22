@@ -1,10 +1,11 @@
 <template lang="pug">
-  v-container(fluid)
-    v-row
-      v-col
-        QuickAccess
-    v-row
-      v-col
+v-container(fluid).pa-0.ma-0
+  v-row.pa-3
+    v-col(cols=3)
+      v-row
+        ByReviewingService
+    v-col(cols=9)
+      v-row
         Highlights
 </template>
 
@@ -12,6 +13,7 @@
 <script>
 import QuickAccess from '../components/quick-access/index.vue'
 import Highlights from '../components/highlights/index.vue'
+import ByReviewingService from '../components/quick-access/by-reviewing-service.vue'
 import Intro from '../layouts/intro.vue'
 
 import { REFEREED_PREPRINTS, AUTO_TOPICS, AUTOMAGIC, FULLTEXT_SEARCH } from '../components/quick-access/tab-names'
@@ -117,6 +119,7 @@ export default {
     QuickAccess,
     Highlights,
     Intro,
+    ByReviewingService
   },
   props: {
     collection: String,
