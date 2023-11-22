@@ -1,47 +1,28 @@
 <template lang="pug">
-  v-container
-      v-row(align="center")
-        v-col(cols=7)
-          v-card(outlined).pa-5
-            v-card-title Preprints linked to formal reviews
-            v-card-text
-              v-btn-toggle(v-model="selectedRev" mandatory)
-                v-container.pa-0
-                  v-row(v-for="i in 4" :key="`row-${i}`")
-                    v-col(cols=6 v-for="j in 2" :key="`col-${j}`")
-                      div(v-if="reviewingListId(i, j)")
-                        router-link(:to="{ path: `/refereed-preprints/${serviceId2Slug(reviewingListId(i, j))}` }")
-                          span().v-badge.v-badge--dot.v-badge--bordered
-                            //- v-badge(dot overlap)
-                            v-btn(
-                              :value="serviceId2Slug(reviewingListId(i, j))" :disabled="loadingRecords"
-                            )
-                              | {{ serviceId2Name(reviewingListId(i, j)) }}
-                            //- span.v-badge__wrapper
-                            //-   span(
-                            //-     v-if="reviewingService(reviewingListId(i, j)).review_requested_by=='Authors'"
-                            //-     style="inset: auto auto calc(100% - 5px) calc(100% - 28px);").v-badge__badge.purple.darken-2
-                            //-   span(
-                            //-     v-if="reviewingService(reviewingListId(i, j)).reviewer_selected_by!=='Authors'"
-                            //-     style="inset: auto auto calc(100% - 5px) calc(100% - 18px);").v-badge__badge.amber.darken-5
-                              //- span(
-                              //-   v-if="reviewingService(reviewingListId(i, j)).pre_review_triage"
-                              //-   style="inset: auto auto calc(100% - 5px) calc(100% - 8px);").v-badge__badge.lime
-        v-col(v-if="selectedRev" cols=5)
-          InfoCardsReviewServiceSummaryGraph(
-            :service_name="serviceId2Name(serviceSlug2Id(selectedRev))",
-            :url="reviewingService(serviceSlug2Id(selectedRev)).url",
-            :peer_review_policy="reviewingService(serviceSlug2Id(selectedRev)).peer_review_policy",
-            :review_requested_by="reviewingService(serviceSlug2Id(selectedRev)).review_requested_by",
-            :reviewer_selected_by="reviewingService(serviceSlug2Id(selectedRev)).reviewer_selected_by",
-            :review_coverage="reviewingService(serviceSlug2Id(selectedRev)).review_coverage",
-            :reviewer_identity_known_to="reviewingService(serviceSlug2Id(selectedRev)).reviewer_identity_known_to",
-            :competing_interests="reviewingService(serviceSlug2Id(selectedRev)).competing_interests",
-            :public_interaction="reviewingService(serviceSlug2Id(selectedRev)).public_interaction",
-            :opportunity_for_author_response="reviewingService(serviceSlug2Id(selectedRev)).opportunity_for_author_response",
-            :recommendation="reviewingService(serviceSlug2Id(selectedRev)).recommendation",
+v-card(flat)
+  v-card-title Review sources
+  v-card-text
+    v-chip-group(v-model="selectedRev" mandatory column)
+      span(v-for="serviceId in this.reviewingList" :key="`${serviceId}-chip`")
+        router-link(:to="{ path: `/refereed-preprints/${serviceId2Slug(serviceId)}` }")
+          v-chip(
+            :value="serviceId2Slug(serviceId)" :disabled="loadingRecords"
           )
+            | {{ serviceId2Name(serviceId) }}
 
+    InfoCardsReviewServiceSummaryGraph(
+      :service_name="serviceId2Name(serviceSlug2Id(selectedRev))",
+      :url="reviewingService(serviceSlug2Id(selectedRev)).url",
+      :peer_review_policy="reviewingService(serviceSlug2Id(selectedRev)).peer_review_policy",
+      :review_requested_by="reviewingService(serviceSlug2Id(selectedRev)).review_requested_by",
+      :reviewer_selected_by="reviewingService(serviceSlug2Id(selectedRev)).reviewer_selected_by",
+      :review_coverage="reviewingService(serviceSlug2Id(selectedRev)).review_coverage",
+      :reviewer_identity_known_to="reviewingService(serviceSlug2Id(selectedRev)).reviewer_identity_known_to",
+      :competing_interests="reviewingService(serviceSlug2Id(selectedRev)).competing_interests",
+      :public_interaction="reviewingService(serviceSlug2Id(selectedRev)).public_interaction",
+      :opportunity_for_author_response="reviewingService(serviceSlug2Id(selectedRev)).opportunity_for_author_response",
+      :recommendation="reviewingService(serviceSlug2Id(selectedRev)).recommendation",
+    ).px-0.mt-2
 </template>
 
 <script>
@@ -50,7 +31,6 @@ import { mapGetters, mapState } from 'vuex'
 import { serviceId2Slug, serviceId2Name, serviceSlug2Id } from '../../store/by-reviewing-service'
 import InfoCardsReviewServiceSummaryGraph from './info-cards/review-service-summary-graph.vue'
 
-
 export default {
   components: {
     InfoCardsReviewServiceSummaryGraph,
@@ -58,7 +38,6 @@ export default {
   data () {
     return {
       selectedRev: undefined,
-      
     }
   },
   beforeMount () {
