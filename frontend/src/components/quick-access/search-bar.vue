@@ -1,25 +1,12 @@
 <template lang="pug">
-  v-card(class="pa-5" outlined)
-    v-card-title Search titles, abstract, figure legends,author name, doi
-    v-card-text
-      v-container
-        v-row(align="center")
-          v-col()
-            v-text-field(
-              v-model="query"
-              outlined
-              clearable
-              :loading="loadingRecords"
-              placeholder="keywords, authors, doi"
-              prepend-icon="mdi-magnify"
-              hide-details
-              @keyup.enter="onSubmit"
-            )
-          v-col()
-            v-btn(
-              @click="onSubmit"
-              color="primary"
-            ) Search
+v-text-field(
+  v-model="query"
+  :loading="loadingRecords"
+  placeholder="keywords, authors, doi"
+  prepend-icon="mdi-magnify"
+  hide-details
+  @keyup.enter="onSubmit"
+)
 </template>
 
 <script>
@@ -35,8 +22,19 @@ export default {
   },
   methods: {
     onSubmit()  {
-      this.$emit('submit', this.query)
+      this.$store.dispatch('fulltextSearch/search', this.query).then(
+        () => {this.$store.dispatch('highlights/listByCurrent', 'fulltextSearch')}
+      )
     },
   }
 }
 </script>
+
+<style>
+  .v-input__slot::before {
+    border-style: none !important;
+  }
+  .v-input__slot::after {
+    border-style: none !important;
+  }
+</style>

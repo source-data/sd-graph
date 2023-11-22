@@ -1,45 +1,70 @@
 <template lang="pug">
   v-app-bar(
     app
-    clipped-left
-    prominent
-    height=220
-    color="blue-grey darken-2"
-    hide-on-scroll
-    fade-img-on-scroll
-    scroll-threshold="80"
-    :src='require("@/assets/EEB_HP_Banner.jpg")'
+    height=100
+    color="white"
   )
-    Banner
-    v-container(fluid).fill-height.align-end.pa-0
-      v-row.align-center.pa-0
-        .mr-auto
-          a(href="https://embo.org" target="_blank" rel="noopener").pa-2
-            img(src="../assets/EMBO_logo.svg" alt="EMBO Logo").logo-EMBO
-        .d-flex
-          a(href="https://embopress.org" target="_blank" rel="noopener").pa-2
-            img(src="../assets/EEB_EP_LOGO.png" alt="EMBO Press Logo").logo-EP
-          a(href="https://sourcedata.io" target="_blank" rel="noopener").pa-2
-            img(src="../assets/EEB_SD_LOGO.png" alt="SourceData Logo")
+    v-row
+      v-col(cols=3)
+        Banner
+
+      v-col(cols=9).pa-0.mt-3
+        v-container.pa-0
+          v-col.d-flex.flex-column
+            a(href="https://embo.org" target="_blank" rel="noopener").pr-2.ml-auto
+              img(src="../assets/EMBO_logo.svg" alt="EMBO Logo").logo-EMBO
+            a(href="https://embopress.org" target="_blank" rel="noopener").pr-2.ml-auto
+              img(src="../assets/EEB_EP_LOGO.png" alt="EMBO Press Logo").logo-EP
+            a(href="https://sourcedata.io" target="_blank" rel="noopener").pr-2.ml-auto
+              img(src="../assets/EEB_SD_LOGO.png" alt="SourceData Logo").logo-sd
+    
+    template(v-slot:extension)
+      v-tabs(
+        v-model="activeTab_"
+        @change="onTabChange"
+        center-active
+        show-arrows
+        wrap
+        row
+        justify-end
+      )
+          v-tab(to="/refereed-preprints") Browse reviewed preprints
+          v-tab(to="/search" v-ripple="false")
+            SearchBar(@submit="onSubmitSearch")
+          v-spacer
+          v-tab(to="/about") About
+          v-tab(to="/for-developers") For developers
+          v-tab(to="/contact") Contact
 </template>
 
 <script>
 
 import Banner from './banner'
+import SearchBar from '../components/quick-access/search-bar.vue'
 
 export default {
   components: {
-    Banner
+    Banner,
+    SearchBar
   }
 }
+
 </script>
 
 <style lang="scss" scoped>
 .logo-EMBO {
-  height: 55px;
+  height: 30px;
+  z-index: 1;
 }
 
 .logo-EP {
-  max-height: 80px;
+  height: 28px;
+  margin-top: 3px;
+  z-index: 1;
+}
+
+.logo-sd {
+  height: 14px;
+  z-index: 1;
 }
 </style>
