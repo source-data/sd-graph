@@ -1,5 +1,5 @@
 import httpClient from '../lib/http'
-import { REFEREED_PREPRINTS, FULLTEXT_SEARCH } from '../components/quick-access/tab-names'
+import { REFEREED_PREPRINTS, FULLTEXT_SEARCH } from '../components/tab-names'
 
 export default {
   namespaced: true,

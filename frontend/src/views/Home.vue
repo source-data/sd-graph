@@ -12,9 +12,9 @@ v-container(fluid).pa-0.ma-0
 
 <script>
 import Highlights from '../components/highlights/index.vue'
-import ByReviewingService from '../components/quick-access/by-reviewing-service.vue'
+import ByReviewingService from '../components/filtering/by-reviewing-service.vue'
 
-import { REFEREED_PREPRINTS, FULLTEXT_SEARCH } from '../components/quick-access/tab-names'
+import { REFEREED_PREPRINTS, FULLTEXT_SEARCH } from '../components/tab-names'
 import { serviceSlug2Id } from '../store/by-reviewing-service'
 
 function getStoreNameForCollection (collection) {

@@ -29,7 +29,7 @@ v-card(flat)
 
 import { mapGetters, mapState } from 'vuex'
 import { serviceId2Slug, serviceId2Name, serviceSlug2Id } from '../../store/by-reviewing-service'
-import InfoCardsReviewServiceSummaryGraph from './info-cards/review-service-summary-graph.vue'
+import InfoCardsReviewServiceSummaryGraph from '../review-service-info/review-service-summary-graph.vue'
 
 export default {
   components: {

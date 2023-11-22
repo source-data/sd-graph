@@ -40,7 +40,7 @@
 <script>
 
 import Banner from './banner'
-import SearchBar from '../components/quick-access/search-bar.vue'
+import SearchBar from '../components/filtering/by-simple-search-query.vue'
 
 export default {
   components: {
