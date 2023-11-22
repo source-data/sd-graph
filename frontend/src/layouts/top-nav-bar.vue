@@ -8,7 +8,7 @@
       v-col(cols=3)
         Banner
 
-      v-col(cols=9).pa-0.mt-3
+      v-col(cols=9).pa-0.mt-2
         v-container.pa-0
           v-col.d-flex.flex-column
             a(href="https://embo.org" target="_blank" rel="noopener").pr-2.ml-auto
@@ -53,18 +53,17 @@ export default {
 
 <style lang="scss" scoped>
 .logo-EMBO {
-  height: 30px;
+  height: 29px;
   z-index: 1;
 }
 
 .logo-EP {
   height: 28px;
-  margin-top: 3px;
   z-index: 1;
 }
 
 .logo-sd {
-  height: 14px;
+  height: 12px;
   z-index: 1;
 }
 </style>
