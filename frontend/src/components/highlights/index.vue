@@ -56,7 +56,6 @@ div.d-flex.ml-auto.mr-auto
 
 <script>
 import HighlightedListItem from './list-item.vue'
-import { REFEREED_PREPRINTS, AUTOMAGIC, AUTO_TOPICS } from '../quick-access/tab-names'
 import { mapGetters, mapState } from 'vuex'
 
 
@@ -72,9 +71,6 @@ export default {
   computed: {
     ...mapGetters('highlights', ['records', 'selectedTab']),
     ...mapState('highlights', ['loadingRecords']),
-    refereedPreprintsTabName () {return REFEREED_PREPRINTS},
-    automagicTabName () {return AUTOMAGIC},
-    autotopcisTabName () {return AUTO_TOPICS},
     pageNumber: {
       get() {
         return this.$store.getters['highlights/currentPage']
