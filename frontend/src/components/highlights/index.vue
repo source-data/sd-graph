@@ -1,47 +1,52 @@
 <template lang="pug">
-  div
-    v-row(justify="center" v-if="loadingRecords")
-      v-progress-circular(:size="70" :width="7" color="purple" indeterminate)
-    div(v-else="loadingRecords")
+div.d-flex.ml-auto.mr-auto
+  v-container(v-if="loadingRecords")
+    v-progress-circular(:size="70" :width="7" color="purple" indeterminate)
+
+  span(v-if="!loadingRecords")
     v-container(fluid v-if="records.length > 0" :class="{'highlights-loading': loadingRecords}")
-      h1 {{ records.length }} articles found:
-    h1(v-if="records.length == 0 && !loadingRecords") No results
+      h2 {{ records.length }} articles found
+    v-container(fluid v-if="records.length == 0 && !loadingRecords")
+      h2(v-if="records.length == 0 && !loadingRecords") No results
     v-container(fluid :class="{'highlights-loading': loadingRecords}")
       v-row(align="center" justify="start")
-        v-col(cols=1)
-           .text-right 
-             small Pages:
-        v-col(cols=6)
+        v-col(cols=8).px-0.d-flex
           v-pagination(
             v-model="pageNumber"
             :length="pageCount"
             :total-visible="10"
           )
-        v-col(cols=1 v-if="selectedTab == refereedPreprintsTabName")
-          .text-right 
-            small.text-right Sort by:
-        v-col(cols=2 v-else-if="selectedTab !== automagicTabName")
-          small.text-right Sort direction:
-        v-col(cols=3 v-if="selectedTab == refereedPreprintsTabName" )
+      v-row
+        v-col.d-flex
           v-btn-toggle(v-model="sortBy" @change="sortRecords")
-            v-btn(x-small outlined value="pub_date")
-              | preprint date
-            v-btn(
-              x-small outlined value="posting_date")
-              | reviewing date
-        v-col(cols=1 v-if="selectedTab !== automagicTabName")
-          v-btn-toggle(v-model="sortDirection" @change="sortRecords" mandatory)
-            v-btn(x-small icon aria-label="descending" value="desc")
-              v-icon(dense) mdi-sort-descending
-            v-btn(x-small icon aria-label="ascending" value="asc")
-              v-icon(dense) mdi-sort-ascending
+            v-tooltip(bottom)
+              template(v-slot:activator="{ on, hover, attrs }")
+                v-btn(x-small v-bind="attrs" v-on="on" outlined value="pub_date")
+                  | preprint date
+              span Sort by preprint date
+            v-tooltip(bottom)
+              template(v-slot:activator="{ on, hover, attrs }")
+                v-btn(x-small outlined value="posting_date" v-bind="attrs" v-on="on")
+                  | reviewing date
+              span Sort by revewing date
+
+          v-btn-toggle(v-model="sortDirection" @change="sortRecords" mandatory).ml-3
+            v-tooltip(right)
+              template(v-slot:activator="{ on, hover, attrs }")
+                v-btn(x-small v-bind="attrs" v-on="on" icon aria-label="descending" value="desc")
+                  v-icon(dense) mdi-sort-descending
+              span Show latest first
+            v-tooltip(right)
+              template(v-slot:activator="{ on, hover, attrs }")
+                v-btn(x-small v-bind="attrs" v-on="on" icon aria-label="ascending" value="asc")
+                  v-icon(dense) mdi-sort-ascending
+              span Sort earliest first
+
       v-row(v-for="article in paginatedRecords" :key="article.id")
         v-col
           HighlightedListItem(:article="article")
       v-row(justify="start")
-        v-col(cols=1)
-           .text-right Pages:
-        v-col(cols=6)
+        v-col(cols=6).px-0.d-flex
           v-pagination(
             v-model="pageNumber"
             :length="pageCount"
