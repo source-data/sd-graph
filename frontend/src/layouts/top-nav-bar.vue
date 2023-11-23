@@ -29,7 +29,7 @@
         justify-end
       )
           v-tab(to="/refereed-preprints") Browse reviewed preprints
-          v-tab(to="/search" v-ripple="false")
+          v-tab(to="/search" v-ripple="false" style="max-width:500px;").d-flex.flex-grow-1
             SearchBar(@submit="onSubmitSearch")
           v-spacer
           v-tab(to="/about") About

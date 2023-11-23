@@ -29,12 +29,3 @@ export default {
   }
 }
 </script>
-
-<style>
-  .v-input__slot::before {
-    border-style: none !important;
-  }
-  .v-input__slot::after {
-    border-style: none !important;
-  }
-</style>
