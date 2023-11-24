@@ -20,8 +20,6 @@
     
     template(v-slot:extension)
       v-tabs(
-        v-model="activeTab_"
-        @change="onTabChange"
         center-active
         show-arrows
         wrap
@@ -30,7 +28,7 @@
       )
           v-tab(to="/refereed-preprints") Browse reviewed preprints
           v-tab(to="/search" v-ripple="false" style="max-width:500px;").d-flex.flex-grow-1
-            SearchBar(@submit="onSubmitSearch")
+            SearchBar
           v-spacer
           v-tab(to="/about") About
           v-tab(to="/for-developers") For developers

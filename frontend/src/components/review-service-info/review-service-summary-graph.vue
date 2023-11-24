@@ -10,12 +10,12 @@
             h4 Process
             v-container.grey.lighten-4.mb-5.rounded-lg
               v-row(v-if="review_requested_by" no-gutters)
-                v-row(v-bind="attrs" v-on="on" dense)
+                v-row(dense)
                   v-col
                     b
                       span(v-if="review_requested_by==='Authors'") Author-driven
                       span(v-else) Author-independent
-                    v-tooltip(right)
+                    v-tooltip(right transition="fade-transition")
                       template(v-slot:activator="{ on, hover, attrs }")
                         span(v-bind="attrs" v-on="on").ml-2
                             v-icon(color="grey-lighten-1") mdi-information-outline
@@ -25,13 +25,13 @@
               
           
               v-row(v-if="reviewer_selected_by" no-gutters)
-                v-row(v-bind="attrs" v-on="on" dense)
+                v-row(dense)
                   v-col
                     b
                       span(v-if="reviewer_selected_by==='Editor, service, or community'") Service-selected reviewers
                       span(v-else-if="reviewer_selected_by==='Self-nominated'") Self-nominated reviewers
                       span(v-else-if="reviewer_selected_by==='Authors'") Author-selected reviewers
-                    v-tooltip(right)
+                    v-tooltip(right transition="fade-transition")
                       template(v-slot:activator="{ on, hover, attrs }")
                         span(v-bind="attrs" v-on="on").ml-2
                             v-icon(color="grey-lighten-1") mdi-information-outline
@@ -40,12 +40,12 @@
                         b.ml-1 {{ reviewer_selected_by }} select the reviewers.
 
               v-row(v-if="public_interaction" no-gutters)
-                v-row(v-bind="attrs" v-on="on" dense)
+                v-row(dense)
                   v-col.d-flex
                     b
                       span(v-if="public_interaction=='Included'") Public feedback
                       span(v-else) No public interactions
-                    v-tooltip(right)
+                    v-tooltip(right transition="fade-transition")
                       template(v-slot:activator="{ on, hover, attrs }")
                         span(v-bind="attrs" v-on="on").ml-2
                             v-icon(color="grey-lighten-1") mdi-information-outline
@@ -54,12 +54,12 @@
                         b.ml-1 {{ public_interaction }}.
 
               v-row(v-if="opportunity_for_author_response" no-gutters)
-                v-row(v-bind="attrs" v-on="on" dense)
+                v-row(dense)
                   v-col
                     b
                       span(v-if="opportunity_for_author_response=='Included'") Authors reply
                       span(v-else)  No author reply
-                    v-tooltip(right)
+                    v-tooltip(right transition="fade-transition")
                       template(v-slot:activator="{ on, hover, attrs }")
                         span(v-bind="attrs" v-on="on").ml-2
                             v-icon(color="grey-lighten-1") mdi-information-outline
@@ -68,13 +68,13 @@
                         b.ml-1 {{ opportunity_for_author_response }}.
 
               v-row(v-if="recommendation" no-gutters)
-                v-row(v-bind="attrs" v-on="on" dense)
+                v-row(dense)
                   v-col
                     b
                       span(v-if="recommendation=='Binary decision'") Binary decision 
                       span(v-else-if="recommendation=='Other scale or rating'") Scaled rating
                       span(v-else) No decision
-                    v-tooltip(right)
+                    v-tooltip(right transition="fade-transition")
                       template(v-slot:activator="{ on, hover, attrs }")
                         span(v-bind="attrs" v-on="on").ml-2
                             v-icon(color="grey-lighten-1") mdi-information-outline
@@ -85,7 +85,7 @@
             h4 Policy
             v-container.grey.lighten-4.rounded-lg
               v-row(v-if="peer_review_policy" no-gutters)
-                v-row(v-bind="attrs" v-on="on" dense)
+                v-row(dense)
                   v-col
                     span Reviewing guidelines:
                     b.prd_val Yes (
@@ -93,7 +93,7 @@
                         v-icon(small class="pa-1") mdi-open-in-new
                         |)
 
-                    v-tooltip(right)
+                    v-tooltip(right transition="fade-transition")
                       template(v-slot:activator="{ on, hover, attrs }")
                         span(v-bind="attrs" v-on="on").ml-2
                             v-icon(color="grey-lighten-1") mdi-information-outline
@@ -101,11 +101,11 @@
                         i Explicit guidelines for reviewers 
 
               v-row(v-if="review_coverage" no-gutters)
-                v-row(v-bind="attrs" v-on="on" dense)
+                v-row(dense)
                   v-col
                     span(v-if="review_coverage") Review coverage:
                     b.prd_val {{ review_coverage }}
-                    v-tooltip(right)
+                    v-tooltip(right transition="fade-transition") 
                       template(v-slot:activator="{ on, hover, attrs }")
                         span(v-bind="attrs" v-on="on").ml-2
                             v-icon(color="grey-lighten-1") mdi-information-outline
@@ -113,11 +113,11 @@
                         i Does the feedback cover the entire paper or only a certain section or aspect?
 
               v-row(v-if="reviewer_identity_known_to" no-gutters)
-                v-row(v-bind="attrs" v-on="on" dense)
+                v-row(dense)
                   v-col
                     span(v-if="reviewer_identity_known_to") Reviewer identity known to:
                     b.prd_val {{ reviewer_identity_known_to }}
-                    v-tooltip(right)
+                    v-tooltip(right transition="fade-transition")
                       template(v-slot:activator="{ on, hover, attrs }")
                         span(v-bind="attrs" v-on="on").ml-2
                             v-icon(color="grey-lighten-1") mdi-information-outline
@@ -125,11 +125,11 @@
                         i Are the identities of reviewers known to everyone (public), editors or service, or no one?
 
               v-row(v-if="competing_interests" no-gutters)
-                v-row(v-bind="attrs" v-on="on" dense)
+                v-row(dense)
                   v-col
                     span(v-if="competing_interests==='Checked'") Competing interests:
                     b.prd_val {{ competing_interests }}
-                    v-tooltip(right)
+                    v-tooltip(right transition="fade-transition")
                       template(v-slot:activator="{ on, hover, attrs }")
                         span(v-bind="attrs" v-on="on").ml-2
                             v-icon(color="grey-lighten-1") mdi-information-outline
