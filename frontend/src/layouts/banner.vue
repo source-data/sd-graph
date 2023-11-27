@@ -1,9 +1,12 @@
 <template lang="pug">
   .banner-title-wrapper
     router-link(to="/"  active-class="is-active")
-      .text-sm-h4.text-h5.pointer.banner-title 
-        b Early Evidence Base
-        .text-sm-h5.text-h6.pointer.banner-subtitle Aggregating Reviewed Preprints
+      .text-sm-h4.text-h5.pointer.banner-title.d-flex.align-center
+        span Early Evidence Base
+        div.ml-auto
+          span.text-body-2.font-italic an initiative by
+          img(src="../assets/EMBO_logo.svg" alt="EMBO Logo" height="30px").ml-2
+      .text-sm-h5.text-h6.pointer.banner-subtitle Collecting and Assessing Reviewed Preprints
 </template>
 
 <style lang="scss" scoped>
