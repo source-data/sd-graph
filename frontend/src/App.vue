@@ -48,9 +48,8 @@ html, body {
   margin:0;
 }
 
-a {
+.v-application a {
   text-decoration: none;
-  color: #66b1ff;
 }
 
 .pointer {

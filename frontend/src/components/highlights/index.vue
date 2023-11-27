@@ -1,7 +1,7 @@
 <template lang="pug">
 div.d-flex.ml-auto.mr-auto
   v-container(v-if="loadingRecords")
-    v-progress-circular(:size="70" :width="7" color="purple" indeterminate)
+    v-progress-circular(:size="70" :width="7" color="primary" indeterminate)
 
   span(v-if="!loadingRecords")
     v-container(fluid v-if="records.length > 0" :class="{'highlights-loading': loadingRecords}")
