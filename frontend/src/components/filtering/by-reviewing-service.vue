@@ -8,6 +8,7 @@ v-card(flat)
           v-chip(
             :value="serviceId2Slug(serviceId)" :disabled="loadingRecords"
           )
+            img(v-if="imageFileName(serviceId2Slug(serviceId))" :src="require(`@/assets/chips/` + imageFileName(serviceId2Slug(serviceId)))" height="24px" :alt="serviceId2Name(serviceId)").pa-1
             | {{ serviceId2Name(serviceId) }}
 
     InfoCardsReviewServiceSummaryGraph(
@@ -54,11 +55,13 @@ export default {
     },
   },
   methods: {
-    onSelect (selectedItemId) {
-      this.$emit('change', selectedItemId)
-    },
-    reviewingListId(i, j) {
-      return this.reviewingList[(i-1)*2 + (j-1)]
+    // Returns the filename for the  image that should be associated with the chip's text, or null if none is found
+    imageFileName(slug) {
+      const availableSourceLogos = require.context('../../assets/chips/', true, /\.(svg|png|jpg)/).keys()
+      let filename = availableSourceLogos.find(i => i.includes(slug))
+      if (filename)
+        return filename.substring(2) // substring to remove the `./` part of the name
+      else return null
     },
     serviceId2Slug,
     serviceId2Name,
