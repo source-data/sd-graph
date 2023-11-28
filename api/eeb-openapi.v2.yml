@@ -1,0 +1,244 @@
+openapi: 3.0.3
+
+info:
+  title: Early Evidence Base API
+  version: 2.0.0
+  description: Read-only API for the Early Evidence Base platform providing collections of papers by reviewing service, automagic, and auto topics, as well as details on papers by DOI.
+
+servers:
+  - url: https://eeb.embo.org/api/v2
+    description: Production server
+  - url: https://eeb-dev.embo.org/api/v2
+    description: Development server
+
+tags:
+  - name: Reviewing Services
+    description: Endpoints related to retrieving information about reviewing services.
+  - name: Paper Details
+    description: Endpoints related to retrieving paper details.
+
+paths:
+  /reviewing_services/:
+    get:
+      summary: Get information about available reviewing services
+      responses:
+        "200":
+          description: An array of reviewing services.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewingServiceCollection"
+      tags:
+        - Reviewing Services
+
+  /papers/:
+    get:
+      summary: Get paginated collections of papers, optionally filtered by reviewing service
+      parameters:
+        - in: query
+          name: reviewed-by
+          schema:
+            type: array
+            items:
+              type: string
+          description: The IDs of the reviewing services for which papers are requested.
+        - in: query
+          name: query
+          schema:
+            type: string
+          description: A search string to filter the results by.
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: The page number of the results to retrieve. The first page is 1.
+        - in: query
+          name: per-page
+          schema:
+            type: integer
+            default: 10
+          description: The number of results to return per page.
+        - in: query
+          name: sort-by
+          schema:
+            type: string
+            enum:
+              - preprint-date
+              - reviewing-date
+            default: preprint-date
+          description: The field to sort the results by.
+        - in: query
+          name: sort-order
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
+          description: The direction to sort the results in.
+      responses:
+        "200":
+          description: An array of papers, sorted and filtered by the given parameters.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Paper"
+                  paging:
+                    $ref: "#/components/schemas/PagingInfo"
+      tags:
+        - Paper Details
+
+components:
+  schemas:
+    PagingInfo:
+      type: object
+      properties:
+        first:
+          type: string
+          example: "https://eeb.embo.org/api/v2/papers/?page=1"
+        prev:
+          type: string
+          nullable: true
+          example: "https://eeb.embo.org/api/v2/papers/?page=1"
+        current:
+          type: string
+          example: "https://eeb.embo.org/api/v2/papers/?page=2"
+        next:
+          type: string
+          nullable: true
+          example: "https://eeb.embo.org/api/v2/papers/?page=3"
+        last:
+          type: string
+          example: "https://eeb.embo.org/api/v2/papers/?page=10"
+        currentPage:
+          type: integer
+          example: 2
+        perPage:
+          type: integer
+          example: 10
+        total:
+          type: integer
+          example: 195
+        sortedBy:
+          type: string
+          example: preprint_date
+        sortedOrder:
+          type: string
+          example: desc
+
+    Paper:
+      type: object
+      properties:
+        doi:
+          type: string
+          format: doi
+        version:
+          type: string
+        source:
+          type: string
+        journal:
+          type: string
+        title:
+          type: string
+        abstract:
+          type: string
+        journal_doi:
+          type: string
+          nullable: true
+          format: doi
+        published_journal_title:
+          type: string
+          nullable: true
+        pub_date:
+          type: string
+          format: date-time
+        authors:
+          type: array
+          items:
+            $ref: "#/components/schemas/Author"
+        revdate:
+          type: string
+          format: date-time
+        entities:
+          type: array
+          items:
+            type: string
+        assays:
+          type: array
+          items:
+            type: string
+        main_topics:
+          type: array
+          items:
+            type: string
+        highlighted_entities:
+          type: array
+          items:
+            type: string
+        slug:
+          type: string
+        reviewed_by:
+          type: array
+          items:
+            type: string
+
+    Author:
+      type: object
+      properties:
+        surname:
+          type: string
+        corresp:
+          type: string
+          nullable: true
+        orcid:
+          type: string
+          format: uri
+          nullable: true
+        position_idx:
+          type: integer
+        given_names:
+          type: string
+
+    ReviewingServiceCollection:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+          reviewing_service_description:
+            $ref: "#/components/schemas/ReviewingServiceDescription"
+
+    ReviewingServiceDescription:
+      type: object
+      properties:
+        peer_review_policy:
+          type: string
+          format: uri
+        name:
+          type: string
+        competing_interests:
+          type: string
+        opportunity_for_author_response:
+          type: string
+        reviewer_selected_by:
+          type: string
+        recommendation:
+          type: string
+        public_interaction:
+          type: string
+        review_coverage:
+          type: string
+        review_requested_by:
+          type: string
+        url:
+          type: string
+          format: uri
+        reviewer_identity_known_to:
+          type: string

@@ -13,3 +13,5 @@ redis==3.5.2
 requests==2.23.0
 tqdm==4.62.2
 Werkzeug < 2.0.0
+
+-e api/server

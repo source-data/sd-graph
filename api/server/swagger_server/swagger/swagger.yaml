@@ -1,0 +1,435 @@
+openapi: 3.0.3
+info:
+  title: Early Evidence Base API
+  description: "Read-only API for the Early Evidence Base platform providing collections\
+    \ of papers by reviewing service, automagic, and auto topics, as well as details\
+    \ on papers by DOI."
+  version: 2.0.0
+servers:
+- url: https://eeb.embo.org/api/v2
+  description: Production server
+- url: https://eeb-dev.embo.org/api/v2
+  description: Development server
+- url: http://localhost:5050/api/v2
+  description: Local development server
+tags:
+- name: Reviewing Services
+  description: Endpoints related to retrieving information about reviewing services.
+- name: Paper Details
+  description: Endpoints related to retrieving paper details.
+paths:
+  /reviewing_services/:
+    get:
+      tags:
+      - Reviewing Services
+      summary: Get information about available reviewing services
+      operationId: reviewing_services_get
+      responses:
+        "200":
+          description: An array of reviewing services.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewingServiceCollection'
+      x-openapi-router-controller: swagger_server.controllers.reviewing_services_controller
+  /papers/:
+    get:
+      tags:
+      - Paper Details
+      summary: "Get paginated collections of papers, optionally filtered by reviewing\
+        \ service"
+      operationId: papers_get
+      parameters:
+      - name: reviewed_by
+        in: query
+        description: The IDs of the reviewing services for which papers are requested.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: query
+        in: query
+        description: A search string to filter the results by.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        description: The page number of the results to retrieve. The first page is
+          1.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 1
+      - name: per_page
+        in: query
+        description: The number of results to return per page.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 10
+      - name: sort_by
+        in: query
+        description: The field to sort the results by.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          default: preprint-date
+          enum:
+          - preprint-date
+          - reviewing-date
+      - name: sort_order
+        in: query
+        description: The direction to sort the results in.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          default: desc
+          enum:
+          - asc
+          - desc
+      responses:
+        "200":
+          description: "An array of papers, sorted and filtered by the given parameters."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200'
+      x-openapi-router-controller: swagger_server.controllers.paper_details_controller
+components:
+  schemas:
+    PagingInfo:
+      type: object
+      properties:
+        first:
+          type: string
+          example: https://eeb.embo.org/api/v2/papers/?page=1
+        prev:
+          type: string
+          nullable: true
+          example: https://eeb.embo.org/api/v2/papers/?page=1
+        current:
+          type: string
+          example: https://eeb.embo.org/api/v2/papers/?page=2
+        next:
+          type: string
+          nullable: true
+          example: https://eeb.embo.org/api/v2/papers/?page=3
+        last:
+          type: string
+          example: https://eeb.embo.org/api/v2/papers/?page=10
+        currentPage:
+          type: integer
+          example: 2
+        perPage:
+          type: integer
+          example: 10
+        total:
+          type: integer
+          example: 195
+        sortedBy:
+          type: string
+          example: preprint_date
+        sortedOrder:
+          type: string
+          example: desc
+      example:
+        next: https://eeb.embo.org/api/v2/papers/?page=3
+        sortedBy: preprint_date
+        current: https://eeb.embo.org/api/v2/papers/?page=2
+        total: 195
+        perPage: 10
+        last: https://eeb.embo.org/api/v2/papers/?page=10
+        prev: https://eeb.embo.org/api/v2/papers/?page=1
+        currentPage: 2
+        first: https://eeb.embo.org/api/v2/papers/?page=1
+        sortedOrder: desc
+    Paper:
+      type: object
+      properties:
+        doi:
+          type: string
+          format: doi
+        version:
+          type: string
+        source:
+          type: string
+        journal:
+          type: string
+        title:
+          type: string
+        abstract:
+          type: string
+        journal_doi:
+          type: string
+          format: doi
+          nullable: true
+        published_journal_title:
+          type: string
+          nullable: true
+        pub_date:
+          type: string
+          format: date-time
+        authors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Author'
+        revdate:
+          type: string
+          format: date-time
+        entities:
+          type: array
+          items:
+            type: string
+        assays:
+          type: array
+          items:
+            type: string
+        main_topics:
+          type: array
+          items:
+            type: string
+        highlighted_entities:
+          type: array
+          items:
+            type: string
+        slug:
+          type: string
+        reviewed_by:
+          type: array
+          items:
+            type: string
+      example:
+        reviewed_by:
+        - reviewed_by
+        - reviewed_by
+        assays:
+        - assays
+        - assays
+        source: source
+        abstract: abstract
+        title: title
+        version: version
+        published_journal_title: published_journal_title
+        pub_date: 2000-01-23T04:56:07.000+00:00
+        journal: journal
+        main_topics:
+        - main_topics
+        - main_topics
+        entities:
+        - entities
+        - entities
+        highlighted_entities:
+        - highlighted_entities
+        - highlighted_entities
+        revdate: 2000-01-23T04:56:07.000+00:00
+        journal_doi: journal_doi
+        slug: slug
+        doi: doi
+        authors:
+        - surname: surname
+          corresp: corresp
+          orcid: http://example.com/aeiou
+          position_idx: 0
+          given_names: given_names
+        - surname: surname
+          corresp: corresp
+          orcid: http://example.com/aeiou
+          position_idx: 0
+          given_names: given_names
+    Author:
+      type: object
+      properties:
+        surname:
+          type: string
+        corresp:
+          type: string
+          nullable: true
+        orcid:
+          type: string
+          format: uri
+          nullable: true
+        position_idx:
+          type: integer
+        given_names:
+          type: string
+      example:
+        surname: surname
+        corresp: corresp
+        orcid: http://example.com/aeiou
+        position_idx: 0
+        given_names: given_names
+    ReviewingServiceCollection:
+      type: array
+      items:
+        $ref: '#/components/schemas/ReviewingServiceCollection_inner'
+    ReviewingServiceDescription:
+      type: object
+      properties:
+        peer_review_policy:
+          type: string
+          format: uri
+        name:
+          type: string
+        competing_interests:
+          type: string
+        opportunity_for_author_response:
+          type: string
+        reviewer_selected_by:
+          type: string
+        recommendation:
+          type: string
+        public_interaction:
+          type: string
+        review_coverage:
+          type: string
+        review_requested_by:
+          type: string
+        url:
+          type: string
+          format: uri
+        reviewer_identity_known_to:
+          type: string
+      example:
+        peer_review_policy: http://example.com/aeiou
+        name: name
+        competing_interests: competing_interests
+        opportunity_for_author_response: opportunity_for_author_response
+        reviewer_selected_by: reviewer_selected_by
+        recommendation: recommendation
+        public_interaction: public_interaction
+        review_coverage: review_coverage
+        review_requested_by: review_requested_by
+        url: http://example.com/aeiou
+        reviewer_identity_known_to: reviewer_identity_known_to
+    inline_response_200:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Paper'
+        paging:
+          $ref: '#/components/schemas/PagingInfo'
+      example:
+        paging:
+          next: https://eeb.embo.org/api/v2/papers/?page=3
+          sortedBy: preprint_date
+          current: https://eeb.embo.org/api/v2/papers/?page=2
+          total: 195
+          perPage: 10
+          last: https://eeb.embo.org/api/v2/papers/?page=10
+          prev: https://eeb.embo.org/api/v2/papers/?page=1
+          currentPage: 2
+          first: https://eeb.embo.org/api/v2/papers/?page=1
+          sortedOrder: desc
+        items:
+        - reviewed_by:
+          - reviewed_by
+          - reviewed_by
+          assays:
+          - assays
+          - assays
+          source: source
+          abstract: abstract
+          title: title
+          version: version
+          published_journal_title: published_journal_title
+          pub_date: 2000-01-23T04:56:07.000+00:00
+          journal: journal
+          main_topics:
+          - main_topics
+          - main_topics
+          entities:
+          - entities
+          - entities
+          highlighted_entities:
+          - highlighted_entities
+          - highlighted_entities
+          revdate: 2000-01-23T04:56:07.000+00:00
+          journal_doi: journal_doi
+          slug: slug
+          doi: doi
+          authors:
+          - surname: surname
+            corresp: corresp
+            orcid: http://example.com/aeiou
+            position_idx: 0
+            given_names: given_names
+          - surname: surname
+            corresp: corresp
+            orcid: http://example.com/aeiou
+            position_idx: 0
+            given_names: given_names
+        - reviewed_by:
+          - reviewed_by
+          - reviewed_by
+          assays:
+          - assays
+          - assays
+          source: source
+          abstract: abstract
+          title: title
+          version: version
+          published_journal_title: published_journal_title
+          pub_date: 2000-01-23T04:56:07.000+00:00
+          journal: journal
+          main_topics:
+          - main_topics
+          - main_topics
+          entities:
+          - entities
+          - entities
+          highlighted_entities:
+          - highlighted_entities
+          - highlighted_entities
+          revdate: 2000-01-23T04:56:07.000+00:00
+          journal_doi: journal_doi
+          slug: slug
+          doi: doi
+          authors:
+          - surname: surname
+            corresp: corresp
+            orcid: http://example.com/aeiou
+            position_idx: 0
+            given_names: given_names
+          - surname: surname
+            corresp: corresp
+            orcid: http://example.com/aeiou
+            position_idx: 0
+            given_names: given_names
+    ReviewingServiceCollection_inner:
+      type: object
+      properties:
+        id:
+          type: string
+        reviewing_service_description:
+          $ref: '#/components/schemas/ReviewingServiceDescription'
+      example:
+        reviewing_service_description:
+          peer_review_policy: http://example.com/aeiou
+          name: name
+          competing_interests: competing_interests
+          opportunity_for_author_response: opportunity_for_author_response
+          reviewer_selected_by: reviewer_selected_by
+          recommendation: recommendation
+          public_interaction: public_interaction
+          review_coverage: review_coverage
+          review_requested_by: review_requested_by
+          url: http://example.com/aeiou
+          reviewer_identity_known_to: reviewer_identity_known_to
+        id: id
+

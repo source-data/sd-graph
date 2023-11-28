@@ -1,16 +1,21 @@
 import os
+from connexion import FlaskApp
 from dotenv import load_dotenv
-from flask import Flask
 from neotools.db import Instance
 from .config import Config
 from flask_cors import CORS
 from flask_caching import Cache
+from swagger_server import encoder
 
 
 load_dotenv()
 EEB_INTERNAL_API = os.getenv("EEB_INTERNAL_API")
 
-app = Flask(__name__)
+connexion_app = FlaskApp(__name__, specification_dir='../api/server/swagger_server/swagger/')
+app = connexion_app.app
+
+connexion_app.add_api('swagger.yaml', arguments={'title': 'Early Evidence Base API'}, pythonic_params=True)
+app.json_encoder = encoder.JSONEncoder
 
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
