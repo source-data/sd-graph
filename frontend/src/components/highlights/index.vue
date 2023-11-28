@@ -19,24 +19,24 @@ div.d-flex.ml-auto.mr-auto
       v-row
         v-col.d-flex
           v-btn-toggle(v-model="sortBy" @change="sortRecords")
-            v-tooltip(bottom)
+            v-tooltip(bottom transition="fade-transition")
               template(v-slot:activator="{ on, hover, attrs }")
                 v-btn(x-small v-bind="attrs" v-on="on" outlined value="pub_date")
                   | preprint date
               span Sort by preprint date
-            v-tooltip(bottom)
+            v-tooltip(bottom transition="fade-transition")
               template(v-slot:activator="{ on, hover, attrs }")
                 v-btn(x-small outlined value="posting_date" v-bind="attrs" v-on="on")
                   | reviewing date
               span Sort by revewing date
 
           v-btn-toggle(v-model="sortDirection" @change="sortRecords" mandatory).ml-3
-            v-tooltip(right)
+            v-tooltip(right transition="fade-transition")
               template(v-slot:activator="{ on, hover, attrs }")
                 v-btn(x-small v-bind="attrs" v-on="on" icon aria-label="descending" value="desc")
                   v-icon(dense) mdi-sort-descending
               span Show latest first
-            v-tooltip(right)
+            v-tooltip(right transition="fade-transition")
               template(v-slot:activator="{ on, hover, attrs }")
                 v-btn(x-small v-bind="attrs" v-on="on" icon aria-label="ascending" value="asc")
                   v-icon(dense) mdi-sort-ascending
