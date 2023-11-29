@@ -75,16 +75,22 @@
         // expect(instance.currentPage).to.be(expectedValueLiteral);
       });
 
+      it('should have the property totalPages (base name: "totalPages")', function() {
+        // TODO: update the code to test the property totalPages
+        expect(instance).to.have.property('totalPages');
+        // expect(instance.totalPages).to.be(expectedValueLiteral);
+      });
+
       it('should have the property perPage (base name: "perPage")', function() {
         // TODO: update the code to test the property perPage
         expect(instance).to.have.property('perPage');
         // expect(instance.perPage).to.be(expectedValueLiteral);
       });
 
-      it('should have the property total (base name: "total")', function() {
-        // TODO: update the code to test the property total
-        expect(instance).to.have.property('total');
-        // expect(instance.total).to.be(expectedValueLiteral);
+      it('should have the property totalItems (base name: "totalItems")', function() {
+        // TODO: update the code to test the property totalItems
+        expect(instance).to.have.property('totalItems');
+        // expect(instance.totalItems).to.be(expectedValueLiteral);
       });
 
       it('should have the property sortedBy (base name: "sortedBy")', function() {

@@ -14,7 +14,7 @@ class PagingInfo(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, first: str=None, prev: str=None, current: str=None, next: str=None, last: str=None, current_page: int=None, per_page: int=None, total: int=None, sorted_by: str=None, sorted_order: str=None):  # noqa: E501
+    def __init__(self, first: str=None, prev: str=None, current: str=None, next: str=None, last: str=None, current_page: int=None, total_pages: int=None, per_page: int=None, total_items: int=None, sorted_by: str=None, sorted_order: str=None):  # noqa: E501
         """PagingInfo - a model defined in Swagger
 
         :param first: The first of this PagingInfo.  # noqa: E501
@@ -29,10 +29,12 @@ class PagingInfo(Model):
         :type last: str
         :param current_page: The current_page of this PagingInfo.  # noqa: E501
         :type current_page: int
+        :param total_pages: The total_pages of this PagingInfo.  # noqa: E501
+        :type total_pages: int
         :param per_page: The per_page of this PagingInfo.  # noqa: E501
         :type per_page: int
-        :param total: The total of this PagingInfo.  # noqa: E501
-        :type total: int
+        :param total_items: The total_items of this PagingInfo.  # noqa: E501
+        :type total_items: int
         :param sorted_by: The sorted_by of this PagingInfo.  # noqa: E501
         :type sorted_by: str
         :param sorted_order: The sorted_order of this PagingInfo.  # noqa: E501
@@ -45,8 +47,9 @@ class PagingInfo(Model):
             'next': str,
             'last': str,
             'current_page': int,
+            'total_pages': int,
             'per_page': int,
-            'total': int,
+            'total_items': int,
             'sorted_by': str,
             'sorted_order': str
         }
@@ -58,8 +61,9 @@ class PagingInfo(Model):
             'next': 'next',
             'last': 'last',
             'current_page': 'currentPage',
+            'total_pages': 'totalPages',
             'per_page': 'perPage',
-            'total': 'total',
+            'total_items': 'totalItems',
             'sorted_by': 'sortedBy',
             'sorted_order': 'sortedOrder'
         }
@@ -69,8 +73,9 @@ class PagingInfo(Model):
         self._next = next
         self._last = last
         self._current_page = current_page
+        self._total_pages = total_pages
         self._per_page = per_page
-        self._total = total
+        self._total_items = total_items
         self._sorted_by = sorted_by
         self._sorted_order = sorted_order
 
@@ -212,6 +217,27 @@ class PagingInfo(Model):
         self._current_page = current_page
 
     @property
+    def total_pages(self) -> int:
+        """Gets the total_pages of this PagingInfo.
+
+
+        :return: The total_pages of this PagingInfo.
+        :rtype: int
+        """
+        return self._total_pages
+
+    @total_pages.setter
+    def total_pages(self, total_pages: int):
+        """Sets the total_pages of this PagingInfo.
+
+
+        :param total_pages: The total_pages of this PagingInfo.
+        :type total_pages: int
+        """
+
+        self._total_pages = total_pages
+
+    @property
     def per_page(self) -> int:
         """Gets the per_page of this PagingInfo.
 
@@ -233,25 +259,25 @@ class PagingInfo(Model):
         self._per_page = per_page
 
     @property
-    def total(self) -> int:
-        """Gets the total of this PagingInfo.
+    def total_items(self) -> int:
+        """Gets the total_items of this PagingInfo.
 
 
-        :return: The total of this PagingInfo.
+        :return: The total_items of this PagingInfo.
         :rtype: int
         """
-        return self._total
+        return self._total_items
 
-    @total.setter
-    def total(self, total: int):
-        """Sets the total of this PagingInfo.
+    @total_items.setter
+    def total_items(self, total_items: int):
+        """Sets the total_items of this PagingInfo.
 
 
-        :param total: The total of this PagingInfo.
-        :type total: int
+        :param total_items: The total_items of this PagingInfo.
+        :type total_items: int
         """
 
-        self._total = total
+        self._total_items = total_items
 
     @property
     def sorted_by(self) -> str:

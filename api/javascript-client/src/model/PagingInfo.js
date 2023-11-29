@@ -50,10 +50,12 @@ export class PagingInfo {
         obj.last = ApiClient.convertToType(data['last'], 'String');
       if (data.hasOwnProperty('currentPage'))
         obj.currentPage = ApiClient.convertToType(data['currentPage'], 'Number');
+      if (data.hasOwnProperty('totalPages'))
+        obj.totalPages = ApiClient.convertToType(data['totalPages'], 'Number');
       if (data.hasOwnProperty('perPage'))
         obj.perPage = ApiClient.convertToType(data['perPage'], 'Number');
-      if (data.hasOwnProperty('total'))
-        obj.total = ApiClient.convertToType(data['total'], 'Number');
+      if (data.hasOwnProperty('totalItems'))
+        obj.totalItems = ApiClient.convertToType(data['totalItems'], 'Number');
       if (data.hasOwnProperty('sortedBy'))
         obj.sortedBy = ApiClient.convertToType(data['sortedBy'], 'String');
       if (data.hasOwnProperty('sortedOrder'))
@@ -94,14 +96,19 @@ PagingInfo.prototype.last = undefined;
 PagingInfo.prototype.currentPage = undefined;
 
 /**
+ * @member {Number} totalPages
+ */
+PagingInfo.prototype.totalPages = undefined;
+
+/**
  * @member {Number} perPage
  */
 PagingInfo.prototype.perPage = undefined;
 
 /**
- * @member {Number} total
+ * @member {Number} totalItems
  */
-PagingInfo.prototype.total = undefined;
+PagingInfo.prototype.totalItems = undefined;
 
 /**
  * @member {String} sortedBy

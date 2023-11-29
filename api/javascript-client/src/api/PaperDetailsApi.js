@@ -62,7 +62,7 @@ export class PaperDetailsApi {
         
       };
       let queryParams = {
-        'reviewed-by': this.apiClient.buildCollectionParam(opts['reviewedBy'], 'multi'),'query': opts['query'],'page': opts['page'],'per-page': opts['perPage'],'sort-by': opts['sortBy'],'sort-order': opts['sortOrder']
+        'reviewedBy': this.apiClient.buildCollectionParam(opts['reviewedBy'], 'multi'),'query': opts['query'],'page': opts['page'],'perPage': opts['perPage'],'sortBy': opts['sortBy'],'sortOrder': opts['sortOrder']
       };
       let headerParams = {
         

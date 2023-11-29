@@ -10,6 +10,8 @@ servers:
     description: Production server
   - url: https://eeb-dev.embo.org/api/v2
     description: Development server
+  - url: http://localhost:5050/api/v2
+    description: Local development server
 
 tags:
   - name: Reviewing Services
@@ -36,7 +38,7 @@ paths:
       summary: Get paginated collections of papers, optionally filtered by reviewing service
       parameters:
         - in: query
-          name: reviewed-by
+          name: reviewedBy
           schema:
             type: array
             items:
@@ -54,13 +56,13 @@ paths:
             default: 1
           description: The page number of the results to retrieve. The first page is 1.
         - in: query
-          name: per-page
+          name: perPage
           schema:
             type: integer
             default: 10
           description: The number of results to return per page.
         - in: query
-          name: sort-by
+          name: sortBy
           schema:
             type: string
             enum:
@@ -69,7 +71,7 @@ paths:
             default: preprint-date
           description: The field to sort the results by.
         - in: query
-          name: sort-order
+          name: sortOrder
           schema:
             type: string
             enum:
@@ -101,28 +103,31 @@ components:
       properties:
         first:
           type: string
-          example: "https://eeb.embo.org/api/v2/papers/?page=1"
+          example: "/api/v2/papers/?page=1"
         prev:
           type: string
           nullable: true
-          example: "https://eeb.embo.org/api/v2/papers/?page=1"
+          example: "/api/v2/papers/?page=1"
         current:
           type: string
-          example: "https://eeb.embo.org/api/v2/papers/?page=2"
+          example: "/api/v2/papers/?page=2"
         next:
           type: string
           nullable: true
-          example: "https://eeb.embo.org/api/v2/papers/?page=3"
+          example: "/api/v2/papers/?page=3"
         last:
           type: string
-          example: "https://eeb.embo.org/api/v2/papers/?page=10"
+          example: "/api/v2/papers/?page=10"
         currentPage:
           type: integer
           example: 2
+        totalPages:
+          type: integer
+          example: 17
         perPage:
           type: integer
           example: 10
-        total:
+        totalItems:
           type: integer
           example: 195
         sortedBy:
