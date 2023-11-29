@@ -31,7 +31,7 @@ RUN pip install cmake \
 WORKDIR /app
 
 # Requirements are installed here to ensure they will be cached.
-COPY requirements/ requirements
+COPY requirements/ /requirements
 COPY api/server api/server
 RUN pip install --upgrade pip  \
     pip install --no-cache-dir -r /requirements/production.txt \
