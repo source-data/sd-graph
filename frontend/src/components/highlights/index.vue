@@ -5,7 +5,7 @@ div.d-flex.ml-auto.mr-auto
 
   span(v-if="!loadingRecords")
     v-container(fluid v-if="records.length > 0" :class="{'highlights-loading': loadingRecords}")
-      h2 {{ records.length }} articles found
+      h2 {{ records.length }} reviewed preprints found
     v-container(fluid v-if="records.length == 0 && !loadingRecords")
       h2(v-if="records.length == 0 && !loadingRecords") No results
     v-container(fluid :class="{'highlights-loading': loadingRecords}")
