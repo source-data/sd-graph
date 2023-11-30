@@ -1,5 +1,5 @@
 import httpClient from '../lib/http'
-import { REFEREED_PREPRINTS, AUTO_TOPICS, AUTOMAGIC, FULLTEXT_SEARCH } from '../components/quick-access/tab-names'
+import { REFEREED_PREPRINTS, FULLTEXT_SEARCH } from '../components/tab-names'
 
 export default {
   namespaced: true,
@@ -10,9 +10,7 @@ export default {
     sortBy: 'posting_date',
     sortDirection: 'desc',
     page: {
-      [AUTO_TOPICS]: 1,
       [REFEREED_PREPRINTS]: 1,
-      [AUTOMAGIC]: 1,
       [FULLTEXT_SEARCH]: 1
     }
   },

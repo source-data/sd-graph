@@ -1,40 +1,30 @@
 <template lang="pug">
-  v-container(fluid)
-    v-row
-      v-col
-        QuickAccess
-    v-row
-      v-col
+v-container(fluid).pa-0.ma-0
+  v-row.pa-3
+    v-col(cols=3)
+      v-row
+        ByReviewingService
+    v-col(cols=9)
+      v-row
         Highlights
 </template>
 
 
 <script>
-import QuickAccess from '../components/quick-access/index.vue'
 import Highlights from '../components/highlights/index.vue'
-import Intro from '../layouts/intro.vue'
+import ByReviewingService from '../components/filtering/by-reviewing-service.vue'
 
-import { REFEREED_PREPRINTS, AUTO_TOPICS, AUTOMAGIC, FULLTEXT_SEARCH } from '../components/quick-access/tab-names'
+import { REFEREED_PREPRINTS, FULLTEXT_SEARCH } from '../components/tab-names'
 import { serviceSlug2Id } from '../store/by-reviewing-service'
 
-function getStoreNameForCollection (collection, service) {
+function getStoreNameForCollection (collection) {
   let storeName = undefined
   switch (collection) {
     case 'refereed-preprints':
       storeName = REFEREED_PREPRINTS
       break
-    case 'all':
-      switch (service) {
-        case 'auto-topics':
-          storeName = AUTO_TOPICS
-          break
-        case 'automagic':
-          storeName = AUTOMAGIC
-          break
-        case 'search':
-          storeName = FULLTEXT_SEARCH
-          break
-      }
+    case 'search':
+      storeName = FULLTEXT_SEARCH
       break
   }
   return storeName
@@ -49,36 +39,15 @@ function initApp (collection, service, $store) {
    */
   let initialLoad = null
   let delayedLoad = []
-  const storeName = getStoreNameForCollection(collection, service)
+  const storeName = getStoreNameForCollection(collection)
   switch (storeName) {
     case REFEREED_PREPRINTS:
       initialLoad = REFEREED_PREPRINTS
-      delayedLoad = [
-        AUTO_TOPICS,
-        AUTOMAGIC,
-      ]
-      break;
-    case AUTO_TOPICS:
-      initialLoad = AUTO_TOPICS
-      delayedLoad = [
-        REFEREED_PREPRINTS,
-        AUTOMAGIC,
-      ]
-      break;
-    case AUTOMAGIC:
-      initialLoad = AUTOMAGIC
-      delayedLoad = [
-        REFEREED_PREPRINTS,
-        AUTO_TOPICS,
-      ]
+      delayedLoad = []
       break;
     case FULLTEXT_SEARCH:
       initialLoad = null
-      delayedLoad = [
-        AUTO_TOPICS,
-        REFEREED_PREPRINTS,
-        AUTOMAGIC,
-      ]
+      delayedLoad = []
       break;
   }
 
@@ -114,9 +83,8 @@ function initApp (collection, service, $store) {
 export default {
   name: 'home',
   components: {
-    QuickAccess,
     Highlights,
-    Intro,
+    ByReviewingService
   },
   props: {
     collection: String,
@@ -133,7 +101,7 @@ export default {
       this.$store.commit('byReviewingService/showRecord', { id: serviceId })
       this.$store.commit('highlights/updateCurrentPage', 1) // reset pagination if we are navigating to a different sub-app
     }
-    const storeName = getStoreNameForCollection(to.params.collection, to.params.service)
+    const storeName = getStoreNameForCollection(to.params.collection)
     this.$store.dispatch('highlights/listByCurrent', storeName)
     next()
   },
