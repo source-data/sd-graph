@@ -45,11 +45,4 @@ cache.init_app(app)
 with app.app_context():
     cache.clear()
 
-
-def get_db():
-    NEO_URI = os.getenv('NEO_URI')
-    NEO_USERNAME = os.getenv("NEO_USERNAME")
-    NEO_PASSWORD = os.getenv("NEO_PASSWORD")
-    return Instance(NEO_URI, NEO_USERNAME, NEO_PASSWORD)
-
 from . import views

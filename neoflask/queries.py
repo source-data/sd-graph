@@ -796,6 +796,40 @@ RETURN
     returns = ['name', 'url', 'peer_review_policy', 'author_driven_submissions', 'post_review_decision', 'pre_review_triage']
 
 
+class DESCRIBE_REVIEWING_SERVICES_V2(Query):
+    code = '''
+MATCH
+    (col:VizCollection {name: "refereed-preprints"})-[:HasSubCol]->(subcol:VizSubCollection)-[:HasDesciption]->(descriptor:VizDescriptor)
+RETURN
+    subcol.name AS id,
+    descriptor.name AS name,
+    descriptor.url AS url,
+    descriptor.peer_review_policy AS peer_review_policy,
+    descriptor.review_requested_by AS review_requested_by,
+    descriptor.reviewer_selected_by AS reviewer_selected_by,
+    descriptor.review_coverage AS review_coverage,
+    descriptor.reviewer_identity_known_to AS reviewer_identity_known_to,
+    descriptor.competing_interests AS competing_interests,
+    descriptor.public_interaction AS public_interaction,
+    descriptor.opportunity_for_author_response AS opportunity_for_author_response,
+    descriptor.recommendation AS recommendation
+    '''
+    returns = [
+        'id',
+        'display_name',
+        'url',
+        'peer_review_policy',
+        'review_requested_by',
+        'reviewer_selected_by',
+        'review_coverage',
+        'reviewer_identity_known_to',
+        'competing_interests',
+        'public_interaction',
+        'opportunity_for_author_response',
+        'recommendation',
+    ]
+
+
 class BY_REVIEWING_SERVICE(Query):
 
     code = '''
