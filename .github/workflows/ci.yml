@@ -52,6 +52,8 @@ jobs:
     - run: scripts/run-tests.sh -vv
 
   build-and-push-image:
+    # only build and push images on pushes to master and dev
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev'
     strategy:
       matrix:
         image: ['flask_deploy', 'flask', 'traefik', 'vuejs']
