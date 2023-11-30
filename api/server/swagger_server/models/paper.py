@@ -15,7 +15,7 @@ class Paper(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, doi: str=None, version: str=None, source: str=None, journal: str=None, title: str=None, abstract: str=None, journal_doi: str=None, published_journal_title: str=None, pub_date: datetime=None, authors: List[Author]=None, revdate: datetime=None, entities: List[str]=None, assays: List[str]=None, main_topics: List[str]=None, highlighted_entities: List[str]=None, slug: str=None, reviewed_by: List[str]=None):  # noqa: E501
+    def __init__(self, doi: str=None, version: str=None, source: str=None, journal: str=None, title: str=None, abstract: str=None, journal_doi: str=None, published_journal_title: str=None, pub_date: datetime=None, authors: List[Author]=None, revdate: datetime=None, entities: List[str]=None, assays: List[str]=None, main_topics: List[List[str]]=None, highlighted_entities: List[str]=None, slug: str=None, reviewed_by: List[str]=None):  # noqa: E501
         """Paper - a model defined in Swagger
 
         :param doi: The doi of this Paper.  # noqa: E501
@@ -45,7 +45,7 @@ class Paper(Model):
         :param assays: The assays of this Paper.  # noqa: E501
         :type assays: List[str]
         :param main_topics: The main_topics of this Paper.  # noqa: E501
-        :type main_topics: List[str]
+        :type main_topics: List[List[str]]
         :param highlighted_entities: The highlighted_entities of this Paper.  # noqa: E501
         :type highlighted_entities: List[str]
         :param slug: The slug of this Paper.  # noqa: E501
@@ -67,7 +67,7 @@ class Paper(Model):
             'revdate': datetime,
             'entities': List[str],
             'assays': List[str],
-            'main_topics': List[str],
+            'main_topics': List[List[str]],
             'highlighted_entities': List[str],
             'slug': str,
             'reviewed_by': List[str]
@@ -395,22 +395,22 @@ class Paper(Model):
         self._assays = assays
 
     @property
-    def main_topics(self) -> List[str]:
+    def main_topics(self) -> List[List[str]]:
         """Gets the main_topics of this Paper.
 
 
         :return: The main_topics of this Paper.
-        :rtype: List[str]
+        :rtype: List[List[str]]
         """
         return self._main_topics
 
     @main_topics.setter
-    def main_topics(self, main_topics: List[str]):
+    def main_topics(self, main_topics: List[List[str]]):
         """Sets the main_topics of this Paper.
 
 
         :param main_topics: The main_topics of this Paper.
-        :type main_topics: List[str]
+        :type main_topics: List[List[str]]
         """
 
         self._main_topics = main_topics

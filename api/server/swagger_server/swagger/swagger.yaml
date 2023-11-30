@@ -194,6 +194,7 @@ components:
         revdate:
           type: string
           format: date-time
+          nullable: true
         entities:
           type: array
           items:
@@ -205,7 +206,9 @@ components:
         main_topics:
           type: array
           items:
-            type: string
+            type: array
+            items:
+              type: string
         highlighted_entities:
           type: array
           items:
@@ -231,8 +234,10 @@ components:
         pub_date: 2000-01-23T04:56:07.000+00:00
         journal: journal
         main_topics:
-        - main_topics
-        - main_topics
+        - - main_topics
+          - main_topics
+        - - main_topics
+          - main_topics
         entities:
         - entities
         - entities
@@ -356,8 +361,10 @@ components:
           pub_date: 2000-01-23T04:56:07.000+00:00
           journal: journal
           main_topics:
-          - main_topics
-          - main_topics
+          - - main_topics
+            - main_topics
+          - - main_topics
+            - main_topics
           entities:
           - entities
           - entities
@@ -393,8 +400,10 @@ components:
           pub_date: 2000-01-23T04:56:07.000+00:00
           journal: journal
           main_topics:
-          - main_topics
-          - main_topics
+          - - main_topics
+            - main_topics
+          - - main_topics
+            - main_topics
           entities:
           - entities
           - entities

@@ -170,6 +170,7 @@ components:
         revdate:
           type: string
           format: date-time
+          nullable: true
         entities:
           type: array
           items:
@@ -181,7 +182,9 @@ components:
         main_topics:
           type: array
           items:
-            type: string
+            type: array
+            items:
+              type: string
         highlighted_entities:
           type: array
           items:
