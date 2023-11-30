@@ -1,5 +1,5 @@
 <template lang="pug">
-v-card(v-if="article" color="blue-grey lighten-5")
+v-card(v-if="article" color="tertiary")
   v-card-title
     div
       | {{ article.title }}
@@ -20,11 +20,11 @@ v-card(v-if="article" color="blue-grey lighten-5")
           v-chip-group(v-if="article.assays.length > 0" :key="3" column)
             v-chip(v-for="(item, index) in article.assays" small outlined :key="`assays-${index}`").green--text {{ item }}
         
-        v-tooltip(bottom)
+        v-tooltip(bottom transition="fade-transition")
           template(v-slot:activator="{ on, hover, attrs }")
             span(v-bind="attrs" v-on="on")
                 v-icon(color="grey-lighten-1") mdi-information-outline
-          span
+          span <!-- TODO: Explain what these are and what the colors mean -->
             h3 Keywords deduced from the figures. 
             p(style="max-width: 200px;") Green text means this, orange text means that...
 

@@ -1,21 +1,18 @@
 <template lang="pug">
-  v-row
-    v-col.d-flex.flex-row
-        router-link(to="/about")
-          v-list-item(index="1")
-            span About
-        router-link(to="/for-developers")
-          v-list-item(index="2")
-            span For developers
-        router-link(to="/contact")
-          v-list-item(index="3")
-            span Contact
-    v-col.d-flex.align-center
-      span.ml-auto EMBO &#169; {{ thisYear }}
+  v-footer(padless).d-flex.flex-grow-1
+    router-link(to="/about")
+      v-list-item(index="1")
+        span About
+    router-link(to="/contact")
+      v-list-item(index="3")
+        span Contact
+    v-spacer 
+    a(href="https://github.com/source-data/sd-graph" target="_blank" rel="noopener").pr-2.ml-auto.mr-2
+      img(src="../assets/github-mark.png" alt="EMBO Logo").gh-badge
+    span EMBO &#169; {{ thisYear }}
 </template>
 
 <script>
-
 export default {
   name: 'Footer',
   computed: {
@@ -25,3 +22,9 @@ export default {
   },
 }
 </script>
+
+<style>
+.gh-badge {
+  width:35px;
+}
+</style>
