@@ -57,8 +57,8 @@ def papers_get(reviewed_by=None, query=None, page=None, per_page=None, sort_by=N
         return filter_by_query(paper) and filter_by_review_service(paper)
 
     papers = list(filter(filter_papers, all_papers))
-    total = len(papers)
-    total_pages = total // per_page + 1
+    total_items = len(papers)
+    total_pages = total_items // per_page + 1
 
     papers = sorted(papers, key=sort_key)
     if sort_order == "desc":
@@ -76,7 +76,8 @@ def papers_get(reviewed_by=None, query=None, page=None, per_page=None, sort_by=N
             "last": f"{base_url}&page={total_pages}",
             "currentPage": page,
             "perPage": per_page,
-            "total": total,
+            "totalItems": total_items,
+            "totalPages": total_pages,
             "sortedBy": sort_by,
             "sortedOrder": sort_order,
         }
