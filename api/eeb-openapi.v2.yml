@@ -29,7 +29,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ReviewingServiceCollection"
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReviewingServiceDescription"
       tags:
         - Reviewing Services
 
@@ -213,24 +215,14 @@ components:
         given_names:
           type: string
 
-    ReviewingServiceCollection:
-      type: array
-      items:
-        type: object
-        properties:
-          id:
-            type: string
-          reviewing_service_description:
-            $ref: "#/components/schemas/ReviewingServiceDescription"
-
     ReviewingServiceDescription:
       type: object
       properties:
+        id:
+          type: string
         peer_review_policy:
           type: string
           format: uri
-        name:
-          type: string
         competing_interests:
           type: string
         opportunity_for_author_response:

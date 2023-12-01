@@ -14,13 +14,13 @@ class ReviewingServiceDescription(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, peer_review_policy: str=None, name: str=None, competing_interests: str=None, opportunity_for_author_response: str=None, reviewer_selected_by: str=None, recommendation: str=None, public_interaction: str=None, review_coverage: str=None, review_requested_by: str=None, url: str=None, reviewer_identity_known_to: str=None):  # noqa: E501
+    def __init__(self, id: str=None, peer_review_policy: str=None, competing_interests: str=None, opportunity_for_author_response: str=None, reviewer_selected_by: str=None, recommendation: str=None, public_interaction: str=None, review_coverage: str=None, review_requested_by: str=None, url: str=None, reviewer_identity_known_to: str=None):  # noqa: E501
         """ReviewingServiceDescription - a model defined in Swagger
 
+        :param id: The id of this ReviewingServiceDescription.  # noqa: E501
+        :type id: str
         :param peer_review_policy: The peer_review_policy of this ReviewingServiceDescription.  # noqa: E501
         :type peer_review_policy: str
-        :param name: The name of this ReviewingServiceDescription.  # noqa: E501
-        :type name: str
         :param competing_interests: The competing_interests of this ReviewingServiceDescription.  # noqa: E501
         :type competing_interests: str
         :param opportunity_for_author_response: The opportunity_for_author_response of this ReviewingServiceDescription.  # noqa: E501
@@ -41,8 +41,8 @@ class ReviewingServiceDescription(Model):
         :type reviewer_identity_known_to: str
         """
         self.swagger_types = {
+            'id': str,
             'peer_review_policy': str,
-            'name': str,
             'competing_interests': str,
             'opportunity_for_author_response': str,
             'reviewer_selected_by': str,
@@ -55,8 +55,8 @@ class ReviewingServiceDescription(Model):
         }
 
         self.attribute_map = {
+            'id': 'id',
             'peer_review_policy': 'peer_review_policy',
-            'name': 'name',
             'competing_interests': 'competing_interests',
             'opportunity_for_author_response': 'opportunity_for_author_response',
             'reviewer_selected_by': 'reviewer_selected_by',
@@ -67,8 +67,8 @@ class ReviewingServiceDescription(Model):
             'url': 'url',
             'reviewer_identity_known_to': 'reviewer_identity_known_to'
         }
+        self._id = id
         self._peer_review_policy = peer_review_policy
-        self._name = name
         self._competing_interests = competing_interests
         self._opportunity_for_author_response = opportunity_for_author_response
         self._reviewer_selected_by = reviewer_selected_by
@@ -91,6 +91,27 @@ class ReviewingServiceDescription(Model):
         return util.deserialize_model(dikt, cls)
 
     @property
+    def id(self) -> str:
+        """Gets the id of this ReviewingServiceDescription.
+
+
+        :return: The id of this ReviewingServiceDescription.
+        :rtype: str
+        """
+        return self._id
+
+    @id.setter
+    def id(self, id: str):
+        """Sets the id of this ReviewingServiceDescription.
+
+
+        :param id: The id of this ReviewingServiceDescription.
+        :type id: str
+        """
+
+        self._id = id
+
+    @property
     def peer_review_policy(self) -> str:
         """Gets the peer_review_policy of this ReviewingServiceDescription.
 
@@ -110,27 +131,6 @@ class ReviewingServiceDescription(Model):
         """
 
         self._peer_review_policy = peer_review_policy
-
-    @property
-    def name(self) -> str:
-        """Gets the name of this ReviewingServiceDescription.
-
-
-        :return: The name of this ReviewingServiceDescription.
-        :rtype: str
-        """
-        return self._name
-
-    @name.setter
-    def name(self, name: str):
-        """Sets the name of this ReviewingServiceDescription.
-
-
-        :param name: The name of this ReviewingServiceDescription.
-        :type name: str
-        """
-
-        self._name = name
 
     @property
     def competing_interests(self) -> str:

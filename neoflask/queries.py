@@ -802,7 +802,6 @@ MATCH
     (col:VizCollection {name: "refereed-preprints"})-[:HasSubCol]->(subcol:VizSubCollection)-[:HasDesciption]->(descriptor:VizDescriptor)
 RETURN
     subcol.name AS id,
-    descriptor.name AS name,
     descriptor.url AS url,
     descriptor.peer_review_policy AS peer_review_policy,
     descriptor.review_requested_by AS review_requested_by,
@@ -816,7 +815,6 @@ RETURN
     '''
     returns = [
         'id',
-        'display_name',
         'url',
         'peer_review_policy',
         'review_requested_by',

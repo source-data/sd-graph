@@ -30,7 +30,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ReviewingServiceCollection'
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReviewingServiceDescription'
+                x-content-type: application/json
       x-openapi-router-controller: swagger_server.controllers.reviewing_services_controller
   /papers/:
     get:
@@ -281,18 +284,14 @@ components:
         orcid: http://example.com/aeiou
         position_idx: 0
         given_names: given_names
-    ReviewingServiceCollection:
-      type: array
-      items:
-        $ref: '#/components/schemas/ReviewingServiceCollection_inner'
     ReviewingServiceDescription:
       type: object
       properties:
+        id:
+          type: string
         peer_review_policy:
           type: string
           format: uri
-        name:
-          type: string
         competing_interests:
           type: string
         opportunity_for_author_response:
@@ -314,11 +313,11 @@ components:
           type: string
       example:
         peer_review_policy: http://example.com/aeiou
-        name: name
         competing_interests: competing_interests
         opportunity_for_author_response: opportunity_for_author_response
         reviewer_selected_by: reviewer_selected_by
         recommendation: recommendation
+        id: id
         public_interaction: public_interaction
         review_coverage: review_coverage
         review_requested_by: review_requested_by
@@ -425,25 +424,4 @@ components:
             orcid: http://example.com/aeiou
             position_idx: 0
             given_names: given_names
-    ReviewingServiceCollection_inner:
-      type: object
-      properties:
-        id:
-          type: string
-        reviewing_service_description:
-          $ref: '#/components/schemas/ReviewingServiceDescription'
-      example:
-        reviewing_service_description:
-          peer_review_policy: http://example.com/aeiou
-          name: name
-          competing_interests: competing_interests
-          opportunity_for_author_response: opportunity_for_author_response
-          reviewer_selected_by: reviewer_selected_by
-          recommendation: recommendation
-          public_interaction: public_interaction
-          review_coverage: review_coverage
-          review_requested_by: review_requested_by
-          url: http://example.com/aeiou
-          reviewer_identity_known_to: reviewer_identity_known_to
-        id: id
 
