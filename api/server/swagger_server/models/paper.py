@@ -125,6 +125,7 @@ class Paper(Model):
     def doi(self) -> str:
         """Gets the doi of this Paper.
 
+        The DOI of the paper.  # noqa: E501
 
         :return: The doi of this Paper.
         :rtype: str
@@ -135,6 +136,7 @@ class Paper(Model):
     def doi(self, doi: str):
         """Sets the doi of this Paper.
 
+        The DOI of the paper.  # noqa: E501
 
         :param doi: The doi of this Paper.
         :type doi: str
@@ -146,6 +148,7 @@ class Paper(Model):
     def version(self) -> str:
         """Gets the version of this Paper.
 
+        The version of the paper.  # noqa: E501
 
         :return: The version of this Paper.
         :rtype: str
@@ -156,6 +159,7 @@ class Paper(Model):
     def version(self, version: str):
         """Sets the version of this Paper.
 
+        The version of the paper.  # noqa: E501
 
         :param version: The version of this Paper.
         :type version: str
@@ -167,6 +171,7 @@ class Paper(Model):
     def source(self) -> str:
         """Gets the source of this Paper.
 
+        The source of the paper. Either \"bioRxiv\" or \"medRxiv\".  # noqa: E501
 
         :return: The source of this Paper.
         :rtype: str
@@ -177,6 +182,7 @@ class Paper(Model):
     def source(self, source: str):
         """Sets the source of this Paper.
 
+        The source of the paper. Either \"bioRxiv\" or \"medRxiv\".  # noqa: E501
 
         :param source: The source of this Paper.
         :type source: str
@@ -188,6 +194,7 @@ class Paper(Model):
     def journal(self) -> str:
         """Gets the journal of this Paper.
 
+        The journal the paper was published in.  # noqa: E501
 
         :return: The journal of this Paper.
         :rtype: str
@@ -198,6 +205,7 @@ class Paper(Model):
     def journal(self, journal: str):
         """Sets the journal of this Paper.
 
+        The journal the paper was published in.  # noqa: E501
 
         :param journal: The journal of this Paper.
         :type journal: str

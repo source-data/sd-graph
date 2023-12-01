@@ -22,7 +22,7 @@ paths:
     get:
       tags:
       - Reviewing Services
-      summary: Get information about available reviewing services
+      summary: Get information about available reviewing services.
       operationId: reviewing_services_get
       responses:
         "200":
@@ -45,7 +45,10 @@ paths:
       parameters:
       - name: reviewedBy
         in: query
-        description: The IDs of the reviewing services for which papers are requested.
+        description: "The IDs of the reviewing services for which papers are requested.\
+          \ If specified, only papers that were reviewed by at least one of the specified\
+          \ reviewing services are returned. Is combined with the query parameter\
+          \ using a logical AND. If not specified, this filter is not applied."
         required: false
         style: form
         explode: true
@@ -55,7 +58,11 @@ paths:
             type: string
       - name: query
         in: query
-        description: A search string to filter the results by.
+        description: "A search string to filter the results by. The search string\
+          \ is matched against the paper DOI, title, abstract, and authors. The search\
+          \ is case-insensitive and matches partial words (e.g. the search string\
+          \ \"covid\" would match \"COVID-19\"). Is combined with the reviewedBy parameter\
+          \ using a logical AND. If not specified, this filter is not applied."
         required: false
         style: form
         explode: true
@@ -69,6 +76,7 @@ paths:
         style: form
         explode: true
         schema:
+          minimum: 1
           type: integer
           default: 1
       - name: perPage
@@ -78,6 +86,8 @@ paths:
         style: form
         explode: true
         schema:
+          maximum: 100
+          minimum: 1
           type: integer
           default: 10
       - name: sortBy
@@ -87,11 +97,7 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
-          default: preprint-date
-          enum:
-          - preprint-date
-          - reviewing-date
+          $ref: '#/components/schemas/PaperSortBy'
       - name: sortOrder
         in: query
         description: The direction to sort the results in.
@@ -99,83 +105,45 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
-          default: desc
-          enum:
-          - asc
-          - desc
+          $ref: '#/components/schemas/SortOrder'
       responses:
         "200":
-          description: "An array of papers, sorted and filtered by the given parameters."
+          description: "An array of papers, filtered, sorted, and paged by the given\
+            \ parameters."
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/inline_response_200'
+        "400":
+          description: Bad request. The request parameters are invalid. The response
+            body contains a JSON object with a detail property describing the error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
       x-openapi-router-controller: swagger_server.controllers.paper_details_controller
 components:
   schemas:
-    PagingInfo:
-      type: object
-      properties:
-        first:
-          type: string
-          example: /api/v2/papers/?page=1
-        prev:
-          type: string
-          nullable: true
-          example: /api/v2/papers/?page=1
-        current:
-          type: string
-          example: /api/v2/papers/?page=2
-        next:
-          type: string
-          nullable: true
-          example: /api/v2/papers/?page=3
-        last:
-          type: string
-          example: /api/v2/papers/?page=10
-        currentPage:
-          type: integer
-          example: 2
-        totalPages:
-          type: integer
-          example: 17
-        perPage:
-          type: integer
-          example: 10
-        totalItems:
-          type: integer
-          example: 195
-        sortedBy:
-          type: string
-          example: preprint_date
-        sortedOrder:
-          type: string
-          example: desc
-      example:
-        next: /api/v2/papers/?page=3
-        sortedBy: preprint_date
-        current: /api/v2/papers/?page=2
-        totalItems: 195
-        perPage: 10
-        last: /api/v2/papers/?page=10
-        prev: /api/v2/papers/?page=1
-        totalPages: 17
-        currentPage: 2
-        first: /api/v2/papers/?page=1
-        sortedOrder: desc
     Paper:
       type: object
       properties:
         doi:
           type: string
+          description: The DOI of the paper.
           format: doi
+          example: 10.1101/2020.05.22.111161
         version:
           type: string
+          description: The version of the paper.
+          example: "1.0"
         source:
           type: string
+          description: The source of the paper. Either "bioRxiv" or "medRxiv".
+          example: bioRxiv
         journal:
           type: string
+          description: The journal the paper was published in.
+          example: bioRxiv
         title:
           type: string
         abstract:
@@ -229,13 +197,13 @@ components:
         assays:
         - assays
         - assays
-        source: source
+        source: bioRxiv
         abstract: abstract
         title: title
-        version: version
+        version: "1.0"
         published_journal_title: published_journal_title
         pub_date: 2000-01-23T04:56:07.000+00:00
-        journal: journal
+        journal: bioRxiv
         main_topics:
         - - main_topics
           - main_topics
@@ -250,7 +218,7 @@ components:
         revdate: 2000-01-23T04:56:07.000+00:00
         journal_doi: journal_doi
         slug: slug
-        doi: doi
+        doi: 10.1101/2020.05.22.111161
         authors:
         - surname: surname
           corresp: corresp
@@ -323,6 +291,103 @@ components:
         review_requested_by: review_requested_by
         url: http://example.com/aeiou
         reviewer_identity_known_to: reviewer_identity_known_to
+    PaperSortBy:
+      type: string
+      description: The field to sort the result by.
+      default: preprint-date
+      enum:
+      - preprint-date
+      - reviewing-date
+    SortOrder:
+      type: string
+      description: The direction to sort the results in.
+      default: desc
+      enum:
+      - asc
+      - desc
+    PagingInfo:
+      type: object
+      properties:
+        first:
+          type: string
+          description: The URL of the first page of results.
+          example: /api/v2/papers/?page=1
+        prev:
+          type: string
+          description: The URL of the previous page of results. Null if the current
+            page is the first page.
+          nullable: true
+          example: /api/v2/papers/?page=1
+        current:
+          type: string
+          description: The URL of the current page of results.
+          example: /api/v2/papers/?page=2
+        next:
+          type: string
+          description: The URL of the next page of results. Null if the current page
+            is the last page.
+          nullable: true
+          example: /api/v2/papers/?page=3
+        last:
+          type: string
+          description: The URL of the last page of results.
+          example: /api/v2/papers/?page=10
+        currentPage:
+          minimum: 1
+          type: integer
+          description: The page number of the current page of results.
+          example: 2
+        totalPages:
+          minimum: 1
+          type: integer
+          description: The total number of pages of results.
+          example: 17
+        perPage:
+          maximum: 100
+          minimum: 1
+          type: integer
+          description: The number of results per page.
+          example: 10
+        totalItems:
+          minimum: 0
+          type: integer
+          description: The total number of results.
+          example: 195
+        sortedBy:
+          $ref: '#/components/schemas/PaperSortBy'
+        sortedOrder:
+          $ref: '#/components/schemas/SortOrder'
+      example:
+        next: /api/v2/papers/?page=3
+        sortedBy: preprint-date
+        current: /api/v2/papers/?page=2
+        totalItems: 195
+        perPage: 10
+        last: /api/v2/papers/?page=10
+        prev: /api/v2/papers/?page=1
+        totalPages: 17
+        currentPage: 2
+        first: /api/v2/papers/?page=1
+        sortedOrder: desc
+    Error:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: A human-readable description of the error.
+          example: "The sortBy parameter must be one of: preprint-date, reviewing-date"
+        title:
+          type: string
+          description: A short description of the error.
+          example: Bad Request
+        status:
+          type: integer
+          description: The HTTP status code of the error.
+          example: 400
+        type:
+          type: string
+          description: A URI reference that identifies the problem type.
+          example: about:blank
     inline_response_200:
       type: object
       properties:
@@ -335,7 +400,7 @@ components:
       example:
         paging:
           next: /api/v2/papers/?page=3
-          sortedBy: preprint_date
+          sortedBy: preprint-date
           current: /api/v2/papers/?page=2
           totalItems: 195
           perPage: 10
@@ -352,13 +417,13 @@ components:
           assays:
           - assays
           - assays
-          source: source
+          source: bioRxiv
           abstract: abstract
           title: title
-          version: version
+          version: "1.0"
           published_journal_title: published_journal_title
           pub_date: 2000-01-23T04:56:07.000+00:00
-          journal: journal
+          journal: bioRxiv
           main_topics:
           - - main_topics
             - main_topics
@@ -373,7 +438,7 @@ components:
           revdate: 2000-01-23T04:56:07.000+00:00
           journal_doi: journal_doi
           slug: slug
-          doi: doi
+          doi: 10.1101/2020.05.22.111161
           authors:
           - surname: surname
             corresp: corresp
@@ -391,13 +456,13 @@ components:
           assays:
           - assays
           - assays
-          source: source
+          source: bioRxiv
           abstract: abstract
           title: title
-          version: version
+          version: "1.0"
           published_journal_title: published_journal_title
           pub_date: 2000-01-23T04:56:07.000+00:00
-          journal: journal
+          journal: bioRxiv
           main_topics:
           - - main_topics
             - main_topics
@@ -412,7 +477,7 @@ components:
           revdate: 2000-01-23T04:56:07.000+00:00
           journal_doi: journal_doi
           slug: slug
-          doi: doi
+          doi: 10.1101/2020.05.22.111161
           authors:
           - surname: surname
             corresp: corresp

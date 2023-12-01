@@ -6,6 +6,8 @@ from datetime import date, datetime  # noqa: F401
 from typing import List, Dict  # noqa: F401
 
 from swagger_server.models.base_model_ import Model
+from swagger_server.models.paper_sort_by import PaperSortBy  # noqa: F401,E501
+from swagger_server.models.sort_order import SortOrder  # noqa: F401,E501
 from swagger_server import util
 
 
@@ -14,7 +16,7 @@ class PagingInfo(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, first: str=None, prev: str=None, current: str=None, next: str=None, last: str=None, current_page: int=None, total_pages: int=None, per_page: int=None, total_items: int=None, sorted_by: str=None, sorted_order: str=None):  # noqa: E501
+    def __init__(self, first: str=None, prev: str=None, current: str=None, next: str=None, last: str=None, current_page: int=None, total_pages: int=None, per_page: int=None, total_items: int=None, sorted_by: PaperSortBy=None, sorted_order: SortOrder=None):  # noqa: E501
         """PagingInfo - a model defined in Swagger
 
         :param first: The first of this PagingInfo.  # noqa: E501
@@ -36,9 +38,9 @@ class PagingInfo(Model):
         :param total_items: The total_items of this PagingInfo.  # noqa: E501
         :type total_items: int
         :param sorted_by: The sorted_by of this PagingInfo.  # noqa: E501
-        :type sorted_by: str
+        :type sorted_by: PaperSortBy
         :param sorted_order: The sorted_order of this PagingInfo.  # noqa: E501
-        :type sorted_order: str
+        :type sorted_order: SortOrder
         """
         self.swagger_types = {
             'first': str,
@@ -50,8 +52,8 @@ class PagingInfo(Model):
             'total_pages': int,
             'per_page': int,
             'total_items': int,
-            'sorted_by': str,
-            'sorted_order': str
+            'sorted_by': PaperSortBy,
+            'sorted_order': SortOrder
         }
 
         self.attribute_map = {
@@ -94,6 +96,7 @@ class PagingInfo(Model):
     def first(self) -> str:
         """Gets the first of this PagingInfo.
 
+        The URL of the first page of results.  # noqa: E501
 
         :return: The first of this PagingInfo.
         :rtype: str
@@ -104,6 +107,7 @@ class PagingInfo(Model):
     def first(self, first: str):
         """Sets the first of this PagingInfo.
 
+        The URL of the first page of results.  # noqa: E501
 
         :param first: The first of this PagingInfo.
         :type first: str
@@ -115,6 +119,7 @@ class PagingInfo(Model):
     def prev(self) -> str:
         """Gets the prev of this PagingInfo.
 
+        The URL of the previous page of results. Null if the current page is the first page.  # noqa: E501
 
         :return: The prev of this PagingInfo.
         :rtype: str
@@ -125,6 +130,7 @@ class PagingInfo(Model):
     def prev(self, prev: str):
         """Sets the prev of this PagingInfo.
 
+        The URL of the previous page of results. Null if the current page is the first page.  # noqa: E501
 
         :param prev: The prev of this PagingInfo.
         :type prev: str
@@ -136,6 +142,7 @@ class PagingInfo(Model):
     def current(self) -> str:
         """Gets the current of this PagingInfo.
 
+        The URL of the current page of results.  # noqa: E501
 
         :return: The current of this PagingInfo.
         :rtype: str
@@ -146,6 +153,7 @@ class PagingInfo(Model):
     def current(self, current: str):
         """Sets the current of this PagingInfo.
 
+        The URL of the current page of results.  # noqa: E501
 
         :param current: The current of this PagingInfo.
         :type current: str
@@ -157,6 +165,7 @@ class PagingInfo(Model):
     def next(self) -> str:
         """Gets the next of this PagingInfo.
 
+        The URL of the next page of results. Null if the current page is the last page.  # noqa: E501
 
         :return: The next of this PagingInfo.
         :rtype: str
@@ -167,6 +176,7 @@ class PagingInfo(Model):
     def next(self, next: str):
         """Sets the next of this PagingInfo.
 
+        The URL of the next page of results. Null if the current page is the last page.  # noqa: E501
 
         :param next: The next of this PagingInfo.
         :type next: str
@@ -178,6 +188,7 @@ class PagingInfo(Model):
     def last(self) -> str:
         """Gets the last of this PagingInfo.
 
+        The URL of the last page of results.  # noqa: E501
 
         :return: The last of this PagingInfo.
         :rtype: str
@@ -188,6 +199,7 @@ class PagingInfo(Model):
     def last(self, last: str):
         """Sets the last of this PagingInfo.
 
+        The URL of the last page of results.  # noqa: E501
 
         :param last: The last of this PagingInfo.
         :type last: str
@@ -199,6 +211,7 @@ class PagingInfo(Model):
     def current_page(self) -> int:
         """Gets the current_page of this PagingInfo.
 
+        The page number of the current page of results.  # noqa: E501
 
         :return: The current_page of this PagingInfo.
         :rtype: int
@@ -209,6 +222,7 @@ class PagingInfo(Model):
     def current_page(self, current_page: int):
         """Sets the current_page of this PagingInfo.
 
+        The page number of the current page of results.  # noqa: E501
 
         :param current_page: The current_page of this PagingInfo.
         :type current_page: int
@@ -220,6 +234,7 @@ class PagingInfo(Model):
     def total_pages(self) -> int:
         """Gets the total_pages of this PagingInfo.
 
+        The total number of pages of results.  # noqa: E501
 
         :return: The total_pages of this PagingInfo.
         :rtype: int
@@ -230,6 +245,7 @@ class PagingInfo(Model):
     def total_pages(self, total_pages: int):
         """Sets the total_pages of this PagingInfo.
 
+        The total number of pages of results.  # noqa: E501
 
         :param total_pages: The total_pages of this PagingInfo.
         :type total_pages: int
@@ -241,6 +257,7 @@ class PagingInfo(Model):
     def per_page(self) -> int:
         """Gets the per_page of this PagingInfo.
 
+        The number of results per page.  # noqa: E501
 
         :return: The per_page of this PagingInfo.
         :rtype: int
@@ -251,6 +268,7 @@ class PagingInfo(Model):
     def per_page(self, per_page: int):
         """Sets the per_page of this PagingInfo.
 
+        The number of results per page.  # noqa: E501
 
         :param per_page: The per_page of this PagingInfo.
         :type per_page: int
@@ -262,6 +280,7 @@ class PagingInfo(Model):
     def total_items(self) -> int:
         """Gets the total_items of this PagingInfo.
 
+        The total number of results.  # noqa: E501
 
         :return: The total_items of this PagingInfo.
         :rtype: int
@@ -272,6 +291,7 @@ class PagingInfo(Model):
     def total_items(self, total_items: int):
         """Sets the total_items of this PagingInfo.
 
+        The total number of results.  # noqa: E501
 
         :param total_items: The total_items of this PagingInfo.
         :type total_items: int
@@ -280,43 +300,43 @@ class PagingInfo(Model):
         self._total_items = total_items
 
     @property
-    def sorted_by(self) -> str:
+    def sorted_by(self) -> PaperSortBy:
         """Gets the sorted_by of this PagingInfo.
 
 
         :return: The sorted_by of this PagingInfo.
-        :rtype: str
+        :rtype: PaperSortBy
         """
         return self._sorted_by
 
     @sorted_by.setter
-    def sorted_by(self, sorted_by: str):
+    def sorted_by(self, sorted_by: PaperSortBy):
         """Sets the sorted_by of this PagingInfo.
 
 
         :param sorted_by: The sorted_by of this PagingInfo.
-        :type sorted_by: str
+        :type sorted_by: PaperSortBy
         """
 
         self._sorted_by = sorted_by
 
     @property
-    def sorted_order(self) -> str:
+    def sorted_order(self) -> SortOrder:
         """Gets the sorted_order of this PagingInfo.
 
 
         :return: The sorted_order of this PagingInfo.
-        :rtype: str
+        :rtype: SortOrder
         """
         return self._sorted_order
 
     @sorted_order.setter
-    def sorted_order(self, sorted_order: str):
+    def sorted_order(self, sorted_order: SortOrder):
         """Sets the sorted_order of this PagingInfo.
 
 
         :param sorted_order: The sorted_order of this PagingInfo.
-        :type sorted_order: str
+        :type sorted_order: SortOrder
         """
 
         self._sorted_order = sorted_order

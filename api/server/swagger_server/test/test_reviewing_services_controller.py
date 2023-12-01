@@ -15,7 +15,7 @@ class TestReviewingServicesController(BaseTestCase):
     def test_reviewing_services_get(self):
         """Test case for reviewing_services_get
 
-        Get information about available reviewing services
+        Get information about available reviewing services.
         """
         response = self.client.open(
             '/api/v2/reviewing_services/',

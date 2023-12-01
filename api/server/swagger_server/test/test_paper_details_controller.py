@@ -5,7 +5,10 @@ from __future__ import absolute_import
 from flask import json
 from six import BytesIO
 
+from swagger_server.models.error import Error  # noqa: E501
 from swagger_server.models.inline_response200 import InlineResponse200  # noqa: E501
+from swagger_server.models.paper_sort_by import PaperSortBy  # noqa: E501
+from swagger_server.models.sort_order import SortOrder  # noqa: E501
 from swagger_server.test import BaseTestCase
 
 
@@ -19,10 +22,10 @@ class TestPaperDetailsController(BaseTestCase):
         """
         query_string = [('reviewed_by', 'reviewed_by_example'),
                         ('query', 'query_example'),
-                        ('page', 1),
-                        ('per_page', 10),
-                        ('sort_by', 'preprint-date'),
-                        ('sort_order', 'desc')]
+                        ('page', 2),
+                        ('per_page', 100),
+                        ('sort_by', PaperSortBy()),
+                        ('sort_order', SortOrder())]
         response = self.client.open(
             '/api/v2/papers/',
             method='GET',
