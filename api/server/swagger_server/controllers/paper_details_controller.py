@@ -41,7 +41,7 @@ def papers_get(reviewed_by=None, query=None, page=None, per_page=None, sort_by=N
         filter_active = reviewed_by and len(reviewed_by) > 0
         if not filter_active:
             return True
-        return sorted(reviewed_by) == sorted(paper["reviewed_by"])
+        return any([service in paper["reviewed_by"] for service in reviewed_by])
 
     def filter_by_query(paper):
         filter_active = query and len(query) > 0
