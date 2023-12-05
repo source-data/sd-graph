@@ -2,34 +2,32 @@
 v-card(flat)
   v-card-title Review sources
   v-card-text
-    v-chip-group(v-model="selectedRev" mandatory column)
-      span(v-for="serviceId in this.reviewingList" :key="`${serviceId}-chip`")
-        router-link(:to="{ path: `/refereed-preprints/${serviceId2Slug(serviceId)}` }")
-          v-chip(
-            :value="serviceId2Slug(serviceId)" :disabled="loadingRecords"
-          )
-            img(v-if="imageFileName(serviceId2Slug(serviceId))" :src="require(`@/assets/chips/` + imageFileName(serviceId2Slug(serviceId)))" height="24px" :alt="serviceId2Name(serviceId)").pa-1
-            | {{ serviceId2Name(serviceId) }}
+    v-chip-group(v-model="selectedReviewer" mandatory column)
+      span(v-for="service in this.reviewing_services" :key="`${service.id}-chip`")
+        v-chip(:value="service.id" :disabled="loadingRecords" filter filter-icon="mdi-check" 
+               active-class="active-chip" text-color="black")
+          img(v-if="imageFileName(serviceId2Slug(service.id))" :src="require(`@/assets/chips/` + imageFileName(serviceId2Slug(service.id)))" height="24px" :alt="serviceId2Name(service.id)").pa-1
+          | {{ serviceId2Name(service.id) }}
 
     InfoCardsReviewServiceSummaryGraph(
-      :service_name="serviceId2Name(serviceSlug2Id(selectedRev))",
-      :url="reviewingService(serviceSlug2Id(selectedRev)).url",
-      :peer_review_policy="reviewingService(serviceSlug2Id(selectedRev)).peer_review_policy",
-      :review_requested_by="reviewingService(serviceSlug2Id(selectedRev)).review_requested_by",
-      :reviewer_selected_by="reviewingService(serviceSlug2Id(selectedRev)).reviewer_selected_by",
-      :review_coverage="reviewingService(serviceSlug2Id(selectedRev)).review_coverage",
-      :reviewer_identity_known_to="reviewingService(serviceSlug2Id(selectedRev)).reviewer_identity_known_to",
-      :competing_interests="reviewingService(serviceSlug2Id(selectedRev)).competing_interests",
-      :public_interaction="reviewingService(serviceSlug2Id(selectedRev)).public_interaction",
-      :opportunity_for_author_response="reviewingService(serviceSlug2Id(selectedRev)).opportunity_for_author_response",
-      :recommendation="reviewingService(serviceSlug2Id(selectedRev)).recommendation",
+      :service_name="serviceId2Name(selectedReviewer)",
+      :url="reviewingService(selectedReviewer).url",
+      :peer_review_policy="reviewingService(selectedReviewer).peer_review_policy",
+      :review_requested_by="reviewingService(selectedReviewer).review_requested_by",
+      :reviewer_selected_by="reviewingService(selectedReviewer).reviewer_selected_by",
+      :review_coverage="reviewingService(selectedReviewer).review_coverage",
+      :reviewer_identity_known_to="reviewingService(selectedReviewer).reviewer_identity_known_to",
+      :competing_interests="reviewingService(selectedReviewer).competing_interests",
+      :public_interaction="reviewingService(selectedReviewer).public_interaction",
+      :opportunity_for_author_response="reviewingService(selectedReviewer).opportunity_for_author_response",
+      :recommendation="reviewingService(selectedReviewer).recommendation",
     ).px-0.mt-2
 </template>
 
 <script>
 
-import { mapGetters, mapState } from 'vuex'
-import { serviceId2Slug, serviceId2Name, serviceSlug2Id } from '../../store/by-reviewing-service'
+import { mapState, mapGetters } from 'vuex'
+import { serviceId2Slug, serviceId2Name } from '../../store/by-filters'
 import InfoCardsReviewServiceSummaryGraph from '../review-service-info/review-service-summary-graph.vue'
 
 export default {
@@ -37,22 +35,21 @@ export default {
     InfoCardsReviewServiceSummaryGraph,
   },
   data () {
-    return {
-      selectedRev: undefined,
-    }
-  },
-  beforeMount () {
-    this.selectedRev = this.$route.params.service
+    return {}
   },
   computed: {
-    ...mapState('highlights', ['loadingRecords']),
-    ...mapGetters('byReviewingService', ['records', 'reviewingService']),
-    reviewingList () {
-      const ids =  this.records.map(
-        (r) => {return r.id}
-      ).sort().reverse()
-      return ids
-    },
+    ...mapState('byFilters', ['reviewing_services', 'loadingRecords', 'reviewed_by']),
+    ...mapGetters('byFilters', ['reviewingService']),
+
+    selectedReviewer: {
+      set(value) {
+        this.$store.commit("byFilters/setReviewedBy", value);
+        this.$store.dispatch('byFilters/updateRecords');
+      },
+      get() {
+        return this.reviewed_by
+      }
+    }
   },
   methods: {
     // Returns the filename for the  image that should be associated with the chip's text, or null if none is found
@@ -64,17 +61,13 @@ export default {
       else return null
     },
     serviceId2Slug,
-    serviceId2Name,
-    serviceSlug2Id
+    serviceId2Name
   },
 }
 </script>
 
 <style lang="scss" scoped>
-/* After the user clicks on a reviewing service's button, all rev service buttons are disabled.
- * This makes the clicked-on-but-disabled button distinct from all the other disabled buttons.
- */
-.v-btn--active.v-btn--disabled::before {
-  opacity: 0.5 !important;
+.active-chip {
+  background-color: var(--v-accent-lighten2);
 }
 </style>
