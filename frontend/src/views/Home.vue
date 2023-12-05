@@ -34,7 +34,7 @@ export default {
   },
 
   created () {
-    this.$store.dispatch(`initialGet/getDefault`);
+    this.$store.dispatch(`byFilters/initialLoad`);
     return true;
   },
 
