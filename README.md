@@ -22,18 +22,22 @@ docker-compose down --volumes # to clean the content of the volumes
 
 This can solve some issues, for example if you run `build` with a wrong config file.
 
-#### First time setup:
+### First time setup:
 
 ```bash
+cp .env.example .env
 docker-compose build
 docker-compose up
 ```
 
-Before you import any dump you need to make sure that Neo4j creates the layout for the databases. You can do that by running:
+Before you import any dump you need to make sure that Neo4j creates the layout for the databases.
+You can do that by running the commands above, or just this one (check your .env file for username/password):
 
+```bash
+docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u $NEO_USERNAME -p $NEO_PASSWORD
 ```
-docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p THE_SOURCEDATA_USER_PASSWORD
-```
+
+See a few sections below on how import a dump to load content into the neo4j database.
 
 ### Note for running on arm64 hosts like M1 Macbooks
 
@@ -46,7 +50,24 @@ docker compose --file docker-compose.yml --file docker-compose.arm64.yml up
 
 See https://docs.docker.com/compose/extends/#multiple-compose-files for more info on the concepts behind multiple compose files.
 
-#### Updating the database contents
+### For frontend development
+
+If you want to run only the frontend locally and use the backend on a remote server, you can run:
+
+```bash
+# go from the root of the repo to the frontend module
+cd frontend
+
+# install pinned dependencies
+npm ci
+
+# run dev server
+NODE_ENV="serverless" npm run serve
+```
+
+This uses the API of the eeb-dev.embo.org server for data.
+
+## Updating the database contents
 Normally you need this:
 ```bash
 docker-compose  build

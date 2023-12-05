@@ -1,0 +1,301 @@
+openapi: 3.0.3
+
+info:
+  title: Early Evidence Base API
+  version: 2.0.0
+  description: Read-only API for the Early Evidence Base platform providing collections of papers by reviewing service, automagic, and auto topics, as well as details on papers by DOI.
+
+servers:
+  - url: https://eeb.embo.org/api/v2
+    description: Production server
+  - url: https://eeb-dev.embo.org/api/v2
+    description: Development server
+  - url: http://localhost:5050/api/v2
+    description: Local development server
+
+tags:
+  - name: Reviewing Services
+    description: Endpoints related to retrieving information about reviewing services.
+  - name: Paper Details
+    description: Endpoints related to retrieving paper details.
+
+paths:
+  /reviewing_services/:
+    get:
+      summary: Get information about available reviewing services.
+      responses:
+        "200":
+          description: An array of reviewing services.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReviewingServiceDescription"
+      tags:
+        - Reviewing Services
+
+  /papers/:
+    get:
+      summary: Get paginated collections of papers, optionally filtered by reviewing service
+      parameters:
+        - in: query
+          name: reviewedBy
+          schema:
+            type: array
+            items:
+              type: string
+          description: The IDs of the reviewing services for which papers are requested. If specified, only papers that were reviewed by at least one of the specified reviewing services are returned. Is combined with the query parameter using a logical AND. If not specified, this filter is not applied.
+        - in: query
+          name: query
+          schema:
+            type: string
+          description: A search string to filter the results by. The search string is matched against the paper DOI, title, abstract, and authors. The search is case-insensitive and matches partial words (e.g. the search string "covid" would match "COVID-19"). Is combined with the reviewedBy parameter using a logical AND. If not specified, this filter is not applied.
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+          description: The page number of the results to retrieve. The first page is 1.
+        - in: query
+          name: perPage
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+          description: The number of results to return per page.
+        - in: query
+          name: sortBy
+          schema:
+            $ref: "#/components/schemas/PaperSortBy"
+          description: The field to sort the results by.
+        - in: query
+          name: sortOrder
+          schema:
+            $ref: "#/components/schemas/SortOrder"
+          description: The direction to sort the results in.
+      responses:
+        "200":
+          description: An array of papers, filtered, sorted, and paged by the given parameters.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Paper"
+                  paging:
+                    $ref: "#/components/schemas/PagingInfo"
+        "400":
+          description: Bad request. The request parameters are invalid. The response body contains a JSON object with a detail property describing the error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      tags:
+        - Paper Details
+
+components:
+  schemas:
+    Paper:
+      type: object
+      properties:
+        doi:
+          type: string
+          format: doi
+          description: The DOI of the paper.
+          example: "10.1101/2020.05.22.111161"
+        version:
+          type: string
+          description: The version of the paper.
+          example: "1.0"
+        source:
+          type: string
+          description: The source of the paper. Either "bioRxiv" or "medRxiv".
+          example: "bioRxiv"
+        journal:
+          type: string
+          description: The journal the paper was published in.
+          example: "bioRxiv"
+        title:
+          type: string
+        abstract:
+          type: string
+        journal_doi:
+          type: string
+          nullable: true
+          format: doi
+        published_journal_title:
+          type: string
+          nullable: true
+        pub_date:
+          type: string
+          format: date-time
+        authors:
+          type: array
+          items:
+            $ref: "#/components/schemas/Author"
+        revdate:
+          type: string
+          format: date-time
+          nullable: true
+        entities:
+          type: array
+          items:
+            type: string
+        assays:
+          type: array
+          items:
+            type: string
+        main_topics:
+          type: array
+          items:
+            type: array
+            items:
+              type: string
+        highlighted_entities:
+          type: array
+          items:
+            type: string
+        slug:
+          type: string
+        reviewed_by:
+          type: array
+          items:
+            type: string
+
+    Author:
+      type: object
+      properties:
+        surname:
+          type: string
+        corresp:
+          type: string
+          nullable: true
+        orcid:
+          type: string
+          format: uri
+          nullable: true
+        position_idx:
+          type: integer
+        given_names:
+          type: string
+
+    ReviewingServiceDescription:
+      type: object
+      properties:
+        id:
+          type: string
+        peer_review_policy:
+          type: string
+          format: uri
+        competing_interests:
+          type: string
+        opportunity_for_author_response:
+          type: string
+        reviewer_selected_by:
+          type: string
+        recommendation:
+          type: string
+        public_interaction:
+          type: string
+        review_coverage:
+          type: string
+        review_requested_by:
+          type: string
+        url:
+          type: string
+          format: uri
+        reviewer_identity_known_to:
+          type: string
+
+    PaperSortBy:
+      type: string
+      enum:
+        - preprint-date
+        - reviewing-date
+      default: preprint-date
+      description: The field to sort the result by.
+
+    SortOrder:
+      type: string
+      enum:
+        - asc
+        - desc
+      default: desc
+      description: The direction to sort the results in.
+
+    PagingInfo:
+      type: object
+      properties:
+        first:
+          type: string
+          description: The URL of the first page of results.
+          example: "/api/v2/papers/?page=1"
+        prev:
+          type: string
+          nullable: true
+          description: The URL of the previous page of results. Null if the current page is the first page.
+          example: "/api/v2/papers/?page=1"
+        current:
+          type: string
+          description: The URL of the current page of results.
+          example: "/api/v2/papers/?page=2"
+        next:
+          type: string
+          nullable: true
+          description: The URL of the next page of results. Null if the current page is the last page.
+          example: "/api/v2/papers/?page=3"
+        last:
+          type: string
+          description: The URL of the last page of results.
+          example: "/api/v2/papers/?page=10"
+        currentPage:
+          type: integer
+          minimum: 1
+          description: The page number of the current page of results.
+          example: 2
+        totalPages:
+          type: integer
+          minimum: 1
+          description: The total number of pages of results.
+          example: 17
+        perPage:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: The number of results per page.
+          example: 10
+        totalItems:
+          type: integer
+          minimum: 0
+          description: The total number of results.
+          example: 195
+        sortedBy:
+          $ref: "#/components/schemas/PaperSortBy"
+        sortedOrder:
+          $ref: "#/components/schemas/SortOrder"
+
+    Error:
+      type: object
+      properties:
+        detail:
+          type: string
+          example: "The sortBy parameter must be one of: preprint-date, reviewing-date"
+          description: A human-readable description of the error.
+        title:
+          type: string
+          example: "Bad Request"
+          description: A short description of the error.
+        status:
+          type: integer
+          example: 400
+          description: The HTTP status code of the error.
+        type:
+          type: string
+          example: "about:blank"
+          description: A URI reference that identifies the problem type.
