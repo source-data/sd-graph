@@ -65,7 +65,7 @@ v-card(v-if="article" color="tertiary")
 <script>
 import MarkdownIt from 'markdown-it'
 import { BASE_URL } from '../../lib/http'
-import { serviceId2Name } from '../../store/by-reviewing-service'
+import { serviceId2Name } from '../../store/by-filters'
 import '@source-data/render-rev'
 
 export default {
