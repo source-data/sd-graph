@@ -35,7 +35,7 @@ def papers_get(reviewed_by=None, query=None, page=None, per_page=None, sort_by=N
 
     def sort_key(paper):
         attr = sort_by_attr[sort_by]
-        return paper[attr]
+        return paper[attr] or ""
 
     def filter_by_review_service(paper):
         filter_active = reviewed_by and len(reviewed_by) > 0
