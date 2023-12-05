@@ -4,6 +4,7 @@
     height=90
     color="tertiary"
     hide-on-scroll
+    scroll-off-screen
   )
     v-row
       v-col(cols=3)
@@ -18,8 +19,6 @@
         justify-end
       )
         v-tab(to="/refereed-preprints") Browse
-        v-tab(to="/search" v-ripple="false" style="max-width:500px;").d-flex.flex-grow-1
-          SearchBar
         v-spacer
         v-tab(to="/about") About
         v-tab(to="/contact") Contact
@@ -28,12 +27,10 @@
 <script>
 
 import Banner from './banner'
-import SearchBar from '../components/filtering/by-simple-search-query.vue'
 
 export default {
   components: {
-    Banner,
-    SearchBar
+    Banner
   }
 }
 
