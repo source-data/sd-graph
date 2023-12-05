@@ -11,7 +11,6 @@ v-app
 <script>
 import TopNavBar from './layouts/top-nav-bar'
 import Banner from './layouts/banner'
-import LeftSideBar from './layouts/left-side-bar'
 import Footer from './layouts/footer'
 
 export default {
@@ -20,7 +19,6 @@ export default {
   components: {
     TopNavBar,
     Banner,
-    LeftSideBar,
     Footer
   },
   metaInfo: {
