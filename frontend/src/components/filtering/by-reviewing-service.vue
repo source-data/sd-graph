@@ -2,53 +2,34 @@
 v-card(flat)
   v-card-title Review sources
   v-card-text
-    v-chip-group(v-model="selectedReviewer" mandatory column)
+    v-chip-group(v-model="selectedReviewers" mandatory column multiple)
       span(v-for="service in this.reviewing_services" :key="`${service.id}-chip`")
         v-chip(:value="service.id" :disabled="loadingRecords" filter filter-icon="mdi-check" 
                active-class="active-chip" text-color="black")
           img(v-if="imageFileName(serviceId2Slug(service.id))" :src="require(`@/assets/chips/` + imageFileName(serviceId2Slug(service.id)))" height="24px" :alt="serviceId2Name(service.id)").pa-1
           | {{ serviceId2Name(service.id) }}
-
-    InfoCardsReviewServiceSummaryGraph(
-      :service_name="serviceId2Name(selectedReviewer)",
-      :url="reviewingService(selectedReviewer).url",
-      :peer_review_policy="reviewingService(selectedReviewer).peer_review_policy",
-      :review_requested_by="reviewingService(selectedReviewer).review_requested_by",
-      :reviewer_selected_by="reviewingService(selectedReviewer).reviewer_selected_by",
-      :review_coverage="reviewingService(selectedReviewer).review_coverage",
-      :reviewer_identity_known_to="reviewingService(selectedReviewer).reviewer_identity_known_to",
-      :competing_interests="reviewingService(selectedReviewer).competing_interests",
-      :public_interaction="reviewingService(selectedReviewer).public_interaction",
-      :opportunity_for_author_response="reviewingService(selectedReviewer).opportunity_for_author_response",
-      :recommendation="reviewingService(selectedReviewer).recommendation",
-    ).px-0.mt-2
 </template>
 
 <script>
 
-import { mapState, mapGetters } from 'vuex'
+import { mapState } from 'vuex'
 import { serviceId2Slug, serviceId2Name } from '../../store/by-filters'
-import InfoCardsReviewServiceSummaryGraph from '../review-service-info/review-service-summary-graph.vue'
 
 export default {
-  components: {
-    InfoCardsReviewServiceSummaryGraph,
-  },
   data () {
     return {}
   },
   computed: {
-    ...mapState('byFilters', ['reviewing_services', 'loadingRecords', 'reviewed_by']),
-    ...mapGetters('byFilters', ['reviewingService']),
+    ...mapState('byFilters', ['reviewing_services', 'loadingRecords', 'reviewed_bys']),
 
-    selectedReviewer: {
-      set(value) {
-        this.$store.commit("byFilters/setReviewedBy", value);
+    selectedReviewers: {
+      set(values) {
+        this.$store.commit("byFilters/setReviewedBys", values);
         this.$store.commit("byFilters/setCurrentPage", 1);
         this.$store.dispatch('byFilters/updateRecords');
       },
       get() {
-        return this.reviewed_by
+        return this.reviewed_bys
       }
     }
   },
