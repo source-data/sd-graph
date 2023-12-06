@@ -2,13 +2,31 @@
 v-card(v-if="article" color="tertiary")
   v-card-title
     div
-      | {{ article.title }}
-      router-link(:to="generateMyUrl()")
-        v-icon(color="indigo lighten-3").ml-1 mdi-link-variant
+      router-link(:to="generateInternalUrl").paper-title
+        | {{ article.title }}
+
+      v-tooltip(bottom transition="fade-transition")
+        template(v-slot:activator="{ on, hover, attrs }")
+          v-btn(@click="copyFullUrlToClipboard" v-bind="attrs" v-on="on" icon elevation=0 plain depressed v-ripple="false")
+            v-icon(color="primary").ml-3 mdi-link-variant
+        span Copy link to clipboard
+
+      v-tooltip(bottom transition="fade-transition")
+        template(v-slot:activator="{ on, hover, attrs }")
+          v-btn(@click="copyCitationToClipboard" v-bind="attrs" v-on="on" icon elevation=0 plain depressed v-ripple="false")
+            v-icon(color="primary").ml-1 mdi-format-quote-open
+        span Copy formatted citation
+
+      v-tooltip(bottom transition="fade-transition")
+        template(v-slot:activator="{ on, hover, attrs }")
+          a(v-bind="attrs" v-on="on" :href="getTweetHref")
+            v-icon(color="primary").ml-1 mdi-twitter
+        span Share on X
+      
   v-card-subtitle
     p.mb-0 {{ authorList }}
 
-    div.d-flex.flex-row.align-center
+    div(v-if="hasFigureKeywords").d-flex.flex-row.align-center
       v-list-item.px-0
         span.d-flex.flex-row.no-pointer-events
           v-chip-group(v-if="article.main_topics.length > 0" :key="0" column)
@@ -28,7 +46,7 @@ v-card(v-if="article" color="tertiary")
             h3 Keywords deduced from the figures. 
             p(style="max-width: 200px;") Green text means this, orange text means that...
 
-    p
+    span
       | Posted
       |
       b {{ displayDate(article.pub_date) }}
@@ -72,7 +90,7 @@ v-card(v-if="article" color="tertiary")
     v-container(fluid).article-content
       //- Vertical 1-col layout with review process first, abstract second on smaller screens, horizontal 2-col layout
       //-  with abstract left, review process right on larger screens. Entities always at the bottom in single column.
-      v-row(v-if="showReviewProcess")
+      v-row
         v-col(order="2" order-md="1" cols="12" md="7")
           v-card.article-card
             v-card-title Abstract
@@ -82,12 +100,6 @@ v-card(v-if="article" color="tertiary")
         v-col(order="1" order-md="2" cols="12" md="5")
           div.review-process
             render-rev(:ref='article.doi')
-      v-row(v-else)
-        v-col
-          v-card.article-card
-            v-card-title Abstract
-            v-card-text
-              p(class="text--primary") {{ article.abstract }}
 </template>
 
 <script>
@@ -152,11 +164,11 @@ export default {
     responseId() {
       return this.article.doi + '#rev0-ar'
     },
-    generateMyUrl () {
-      if (this.article.slug) {
-        return `/p/${this.article.slug}`
-      }
-      return `/doi/${this.article.doi}`
+    copyFullUrlToClipboard () {
+      navigator.clipboard.writeText(window.location.host + this.generateInternalUrl);
+    },
+    copyCitationToClipboard () {
+      navigator.clipboard.writeText(this.citationText);
     },
     selectReviewerInfo(value) {
       this.selectedSource = value;
@@ -177,32 +189,50 @@ export default {
     info () {
       return this.article.info
     },
-    showReviewProcess() {
-      return this.article.review_process && (
-        this.article.review_process.reviews.length > 0
-        || this.article.review_process.response
-        || this.article.review_process.annot.length > 0
-      )
+    hasFigureKeywords() {
+      return this.article.main_topics.length > 0 || this.article.highlighted_entities.length > 0 || 
+        this.article.entities.length > 0 || this.article.assays.length > 0
+    },
+    generateInternalUrl () {
+      if (this.article.slug) {
+        return `/p/${this.article.slug}`
+      }
+      return `/doi/${this.article.doi}`
+    },
+    getFullStandaloneUrl() {
+      return window.location.host + this.generateInternalUrl
+    },
+    getTweetHref() {
+      let tweetContent = this.getFullStandaloneUrl
+      let fullLink = "https://twitter.com/intent/tweet?text=" + tweetContent
+      return fullLink
+    },
+    citationText() {
+      const date = new Date(this.article.pub_date)       
+      const year = date.getFullYear()
+      
+      const reviewedByText = this.article.reviewed_by.map(r => "peer reviewed by " + serviceId2Name(r)).join(", ")
+
+      let citationText = `${this.authorList} (${year}). ${this.article.title}. ${this.article.journal} ${this.article.doi}, ${reviewedByText} ${this.getFullStandaloneUrl}.`
+      return citationText
     }
   },
   mounted() {
-    if (this.showReviewProcess) {
-      const docmapsUrl = doi => `${BASE_URL}/api/v2/docmap/${doi}`;
-      const doi = this.article.doi;
-      const highlightDoi = this.expandedReview ? this.expandedReview.doi : null;
+    const docmapsUrl = doi => `${BASE_URL}/api/v2/docmap/${doi}`;
+    const doi = this.article.doi;
+    const highlightDoi = this.expandedReview ? this.expandedReview.doi : null;
 
-      const md = new MarkdownIt({
-        html: true,
-        linkify: true,
-        typographer: true
-      });
-      const display = {
-        renderMarkdown: src => md.render(src),
-      };
+    const md = new MarkdownIt({
+      html: true,
+      linkify: true,
+      typographer: true
+    });
+    const display = {
+      renderMarkdown: src => md.render(src),
+    };
 
-      const el = this.$refs[doi];
-      el.configure({ docmapsUrl, doi, display, highlightDoi });
-    }
+    const el = this.$refs[doi];
+    el.configure({ docmapsUrl, doi, display, highlightDoi });
   }
 }
 </script>
@@ -234,5 +264,9 @@ export default {
 
   .no-pointer-events {
     pointer-events: none;
+  }
+
+  a:hover {
+    color: #217b90;
   }
 </style>
