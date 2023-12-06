@@ -3,8 +3,6 @@ import httpClient from '../lib/http'
 const papersApiPath = '/api/v2/papers/'
 const reviewersApiPath = '/api/v2/reviewing_services/'
 
-const defaultReviewer = "review commons"
-
 const _serviceId2Slug = {
   'biorxiv': 'biorxiv',
   'medrxiv': 'medrxiv',
@@ -29,6 +27,8 @@ const _serviceId2Name = {
   'peer ref': 'Peer Ref'
 }
 
+const _allServiceIds = Object.keys(_serviceId2Slug)
+
 export function serviceId2Slug(serviceId) {
   return _serviceId2Slug[serviceId]
 }
@@ -40,7 +40,7 @@ export function serviceId2Name(serviceId) {
 export const byFilters = {
   namespaced: true,
   state: {
-    reviewed_by: "review commons",
+    reviewed_bys: _allServiceIds,
     query: null,
 
     records: {},
@@ -79,8 +79,8 @@ export const byFilters = {
     setNotLoading (state) {
       state.loadingRecords = false
     },
-    setReviewedBy (state, reviewer) {
-      state.reviewed_by = reviewer
+    setReviewedBys (state, reviewers) {
+      state.reviewed_bys = reviewers
     },
     setCurrentPage (state, requestedPage) {
       state.paging.currentPage = requestedPage
@@ -98,8 +98,9 @@ export const byFilters = {
   actions: {
     initialLoad ({ commit }) {
       commit('setIsLoading')
-      // The initial load will fetch the first page using only the default reviewer
-      let pathWithQueryParameters = papersApiPath + "?reviewedBy=" + defaultReviewer
+      // The initial load will fetch the first page, using all reviewers
+      let allReviewedBys = _allServiceIds.map(s => "reviewedBy=" + s).join("&")
+      let pathWithQueryParameters = papersApiPath + "?" + allReviewedBys
       // First we get the records
       return httpClient.get(pathWithQueryParameters)
         .then((response) => {
@@ -121,9 +122,10 @@ export const byFilters = {
 
     updateRecords ({ commit, state }) {
       commit('setIsLoading')
+      let reviewBys = state.reviewed_bys.map(s => "reviewedBy=" + s).join("&")
       let maybeQuery = state.query != null && state.query !== "" ? "&query=" + state.query : ""
       let pathWithQueryParameters = papersApiPath + "?"
-        + "reviewedBy=" + state.reviewed_by
+        + reviewBys
         + maybeQuery
         + "&page=" + state.paging.currentPage
         + "&sortBy=" + state.paging.sortedBy
