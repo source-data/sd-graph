@@ -4,6 +4,7 @@ import router from './router'
 import store from './store'
 import VueMeta from 'vue-meta'
 import vuetify from './plugins/vuetify';
+import './scss/main.scss'
 
 Vue.use(VueMeta)
 
