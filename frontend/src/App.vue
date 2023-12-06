@@ -60,4 +60,8 @@ html, body {
   width: 100%;
   padding: 0;
 }
+
+.v-input__control:has(input:disabled) {
+  background-color:#dddddd !important;
+}
 </style>
