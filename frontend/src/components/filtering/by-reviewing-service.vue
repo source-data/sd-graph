@@ -68,6 +68,6 @@ export default {
 
 <style lang="scss" scoped>
 .active-chip {
-  background-color: var(--v-accent-lighten2);
+  background-color: var(--v-accent-lighten1);
 }
 </style>
