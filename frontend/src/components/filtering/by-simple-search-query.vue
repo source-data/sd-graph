@@ -45,6 +45,7 @@ export default {
     addQueryAndRefresh()  {
       this.$vuetify.goTo(0);
       this.disabled = true;
+      this.$store.commit("byFilters/setCurrentPage", 1);
       this.$store.dispatch('byFilters/updateRecords');
     },
     clearQuery() {
@@ -53,6 +54,7 @@ export default {
 
       this.$vuetify.goTo(0);
       this.$store.commit("byFilters/setQuery", this.query);
+      this.$store.commit("byFilters/setCurrentPage", 1);
       this.$store.dispatch('byFilters/updateRecords');
     },
   }

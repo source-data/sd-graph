@@ -74,7 +74,6 @@ export default {
         return parseInt(this.paging.currentPage)
       },
       set(value) {
-        debugger;
         this.$store.commit("byFilters/setCurrentPage", value);
         this.$store.dispatch('byFilters/updateRecords');
       }
@@ -85,6 +84,7 @@ export default {
       },
       set(value) {
         this.$store.commit('byFilters/setSortedBy', value);
+        this.$store.commit("byFilters/setCurrentPage", 1);
         this.$store.dispatch('byFilters/updateRecords');
       }
     },
@@ -94,6 +94,7 @@ export default {
       },
       set(value) {
         this.$store.commit('byFilters/setSortedOrder', value);
+        this.$store.commit("byFilters/setCurrentPage", 1);
         this.$store.dispatch('byFilters/updateRecords');
       }
     },
