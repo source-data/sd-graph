@@ -3,11 +3,11 @@ div.d-flex.mr-auto
   v-container(v-if="loadingRecords")
     v-progress-circular(:size="70" :width="7" color="primary" indeterminate)
 
-  span(v-if="!loadingRecords").mt-3
+  span(v-else).mt-3
     v-container(fluid v-if="paging.totalItems > 0" :class="{'highlights-loading': loadingRecords}")
       h2 {{ paging.totalItems }} reviewed preprints found
-    v-container(fluid v-if="paging.totalItems == 0 && !loadingRecords")
-      h2(v-if="paging.totalItems == 0 && !loadingRecords") Sorry, we couldn't find any results
+    v-container(fluid v-if="paging.totalItems == 0")
+      h2 Sorry, we couldn't find any results
       p Try changing some of the filter values
     v-container(fluid :class="{'highlights-loading': loadingRecords}")
       v-row(align="center" justify="start")
@@ -74,9 +74,7 @@ export default {
         return parseInt(this.paging.currentPage)
       },
       set(value) {
-        debugger;
         this.$store.commit("byFilters/setCurrentPage", value);
-        this.$store.dispatch('byFilters/updateRecords');
       }
     },
     sortBy: {
@@ -85,7 +83,6 @@ export default {
       },
       set(value) {
         this.$store.commit('byFilters/setSortedBy', value);
-        this.$store.dispatch('byFilters/updateRecords');
       }
     },
     sortedOrder: {
@@ -94,7 +91,6 @@ export default {
       },
       set(value) {
         this.$store.commit('byFilters/setSortedOrder', value);
-        this.$store.dispatch('byFilters/updateRecords');
       }
     },
     pageCount() {

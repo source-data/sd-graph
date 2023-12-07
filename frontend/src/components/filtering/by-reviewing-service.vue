@@ -44,7 +44,6 @@ export default {
     selectedReviewer: {
       set(value) {
         this.$store.commit("byFilters/setReviewedBy", value);
-        this.$store.dispatch('byFilters/updateRecords');
       },
       get() {
         return this.reviewed_by

@@ -41,7 +41,7 @@ export const byFilters = {
   namespaced: true,
   state: {
     reviewed_by: "review commons",
-    query: null,
+    query: "",
 
     records: {},
     paging: {},
@@ -59,12 +59,12 @@ export const byFilters = {
     /* *************************************************************************
     * Records and reviewing services
     */
-    addRecords (state, data) {
+    setRecords (state, data) {
       state.records = data.items
       state.paging = data.paging
     },
 
-    addReviewingServices (state, reviewing_services) {
+    setReviewingServices (state, reviewing_services) {
       state.reviewing_services = reviewing_services
     },
     /* *************************************************************************
@@ -104,13 +104,13 @@ export const byFilters = {
       return httpClient.get(pathWithQueryParameters)
         .then((response) => {
           const data = response.data
-          commit('addRecords', data)
+          commit('setRecords', data)
 
           // And then we get the reviewing services
           httpClient.get(reviewersApiPath)
           .then((response) => {
             const data = response.data
-            commit('addReviewingServices', data)
+            commit('setReviewingServices', data)
           })
           .finally(() => {
             commit('setNotLoading')
@@ -119,20 +119,21 @@ export const byFilters = {
         })
     },
 
-    updateRecords ({ commit, state }) {
+    updateRecords ({ commit, state }, resetPagination) {
+      debugger;
       commit('setIsLoading')
-      let maybeQuery = state.query != null && state.query !== "" ? "&query=" + state.query : ""
+      let maybeQuery = state.query !== "" ? "&query=" + state.query : ""
       let pathWithQueryParameters = papersApiPath + "?"
         + "reviewedBy=" + state.reviewed_by
         + maybeQuery
-        + "&page=" + state.paging.currentPage
+        + "&page=" + (resetPagination ? 1 : state.paging.currentPage)
         + "&sortBy=" + state.paging.sortedBy
         + "&sortOrder=" + state.paging.sortedOrder
 
       return httpClient.get(pathWithQueryParameters)
         .then((response) => {
           const data = response.data
-          commit('addRecords', data)
+          commit('setRecords', data)
         })
         .finally(() => {
           commit('setNotLoading')

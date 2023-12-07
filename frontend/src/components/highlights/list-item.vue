@@ -74,9 +74,7 @@ export default {
     expandedReview: Object,
   },
   data() {
-    return {
-      activeCards: [0,1,2],
-    }
+    return {}
   },
   methods: {
     href(doi) {
