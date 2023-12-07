@@ -123,67 +123,97 @@ components:
           example: "bioRxiv"
         title:
           type: string
+          description: The title of the paper.
+          example: "A SARS-CoV-2 protein interaction map reveals targets for drug repurposing"
         abstract:
           type: string
+          description: The abstract of the paper.
+          example: "The COVID-19 pandemic urgently needs..."
         journal_doi:
           type: string
           nullable: true
           format: doi
+          description: The DOI of the published version of this paper. Null if the paper has not been published.
+          example: "10.15252/embj.20105114"
         published_journal_title:
           type: string
           nullable: true
+          description: The title of the journal the paper was published in. Null if the paper has not been published.
+          example: "EMBO Journal"
         pub_date:
           type: string
           format: date-time
+          description: The date the paper was published.
+          example: "2020-05-22T00:00:00Z"
         authors:
           type: array
           items:
             $ref: "#/components/schemas/Author"
+          description: The authors of the paper.
         revdate:
           type: string
           format: date-time
           nullable: true
+          description: The date the paper was reviewed. Null if the paper has not been reviewed.
         entities:
           type: array
           items:
             type: string
+          description: The entities (e.g. genes, proteins, diseases) mentioned in the paper's figures.
         assays:
           type: array
           items:
             type: string
+          description: The assays (e.g. ELISA, PCR) mentioned in the paper's figures.
         main_topics:
           type: array
           items:
             type: array
             items:
               type: string
+          description: The main topics of the paper.
         highlighted_entities:
           type: array
           items:
             type: string
+          description: The highlighted entities (e.g. genes, proteins, diseases) mentioned in the paper's abstract.
         slug:
           type: string
+          description: The slug of the paper. Can be used to construct a URL to the paper's page on the Early Evidence Base platform.
+          example: "a-sars-cov-2-protein-interaction-map-reveals-targets-for-drug-repurposing"
         reviewed_by:
           type: array
           items:
             type: string
+          description: The IDs of the reviewing services that reviewed this paper.
+          example: ["review commons"]
 
     Author:
       type: object
       properties:
         surname:
           type: string
+          description: The surname of the author.
+          example: "Doe"
         corresp:
           type: string
           nullable: true
+          description: Whether the author is a corresponding author. "yes" if the author is a corresponding author, null otherwise.
+          example: "yes"
         orcid:
           type: string
           format: uri
           nullable: true
+          description: The ORCID of the author. Null if the author does not have an ORCID.
+          example: "https://orcid.org/0000-0001-2345-6789"
         position_idx:
           type: integer
+          description: The position of the author in the list of authors.
+          example: 1
         given_names:
           type: string
+          description: The given names of the author.
+          example: "Jane John"
 
     ReviewingServiceDescription:
       type: object
