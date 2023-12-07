@@ -44,7 +44,11 @@ export const byFilters = {
     query: "",
 
     records: {},
-    paging: {},
+    paging: {
+      page: 1,
+      sortBy: 'preprint-date',
+      sortOrder: 'desc'
+    },
     reviewing_services: [],
 
     loadingRecords: false,
@@ -98,11 +102,13 @@ export const byFilters = {
   actions: {
     initialLoad ({ commit }) {
       commit('setIsLoading')
+
       // The initial load will fetch the first page, using all reviewers
-      let allReviewedBys = _allServiceIds.map(s => "reviewedBy=" + s).join("&")
-      let pathWithQueryParameters = papersApiPath + "?" + allReviewedBys
+      const params = new URLSearchParams();
+      _allServiceIds.forEach(s => params.append("reviewedBy", s))
+
       // First we get the records
-      return httpClient.get(pathWithQueryParameters)
+      return httpClient.get(papersApiPath, {params})
         .then((response) => {
           const data = response.data
           commit('setRecords', data)
@@ -122,16 +128,16 @@ export const byFilters = {
 
     updateRecords ({ commit, state }, resetPagination) {
       commit('setIsLoading')
-      let maybeQuery = state.query !== "" ? "&query=" + state.query : ""
-      let reviewBys = state.reviewed_bys.map(s => "reviewedBy=" + s).join("&")
-      let pathWithQueryParameters = papersApiPath + "?"
-        + reviewBys
-        + maybeQuery
-        + "&page=" + (resetPagination ? 1 : state.paging.currentPage)
-        + "&sortBy=" + state.paging.sortedBy
-        + "&sortOrder=" + state.paging.sortedOrder
 
-      return httpClient.get(pathWithQueryParameters)
+      const params = new URLSearchParams();
+      if (state.query !== "")
+        params.append('query', state.query)
+      state.reviewed_bys.forEach(s => params.append("reviewedBy", s))
+      params.append('page', (resetPagination ? 1 : state.paging.currentPage))
+      params.append('sortBy', state.paging.sortedBy)
+      params.append('sortOrder', state.paging.sortedOrder)
+
+      return httpClient.get(papersApiPath, {params: params})
         .then((response) => {
           const data = response.data
           commit('setRecords', data)

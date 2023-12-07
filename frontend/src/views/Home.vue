@@ -32,12 +32,6 @@ export default {
     collection: String,
     service: String,
   },
-
-  created () {
-    this.$store.dispatch(`byFilters/initialLoad`);
-    return true;
-  },
-
 }
 </script>
 

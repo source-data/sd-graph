@@ -72,7 +72,7 @@ v-card(v-if="article" color="tertiary")
     v-container(fluid).article-content
       //- Vertical 1-col layout with review process first, abstract second on smaller screens, horizontal 2-col layout
       //-  with abstract left, review process right on larger screens. Entities always at the bottom in single column.
-      v-row(v-if="showReviewProcess")
+      v-row
         v-col(order="2" order-md="1" cols="12" md="7")
           v-card.article-card
             v-card-title Abstract
@@ -82,12 +82,6 @@ v-card(v-if="article" color="tertiary")
         v-col(order="1" order-md="2" cols="12" md="5")
           div.review-process
             render-rev(:ref='article.doi')
-      v-row(v-else)
-        v-col
-          v-card.article-card
-            v-card-title Abstract
-            v-card-text
-              p(class="text--primary") {{ article.abstract }}
 </template>
 
 <script>
@@ -176,33 +170,24 @@ export default {
     },
     info () {
       return this.article.info
-    },
-    showReviewProcess() {
-      return this.article.review_process && (
-        this.article.review_process.reviews.length > 0
-        || this.article.review_process.response
-        || this.article.review_process.annot.length > 0
-      )
     }
   },
   mounted() {
-    if (this.showReviewProcess) {
-      const docmapsUrl = doi => `${BASE_URL}/api/v2/docmap/${doi}`;
-      const doi = this.article.doi;
-      const highlightDoi = this.expandedReview ? this.expandedReview.doi : null;
+    const docmapsUrl = doi => `${BASE_URL}/api/v2/docmap/${doi}`;
+    const doi = this.article.doi;
+    const highlightDoi = this.expandedReview ? this.expandedReview.doi : null;
 
-      const md = new MarkdownIt({
-        html: true,
-        linkify: true,
-        typographer: true
-      });
-      const display = {
-        renderMarkdown: src => md.render(src),
-      };
+    const md = new MarkdownIt({
+      html: true,
+      linkify: true,
+      typographer: true
+    });
+    const display = {
+      renderMarkdown: src => md.render(src),
+    };
 
-      const el = this.$refs[doi];
-      el.configure({ docmapsUrl, doi, display, highlightDoi });
-    }
+    const el = this.$refs[doi];
+    el.configure({ docmapsUrl, doi, display, highlightDoi });
   }
 }
 </script>
