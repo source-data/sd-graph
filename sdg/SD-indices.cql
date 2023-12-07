@@ -63,5 +63,6 @@ ON EACH [
     n.abstract,
     // author fields
     n.concat_name,
-    n.surname
+    n.surname,
+    n.orcid
 ]
