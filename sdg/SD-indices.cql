@@ -39,6 +39,8 @@ CALL db.index.fulltext.drop("abstract");
 CALL db.index.fulltext.drop("abstract_jats");
 CALL db.index.fulltext.drop("title_jats");
 CALL db.index.fulltext.drop("caption");
+CALL db.index.fulltext.drop("fulltextIndexArticles");
+
 
 // create
 CALL db.index.fulltext.createNodeIndex("name",["SDContrib"], ["concat_name", "surname"]);
@@ -50,3 +52,16 @@ CALL db.index.fulltext.createNodeIndex("abstract", ["SDArticle"], ["abstract"], 
 CALL db.index.fulltext.createNodeIndex("abstract_jats", ["Article"], ["abstract"], {analyzer: "simple"});
 CALL db.index.fulltext.createNodeIndex("title_jats", ["Article"], ["title"], {analyzer: "simple"});
 CALL db.index.fulltext.createNodeIndex("caption", ["SDPanel"], ["caption"], {analyzer: "english"});
+
+CREATE FULLTEXT INDEX fulltextIndexArticles
+FOR (n:SDArticle|SDContrib)
+ON EACH [
+    // article fields
+    n.doi,
+    n.journal_doi,
+    n.title,
+    n.abstract,
+    // author fields
+    n.concat_name,
+    n.surname
+]

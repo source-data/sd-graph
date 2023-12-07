@@ -90,6 +90,172 @@ LIMIT $pagesize
     ] #, 'review_process']
 
 
+class REFEREED_PREPRINTS_V2(Query):
+
+    code = '''
+// Perform full-text search if `query` is provided
+CALL {
+  WITH $lucene_query AS searchQuery
+  WHERE searchQuery IS NOT NULL  // don't call the fulltext index if there is no query
+  CALL db.index.fulltext.queryNodes("fulltextIndexArticles", searchQuery)  // query must be escaped or validated if it comes from user input!
+  YIELD node, score
+  // node can be an article or an author. If it is an author, we want to return their article
+  OPTIONAL MATCH (a:SDArticle)-[:has_author]->(node)
+  WITH COALESCE (a, node) AS article
+  RETURN DISTINCT article.doi AS doi
+}
+WITH collect(doi) AS doisFulltextSearch
+
+// filter by reviewing service if requested
+MATCH (refprep:VizCollection {name: "refereed-preprints"})-[:HasSubCol]->(review_service:VizSubCollection)
+WHERE (
+  $reviewed_by IS NULL OR
+  $reviewed_by = [] OR
+  review_service.name IN $reviewed_by
+)
+
+// filter by query if requested
+MATCH (review_service)-[:HasPaper]->(paper:VizPaper)
+WHERE $lucene_query IS NULL OR paper.doi in doisFulltextSearch
+
+// figure out how to sort based on the provided parameters
+MATCH (paper)-[:HasReviewDate]->(revdate:VizReviewDate)
+WITH
+    paper.doi AS doi,
+    {
+      preprint_date: paper.pub_date,
+      review_date: revdate.date
+    } AS sort_fields  // for the parameterized sort, see below
+WITH
+  doi,
+  sort_fields[$sort_by] AS sort_field  // parameterized sort field; otherwise we'd have to use a CASE WHEN or python-based string interpolation
+ORDER BY
+// parameterized sort order
+CASE WHEN $sort_ascending THEN sort_field ELSE null END ASC,
+CASE WHEN $sort_ascending THEN null ELSE sort_field END DESC
+
+WITH COLLECT(DISTINCT doi) AS dois
+WITH 
+  SIZE(dois) AS n_total,
+  dois[$page * $per_page..($page + 1) * $per_page] AS dois  // paging
+
+CALL {
+  WITH dois
+  // construct the return object
+  UNWIND dois AS doi
+
+  // grab the most recent version of the article
+  CALL {
+      WITH doi
+      MATCH (article:Article {doi: doi})
+      WITH article
+      ORDER BY article.version DESC
+      return COLLECT(article)[0] AS a
+  }
+
+  // need the VizPaper for the slug and the VizSubCollection for the review services
+  MATCH (vzp:VizPaper {doi: doi})
+  MATCH (vzp)<-[:HasPaper]-(subcol:VizSubCollection)<-[:HasSubCol]-(:VizCollection {name: "refereed-preprints"})
+  MATCH (vzp)-[:HasReviewDate]->(revdate:VizReviewDate)
+  WITH
+    a,
+    vzp,
+    COLLECT(DISTINCT subcol.name) AS reviewed_by,
+    COLLECT(DISTINCT revdate.date) AS review_dates
+
+  OPTIONAL MATCH (a)-->(auth:Contrib)
+  OPTIONAL MATCH (auth)-[:has_orcid]->(auth_id:Contrib_id)
+  WITH
+    a,
+    vzp,
+    reviewed_by,
+    review_dates,
+    auth,
+    auth_id
+  ORDER BY auth.position_idx
+  WITH
+    a,
+    vzp,
+    reviewed_by,
+    review_dates,
+    COLLECT(DISTINCT auth {.surname, .given_names, .position_idx, .corresp, orcid: auth_id.text}) AS authors
+
+  OPTIONAL MATCH (VizCollection {name: "by-auto-topics"})-->(autotopics:VizSubCollection)-[rel_autotopics_paper]->(vzp)-[:HasEntityHighlight]->(highlight:VizEntity {category: 'entity'})
+  WITH
+    a,
+    vzp,
+    reviewed_by,
+    review_dates,
+    authors,
+    COLLECT(DISTINCT autotopics.topics) AS main_topics,
+    COLLECT(DISTINCT highlight.text) AS highlighted_entities
+
+  OPTIONAL MATCH (vzp)-[:HasEntity]->(assay:VizEntity {category: 'assay'})
+  WITH
+    a,
+    vzp,
+    reviewed_by,
+    review_dates,
+    authors,
+    main_topics,
+    highlighted_entities,
+    COLLECT(DISTINCT assay.text) AS assays
+
+  OPTIONAL MATCH (vzp)-[:HasEntity]->(entity:VizEntity {category: 'entity'})
+  // don't duplicate entities if they are in the topic highlight set
+  WHERE not((vzp)-[:HasEntityHighlight]->(entity))
+
+  WITH
+    a,
+    vzp,
+    reviewed_by,
+    review_dates,
+    authors,
+    main_topics,
+    highlighted_entities,
+    assays,
+    COLLECT(DISTINCT entity.text) AS entities
+
+  RETURN COLLECT({
+    slug: vzp.slug,
+    doi: a.doi,
+    version: a.version,
+    source: a.source,
+    journal: a.journal_title,
+    title: a.title,
+    abstract: a.abstract,
+    journal_doi: a.journal_doi,
+    published_journal_title: a.published_journal_title,
+    pub_date: toString(DATETIME(a.publication_date)),
+    review_dates: review_dates,
+    reviewed_by: reviewed_by,
+    authors: authors,
+    entities: entities,
+    assays: assays,
+    main_topics: main_topics,
+    highlighted_entities: highlighted_entities
+  }) AS items
+}
+
+RETURN n_total, items
+    '''
+    map = {
+      'reviewed_by': {'req_param': 'reviewed_by', 'default': None},
+      'lucene_query': {'req_param': 'lucene_query', 'default': None},
+
+      'sort_by': {'req_param': 'sort_by', 'default': 'pub_date'},
+      'sort_ascending': {'req_param': 'sort_ascending', 'default': False},
+
+      'page': {'req_param': 'page', 'default': 0},
+      'per_page': {'req_param': 'per_page', 'default': 10},
+    }
+
+    returns = [
+      'n_total',
+      'items',
+    ]
+
+
 class COLLECTION_NAMES(Query):
     code = '''
 MATCH (subject:Subject)
