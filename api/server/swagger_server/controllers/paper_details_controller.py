@@ -1,7 +1,7 @@
 from math import ceil
 from neoflask.queries import REFEREED_PREPRINTS_V2
 from neotools import ask_neo
-
+from urllib.parse import urlencode
 
 def _to_lucene_query(user_input):
     # remove double quotes and backslashes from user input to prevent injection
@@ -11,8 +11,21 @@ def _to_lucene_query(user_input):
 
 
 def papers_url(reviewed_by=None, query=None, page=None, per_page=None, sort_by=None, sort_order=None):
-    reviewed_by_query = "&".join([f"reviewedBy={r}" for r in reviewed_by]) if reviewed_by else ""
-    return fr"/api/v2/papers?{reviewed_by_query}&query={query}&page={page}&perPage={per_page}&sortBy={sort_by}&sortOrder={sort_order}"
+    base_url = "/api/v2/papers/"
+    query_params_list = [
+        ("page", page),
+        ("perPage", per_page),
+        ("sortBy", sort_by),
+        ("sortOrder", sort_order),
+    ]
+    if reviewed_by:
+        for service in reviewed_by:
+            query_params_list.append(("reviewedBy", service))
+    if query:
+        query_params_list.append(("query", query))
+
+    query_params = urlencode(query_params_list)
+    return f"{base_url}?{query_params}"
 
 
 def papers_get(reviewed_by=None, query=None, page=None, per_page=None, sort_by=None, sort_order=None):  # noqa: E501
@@ -35,7 +48,7 @@ def papers_get(reviewed_by=None, query=None, page=None, per_page=None, sort_by=N
 
     :rtype: InlineResponse200
     """
-    lucene_query = _to_lucene_query(query)
+    lucene_query = _to_lucene_query(query) if query else None
     db_page = page - 1  # neo4j pages are 0-indexed, page is checked for > 0 in param validation
     sort_ascending = sort_order == "asc"
     db_params = dict(
