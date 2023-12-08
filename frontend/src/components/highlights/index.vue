@@ -1,7 +1,7 @@
 <template lang="pug">
-div.d-flex.mr-auto
-  v-container(v-if="loadingRecords")
-    v-progress-circular(:size="70" :width="7" color="primary" indeterminate)
+div.d-flex.mr-auto.ml-auto
+  v-container(v-if="loadingRecords").mt-6
+    v-progress-circular(:size="70" :width="7" color="primary" indeterminate).ml-auto
 
   span(v-else).mt-3
     v-container(fluid v-if="paging.totalItems > 0" :class="{'highlights-loading': loadingRecords}")
@@ -15,7 +15,7 @@ div.d-flex.mr-auto
           v-pagination(
             v-if="paging.totalItems > 0"
             v-model="pageNumber"
-            :length="pageCount"
+            :length="this.paging.totalPages"
             :total-visible="10"
           )
       v-row(v-if="paging.totalItems > 0")
@@ -51,7 +51,7 @@ div.d-flex.mr-auto
         v-col(cols=6).px-0.d-flex
           v-pagination(
             v-model="pageNumber"
-            :length="pageCount"
+            :length="this.paging.totalPages"
             :total-visible="10"
           )
 </template>
@@ -92,12 +92,7 @@ export default {
       set(value) {
         this.$store.commit('byFilters/setSortedOrder', value);
       }
-    },
-    pageCount() {
-      let l = this.paging.totalItems,
-          s = this.paging.perPage
-      return Math.ceil(l / s)
-    },
+    }
   },
   methods: {},
 }

@@ -1,7 +1,7 @@
 <template lang="pug">
 v-app
   TopNavBar
-  v-main
+  v-main.main-padding
     v-container.main-content
       router-view
   v-footer
@@ -59,10 +59,13 @@ html, body {
 .container.main-content {
   max-width: 100%;
   width: 100%;
-  padding: 0;
 }
 
 .v-input__control:has(input:disabled) {
   background-color:#dddddd !important;
+}
+
+.main-padding {
+  padding-top: 150px;
 }
 </style>
