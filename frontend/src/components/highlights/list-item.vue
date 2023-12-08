@@ -220,4 +220,10 @@ export default {
   .no-pointer-events {
     pointer-events: none;
   }
+
+  .v-dialog > .v-card {
+    margin: 0px !important;
+    border-radius: 0;
+
+  }
 </style>
