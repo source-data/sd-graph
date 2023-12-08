@@ -50,14 +50,17 @@ def papers_get(reviewed_by=None, query=None, page=None, per_page=None, sort_by=N
     """
     lucene_query = _to_lucene_query(query) if query else None
     db_page = page - 1  # neo4j pages are 0-indexed, page is checked for > 0 in param validation
+    db_sort_by = ({
+        "preprint-date": "preprint_date",
+        "reviewing-date": "review_date",
+    }).get(sort_by)
     sort_ascending = sort_order == "asc"
     db_params = dict(
         reviewed_by=reviewed_by,  # parameterized in database query, no need to escape
         lucene_query=lucene_query,  # user input is escaped in _to_lucene_query()
         page=db_page,  # converted from 1- to 0-indexed above
-        # remaining parameters are already validated and can be passed through
-        per_page=per_page,
-        sort_by=sort_by,
+        per_page=per_page,  # already validated, and can be passed through
+        sort_by=db_sort_by,
         sort_ascending=sort_ascending
     )
     result = ask_neo(REFEREED_PREPRINTS_V2(), **db_params)

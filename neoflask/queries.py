@@ -243,7 +243,7 @@ RETURN n_total, items
       'reviewed_by': {'req_param': 'reviewed_by', 'default': None},
       'lucene_query': {'req_param': 'lucene_query', 'default': None},
 
-      'sort_by': {'req_param': 'sort_by', 'default': 'pub_date'},
+      'sort_by': {'req_param': 'sort_by', 'default': 'preprint_date'},
       'sort_ascending': {'req_param': 'sort_ascending', 'default': False},
 
       'page': {'req_param': 'page', 'default': 0},
