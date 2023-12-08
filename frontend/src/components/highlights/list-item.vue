@@ -165,7 +165,7 @@ export default {
       return this.article.doi + '#rev0-ar'
     },
     copyFullUrlToClipboard () {
-      navigator.clipboard.writeText(window.location.host + this.generateInternalUrl);
+      navigator.clipboard.writeText(this.getFullStandaloneDoiUrl);
     },
     copyCitationToClipboard () {
       navigator.clipboard.writeText(this.citationText);
@@ -199,11 +199,11 @@ export default {
       }
       return `/doi/${this.article.doi}`
     },
-    getFullStandaloneUrl() {
-      return window.location.host + this.generateInternalUrl
+    getFullStandaloneDoiUrl() {
+      return `${window.location.host}/doi/${this.article.doi}`
     },
     getTweetHref() {
-      let tweetContent = this.getFullStandaloneUrl
+      let tweetContent = this.getFullStandaloneDoiUrl
       let fullLink = "https://twitter.com/intent/tweet?text=" + tweetContent
       return fullLink
     },
@@ -213,7 +213,7 @@ export default {
       
       const reviewedByText = this.article.reviewed_by.map(r => "peer reviewed by " + serviceId2Name(r)).join(", ")
 
-      let citationText = `${this.authorList} (${year}). ${this.article.title}. ${this.article.journal} ${this.article.doi}, ${reviewedByText} ${this.getFullStandaloneUrl}.`
+      let citationText = `${this.authorList} (${year}). ${this.article.title}. ${this.article.journal} doi.org/${this.article.doi}, ${reviewedByText} ${this.getFullStandaloneDoiUrl}.`
       return citationText
     }
   },
