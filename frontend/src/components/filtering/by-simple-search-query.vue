@@ -1,31 +1,43 @@
 <template lang="pug">
-v-text-field(
-  v-model="query"
-  :loading="loadingRecords"
-  placeholder="keywords, authors, doi"
-  prepend-icon="mdi-magnify"
-  hide-details
-  @keyup.enter="onSubmit"
-)
+v-card(flat).flex-grow-1
+  v-card-title Search for terms
+  v-card-text.d-flex.d-flex-row.align-center
+    v-text-field(
+      :value="currentQuery" v-on:keyup.enter="currentQuery = $event.target.value"
+      :loading="loadingRecords"
+      placeholder="keywords, authors, doi"
+      prepend-icon="mdi-magnify"
+      hide-details
+      outlined
+    ).mt-0.pt-0
+    v-tooltip(bottom transition="fade-transition")
+      template(v-slot:activator="{ on, hover, attrs }")
+        v-btn(text v-bind="attrs" v-on="on" @click="currentQuery = ''" icon :disabled="query === ''")
+          v-icon(dense) mdi-close-circle
+      span Clear search
 </template>
 
 <script>
 import { mapState } from 'vuex'
+
 export default {
   data: function() {
     return {
-      query: ''
     }
   },
   computed: {
-    ...mapState('fulltextSearch', ['loadingRecords'])
+    ...mapState('byFilters', ['query', 'loadingRecords']),
+
+    currentQuery: {
+      set(value) {
+        this.$vuetify.goTo(0);
+        this.$store.commit("byFilters/setQuery", value);
+      },
+      get() {
+        return this.query
+      }
+    }
   },
-  methods: {
-    onSubmit()  {
-      this.$store.dispatch('fulltextSearch/search', this.query).then(
-        () => {this.$store.dispatch('highlights/listByCurrent', 'fulltextSearch')}
-      )
-    },
-  }
+  methods: {}
 }
 </script>
