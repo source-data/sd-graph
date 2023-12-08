@@ -6,14 +6,14 @@ v-card(flat)
       span(v-for="service in this.reviewing_services" :key="`${service.id}-chip`")
         v-chip(:value="service.id" :disabled="loadingRecords" filter filter-icon="mdi-check" 
                active-class="active-chip" text-color="black")
-          img(v-if="imageFileName(serviceId2Slug(service.id))" :src="require(`@/assets/chips/` + imageFileName(serviceId2Slug(service.id)))" height="24px" :alt="serviceId2Name(service.id)").pa-1
+          img(v-if="imageFileName(service.id)" :src="require(`@/assets/partner-logos/` + imageFileName(service.id))" height="24px" :alt="serviceId2Name(service.id)").pa-1
           | {{ serviceId2Name(service.id) }}
 </template>
 
 <script>
 
 import { mapState } from 'vuex'
-import { serviceId2Slug, serviceId2Name } from '../../store/by-filters'
+import { normalizeServiceName, serviceId2Name } from '../../store/by-filters'
 
 export default {
   data () {
@@ -33,14 +33,16 @@ export default {
   },
   methods: {
     // Returns the filename for the  image that should be associated with the chip's text, or null if none is found
-    imageFileName(slug) {
-      const availableSourceLogos = require.context('../../assets/chips/', true, /\.(svg|png|jpg)/).keys()
-      let filename = availableSourceLogos.find(i => i.includes(slug))
+    imageFileName(id) {
+      const availableSourceLogos = require.context('../../assets/partner-logos/', true, /\.(svg|png|jpg)/).keys()
+
+      let normalizedServiceName = normalizeServiceName(serviceId2Name(id))
+      let filename = availableSourceLogos.find(i => i.includes(normalizedServiceName))
       if (filename)
         return filename.substring(2) // substring to remove the `./` part of the name
       else return null
     },
-    serviceId2Slug,
+    normalizeServiceName,
     serviceId2Name
   },
 }

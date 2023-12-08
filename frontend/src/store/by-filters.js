@@ -3,18 +3,6 @@ import httpClient from '../lib/http'
 const papersApiPath = '/api/v2/papers/'
 const reviewersApiPath = '/api/v2/reviewing_services/'
 
-const _serviceId2Slug = {
-  'biorxiv': 'biorxiv',
-  'medrxiv': 'medrxiv',
-  'review commons': 'review-commons',
-  'elife': 'elife',
-  'embo press': 'embo-press',
-  'peerage of science': 'peerage-of-science',
-  'MIT Press - Journals': 'rrc19',
-  'Peer Community In': 'peer-community-in',
-  'peer ref': 'peer-ref',
-}
-
 const _serviceId2Name = {
   'biorxiv': 'bioRxiv', 
   'medrxiv': 'medRxiv',
@@ -27,10 +15,8 @@ const _serviceId2Name = {
   'peer ref': 'Peer Ref'
 }
 
-const _allServiceIds = Object.keys(_serviceId2Slug)
-
-export function serviceId2Slug(serviceId) {
-  return _serviceId2Slug[serviceId]
+export function normalizeServiceName(serviceName) {
+  return serviceName.toLowerCase().replaceAll(/[\W_]+/g, "");
 }
 
 export function serviceId2Name(serviceId) {
@@ -40,15 +26,11 @@ export function serviceId2Name(serviceId) {
 export const byFilters = {
   namespaced: true,
   state: {
-    reviewed_bys: _allServiceIds,
+    reviewed_bys: [],
     query: "",
 
     records: {},
-    paging: {
-      page: 1,
-      sortBy: 'preprint-date',
-      sortOrder: 'desc'
-    },
+    paging: {},
     reviewing_services: [],
 
     loadingRecords: false,
@@ -70,6 +52,7 @@ export const byFilters = {
 
     setReviewingServices (state, reviewing_services) {
       state.reviewing_services = reviewing_services
+      state.reviewed_bys = reviewing_services.map(s => s.id)
     },
     /* *************************************************************************
     * Setters
@@ -103,12 +86,8 @@ export const byFilters = {
     initialLoad ({ commit }) {
       commit('setIsLoading')
 
-      // The initial load will fetch the first page, using all reviewers
-      const params = new URLSearchParams();
-      _allServiceIds.forEach(s => params.append("reviewedBy", s))
-
       // First we get the records
-      return httpClient.get(papersApiPath, {params})
+      return httpClient.get(papersApiPath)
         .then((response) => {
           const data = response.data
           commit('setRecords', data)
