@@ -1,7 +1,8 @@
+from neoflask.cache import cache
 from neoflask.queries import DESCRIBE_REVIEWING_SERVICES_V2
 from neotools import ask_neo
 
-
+@cache.cached()
 def reviewing_services_get():  # noqa: E501
     """Get information about available reviewing services
 

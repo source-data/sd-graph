@@ -1,10 +1,9 @@
 import os
 from connexion import FlaskApp
 from dotenv import load_dotenv
-from neotools.db import Instance
+from .cache import init_cache
 from .config import Config
 from flask_cors import CORS
-from flask_caching import Cache
 from swagger_server import encoder
 
 
@@ -27,22 +26,6 @@ CORS(app, resources={r"/api/*": {"origins": "*"}})
 Config.init_app(app)
 app.config.from_object(Config)
 
-cache = Cache(config={
-    'CACHE_DEFAULT_TIMEOUT': 365 * 24 * 60 * 60,
-    'CACHE_KEY_PREFIX': __name__,
-    'CACHE_TYPE': 'redis',
-    'CACHE_REDIS_HOST': 'redis',
-    'CACHE_REDIS_PORT': '6379',
-    # 'CACHE_THRESHOLD': 1000,
-    # 'CACHE_REDIS_PASSWORD': '',
-    # 'CACHE_REDIS_DB': '',
-    # 'CACHE_ARGS': '',
-    # 'CACHE_OPTIONS': '',
-    # 'CACHE_REDIS_URL': '',
-})
-
-cache.init_app(app)
-with app.app_context():
-    cache.clear()
+init_cache(app)
 
 from . import views

@@ -1,4 +1,5 @@
 from math import ceil
+from neoflask.cache import cache
 from neoflask.queries import REFEREED_PREPRINTS_V2
 from neotools import ask_neo
 from urllib.parse import urlencode
@@ -27,7 +28,7 @@ def papers_url(reviewed_by=None, query=None, page=None, per_page=None, sort_by=N
     query_params = urlencode(query_params_list)
     return f"{base_url}?{query_params}"
 
-
+@cache.memoize()  # memoize handles function parameters, .cached does not
 def papers_get(reviewed_by=None, query=None, page=None, per_page=None, sort_by=None, sort_order=None):  # noqa: E501
     """Get paginated collections of papers, optionally filtered by reviewing service
 

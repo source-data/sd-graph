@@ -1,7 +1,6 @@
 from collections import namedtuple
 from datetime import date, timedelta
 from functools import wraps
-import pdb
 from dateutil.relativedelta import relativedelta
 from flask import (
     abort,
@@ -26,9 +25,10 @@ from .queries import (
     COLLECTION_NAMES, 
     SUBJECT_COLLECTIONS,
 )
+from neoflask.cache import cache
 from neotools import ask_neo
 import re
-from . import app, cache
+from . import app
 
 
 DOI_REGEX = re.compile(r'10.\d{4,9}/[-._;()/:A-Z0-9]+$', flags=re.IGNORECASE)
