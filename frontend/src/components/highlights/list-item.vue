@@ -40,11 +40,39 @@ v-card(v-if="article" color="tertiary")
         |
         | doi.org/{{ article.doi }}
 
+    span.d-flex.flex-row.align-center
+      span.mr-3 Reviewed by 
+      v-bottom-sheet(v-model="dialog" inset)
+        template(v-slot:activator="{ on, attrs }")
+          v-chip-group
+            v-chip(
+              color="secondary"
+              outlined
+              @click="selectReviewerInfo(source)"
+              v-bind="attrs"
+              v-on="on" v-for='source in article.reviewed_by')
+              | {{ serviceId2Name(source) }}
+              v-icon(right) mdi-information
+
+        InfoCardsReviewServiceSummaryGraph(
+          :service_name="serviceId2Name(selectedSource)",
+          :url="reviewingService(selectedSource).url",
+          :peer_review_policy="reviewingService(selectedSource).peer_review_policy",
+          :review_requested_by="reviewingService(selectedSource).review_requested_by",
+          :reviewer_selected_by="reviewingService(selectedSource).reviewer_selected_by",
+          :review_coverage="reviewingService(selectedSource).review_coverage",
+          :reviewer_identity_known_to="reviewingService(selectedSource).reviewer_identity_known_to",
+          :competing_interests="reviewingService(selectedSource).competing_interests",
+          :public_interaction="reviewingService(selectedSource).public_interaction",
+          :opportunity_for_author_response="reviewingService(selectedSource).opportunity_for_author_response",
+          :recommendation="reviewingService(selectedSource).recommendation",
+        ).px-0.mt-2
+
   v-card-text
     v-container(fluid).article-content
       //- Vertical 1-col layout with review process first, abstract second on smaller screens, horizontal 2-col layout
       //-  with abstract left, review process right on larger screens. Entities always at the bottom in single column.
-      v-row(v-if="showReviewProcess")
+      v-row
         v-col(order="2" order-md="1" cols="12" md="7")
           v-card.article-card
             v-card-title Abstract
@@ -54,12 +82,6 @@ v-card(v-if="article" color="tertiary")
         v-col(order="1" order-md="2" cols="12" md="5")
           div.review-process
             render-rev(:ref='article.doi')
-      v-row(v-else)
-        v-col
-          v-card.article-card
-            v-card-title Abstract
-            v-card-text
-              p(class="text--primary") {{ article.abstract }}
 </template>
 
 <script>
@@ -67,27 +89,35 @@ import MarkdownIt from 'markdown-it'
 import { BASE_URL } from '../../lib/http'
 import { serviceId2Name } from '../../store/by-filters'
 import '@source-data/render-rev'
+import { mapGetters } from 'vuex'
+import InfoCardsReviewServiceSummaryGraph from '../review-service-info/review-service-summary-graph.vue'
 
 export default {
+  components: {
+    InfoCardsReviewServiceSummaryGraph
+  },
   props: {
     article: Object,
     expandedReview: Object,
   },
   data() {
-    return {}
+    return {
+      dialog: false,
+      selectedSource: null
+    }
   },
   methods: {
     href(doi) {
       return new URL(doi, "https://doi.org/").href
     },
     displayDate(date_str) {
-        // date_str needs to be in ISO 8601 format for Safari; YYYY-M-DD instead of YYYY-MM-DD will NOT work!
-        const date = new Date(date_str)
-        const year = date.getFullYear()
-        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-        const month = months[date.getMonth()]
-        const day = date.getDate()
-        return month + ' ' + day + ', ' + year
+      // date_str needs to be in ISO 8601 format for Safari; YYYY-M-DD instead of YYYY-MM-DD will NOT work!
+      const date = new Date(date_str)
+      const year = date.getFullYear()
+      const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      const month = months[date.getMonth()]
+      const day = date.getDate()
+      return month + ' ' + day + ', ' + year
     },
     mdRender(md_text) {
       const md = new MarkdownIt({
@@ -122,8 +152,13 @@ export default {
       }
       return `/doi/${this.article.doi}`
     },
+    selectReviewerInfo(value) {
+      this.selectedSource = value;
+    }
   },
   computed: {
+    ...mapGetters('byFilters', ['reviewingService']),
+
     authorList() {
       // first, clone the authors array because sort() operates in-place on the array it's called on.
       const authorsSortedByPosition = this.article.authors.slice(0);
@@ -135,33 +170,24 @@ export default {
     },
     info () {
       return this.article.info
-    },
-    showReviewProcess() {
-      return this.article.review_process && (
-        this.article.review_process.reviews.length > 0
-        || this.article.review_process.response
-        || this.article.review_process.annot.length > 0
-      )
     }
   },
   mounted() {
-    if (this.showReviewProcess) {
-      const docmapsUrl = doi => `${BASE_URL}/api/v2/docmap/${doi}`;
-      const doi = this.article.doi;
-      const highlightDoi = this.expandedReview ? this.expandedReview.doi : null;
+    const docmapsUrl = doi => `${BASE_URL}/api/v2/docmap/${doi}`;
+    const doi = this.article.doi;
+    const highlightDoi = this.expandedReview ? this.expandedReview.doi : null;
 
-      const md = new MarkdownIt({
-        html: true,
-        linkify: true,
-        typographer: true
-      });
-      const display = {
-        renderMarkdown: src => md.render(src),
-      };
+    const md = new MarkdownIt({
+      html: true,
+      linkify: true,
+      typographer: true
+    });
+    const display = {
+      renderMarkdown: src => md.render(src),
+    };
 
-      const el = this.$refs[doi];
-      el.configure({ docmapsUrl, doi, display, highlightDoi });
-    }
+    const el = this.$refs[doi];
+    el.configure({ docmapsUrl, doi, display, highlightDoi });
   }
 }
 </script>
@@ -193,5 +219,11 @@ export default {
 
   .no-pointer-events {
     pointer-events: none;
+  }
+
+  .v-dialog > .v-card {
+    margin: 0px !important;
+    border-radius: 0;
+
   }
 </style>

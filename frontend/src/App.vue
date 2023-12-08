@@ -1,7 +1,7 @@
 <template lang="pug">
 v-app
   TopNavBar
-  v-main
+  v-main.main-padding
     v-container.main-content
       router-view
   v-footer
@@ -33,9 +33,10 @@ export default {
     // all titles will be injected into this template
     titleTemplate: '%s | Early Evidence Base'
   },
-  data: () => ({
-    //
-  }),
+  data: () => ({}),
+  created() {
+    this.$store.dispatch(`byFilters/initialLoad`);
+  }
 };
 </script>
 
@@ -58,6 +59,13 @@ html, body {
 .container.main-content {
   max-width: 100%;
   width: 100%;
-  padding: 0;
+}
+
+.v-input__control:has(input:disabled) {
+  background-color:#dddddd !important;
+}
+
+.main-padding {
+  padding-top: 150px;
 }
 </style>

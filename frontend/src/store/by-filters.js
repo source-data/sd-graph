@@ -3,20 +3,6 @@ import httpClient from '../lib/http'
 const papersApiPath = '/api/v2/papers/'
 const reviewersApiPath = '/api/v2/reviewing_services/'
 
-const defaultReviewer = "review commons"
-
-const _serviceId2Slug = {
-  'biorxiv': 'biorxiv',
-  'medrxiv': 'medrxiv',
-  'review commons': 'review-commons',
-  'elife': 'elife',
-  'embo press': 'embo-press',
-  'peerage of science': 'peerage-of-science',
-  'MIT Press - Journals': 'rrc19',
-  'Peer Community In': 'peer-community-in',
-  'peer ref': 'peer-ref',
-}
-
 const _serviceId2Name = {
   'biorxiv': 'bioRxiv', 
   'medrxiv': 'medRxiv',
@@ -29,8 +15,8 @@ const _serviceId2Name = {
   'peer ref': 'Peer Ref'
 }
 
-export function serviceId2Slug(serviceId) {
-  return _serviceId2Slug[serviceId]
+export function normalizeServiceName(serviceName) {
+  return serviceName.toLowerCase().replaceAll(/[\W_]+/g, "");
 }
 
 export function serviceId2Name(serviceId) {
@@ -40,7 +26,7 @@ export function serviceId2Name(serviceId) {
 export const byFilters = {
   namespaced: true,
   state: {
-    reviewed_by: "review commons",
+    reviewed_bys: [],
     query: "",
 
     records: {},
@@ -66,6 +52,7 @@ export const byFilters = {
 
     setReviewingServices (state, reviewing_services) {
       state.reviewing_services = reviewing_services
+      state.reviewed_bys = reviewing_services.map(s => s.id)
     },
     /* *************************************************************************
     * Setters
@@ -79,8 +66,8 @@ export const byFilters = {
     setNotLoading (state) {
       state.loadingRecords = false
     },
-    setReviewedBy (state, reviewer) {
-      state.reviewed_by = reviewer
+    setReviewedBys (state, reviewers) {
+      state.reviewed_bys = reviewers
     },
     setCurrentPage (state, requestedPage) {
       state.paging.currentPage = requestedPage
@@ -98,10 +85,9 @@ export const byFilters = {
   actions: {
     initialLoad ({ commit }) {
       commit('setIsLoading')
-      // The initial load will fetch the first page using only the default reviewer
-      let pathWithQueryParameters = papersApiPath + "?reviewedBy=" + defaultReviewer
+
       // First we get the records
-      return httpClient.get(pathWithQueryParameters)
+      return httpClient.get(papersApiPath)
         .then((response) => {
           const data = response.data
           commit('setRecords', data)
@@ -120,17 +106,17 @@ export const byFilters = {
     },
 
     updateRecords ({ commit, state }, resetPagination) {
-      debugger;
       commit('setIsLoading')
-      let maybeQuery = state.query !== "" ? "&query=" + state.query : ""
-      let pathWithQueryParameters = papersApiPath + "?"
-        + "reviewedBy=" + state.reviewed_by
-        + maybeQuery
-        + "&page=" + (resetPagination ? 1 : state.paging.currentPage)
-        + "&sortBy=" + state.paging.sortedBy
-        + "&sortOrder=" + state.paging.sortedOrder
 
-      return httpClient.get(pathWithQueryParameters)
+      const params = new URLSearchParams();
+      if (state.query !== "")
+        params.append('query', state.query)
+      state.reviewed_bys.forEach(s => params.append("reviewedBy", s))
+      params.append('page', (resetPagination ? 1 : state.paging.currentPage))
+      params.append('sortBy', state.paging.sortedBy)
+      params.append('sortOrder', state.paging.sortedOrder)
+
+      return httpClient.get(papersApiPath, {params: params})
         .then((response) => {
           const data = response.data
           commit('setRecords', data)

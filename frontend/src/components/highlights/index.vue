@@ -1,11 +1,11 @@
 <template lang="pug">
-div.d-flex.mr-auto
-  v-container(v-if="loadingRecords")
-    v-progress-circular(:size="70" :width="7" color="primary" indeterminate)
+div.d-flex.mr-auto.ml-auto
+  v-container(v-if="loadingRecords").mt-6
+    v-progress-circular(:size="70" :width="7" color="primary" indeterminate).ml-auto
 
   span(v-else).mt-3
     v-container(fluid v-if="paging.totalItems > 0" :class="{'highlights-loading': loadingRecords}")
-      h2 {{ paging.totalItems }} reviewed preprints found
+      h2 {{ paging.totalItems }} reviewed preprints found {{ query != '' ? `for search term "${query}" ` : '' }} in the selected sources
     v-container(fluid v-if="paging.totalItems == 0")
       h2 Sorry, we couldn't find any results
       p Try changing some of the filter values
@@ -15,7 +15,7 @@ div.d-flex.mr-auto
           v-pagination(
             v-if="paging.totalItems > 0"
             v-model="pageNumber"
-            :length="pageCount"
+            :length="this.paging.totalPages"
             :total-visible="10"
           )
       v-row(v-if="paging.totalItems > 0")
@@ -51,7 +51,7 @@ div.d-flex.mr-auto
         v-col(cols=6).px-0.d-flex
           v-pagination(
             v-model="pageNumber"
-            :length="pageCount"
+            :length="this.paging.totalPages"
             :total-visible="10"
           )
 </template>
@@ -68,7 +68,7 @@ export default {
     HighlightedListItem,
   },
   computed: {
-    ...mapState('byFilters', ['records', 'paging', 'loadingRecords']),
+    ...mapState('byFilters', ['records', 'query', 'paging', 'loadingRecords']),
     pageNumber: {
       get() {
         return parseInt(this.paging.currentPage)
@@ -92,12 +92,7 @@ export default {
       set(value) {
         this.$store.commit('byFilters/setSortedOrder', value);
       }
-    },
-    pageCount() {
-      let l = this.paging.totalItems,
-          s = this.paging.perPage
-      return Math.ceil(l / s)
-    },
+    }
   },
   methods: {},
 }
