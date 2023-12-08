@@ -2,13 +2,31 @@
 v-card(v-if="article" color="tertiary")
   v-card-title
     div
-      | {{ article.title }}
-      router-link(:to="generateMyUrl()")
-        v-icon(color="indigo lighten-3").ml-1 mdi-link-variant
+      router-link(:to="generateInternalUrl").paper-title
+        | {{ article.title }}
+
+      v-tooltip(bottom transition="fade-transition")
+        template(v-slot:activator="{ on, hover, attrs }")
+          v-btn(@click="copyFullUrlToClipboard" v-bind="attrs" v-on="on" icon elevation=0 plain depressed v-ripple="false")
+            v-icon(color="primary").ml-3 mdi-link-variant
+        span Copy link to clipboard
+
+      v-tooltip(bottom transition="fade-transition")
+        template(v-slot:activator="{ on, hover, attrs }")
+          v-btn(@click="copyCitationToClipboard" v-bind="attrs" v-on="on" icon elevation=0 plain depressed v-ripple="false")
+            v-icon(color="primary").ml-1 mdi-format-quote-open
+        span Copy formatted citation
+
+      v-tooltip(bottom transition="fade-transition")
+        template(v-slot:activator="{ on, hover, attrs }")
+          a(v-bind="attrs" v-on="on" :href="getTweetHref")
+            v-icon(color="primary").ml-1 mdi-twitter
+        span Share on X
+      
   v-card-subtitle
     p.mb-0 {{ authorList }}
 
-    div.d-flex.flex-row.align-center
+    div(v-if="hasFigureKeywords").d-flex.flex-row.align-center
       v-list-item.px-0
         span.d-flex.flex-row.no-pointer-events
           v-chip-group(v-if="article.main_topics.length > 0" :key="0" column)
@@ -28,7 +46,7 @@ v-card(v-if="article" color="tertiary")
             h3 Keywords deduced from the figures. 
             p(style="max-width: 200px;") Green text means this, orange text means that...
 
-    p
+    span
       | Posted
       |
       b {{ displayDate(article.pub_date) }}
@@ -146,11 +164,11 @@ export default {
     responseId() {
       return this.article.doi + '#rev0-ar'
     },
-    generateMyUrl () {
-      if (this.article.slug) {
-        return `/p/${this.article.slug}`
-      }
-      return `/doi/${this.article.doi}`
+    copyFullUrlToClipboard () {
+      navigator.clipboard.writeText(this.getFullStandaloneDoiUrl);
+    },
+    copyCitationToClipboard () {
+      navigator.clipboard.writeText(this.citationText);
     },
     selectReviewerInfo(value) {
       this.selectedSource = value;
@@ -170,6 +188,33 @@ export default {
     },
     info () {
       return this.article.info
+    },
+    hasFigureKeywords() {
+      return this.article.main_topics.length > 0 || this.article.highlighted_entities.length > 0 || 
+        this.article.entities.length > 0 || this.article.assays.length > 0
+    },
+    generateInternalUrl () {
+      if (this.article.slug) {
+        return `/p/${this.article.slug}`
+      }
+      return `/doi/${this.article.doi}`
+    },
+    getFullStandaloneDoiUrl() {
+      return `${window.location.host}/doi/${this.article.doi}`
+    },
+    getTweetHref() {
+      let tweetContent = this.getFullStandaloneDoiUrl
+      let fullLink = "https://twitter.com/intent/tweet?text=" + tweetContent
+      return fullLink
+    },
+    citationText() {
+      const date = new Date(this.article.pub_date)       
+      const year = date.getFullYear()
+      
+      const reviewedByText = this.article.reviewed_by.map(r => "peer reviewed by " + serviceId2Name(r)).join(", ")
+
+      let citationText = `${this.authorList} (${year}). ${this.article.title}. ${this.article.journal} doi.org/${this.article.doi}, ${reviewedByText} ${this.getFullStandaloneDoiUrl}.`
+      return citationText
     }
   },
   mounted() {
@@ -224,6 +269,9 @@ export default {
   .v-dialog > .v-card {
     margin: 0px !important;
     border-radius: 0;
+  }
 
+  a:hover {
+    color: #217b90;
   }
 </style>
