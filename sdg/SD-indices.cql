@@ -52,17 +52,20 @@ CALL db.index.fulltext.createNodeIndex("abstract", ["SDArticle"], ["abstract"], 
 CALL db.index.fulltext.createNodeIndex("abstract_jats", ["Article"], ["abstract"], {analyzer: "simple"});
 CALL db.index.fulltext.createNodeIndex("title_jats", ["Article"], ["title"], {analyzer: "simple"});
 CALL db.index.fulltext.createNodeIndex("caption", ["SDPanel"], ["caption"], {analyzer: "english"});
-
-CREATE FULLTEXT INDEX fulltextIndexArticles
-FOR (n:SDArticle|SDContrib)
-ON EACH [
-    // article fields
-    n.doi,
-    n.journal_doi,
-    n.title,
-    n.abstract,
-    // author fields
-    n.concat_name,
-    n.surname,
-    n.orcid
-]
+CALL db.index.fulltext.createNodeIndex(
+    "fulltextIndexArticles",
+    [
+        "SDArticle",  // articles
+        "SDContrib"   // authors
+    ],
+    [
+        "doi",
+        "journal_doi",
+        "title",
+        "abstract",
+        "concat_name",
+        "surname",
+        "orcid"
+    ],
+    {analyzer: "english"}
+);
