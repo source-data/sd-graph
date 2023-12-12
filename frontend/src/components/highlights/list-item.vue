@@ -99,7 +99,8 @@ v-card(v-if="article" color="tertiary")
 
         v-col(order="1" order-md="2" cols="12" md="5")
           div.review-process
-            render-rev(:ref='article.doi')
+            render-rev-summary(:ref='article.doi + "-rev-summary"')
+            render-rev-timeline(:ref='article.doi + "-rev-timeline"')
 </template>
 
 <script>
@@ -107,6 +108,7 @@ import MarkdownIt from 'markdown-it'
 import { BASE_URL } from '../../lib/http'
 import { serviceId2Name } from '../../store/by-filters'
 import '@source-data/render-rev'
+import { parse as parseDocmaps } from '@source-data/render-rev/src/docmaps.js'
 import { mapGetters } from 'vuex'
 import InfoCardsReviewServiceSummaryGraph from '../review-service-info/review-service-summary-graph.vue'
 
@@ -208,7 +210,7 @@ export default {
       return fullLink
     },
     citationText() {
-      const date = new Date(this.article.pub_date)       
+      const date = new Date(this.article.pub_date)
       const year = date.getFullYear()
       
       const reviewedByText = this.article.reviewed_by.map(r => "peer reviewed by " + serviceId2Name(r)).join(", ")
@@ -218,21 +220,28 @@ export default {
     }
   },
   mounted() {
-    const docmapsUrl = doi => `${BASE_URL}/api/v2/docmap/${doi}`;
     const doi = this.article.doi;
     const highlightDoi = this.expandedReview ? this.expandedReview.doi : null;
+    fetch(`${BASE_URL}/api/v2/docmap/${doi}`)
+      .then(response => response.json())
+      .then(parseDocmaps)
+      .then(reviewProcess => {
+        this.$refs[doi + "-rev-summary"].reviewProcess = reviewProcess;
 
-    const md = new MarkdownIt({
-      html: true,
-      linkify: true,
-      typographer: true
-    });
-    const display = {
-      renderMarkdown: src => md.render(src),
-    };
+        const timeline = this.$refs[doi + "-rev-timeline"];
+        timeline.reviewProcess = reviewProcess;
+        timeline.highlightItem = highlightDoi;
+        const md = new MarkdownIt({
+          html: true,
+          linkify: true,
+          typographer: true
+        });
+        timeline.options = {
+          renderMarkdown: src => md.render(src),
+        };
+      });
 
-    const el = this.$refs[doi];
-    el.configure({ docmapsUrl, doi, display, highlightDoi });
+
   }
 }
 </script>
