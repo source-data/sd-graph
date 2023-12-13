@@ -18,6 +18,9 @@ env:
   IMAGE_SOURCE: https://github.com/source-data/sd-graph
   IMAGE_REVISION: ${{ github.sha }}
   IMAGE_TAG: ${{ github.ref_name }}
+  # prevent timeouts when pushing the images
+  DOCKER_CLIENT_TIMEOUT: 180
+  COMPOSE_HTTP_TIMEOUT: 180
 
 jobs:
   lint:
