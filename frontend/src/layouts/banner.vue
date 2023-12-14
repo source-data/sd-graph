@@ -1,6 +1,6 @@
 <template lang="pug">
   .banner-title-wrapper
-    router-link(to="/"  active-class="is-active")
+    a(:href="$router.resolve({name: 'Home'}).href")
       .text-sm-h4.text-h5.pointer.banner-title.d-flex.align-center
         span Early Evidence Base
         div.ml-auto
