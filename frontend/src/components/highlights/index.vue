@@ -1,5 +1,8 @@
 <template lang="pug">
 div.d-flex.mr-auto.ml-auto
+  v-container(v-if="showAlert").mt-6
+    v-alert(color="red lighten-2" outlined) {{ error }}
+
   v-container(v-if="loadingRecords").mt-6
     v-progress-circular(:size="70" :width="7" color="primary" indeterminate).ml-auto
 
@@ -62,13 +65,15 @@ import { mapState } from 'vuex'
 
 export default {
   data() {
-    return {}
+    return {
+      showAlert: false
+    }
   },
   components: {
     HighlightedListItem,
   },
   computed: {
-    ...mapState('byFilters', ['records', 'query', 'paging', 'loadingRecords']),
+    ...mapState('byFilters', ['records', 'query', 'paging', 'loadingRecords', "error"]),
     pageNumber: {
       get() {
         return parseInt(this.paging.currentPage)
@@ -95,6 +100,14 @@ export default {
     }
   },
   methods: {},
+  watch: {
+    error() {
+      this.showAlert = true;
+      window.setInterval(() => {
+        this.showAlert = false;
+      }, 5000)    
+    }
+  }
 }
 </script>
 

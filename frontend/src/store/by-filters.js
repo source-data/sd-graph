@@ -33,6 +33,7 @@ export const byFilters = {
     paging: {},
     reviewing_services: [],
 
+    error: null,
     loadingRecords: false,
     loadComplete: false,
   },
@@ -52,7 +53,8 @@ export const byFilters = {
 
     setReviewingServices (state, reviewing_services) {
       state.reviewing_services = reviewing_services
-      state.reviewed_bys = reviewing_services.map(s => s.id)
+      if (state.reviewed_bys.length === 0)
+        state.reviewed_bys = reviewing_services.map(s => s.id)
     },
     /* *************************************************************************
     * Setters
@@ -98,10 +100,22 @@ export const byFilters = {
             const data = response.data
             commit('setReviewingServices', data)
           })
+          .catch(function (error) {
+            state.error = "An unexpected server error occured. Please try again in a moment..."
+          })
           .finally(() => {
             commit('setNotLoading')
             commit('setLoadComplete')
           })
+        })
+        .catch(function (error) {
+          if (error.response.status === 400)
+            state.error = "There was an error with your request. Please check your request and try again in a moment..."
+          else
+            state.error = "An unexpected server error occured. Please try again in a moment..."
+
+          commit('setNotLoading')
+          commit('setLoadComplete')
         })
     },
 
@@ -120,6 +134,9 @@ export const byFilters = {
         .then((response) => {
           const data = response.data
           commit('setRecords', data)
+        })
+        .catch(function (error) {
+          state.error = "An unexpected server error occured. Please try again in a moment..."
         })
         .finally(() => {
           commit('setNotLoading')
