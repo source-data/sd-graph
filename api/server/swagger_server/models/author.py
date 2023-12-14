@@ -64,6 +64,7 @@ class Author(Model):
     def surname(self) -> str:
         """Gets the surname of this Author.
 
+        The surname of the author.  # noqa: E501
 
         :return: The surname of this Author.
         :rtype: str
@@ -74,6 +75,7 @@ class Author(Model):
     def surname(self, surname: str):
         """Sets the surname of this Author.
 
+        The surname of the author.  # noqa: E501
 
         :param surname: The surname of this Author.
         :type surname: str
@@ -85,6 +87,7 @@ class Author(Model):
     def corresp(self) -> str:
         """Gets the corresp of this Author.
 
+        Whether the author is a corresponding author. \"yes\" if the author is a corresponding author, null otherwise.  # noqa: E501
 
         :return: The corresp of this Author.
         :rtype: str
@@ -95,6 +98,7 @@ class Author(Model):
     def corresp(self, corresp: str):
         """Sets the corresp of this Author.
 
+        Whether the author is a corresponding author. \"yes\" if the author is a corresponding author, null otherwise.  # noqa: E501
 
         :param corresp: The corresp of this Author.
         :type corresp: str
@@ -106,6 +110,7 @@ class Author(Model):
     def orcid(self) -> str:
         """Gets the orcid of this Author.
 
+        The ORCID of the author. Null if the author does not have an ORCID.  # noqa: E501
 
         :return: The orcid of this Author.
         :rtype: str
@@ -116,6 +121,7 @@ class Author(Model):
     def orcid(self, orcid: str):
         """Sets the orcid of this Author.
 
+        The ORCID of the author. Null if the author does not have an ORCID.  # noqa: E501
 
         :param orcid: The orcid of this Author.
         :type orcid: str
@@ -127,6 +133,7 @@ class Author(Model):
     def position_idx(self) -> int:
         """Gets the position_idx of this Author.
 
+        The position of the author in the list of authors.  # noqa: E501
 
         :return: The position_idx of this Author.
         :rtype: int
@@ -137,6 +144,7 @@ class Author(Model):
     def position_idx(self, position_idx: int):
         """Sets the position_idx of this Author.
 
+        The position of the author in the list of authors.  # noqa: E501
 
         :param position_idx: The position_idx of this Author.
         :type position_idx: int
@@ -148,6 +156,7 @@ class Author(Model):
     def given_names(self) -> str:
         """Gets the given_names of this Author.
 
+        The given names of the author.  # noqa: E501
 
         :return: The given_names of this Author.
         :rtype: str
@@ -158,6 +167,7 @@ class Author(Model):
     def given_names(self, given_names: str):
         """Sets the given_names of this Author.
 
+        The given names of the author.  # noqa: E501
 
         :param given_names: The given_names of this Author.
         :type given_names: str

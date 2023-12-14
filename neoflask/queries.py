@@ -90,6 +90,113 @@ LIMIT $pagesize
     ] #, 'review_process']
 
 
+class REFEREED_PREPRINT_V2(Query):
+    code = """
+MATCH (col:VizCollection {name: "refereed-preprints"})-[:HasSubCol]->(subcol:VizSubCollection)-[:HasPaper]->(vzp:VizPaper)
+WHERE (
+  $doi IS NOT NULL AND vzp.doi = $doi
+) OR (
+  $slug IS NOT NULL AND vzp.slug = $slug
+)
+WITH vzp.doi AS doi
+// grab the most recent version of the article
+CALL {
+    WITH doi
+    MATCH (article:Article {doi: doi})
+    WITH article
+    ORDER BY article.version DESC
+    return COLLECT(article)[0] AS a
+}
+
+// need the VizPaper for the slug and the VizSubCollection for the review services
+MATCH (vzp:VizPaper {doi: doi})
+MATCH (vzp)<-[:HasPaper]-(subcol:VizSubCollection)<-[:HasSubCol]-(:VizCollection {name: "refereed-preprints"})
+MATCH (vzp)-[:HasReviewDate]->(revdate:VizReviewDate)
+WITH
+  a,
+  vzp,
+  COLLECT(DISTINCT subcol.name) AS reviewed_by,
+  COLLECT(DISTINCT revdate.date) AS review_dates
+
+OPTIONAL MATCH (a)-->(auth:Contrib)
+OPTIONAL MATCH (auth)-[:has_orcid]->(auth_id:Contrib_id)
+WITH
+  a,
+  vzp,
+  reviewed_by,
+  review_dates,
+  auth,
+  auth_id
+ORDER BY auth.position_idx
+WITH
+  a,
+  vzp,
+  reviewed_by,
+  review_dates,
+  COLLECT(DISTINCT auth {.surname, .given_names, .position_idx, .corresp, orcid: auth_id.text}) AS authors
+
+OPTIONAL MATCH (VizCollection {name: "by-auto-topics"})-->(autotopics:VizSubCollection)-[rel_autotopics_paper]->(vzp)-[:HasEntityHighlight]->(highlight:VizEntity {category: 'entity'})
+WITH
+  a,
+  vzp,
+  reviewed_by,
+  review_dates,
+  authors,
+  COLLECT(DISTINCT autotopics.topics) AS main_topics,
+  COLLECT(DISTINCT highlight.text) AS highlighted_entities
+
+OPTIONAL MATCH (vzp)-[:HasEntity]->(assay:VizEntity {category: 'assay'})
+WITH
+  a,
+  vzp,
+  reviewed_by,
+  review_dates,
+  authors,
+  main_topics,
+  highlighted_entities,
+  COLLECT(DISTINCT assay.text) AS assays
+
+OPTIONAL MATCH (vzp)-[:HasEntity]->(entity:VizEntity {category: 'entity'})
+// don't duplicate entities if they are in the topic highlight set
+WHERE not((vzp)-[:HasEntityHighlight]->(entity))
+
+WITH
+  a,
+  vzp,
+  reviewed_by,
+  review_dates,
+  authors,
+  main_topics,
+  highlighted_entities,
+  assays,
+  COLLECT(DISTINCT entity.text) AS entities
+
+RETURN {
+  slug: vzp.slug,
+  doi: a.doi,
+  version: a.version,
+  source: a.source,
+  journal: a.journal_title,
+  title: a.title,
+  abstract: a.abstract,
+  journal_doi: a.journal_doi,
+  published_journal_title: a.published_journal_title,
+  pub_date: toString(DATETIME(a.publication_date)),
+  review_dates: review_dates,
+  reviewed_by: reviewed_by,
+  authors: authors,
+  entities: entities,
+  assays: assays,
+  main_topics: main_topics,
+  highlighted_entities: highlighted_entities
+} as refereed_preprint
+"""
+    map = {
+        'doi': {'req_param': 'doi', 'default': None},
+        'slug': {'req_param': 'slug', 'default': None}
+      }
+    returns = ['refereed_preprint']
+
 class REFEREED_PREPRINTS_V2(Query):
 
     code = '''
@@ -109,14 +216,20 @@ WITH collect(doi) AS doisFulltextSearch
 // filter by reviewing service if requested
 MATCH (refprep:VizCollection {name: "refereed-preprints"})-[:HasSubCol]->(review_service:VizSubCollection)
 WHERE (
-  $reviewed_by IS NULL OR
-  $reviewed_by = [] OR
-  review_service.name IN $reviewed_by
+  $reviewed_by IS NULL
+  OR $reviewed_by = []
+  OR review_service.name IN $reviewed_by
 )
 
 // filter by query if requested
 MATCH (review_service)-[:HasPaper]->(paper:VizPaper)
-WHERE $lucene_query IS NULL OR paper.doi in doisFulltextSearch
+WHERE
+  ($lucene_query IS NULL OR paper.doi in doisFulltextSearch)
+  AND (
+    $published_in IS NULL
+    OR $published_in = []
+    OR toLower(paper.published_journal_title) IN $published_in
+  )
 
 // figure out how to sort based on the provided parameters
 MATCH (paper)-[:HasReviewDate]->(revdate:VizReviewDate)
@@ -242,6 +355,7 @@ RETURN n_total, items
     map = {
       'reviewed_by': {'req_param': 'reviewed_by', 'default': None},
       'lucene_query': {'req_param': 'lucene_query', 'default': None},
+      'published_in': {'req_param': 'published_in', 'default': None},
 
       'sort_by': {'req_param': 'sort_by', 'default': 'preprint_date'},
       'sort_ascending': {'req_param': 'sort_ascending', 'default': False},
@@ -992,6 +1106,21 @@ RETURN
         'opportunity_for_author_response',
         'recommendation',
     ]
+
+
+class DESCRIBE_PUBLISHERS(Query):
+    code = '''
+MATCH (col:VizCollection {name: "refereed-preprints"})-[:HasSubCol]->(subcol:VizSubCollection)-[:HasPaper]->(vzp:VizPaper)
+MATCH (a:Article {doi: vzp.doi})
+WHERE
+    a.published_journal_title IS NOT NULL
+    AND NOT isEmpty(a.published_journal_title)
+RETURN
+  a.published_journal_title AS id,
+  COUNT(*) AS n_papers
+ORDER BY TOLOWER(id) ASC
+    '''
+    returns = ['id', 'n_papers']
 
 
 class BY_REVIEWING_SERVICE(Query):

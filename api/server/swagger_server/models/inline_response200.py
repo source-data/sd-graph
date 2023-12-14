@@ -7,7 +7,7 @@ from typing import List, Dict  # noqa: F401
 
 from swagger_server.models.base_model_ import Model
 from swagger_server.models.paging_info import PagingInfo  # noqa: F401,E501
-from swagger_server.models.paper import Paper  # noqa: F401,E501
+from swagger_server.models.refereed_preprint import RefereedPreprint  # noqa: F401,E501
 from swagger_server import util
 
 
@@ -16,16 +16,16 @@ class InlineResponse200(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, items: List[Paper]=None, paging: PagingInfo=None):  # noqa: E501
+    def __init__(self, items: List[RefereedPreprint]=None, paging: PagingInfo=None):  # noqa: E501
         """InlineResponse200 - a model defined in Swagger
 
         :param items: The items of this InlineResponse200.  # noqa: E501
-        :type items: List[Paper]
+        :type items: List[RefereedPreprint]
         :param paging: The paging of this InlineResponse200.  # noqa: E501
         :type paging: PagingInfo
         """
         self.swagger_types = {
-            'items': List[Paper],
+            'items': List[RefereedPreprint],
             'paging': PagingInfo
         }
 
@@ -48,22 +48,22 @@ class InlineResponse200(Model):
         return util.deserialize_model(dikt, cls)
 
     @property
-    def items(self) -> List[Paper]:
+    def items(self) -> List[RefereedPreprint]:
         """Gets the items of this InlineResponse200.
 
 
         :return: The items of this InlineResponse200.
-        :rtype: List[Paper]
+        :rtype: List[RefereedPreprint]
         """
         return self._items
 
     @items.setter
-    def items(self, items: List[Paper]):
+    def items(self, items: List[RefereedPreprint]):
         """Sets the items of this InlineResponse200.
 
 
         :param items: The items of this InlineResponse200.
-        :type items: List[Paper]
+        :type items: List[RefereedPreprint]
         """
 
         self._items = items

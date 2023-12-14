@@ -2,8 +2,8 @@ openapi: 3.0.3
 info:
   title: Early Evidence Base API
   description: "Read-only API for the Early Evidence Base platform providing collections\
-    \ of papers by reviewing service, automagic, and auto topics, as well as details\
-    \ on papers by DOI."
+    \ of refereed preprints by reviewing service, automagic, and auto topics, as well\
+    \ as details on refereed preprints by DOI."
   version: 2.0.0
 servers:
 - url: https://eeb.embo.org/api/v2
@@ -13,15 +13,16 @@ servers:
 - url: http://localhost:5050/api/v2
   description: Local development server
 tags:
-- name: Reviewing Services
-  description: Endpoints related to retrieving information about reviewing services.
-- name: Paper Details
-  description: Endpoints related to retrieving paper details.
+- name: Reviewing Services and Publishers
+  description: Endpoints related to retrieving information about reviewing services
+    and publishers.
+- name: Refereed Preprint Details
+  description: Endpoints related to retrieving details about refereed preprints.
 paths:
   /reviewing_services/:
     get:
       tags:
-      - Reviewing Services
+      - Reviewing Services and Publishers
       summary: Get information about available reviewing services.
       operationId: reviewing_services_get
       responses:
@@ -34,21 +35,39 @@ paths:
                 items:
                   $ref: '#/components/schemas/ReviewingServiceDescription'
                 x-content-type: application/json
-      x-openapi-router-controller: swagger_server.controllers.reviewing_services_controller
+      x-openapi-router-controller: swagger_server.controllers.reviewing_services_and_publishers_controller
+  /publishers/:
+    get:
+      tags:
+      - Reviewing Services and Publishers
+      summary: Get information about available publishers.
+      operationId: publishers_get
+      responses:
+        "200":
+          description: An array of publishers.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PublisherDescription'
+                x-content-type: application/json
+      x-openapi-router-controller: swagger_server.controllers.reviewing_services_and_publishers_controller
   /papers/:
     get:
       tags:
-      - Paper Details
-      summary: "Get paginated collections of papers, optionally filtered by reviewing\
-        \ service"
+      - Refereed Preprint Details
+      summary: "Get paginated collections of refereed preprints, optionally filtered\
+        \ by reviewing service"
       operationId: papers_get
       parameters:
       - name: reviewedBy
         in: query
-        description: "The IDs of the reviewing services for which papers are requested.\
-          \ If specified, only papers that were reviewed by at least one of the specified\
-          \ reviewing services are returned. Is combined with the query parameter\
-          \ using a logical AND. If not specified, this filter is not applied."
+        description: "The IDs of the reviewing services for which refereed preprints\
+          \ are requested. If specified, only refereed preprints that were reviewed\
+          \ by at least one of the specified reviewing services are returned. Is combined\
+          \ with the query and publishedIn parameters using a logical AND. If not\
+          \ specified, this filter is not applied."
         required: false
         style: form
         explode: true
@@ -59,15 +78,29 @@ paths:
       - name: query
         in: query
         description: "A search string to filter the results by. The search string\
-          \ is matched against the paper DOI, title, abstract, and authors. The search\
-          \ is case-insensitive and matches partial words (e.g. the search string\
-          \ \"covid\" would match \"COVID-19\"). Is combined with the reviewedBy parameter\
-          \ using a logical AND. If not specified, this filter is not applied."
+          \ is matched against the refereed preprint DOI, title, abstract, and authors.\
+          \ The search is case-insensitive and matches partial words (e.g. the search\
+          \ string \"covid\" would match \"COVID-19\"). Is combined with the reviewedBy\
+          \ and publishedIn parameters using a logical AND. If not specified, this\
+          \ filter is not applied."
         required: false
         style: form
         explode: true
         schema:
           type: string
+      - name: publishedIn
+        in: query
+        description: "The journals to filter the results by. If specified, only refereed\
+          \ preprints that were published in at least one of the specified journals\
+          \ are returned. Is combined with the reviewedBy and query parameters using\
+          \ a logical AND. If not specified, this filter is not applied."
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
       - name: page
         in: query
         description: The page number of the results to retrieve. The first page is
@@ -108,8 +141,8 @@ paths:
           $ref: '#/components/schemas/SortOrder'
       responses:
         "200":
-          description: "An array of papers, filtered, sorted, and paged by the given\
-            \ parameters."
+          description: "An array of refereed preprints, filtered, sorted, and paged\
+            \ by the given parameters."
           content:
             application/json:
               schema:
@@ -121,88 +154,159 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-      x-openapi-router-controller: swagger_server.controllers.paper_details_controller
+      x-openapi-router-controller: swagger_server.controllers.refereed_preprint_details_controller
+  /paper/:
+    get:
+      tags:
+      - Refereed Preprint Details
+      summary: Get details about a refereed preprint by DOI or slug.
+      operationId: paper_get
+      parameters:
+      - name: doi
+        in: query
+        description: The DOI of the refereed preprint. Either the DOI or the slug
+          parameter must be specified.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: doi
+      - name: slug
+        in: query
+        description: The slug of the refereed preprint. Either the DOI or the slug
+          parameter must be specified.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: The details of the refereed preprint.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefereedPreprint'
+        "400":
+          description: Bad request. The request parameters are invalid. The response
+            body contains a JSON object with a detail property describing the error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: The refereed preprint with the given DOI or slug does not exist.
+      x-openapi-router-controller: swagger_server.controllers.refereed_preprint_details_controller
 components:
   schemas:
-    Paper:
+    RefereedPreprint:
       type: object
       properties:
         doi:
           type: string
-          description: The DOI of the paper.
+          description: The DOI of the refereed preprint.
           format: doi
           example: 10.1101/2020.05.22.111161
         version:
           type: string
-          description: The version of the paper.
+          description: The version of the refereed preprint.
           example: "1.0"
         source:
           type: string
-          description: The source of the paper. Either "bioRxiv" or "medRxiv".
+          description: The source of the refereed preprint. Either "bioRxiv" or "medRxiv".
           example: bioRxiv
         journal:
           type: string
-          description: The journal the paper was published in.
+          description: The journal the refereed preprint was published in.
           example: bioRxiv
         title:
           type: string
+          description: The title of the refereed preprint.
+          example: A SARS-CoV-2 protein interaction map reveals targets for drug repurposing
         abstract:
           type: string
+          description: The abstract of the refereed preprint.
+          example: The COVID-19 pandemic urgently needs...
         journal_doi:
           type: string
+          description: The DOI of the published version of this refereed preprint.
+            Null if the refereed preprint has not been published.
           format: doi
           nullable: true
+          example: 10.15252/embj.20105114
         published_journal_title:
           type: string
+          description: The title of the journal the refereed preprint was published
+            in. Null if the refereed preprint has not been published.
           nullable: true
+          example: EMBO Journal
         pub_date:
           type: string
+          description: The date the refereed preprint was published.
           format: date-time
+          example: 2020-05-22T00:00:00Z
         authors:
           type: array
+          description: The authors of the refereed preprint.
           items:
             $ref: '#/components/schemas/Author'
-        revdate:
-          type: string
-          format: date-time
-          nullable: true
+        review_dates:
+          type: array
+          description: The dates the refereed preprint was reviewed on.
+          items:
+            type: string
+            format: date-time
         entities:
           type: array
+          description: "The entities (e.g. genes, proteins, diseases) mentioned in\
+            \ the refereed preprint's figures."
           items:
             type: string
         assays:
           type: array
+          description: "The assays (e.g. ELISA, PCR) mentioned in the refereed preprint's\
+            \ figures."
           items:
             type: string
         main_topics:
           type: array
+          description: The main topics of the refereed preprint.
           items:
             type: array
             items:
               type: string
         highlighted_entities:
           type: array
+          description: "The highlighted entities (e.g. genes, proteins, diseases)\
+            \ mentioned in the refereed preprint's abstract."
           items:
             type: string
         slug:
           type: string
+          description: The slug of the refereed preprint. Can be used to construct
+            a URL to the refereed preprint's page on the Early Evidence Base platform.
+          example: a-sars-cov-2-protein-interaction-map-reveals-targets-for-drug-repurposing
         reviewed_by:
           type: array
+          description: The IDs of the reviewing services that reviewed this refereed
+            preprint.
+          example:
+          - review commons
           items:
             type: string
       example:
         reviewed_by:
-        - reviewed_by
-        - reviewed_by
+        - review commons
         assays:
         - assays
         - assays
         source: bioRxiv
-        abstract: abstract
-        title: title
+        abstract: The COVID-19 pandemic urgently needs...
+        title: A SARS-CoV-2 protein interaction map reveals targets for drug repurposing
         version: "1.0"
-        published_journal_title: published_journal_title
-        pub_date: 2000-01-23T04:56:07.000+00:00
+        published_journal_title: EMBO Journal
+        pub_date: 2020-05-22T00:00:00Z
         journal: bioRxiv
         main_topics:
         - - main_topics
@@ -212,46 +316,74 @@ components:
         entities:
         - entities
         - entities
+        review_dates:
+        - 2000-01-23T04:56:07.000+00:00
+        - 2000-01-23T04:56:07.000+00:00
         highlighted_entities:
         - highlighted_entities
         - highlighted_entities
-        revdate: 2000-01-23T04:56:07.000+00:00
-        journal_doi: journal_doi
-        slug: slug
+        journal_doi: 10.15252/embj.20105114
+        slug: a-sars-cov-2-protein-interaction-map-reveals-targets-for-drug-repurposing
         doi: 10.1101/2020.05.22.111161
         authors:
-        - surname: surname
-          corresp: corresp
-          orcid: http://example.com/aeiou
-          position_idx: 0
-          given_names: given_names
-        - surname: surname
-          corresp: corresp
-          orcid: http://example.com/aeiou
-          position_idx: 0
-          given_names: given_names
+        - surname: Doe
+          corresp: "yes"
+          orcid: https://orcid.org/0000-0001-2345-6789
+          position_idx: 1
+          given_names: Jane John
+        - surname: Doe
+          corresp: "yes"
+          orcid: https://orcid.org/0000-0001-2345-6789
+          position_idx: 1
+          given_names: Jane John
     Author:
       type: object
       properties:
         surname:
           type: string
+          description: The surname of the author.
+          example: Doe
         corresp:
           type: string
+          description: "Whether the author is a corresponding author. \"yes\" if the\
+            \ author is a corresponding author, null otherwise."
           nullable: true
+          example: "yes"
         orcid:
           type: string
+          description: The ORCID of the author. Null if the author does not have an
+            ORCID.
           format: uri
           nullable: true
+          example: https://orcid.org/0000-0001-2345-6789
         position_idx:
           type: integer
+          description: The position of the author in the list of authors.
+          example: 1
         given_names:
           type: string
+          description: The given names of the author.
+          example: Jane John
       example:
-        surname: surname
-        corresp: corresp
-        orcid: http://example.com/aeiou
-        position_idx: 0
-        given_names: given_names
+        surname: Doe
+        corresp: "yes"
+        orcid: https://orcid.org/0000-0001-2345-6789
+        position_idx: 1
+        given_names: Jane John
+    PublisherDescription:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of the publisher.
+          example: EMBO Molecular Medicine
+        n_papers:
+          type: integer
+          description: The number of refereed preprints published by the publisher.
+          example: 10
+      example:
+        n_papers: 10
+        id: EMBO Molecular Medicine
     ReviewingServiceDescription:
       type: object
       properties:
@@ -394,7 +526,7 @@ components:
         items:
           type: array
           items:
-            $ref: '#/components/schemas/Paper'
+            $ref: '#/components/schemas/RefereedPreprint'
         paging:
           $ref: '#/components/schemas/PagingInfo'
       example:
@@ -412,17 +544,16 @@ components:
           sortedOrder: desc
         items:
         - reviewed_by:
-          - reviewed_by
-          - reviewed_by
+          - review commons
           assays:
           - assays
           - assays
           source: bioRxiv
-          abstract: abstract
-          title: title
+          abstract: The COVID-19 pandemic urgently needs...
+          title: A SARS-CoV-2 protein interaction map reveals targets for drug repurposing
           version: "1.0"
-          published_journal_title: published_journal_title
-          pub_date: 2000-01-23T04:56:07.000+00:00
+          published_journal_title: EMBO Journal
+          pub_date: 2020-05-22T00:00:00Z
           journal: bioRxiv
           main_topics:
           - - main_topics
@@ -432,36 +563,37 @@ components:
           entities:
           - entities
           - entities
+          review_dates:
+          - 2000-01-23T04:56:07.000+00:00
+          - 2000-01-23T04:56:07.000+00:00
           highlighted_entities:
           - highlighted_entities
           - highlighted_entities
-          revdate: 2000-01-23T04:56:07.000+00:00
-          journal_doi: journal_doi
-          slug: slug
+          journal_doi: 10.15252/embj.20105114
+          slug: a-sars-cov-2-protein-interaction-map-reveals-targets-for-drug-repurposing
           doi: 10.1101/2020.05.22.111161
           authors:
-          - surname: surname
-            corresp: corresp
-            orcid: http://example.com/aeiou
-            position_idx: 0
-            given_names: given_names
-          - surname: surname
-            corresp: corresp
-            orcid: http://example.com/aeiou
-            position_idx: 0
-            given_names: given_names
+          - surname: Doe
+            corresp: "yes"
+            orcid: https://orcid.org/0000-0001-2345-6789
+            position_idx: 1
+            given_names: Jane John
+          - surname: Doe
+            corresp: "yes"
+            orcid: https://orcid.org/0000-0001-2345-6789
+            position_idx: 1
+            given_names: Jane John
         - reviewed_by:
-          - reviewed_by
-          - reviewed_by
+          - review commons
           assays:
           - assays
           - assays
           source: bioRxiv
-          abstract: abstract
-          title: title
+          abstract: The COVID-19 pandemic urgently needs...
+          title: A SARS-CoV-2 protein interaction map reveals targets for drug repurposing
           version: "1.0"
-          published_journal_title: published_journal_title
-          pub_date: 2000-01-23T04:56:07.000+00:00
+          published_journal_title: EMBO Journal
+          pub_date: 2020-05-22T00:00:00Z
           journal: bioRxiv
           main_topics:
           - - main_topics
@@ -471,22 +603,24 @@ components:
           entities:
           - entities
           - entities
+          review_dates:
+          - 2000-01-23T04:56:07.000+00:00
+          - 2000-01-23T04:56:07.000+00:00
           highlighted_entities:
           - highlighted_entities
           - highlighted_entities
-          revdate: 2000-01-23T04:56:07.000+00:00
-          journal_doi: journal_doi
-          slug: slug
+          journal_doi: 10.15252/embj.20105114
+          slug: a-sars-cov-2-protein-interaction-map-reveals-targets-for-drug-repurposing
           doi: 10.1101/2020.05.22.111161
           authors:
-          - surname: surname
-            corresp: corresp
-            orcid: http://example.com/aeiou
-            position_idx: 0
-            given_names: given_names
-          - surname: surname
-            corresp: corresp
-            orcid: http://example.com/aeiou
-            position_idx: 0
-            given_names: given_names
+          - surname: Doe
+            corresp: "yes"
+            orcid: https://orcid.org/0000-0001-2345-6789
+            position_idx: 1
+            given_names: Jane John
+          - surname: Doe
+            corresp: "yes"
+            orcid: https://orcid.org/0000-0001-2345-6789
+            position_idx: 1
+            given_names: Jane John
 
