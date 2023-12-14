@@ -1,8 +1,8 @@
 <template lang="pug">
   v-container(fluid)
     v-row(v-if="article")
-      v-col
-        HighlightedListItem(:article="article" :expandedReview="expandedReview")
+      v-col.d-flex.align-center
+        HighlightedListItem(:article="article" :expandedReview="expandedReview" :open-preprint-boxes=[0, 1, 2] :open-reviewed-boxes=[0, 1, 2]).ml-auto.mr-auto
     v-row(v-else)
       v-col
         v-card
@@ -95,25 +95,18 @@ export default {
       let url = null;
       if (params.slug) {
         this.article_slug = params.slug
-        url = `/api/v1/slug/${params.slug}`
+        url = `/api/v2/paper/?slug=${params.slug}`
       } else if (params.doi) {
         this.article_doi = params.doi
-        url = `/api/v1/doi/${params.doi}`
+        url = `/api/v2/paper/?doi=${params.doi}`
       }
       httpClient.get(url).then((response) => {
-        let article = response.data[0]
+        let article = response.data
         if (article.doi) {  // if the backend doesn't find the article it
                             // returns an article with all its properties set to null
           this.article = article
-          // return httpClient.get(`/api/v1/review/${doi}`)
         }
       })
-      // .then((response) => {
-      //   if (response.data[0]) {
-      //     let review_process = response.data[0].review_process
-      //     this.article.review_process = review_process
-      //   }
-      // })
     },
     generateMyUrl () {
       if (this.article_slug) {
