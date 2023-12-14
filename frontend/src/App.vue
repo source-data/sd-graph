@@ -34,8 +34,9 @@ export default {
     titleTemplate: '%s | Early Evidence Base'
   },
   data: () => ({}),
+
   created() {
-    this.$store.dispatch(`byFilters/initialLoad`);
+    this.$store.dispatch(`byFilters/initialLoad`, this.$route.query);
   }
 };
 </script>
