@@ -4,7 +4,6 @@ v-card(flat).flex-grow-1
   v-card-text.d-flex.d-flex-row.align-center
     v-text-field(
       :value="currentQuery" v-on:keyup.enter="currentQuery = $event.target.value"
-      :loading="loadingRecords"
       placeholder="keywords, authors, doi"
       prepend-icon="mdi-magnify"
       hide-details
