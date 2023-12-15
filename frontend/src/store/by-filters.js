@@ -124,7 +124,7 @@ export const byFilters = {
             const data = response.data
             commit('setReviewingServices', data)
           })
-          .catch(function (error) {
+          .catch(function () {
             state.error = "An unexpected server error occured. Please try again in a moment..."
           })
           .finally(() => {
@@ -161,7 +161,7 @@ export const byFilters = {
           const data = response.data
           commit('setRecords', data)
         })
-        .catch(function (error) {
+        .catch(function () {
           state.error = "An unexpected server error occurred. Please try again in a moment..."
         })
         .finally(() => {
