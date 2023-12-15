@@ -220,23 +220,35 @@ WHERE (
   OR $reviewed_by = []
   OR review_service.name IN $reviewed_by
 )
+WITH doisFulltextSearch, review_service
 
 // filter by query if requested
-MATCH (review_service)-[:HasPaper]->(paper:VizPaper)
+MATCH (review_service)-[:HasPaper]->(vzp:VizPaper)
 WHERE
-  ($lucene_query IS NULL OR paper.doi in doisFulltextSearch)
-  AND (
-    $published_in IS NULL
-    OR $published_in = []
-    OR toLower(paper.published_journal_title) IN $published_in
+  (
+    $lucene_query IS NULL
+    OR vzp.doi in doisFulltextSearch
   )
+WITH vzp
+
+// filter by publisher
+MATCH (a:Article {doi: vzp.doi})
+WHERE (
+  $published_in IS NULL
+  OR $published_in = []
+  OR (
+    NOT isEmpty(a.published_journal_title)
+    AND a.published_journal_title IN $published_in
+  )
+)
+WITH vzp
 
 // figure out how to sort based on the provided parameters
-MATCH (paper)-[:HasReviewDate]->(revdate:VizReviewDate)
+MATCH (vzp)-[:HasReviewDate]->(revdate:VizReviewDate)
 WITH
-    paper.doi AS doi,
+    vzp.doi AS doi,
     {
-      preprint_date: paper.pub_date,
+      preprint_date: vzp.pub_date,
       review_date: revdate.date
     } AS sort_fields  // for the parameterized sort, see below
 WITH
