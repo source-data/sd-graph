@@ -16,7 +16,8 @@ const opts = {
         secondary: '#0d648c',
         tertiary: '#e1ecf0',
         accent: '#aecbeb',
-        error: '#b71c1c'
+        error: '#b71c1c',
+        tooltip: '#000000'
       },
     },
     options: { customProperties: true },

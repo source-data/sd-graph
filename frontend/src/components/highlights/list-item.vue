@@ -41,7 +41,7 @@ v-card(v-if="article" color="tertiary")
         |
         | doi.org/{{ article.doi }}
   v-card-text
-    v-expansion-panels(accordion multiple v-model="openPreprintBoxes").mb-3.mt-1
+    v-expansion-panels(accordion multiple v-model="dataOpenPreprintBoxes").mb-3.mt-1
       v-expansion-panel(mandatory eager)
         v-expansion-panel-header(color="tertiary")
             span
@@ -54,7 +54,7 @@ v-card(v-if="article" color="tertiary")
         v-expansion-panel-header(color="tertiary")
           span.d-flex.align-center
             h3 Preprint figure keywords
-            v-tooltip(bottom transition="fade-transition")
+            v-tooltip(color="tooltip" bottom transition="fade-transition")
               template(v-slot:activator="{ on, hover, attrs }")
                 v-card(color="transparent" flat v-on:click.stop v-bind="attrs" v-on="on").ml-1
                   v-icon(color="grey-lighten-1") mdi-information-outline
@@ -75,7 +75,7 @@ v-card(v-if="article" color="tertiary")
                 v-chip-group(v-if="article.assays.length > 0" :key="3" column)
                   v-chip(v-for="(item, index) in article.assays"  outlined :key="`assays-${index}`").green--text {{ item }}
 
-    v-expansion-panels(accordion multiple v-model="openReviewedBoxes")
+    v-expansion-panels(accordion multiple v-model="dataOpenReviewedBoxes")
       v-expansion-panel(readonly)
         v-expansion-panel-header(hide-actions)
           span.d-flex.flex-column
@@ -125,7 +125,7 @@ v-card(v-if="article" color="tertiary")
           span
             span.d-flex.align-center
               h3 Automated summary of preprint reviews
-              v-tooltip(bottom transition="fade-transition")
+              v-tooltip(color="tooltip" bottom transition="fade-transition")
                 template(v-slot:activator="{ on, hover, attrs }")
                   v-card(flat color="transparent" v-on:click.stop v-bind="attrs" v-on="on").ml-1
                     v-icon(color="grey-lighten-1") mdi-information-outline
@@ -142,7 +142,7 @@ v-card(v-if="article" color="tertiary")
         v-expansion-panel-header 
           span.d-flex.align-baseline
             h3 Cite reviewed preprint
-            v-tooltip(bottom transition="fade-transition")
+            v-tooltip(color="tooltip" bottom transition="fade-transition")
                 template(v-slot:activator="{ on, hover, attrs }")
                   v-card(@click="copyCitationToClipboard" v-on:click.stop v-bind="attrs" v-on="on" icon elevation=0 plain depressed v-ripple="false").pl-2
                     v-icon(color="primary") mdi-content-copy
@@ -175,6 +175,9 @@ export default {
   },
   data() {
     return {
+      dataOpenPreprintBoxes: this.openPreprintBoxes,
+      dataOpenReviewedBoxes: this.openReviewedBoxes,
+
       dialog: false,
       selectedSource: null,
 
