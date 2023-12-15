@@ -1,5 +1,5 @@
 <template lang="pug">
-v-card(v-if="article" color="tertiary" style="max-width: 70%;")
+v-card(v-if="article" color="tertiary")
   v-card-title.pb-3
     span.d-flex.flex-row
       router-link(:to="generateInternalUrl").paper-title
@@ -13,7 +13,7 @@ v-card(v-if="article" color="tertiary" style="max-width: 70%;")
             v-list-item-title
               v-btn(@click="copyFullUrlToClipboard" elevation=0 plain depressed v-ripple="false")
                 v-icon(color="primary") mdi-link-variant
-                span.ml-2 Copy link to clipboard
+                span.ml-1 Copy link to clipboard
           v-list-item
             v-list-item-title
               v-btn(@click="copyCitationToClipboard" elevation=0 plain depressed v-ripple="false")
@@ -40,7 +40,6 @@ v-card(v-if="article" color="tertiary" style="max-width: 70%;")
       a(:href="href(article.doi)" target="_blank" rel="noopener" class="ml-2")
         |
         | doi.org/{{ article.doi }}
-        
   v-card-text
     v-expansion-panels(accordion multiple v-model="openPreprintBoxes").mb-3.mt-1
       v-expansion-panel(mandatory eager)
@@ -64,9 +63,9 @@ v-card(v-if="article" color="tertiary" style="max-width: 70%;")
                 p(style="max-width: 250px;") Green text means this, orange text means that...
       
         v-expansion-panel-content(color="tertiary")
-          div.d-flex.flex-row.align-center
+          div.d-flex.align-center
             v-list-item.px-0
-              span.d-flex.flex-row.no-pointer-events
+              span.d-flex.flex-column.no-pointer-events
                 v-chip-group(v-if="article.main_topics.length > 0" :key="0" column)
                   v-chip(v-for="(item, index) in article.main_topics"  outlined :key="`topics-${index}`").purple--text {{ item.slice(0,3).join(", ") }}
                 v-chip-group(v-if="article.highlighted_entities.length > 0" :key="1" column)
@@ -117,7 +116,6 @@ v-card(v-if="article" color="tertiary" style="max-width: 70%;")
                   :opportunity_for_author_response="reviewingService(selectedSource).opportunity_for_author_response",
                   :recommendation="reviewingService(selectedSource).recommendation",
                 ).px-0.mt-2
-        
         v-expansion-panel-content(eager).pt-0
           span.review-process.d-flex.align-start.justify-start
             render-rev-timeline(:ref='article.doi + "-rev-timeline"')
@@ -142,7 +140,7 @@ v-card(v-if="article" color="tertiary" style="max-width: 70%;")
 
       v-expansion-panel
         v-expansion-panel-header 
-          h3 Cite this reviewed preprint
+          h3 Cite reviewed preprint
             v-tooltip(bottom transition="fade-transition")
                 template(v-slot:activator="{ on, hover, attrs }")
                   v-btn(@click="copyCitationToClipboard" v-on:click.stop v-bind="attrs" v-on="on" icon elevation=0 plain depressed v-ripple="false")
