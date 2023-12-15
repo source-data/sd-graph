@@ -9,7 +9,7 @@ v-card(flat).flex-grow-1
       hide-details
       outlined
     ).mt-0.pt-0
-    v-tooltip(bottom transition="fade-transition")
+    v-tooltip(color="tooltip" bottom transition="fade-transition")
       template(v-slot:activator="{ on, hover, attrs }")
         v-btn(text v-bind="attrs" v-on="on" @click="currentQuery = ''" icon :disabled="query === ''")
           v-icon(dense) mdi-close-circle

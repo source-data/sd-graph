@@ -1,5 +1,5 @@
 <template lang="pug">
-v-card(v-if="article" color="tertiary" style="max-width: 70%;")
+v-card(v-if="article" color="tertiary")
   v-card-title.pb-3
     span.d-flex.flex-row
       router-link(:to="generateInternalUrl").paper-title
@@ -13,11 +13,11 @@ v-card(v-if="article" color="tertiary" style="max-width: 70%;")
             v-list-item-title
               v-btn(@click="copyFullUrlToClipboard" elevation=0 plain depressed v-ripple="false")
                 v-icon(color="primary") mdi-link-variant
-                span.ml-2 Copy link to clipboard
+                span.ml-1 Copy link to clipboard
           v-list-item
             v-list-item-title
               v-btn(@click="copyCitationToClipboard" elevation=0 plain depressed v-ripple="false")
-                v-icon(color="primary") mdi-format-quote-open
+                v-icon(color="primary") mdi-content-copy
                 span.ml-2 Copy citation
           v-list-item
             v-list-item-title
@@ -40,9 +40,8 @@ v-card(v-if="article" color="tertiary" style="max-width: 70%;")
       a(:href="href(article.doi)" target="_blank" rel="noopener" class="ml-2")
         |
         | doi.org/{{ article.doi }}
-        
   v-card-text
-    v-expansion-panels(accordion multiple v-model="openPreprintBoxes").mb-3.mt-1
+    v-expansion-panels(accordion multiple v-model="dataOpenPreprintBoxes").mb-3.mt-1
       v-expansion-panel(mandatory eager)
         v-expansion-panel-header(color="tertiary")
             span
@@ -55,18 +54,18 @@ v-card(v-if="article" color="tertiary" style="max-width: 70%;")
         v-expansion-panel-header(color="tertiary")
           span.d-flex.align-center
             h3 Preprint figure keywords
-            v-tooltip(bottom transition="fade-transition")
+            v-tooltip(color="tooltip" bottom transition="fade-transition")
               template(v-slot:activator="{ on, hover, attrs }")
-                span(v-on:click.stop v-bind="attrs" v-on="on").ml-1
+                v-card(color="transparent" flat v-on:click.stop v-bind="attrs" v-on="on").ml-1
                   v-icon(color="grey-lighten-1") mdi-information-outline
               span <!-- TODO: Explain what these are and what the colors mean -->
                 h3 Keywords deduced from the figures. 
                 p(style="max-width: 250px;") Green text means this, orange text means that...
       
         v-expansion-panel-content(color="tertiary")
-          div.d-flex.flex-row.align-center
+          div.d-flex.align-center
             v-list-item.px-0
-              span.d-flex.flex-row.no-pointer-events
+              span.d-flex.flex-column.no-pointer-events
                 v-chip-group(v-if="article.main_topics.length > 0" :key="0" column)
                   v-chip(v-for="(item, index) in article.main_topics"  outlined :key="`topics-${index}`").purple--text {{ item.slice(0,3).join(", ") }}
                 v-chip-group(v-if="article.highlighted_entities.length > 0" :key="1" column)
@@ -76,7 +75,7 @@ v-card(v-if="article" color="tertiary" style="max-width: 70%;")
                 v-chip-group(v-if="article.assays.length > 0" :key="3" column)
                   v-chip(v-for="(item, index) in article.assays"  outlined :key="`assays-${index}`").green--text {{ item }}
 
-    v-expansion-panels(accordion multiple v-model="openReviewedBoxes")
+    v-expansion-panels(accordion multiple v-model="dataOpenReviewedBoxes")
       v-expansion-panel(readonly)
         v-expansion-panel-header(hide-actions)
           span.d-flex.flex-column
@@ -117,7 +116,6 @@ v-card(v-if="article" color="tertiary" style="max-width: 70%;")
                   :opportunity_for_author_response="reviewingService(selectedSource).opportunity_for_author_response",
                   :recommendation="reviewingService(selectedSource).recommendation",
                 ).px-0.mt-2
-        
         v-expansion-panel-content(eager).pt-0
           span.review-process.d-flex.align-start.justify-start
             render-rev-timeline(:ref='article.doi + "-rev-timeline"')
@@ -127,9 +125,9 @@ v-card(v-if="article" color="tertiary" style="max-width: 70%;")
           span
             span.d-flex.align-center
               h3 Automated summary of preprint reviews
-              v-tooltip(bottom transition="fade-transition")
+              v-tooltip(color="tooltip" bottom transition="fade-transition")
                 template(v-slot:activator="{ on, hover, attrs }")
-                  span(v-on:click.stop v-bind="attrs" v-on="on").ml-1
+                  v-card(flat color="transparent" v-on:click.stop v-bind="attrs" v-on="on").ml-1
                     v-icon(color="grey-lighten-1") mdi-information-outline
                 p(style="max-width: 250px;")
                   | This summary was generated automatically using ChatGPT-4 based on the content of the reviews. 
@@ -142,12 +140,13 @@ v-card(v-if="article" color="tertiary" style="max-width: 70%;")
 
       v-expansion-panel
         v-expansion-panel-header 
-          h3 Cite this reviewed preprint
-            v-tooltip(bottom transition="fade-transition")
+          span.d-flex.align-baseline
+            h3 Cite reviewed preprint
+            v-tooltip(color="tooltip" bottom transition="fade-transition")
                 template(v-slot:activator="{ on, hover, attrs }")
-                  v-btn(@click="copyCitationToClipboard" v-on:click.stop v-bind="attrs" v-on="on" icon elevation=0 plain depressed v-ripple="false")
-                    v-icon(color="primary") mdi-format-quote-open
-                span Copy reviewed preprint citation
+                  v-card(@click="copyCitationToClipboard" v-on:click.stop v-bind="attrs" v-on="on" icon elevation=0 plain depressed v-ripple="false").pl-2
+                    v-icon(color="primary") mdi-content-copy
+                span Click to copy reviewed preprint citation
         v-expansion-panel-content
           span.d-flex.flex-row.align-top
             p(v-html="this.citationText(false)").mb-2.text-body-1
@@ -176,6 +175,9 @@ export default {
   },
   data() {
     return {
+      dataOpenPreprintBoxes: this.openPreprintBoxes,
+      dataOpenReviewedBoxes: this.openReviewedBoxes,
+
       dialog: false,
       selectedSource: null,
 
@@ -319,7 +321,14 @@ export default {
 }
 </script>
 
-<style scoped>
+
+<style lang="scss" scoped>
+  ::v-deep .v-expansion-panel-header__icon {
+    margin-bottom: auto !important;
+    padding-top: 0.5rem;
+    padding-left: 0.5rem;
+  }
+
   .v-card__text, .v-card__title { /* bug fix; see https://github.com/vuetifyjs/vuetify/issues/9130 */
     word-break: normal; /* maybe !important  */
   }
@@ -328,6 +337,7 @@ export default {
     --rr-timeline-summary-bg-color: white;
     --rr-timeline-summary-text-color: black;
     --rr-timeline-width: 100%;
+    overflow-y: scroll;
   }
   .v-chip.v-chip--outlined.v-chip.v-chip {
     background-color: white !important;

@@ -1,5 +1,5 @@
 <template lang="pug">
-  v-container(fluid)
+  v-container(fluid).pa-0
     v-row(v-if="article")
       v-col.d-flex.align-center
         HighlightedListItem(:article="article" :expandedReview="expandedReview" :open-preprint-boxes=[0, 1, 2] :open-reviewed-boxes=[0, 1, 2]).ml-auto.mr-auto
@@ -165,3 +165,8 @@ export default {
 }
 </script>
 
+<style lang="scss" scoped>
+  ::v-deep .container {
+    padding: 0 !important;
+  }
+</style>

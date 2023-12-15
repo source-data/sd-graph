@@ -1,13 +1,14 @@
 <template lang="pug">
-  v-card(flat).col-6.ml-auto.mr-auto
-    v-card-title.d-flex
-      | About EEB
+  v-card(flat).col-lg-8.col-md-9.col-sm-10.col-xs-12.ml-auto.mr-auto
+    span.d-flex.flex-row.align-center.mt-3
       a(href="https://embo.org" target="_blank" rel="noopener").pr-2.ml-auto
-        img(src="../assets/EMBO_logo.svg" alt="EMBO Logo" height="45px").logo-EMBO
+        img(src="../assets/EMBO_logo.svg" alt="EMBO Logo").logo-EMBO
       a(href="https://embopress.org" target="_blank" rel="noopener").pr-2
         img(src="../assets/EEB_EP_LOGO.png" alt="EMBO Press Logo").logo-EP
-      a(href="https://sourcedata.io" target="_blank" rel="noopener").pr-2
-        img(src="../assets/EEB_SD_LOGO.png" alt="SourceData Logo").logo-sd
+      a(href="https://sourcedata.io" target="_blank" rel="noopener").pb-1.mr-auto
+        img(src="../assets/EEB_SD_LOGO.png" alt="SourceData Logo").logo-SD
+
+    v-card-title About EEB
     v-card-text.text-body-1
       p <i>Early Evidence Base</i> (EEB) is an <b>experimental platform</b>
         |  that  combines artificial intelligence with human curation
@@ -38,3 +39,30 @@
           li To highlight the importance of experimental evidence, EEB automatically highlights and organizes preprints around scientific topics and emergent areas of research.
           li Finally, EEB provides an automated selection of preprints that are enriched in studies that were peer reviewed, may bridge several areas of research and use a diversity of experimental approaches.
 </template>
+
+<style lang="scss" scoped>
+.logo-EP {
+  height: 30px;
+}
+
+.logo-EMBO {
+  height: 30px;
+}
+
+.logo-SD {
+  height: 15px;
+}
+
+@media only screen and (max-width: 600px) {
+  .logo-EP {
+    height: 22px;
+  }
+  .logo-EMBO {
+    height: 22px;
+  }
+  .logo-SD {
+    height: 13px;
+  }
+}
+
+</style>
