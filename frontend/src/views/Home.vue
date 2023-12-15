@@ -1,6 +1,6 @@
 <template lang="pug">
 v-container(fluid).pa-0.ma-0
-  v-row.pl-3.pr-3
+  v-row.pa-3
     v-col(cols=3)
       v-card.fixed-filter-panel
         v-card-text
@@ -37,15 +37,13 @@ export default {
 
 <style lang="scss">
 .fixed-filter-panel {
-  margin: 0;
-  padding: 0;
   position: sticky !important;
-  top: 150px;
+  top: 160px;
 }
 
 .v-app-bar--hide-shadow  ~ main .fixed-filter-panel {
   position: sticky !important;
-  top: 40px;
+  top: 25px;
 }
 </style>
 

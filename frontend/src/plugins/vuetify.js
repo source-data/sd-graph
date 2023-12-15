@@ -14,7 +14,7 @@ const opts = {
       light: {
         primary: '#0a5769',
         secondary: '#0d648c',
-        tertiary: '#e1ecf7',
+        tertiary: '#e1ecf0',
         accent: '#aecbeb',
         error: '#b71c1c'
       },
