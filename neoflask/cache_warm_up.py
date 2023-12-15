@@ -49,20 +49,7 @@ def warmup_paged_method(base_url, path_first_page, no_progress):
 def cache_warm_up(base_url, no_progress=False):
     logger.info(f"Warming up cache using base URL {base_url}")
 
-    # warm up the reviewing_services method
-    path_reviewing_services = "/api/v2/reviewing_services/"
-    logger.info("warming up %s", path_reviewing_services)
-    reviewing_services = get_json(base_url, path_reviewing_services)
-
-    paths_reviewing_services = [
-        f"/api/v2/papers/?reviewedBy={rs['id']}"
-        for rs in reviewing_services
-    ]
     path_papers = "/api/v2/papers/"
-    for path_reviewing_service in paths_reviewing_services:
-        logger.info("warming up %s", path_reviewing_service)
-        warmup_paged_method(base_url, path_papers, no_progress)
-
     logger.info("warming up %s", path_papers)
     paper_ids = [
         pid
