@@ -16,7 +16,6 @@ v-container(fluid).pa-0.ma-0
 
   v-row(justify="center").d-lg-none
     v-dialog(
-      v-if="!loadingRecords"
       v-model="showMobileFilterDialog"
       fullscreen
       hide-overlay
@@ -30,7 +29,7 @@ v-container(fluid).pa-0.ma-0
           | Content filters
       v-card
         v-toolbar(color="tertiary")
-          v-btn(icon @click="dialog = false")
+          v-btn(icon @click="showMobileFilterDialog = false")
             v-icon mdi-close
           v-toolbar-title Content filters
         v-card-text
@@ -70,12 +69,7 @@ export default {
     collection: String,
     service: String,
   },
-  watch: {
-    loadingRecords(isLoading) {
-      // if a load starts while the dialog is showing, stop displaying the dialog
-      this.showMobileFilterDialog = this.showMobileFilterDialog && !isLoading
-    }
-  }
+  watch: {}
 }
 </script>
 

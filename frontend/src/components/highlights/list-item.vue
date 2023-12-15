@@ -17,7 +17,7 @@ v-card(v-if="article" color="tertiary")
           v-list-item
             v-list-item-title
               v-btn(@click="copyCitationToClipboard" elevation=0 plain depressed v-ripple="false")
-                v-icon(color="primary") mdi-format-quote-open
+                v-icon(color="primary") mdi-content-copy
                 span.ml-2 Copy citation
           v-list-item
             v-list-item-title
@@ -56,7 +56,7 @@ v-card(v-if="article" color="tertiary")
             h3 Preprint figure keywords
             v-tooltip(bottom transition="fade-transition")
               template(v-slot:activator="{ on, hover, attrs }")
-                span(v-on:click.stop v-bind="attrs" v-on="on").ml-1
+                v-card(color="transparent" flat v-on:click.stop v-bind="attrs" v-on="on").ml-1
                   v-icon(color="grey-lighten-1") mdi-information-outline
               span <!-- TODO: Explain what these are and what the colors mean -->
                 h3 Keywords deduced from the figures. 
@@ -127,7 +127,7 @@ v-card(v-if="article" color="tertiary")
               h3 Automated summary of preprint reviews
               v-tooltip(bottom transition="fade-transition")
                 template(v-slot:activator="{ on, hover, attrs }")
-                  span(v-on:click.stop v-bind="attrs" v-on="on").ml-1
+                  v-card(flat color="transparent" v-on:click.stop v-bind="attrs" v-on="on").ml-1
                     v-icon(color="grey-lighten-1") mdi-information-outline
                 p(style="max-width: 250px;")
                   | This summary was generated automatically using ChatGPT-4 based on the content of the reviews. 
@@ -140,12 +140,13 @@ v-card(v-if="article" color="tertiary")
 
       v-expansion-panel
         v-expansion-panel-header 
-          h3 Cite reviewed preprint
+          span.d-flex.align-baseline
+            h3 Cite reviewed preprint
             v-tooltip(bottom transition="fade-transition")
                 template(v-slot:activator="{ on, hover, attrs }")
-                  v-btn(@click="copyCitationToClipboard" v-on:click.stop v-bind="attrs" v-on="on" icon elevation=0 plain depressed v-ripple="false")
-                    v-icon(color="primary") mdi-format-quote-open
-                span Copy reviewed preprint citation
+                  v-card(@click="copyCitationToClipboard" v-on:click.stop v-bind="attrs" v-on="on" icon elevation=0 plain depressed v-ripple="false").pl-2
+                    v-icon(color="primary") mdi-content-copy
+                span Click to copy reviewed preprint citation
         v-expansion-panel-content
           span.d-flex.flex-row.align-top
             p(v-html="this.citationText(false)").mb-2.text-body-1
@@ -317,7 +318,14 @@ export default {
 }
 </script>
 
-<style scoped>
+
+<style lang="scss" scoped>
+  ::v-deep .v-expansion-panel-header__icon {
+    margin-bottom: auto !important;
+    padding-top: 0.5rem;
+    padding-left: 0.5rem;
+  }
+
   .v-card__text, .v-card__title { /* bug fix; see https://github.com/vuetifyjs/vuetify/issues/9130 */
     word-break: normal; /* maybe !important  */
   }
@@ -326,6 +334,7 @@ export default {
     --rr-timeline-summary-bg-color: white;
     --rr-timeline-summary-text-color: black;
     --rr-timeline-width: 100%;
+    overflow-y: scroll;
   }
   .v-chip.v-chip--outlined.v-chip.v-chip {
     background-color: white !important;
