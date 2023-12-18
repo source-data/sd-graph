@@ -1,4 +1,5 @@
 import httpClient from '../lib/http'
+import router from '@/router'
 
 const papersApiPath = '/api/v2/papers/'
 const reviewersApiPath = '/api/v2/reviewing_services/'
@@ -33,6 +34,7 @@ export const byFilters = {
     paging: {},
     reviewing_services: [],
 
+    error: null,
     loadingRecords: false,
     loadComplete: false,
   },
@@ -52,7 +54,8 @@ export const byFilters = {
 
     setReviewingServices (state, reviewing_services) {
       state.reviewing_services = reviewing_services
-      state.reviewed_bys = reviewing_services.map(s => s.id)
+      if (state.reviewed_bys.length === 0)
+        state.reviewed_bys = reviewing_services.map(s => s.id)
     },
     /* *************************************************************************
     * Setters
@@ -80,14 +83,37 @@ export const byFilters = {
     },
     setQuery (state, query) {
       state.query = query
+    },
+    maybeSetInitialValuesFromUrlParams(state, urlParams) {
+      if (urlParams.page)
+        state.paging.currentPage = urlParams.page
+      if (urlParams.reviewedBy)
+        state.reviewed_bys = [urlParams.reviewedBy].flat() // one liner to deal with having one or multiple reviewedBy params
+      if (urlParams.sortBy)
+        state.paging.sortedBy = urlParams.sortBy
+      if (urlParams.sortOrder)
+        state.paging.sortedOrder = urlParams.sortOrder
+      if (urlParams.query)
+        state.query = urlParams.query
     }
   },
   actions: {
-    initialLoad ({ commit }) {
+    initialLoad ({ commit, state }, urlParams) {
       commit('setIsLoading')
+      commit('maybeSetInitialValuesFromUrlParams', urlParams)
+
+      const routeParams = {
+        // Conditionally create the request params given the initial state - if no params were passed
+        // in the URL, nothing will be passed
+        ...(state.query !== "" ? {query: state.query} : {}),
+        ...(state.reviewed_bys.length !== 0 ? {reviewedBy: state.reviewed_bys} : {}),
+        ...(state.paging.currentPage ? { page: state.paging.currentPage} : {}),
+        ...(state.paging.sortedBy ? {sortBy: state.paging.sortedBy} : {}),
+        ...(state.paging.sortedOrder ? {sortOrder: state.paging.sortedOrder} : {}),
+      }
 
       // First we get the records
-      return httpClient.get(papersApiPath)
+      return httpClient.get(papersApiPath, { params: new URLSearchParams(routeParams) })
         .then((response) => {
           const data = response.data
           commit('setRecords', data)
@@ -98,28 +124,45 @@ export const byFilters = {
             const data = response.data
             commit('setReviewingServices', data)
           })
+          .catch(function () {
+            state.error = "An unexpected server error occured. Please try again in a moment..."
+          })
           .finally(() => {
             commit('setNotLoading')
             commit('setLoadComplete')
           })
+        })
+        .catch(function (error) {
+          if (error.response.status === 400)
+            state.error = "There was an error with your request. Please check your request and try again in a moment..."
+          else
+            state.error = "An unexpected server error occured. Please try again in a moment..."
+
+          commit('setNotLoading')
+          commit('setLoadComplete')
         })
     },
 
     updateRecords ({ commit, state }, resetPagination) {
       commit('setIsLoading')
 
-      const params = new URLSearchParams();
-      if (state.query !== "")
-        params.append('query', state.query)
-      state.reviewed_bys.forEach(s => params.append("reviewedBy", s))
-      params.append('page', (resetPagination ? 1 : state.paging.currentPage))
-      params.append('sortBy', state.paging.sortedBy)
-      params.append('sortOrder', state.paging.sortedOrder)
+      const routeParams = {
+        ...(state.query !== "" ? {query: state.query} : {}),
+        reviewedBy: state.reviewed_bys,
+        page: (resetPagination ? 1 : state.paging.currentPage),
+        sortBy: state.paging.sortedBy,
+        sortOrder: state.paging.sortedOrder
+      }
 
-      return httpClient.get(papersApiPath, {params: params})
+      // Before we issue the request set query params in the URL
+      router.push({ query: routeParams });
+      return httpClient.get(papersApiPath, { params: new URLSearchParams(routeParams) })
         .then((response) => {
           const data = response.data
           commit('setRecords', data)
+        })
+        .catch(function () {
+          state.error = "An unexpected server error occurred. Please try again in a moment..."
         })
         .finally(() => {
           commit('setNotLoading')
