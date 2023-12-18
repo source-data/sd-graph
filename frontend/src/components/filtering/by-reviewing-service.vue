@@ -2,7 +2,7 @@
 v-card(flat)
   v-card-title Review sources
   v-card-text
-    v-chip-group(v-model="selectedReviewers" mandatory column multiple)
+    v-chip-group(v-model="selectedReviewers" column multiple)
       span(v-for="service in this.reviewing_services" :key="`${service.id}-chip`")
         v-chip(:value="service.id" :disabled="loadingRecords" filter filter-icon="mdi-check" outlined
                active-class="active-chip" text-color="black")

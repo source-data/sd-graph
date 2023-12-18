@@ -54,8 +54,6 @@ export const byFilters = {
 
     setReviewingServices (state, reviewing_services) {
       state.reviewing_services = reviewing_services
-      if (state.reviewed_bys.length === 0)
-        state.reviewed_bys = reviewing_services.map(s => s.id)
     },
     /* *************************************************************************
     * Setters
@@ -158,7 +156,7 @@ export const byFilters = {
 
       const routeParams = {
         ...(state.query !== "" ? {query: state.query} : {}),
-        reviewedBy: state.reviewed_bys,
+        ...(state.reviewed_bys.length !== 0 ? {reviewedBy: state.reviewed_bys} : {}),
         page: (resetPagination ? 1 : state.paging.currentPage),
         sortBy: state.paging.sortedBy,
         sortOrder: state.paging.sortedOrder
