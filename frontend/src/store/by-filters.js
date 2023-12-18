@@ -127,22 +127,27 @@ export const byFilters = {
           const data = response.data
           commit('setRecords', data)
 
-          // And then we get the reviewing services
+          // Then we get the reviewing services
           httpClient.get(reviewersApiPath)
           .then((response) => {
             const data = response.data
             commit('setReviewingServices', data)
 
+            // And then we get the publisher data
             httpClient.get(publishersApiPath)
               .then((response) => {
                 const data = response.data
                 commit('setPublishers', data)
               })
+              .catch(function () {
+                state.error = "An unexpected server error occured. Please try again in a moment..."
+              })
+              .finally(() => {
+                commit('setNotLoading')
+              })
           })
           .catch(function () {
             state.error = "An unexpected server error occured. Please try again in a moment..."
-          })
-          .finally(() => {
             commit('setNotLoading')
           })
         })

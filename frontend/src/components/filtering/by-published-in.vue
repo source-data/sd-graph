@@ -8,8 +8,8 @@ v-card(flat).flex-grow-1
       :items="publishers.map(p => p.id)"
       :disabled="loadingRecords"
       label="Select publishers"
-      multiple outlined deletable-chips compact
-      chips).pa-0.mt-0
+      multiple outlined deletable-chips
+      chips)
 </template>
 
 <script>
@@ -35,3 +35,22 @@ export default {
   methods: {},
 }
 </script>
+
+<style lang="scss" scoped>
+  ::v-deep .v-chip__content {
+    display: inline-block !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: calc(100%);
+    padding: 5px 20px 5px 0px;
+  }
+
+  ::v-deep .v-chip__content .v-chip__close {
+    position: absolute;
+    top: 6px;
+    right: 0;
+    margin-right: 5px;
+    width: 24px;
+  }
+</style>
