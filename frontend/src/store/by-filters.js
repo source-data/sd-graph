@@ -3,6 +3,7 @@ import router from '@/router'
 
 const papersApiPath = '/api/v2/papers/'
 const reviewersApiPath = '/api/v2/reviewing_services/'
+const publishersApiPath = '/api/v2/publishers/'
 
 const _serviceId2Name = {
   'biorxiv': 'bioRxiv', 
@@ -28,15 +29,16 @@ export const byFilters = {
   namespaced: true,
   state: {
     reviewed_bys: [],
+    published_in: [],
     query: "",
 
     records: {},
     paging: {},
     reviewing_services: [],
+    publishers: [],
 
     error: null,
     loadingRecords: false,
-    loadComplete: false,
   },
   getters: {
     reviewingService (state) {
@@ -57,20 +59,24 @@ export const byFilters = {
       if (state.reviewed_bys.length === 0)
         state.reviewed_bys = reviewing_services.map(s => s.id)
     },
+
+    setPublishers (state, publishers) {
+      state.publishers = publishers
+    },
     /* *************************************************************************
     * Setters
     */
     setIsLoading (state) {
       state.loadingRecords = true
     },
-    setLoadComplete (state) {
-      state.loadComplete = true
-    },
     setNotLoading (state) {
       state.loadingRecords = false
     },
     setReviewedBys (state, reviewers) {
       state.reviewed_bys = reviewers
+    },
+    setPublishedIn (state, publishedIn) {
+      state.published_in = publishedIn;
     },
     setCurrentPage (state, requestedPage) {
       state.paging.currentPage = requestedPage
@@ -89,7 +95,9 @@ export const byFilters = {
         state.paging.currentPage = urlParams.page
       if (urlParams.reviewedBy)
         state.reviewed_bys = [urlParams.reviewedBy].flat() // one liner to deal with having one or multiple reviewedBy params
-      if (urlParams.sortBy)
+      if (urlParams.publishedIn)
+        state.published_in = [urlParams.publishedIn].flat() // one liner to deal with having one or multiple reviewedBy params
+        if (urlParams.sortBy)
         state.paging.sortedBy = urlParams.sortBy
       if (urlParams.sortOrder)
         state.paging.sortedOrder = urlParams.sortOrder
@@ -107,6 +115,7 @@ export const byFilters = {
         // in the URL, nothing will be passed
         ...(state.query !== "" ? {query: state.query} : {}),
         ...(state.reviewed_bys.length !== 0 ? {reviewedBy: state.reviewed_bys} : {}),
+        ...(state.published_in.length !== 0 ? {publishedIn: state.published_in} : {}),
         ...(state.paging.currentPage ? { page: state.paging.currentPage} : {}),
         ...(state.paging.sortedBy ? {sortBy: state.paging.sortedBy} : {}),
         ...(state.paging.sortedOrder ? {sortOrder: state.paging.sortedOrder} : {}),
@@ -123,13 +132,18 @@ export const byFilters = {
           .then((response) => {
             const data = response.data
             commit('setReviewingServices', data)
+
+            httpClient.get(publishersApiPath)
+              .then((response) => {
+                const data = response.data
+                commit('setPublishers', data)
+              })
           })
           .catch(function () {
             state.error = "An unexpected server error occured. Please try again in a moment..."
           })
           .finally(() => {
             commit('setNotLoading')
-            commit('setLoadComplete')
           })
         })
         .catch(function (error) {
@@ -139,7 +153,6 @@ export const byFilters = {
             state.error = "An unexpected server error occured. Please try again in a moment..."
 
           commit('setNotLoading')
-          commit('setLoadComplete')
         })
     },
 
@@ -149,6 +162,7 @@ export const byFilters = {
       const routeParams = {
         ...(state.query !== "" ? {query: state.query} : {}),
         reviewedBy: state.reviewed_bys,
+        ...(state.published_in.length !== 0 ? {publishedIn: state.published_in} : {}),
         page: (resetPagination ? 1 : state.paging.currentPage),
         sortBy: state.paging.sortedBy,
         sortOrder: state.paging.sortedOrder
@@ -166,7 +180,6 @@ export const byFilters = {
         })
         .finally(() => {
           commit('setNotLoading')
-          commit('setLoadComplete')
         })
     },
   },
