@@ -31,6 +31,6 @@ setup(
     entry_points={
         'console_scripts': ['swagger_server=swagger_server.__main__:main']},
     long_description="""\
-    Read-only API for the Early Evidence Base platform providing collections of papers by reviewing service, automagic, and auto topics, as well as details on papers by DOI.
+    Read-only API for the Early Evidence Base platform providing collections of refereed preprints by reviewing service, automagic, and auto topics, as well as details on refereed preprints by DOI.
     """
 )

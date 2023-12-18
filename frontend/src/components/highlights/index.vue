@@ -1,12 +1,12 @@
 <template lang="pug">
-div.d-flex.mr-auto.ml-auto
+div(style="max-width: 100%;").d-flex.mr-auto.ml-auto
   v-container(v-if="showAlert").mt-6
     v-alert(color="red lighten-2" outlined) {{ error }}
 
   v-container(v-if="loadingRecords").mt-6
     v-progress-circular(:size="70" :width="7" color="primary" indeterminate).ml-auto
 
-  span(v-else).mt-3
+  span(v-else style="max-width:100%;").mt-3
     v-container(fluid v-if="paging.totalItems > 0" :class="{'highlights-loading': loadingRecords}")
       h2 {{ paging.totalItems }} reviewed preprints found {{ query != '' ? `for search term "${query}" ` : '' }} in the selected sources
     v-container(fluid v-if="paging.totalItems == 0")
@@ -23,33 +23,33 @@ div.d-flex.mr-auto.ml-auto
           )
       v-row(v-if="paging.totalItems > 0")
         v-col.d-flex
-          v-btn-toggle(v-model="sortBy")
-            v-tooltip(bottom transition="fade-transition")
+          v-btn-toggle(v-model="sortBy" mandatory)
+            v-tooltip(color="tooltip" bottom transition="fade-transition")
               template(v-slot:activator="{ on, hover, attrs }")
                 v-btn(x-small v-bind="attrs" v-on="on" outlined value="preprint-date")
                   | preprint date
               span Sort by preprint date
-            v-tooltip(bottom transition="fade-transition")
+            v-tooltip(color="tooltip" bottom transition="fade-transition")
               template(v-slot:activator="{ on, hover, attrs }")
                 v-btn(x-small outlined value="reviewing-date" v-bind="attrs" v-on="on")
                   | reviewing date
               span Sort by revewing date
 
           v-btn-toggle(v-model="sortedOrder" mandatory).ml-3
-            v-tooltip(right transition="fade-transition")
+            v-tooltip(color="tooltip" right transition="fade-transition")
               template(v-slot:activator="{ on, hover, attrs }")
                 v-btn(x-small v-bind="attrs" v-on="on" icon aria-label="descending" value="desc")
                   v-icon(dense) mdi-sort-descending
               span Show latest first
-            v-tooltip(right transition="fade-transition")
+            v-tooltip(color="tooltip" right transition="fade-transition")
               template(v-slot:activator="{ on, hover, attrs }")
                 v-btn(x-small v-bind="attrs" v-on="on" icon aria-label="ascending" value="asc")
                   v-icon(dense) mdi-sort-ascending
               span Sort earliest first
 
       v-row(v-for="article in records" :key="article.id")
-        v-col
-          HighlightedListItem(:article="article")
+        v-col(cols=12)
+          HighlightedListItem(:article="article" :open-preprint-boxes="[]" :open-reviewed-boxes="[0]")
       v-row(v-if="paging.totalItems > 0" justify="start")
         v-col(cols=6).px-0.d-flex
           v-pagination(

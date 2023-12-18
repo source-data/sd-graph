@@ -3,7 +3,7 @@ openapi: 3.0.3
 info:
   title: Early Evidence Base API
   version: 2.0.0
-  description: Read-only API for the Early Evidence Base platform providing collections of papers by reviewing service, automagic, and auto topics, as well as details on papers by DOI.
+  description: Read-only API for the Early Evidence Base platform providing collections of refereed preprints by reviewing service, automagic, and auto topics, as well as details on refereed preprints by DOI.
 
 servers:
   - url: https://eeb.embo.org/api/v2
@@ -14,10 +14,10 @@ servers:
     description: Local development server
 
 tags:
-  - name: Reviewing Services
-    description: Endpoints related to retrieving information about reviewing services.
-  - name: Paper Details
-    description: Endpoints related to retrieving paper details.
+  - name: Reviewing Services and Publishers
+    description: Endpoints related to retrieving information about reviewing services and publishers.
+  - name: Refereed Preprint Details
+    description: Endpoints related to retrieving details about refereed preprints.
 
 paths:
   /reviewing_services/:
@@ -33,11 +33,26 @@ paths:
                 items:
                   $ref: "#/components/schemas/ReviewingServiceDescription"
       tags:
-        - Reviewing Services
+        - Reviewing Services and Publishers
+
+  /publishers/:
+    get:
+      summary: Get information about available publishers.
+      responses:
+        "200":
+          description: An array of publishers.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PublisherDescription"
+      tags:
+        - Reviewing Services and Publishers
 
   /papers/:
     get:
-      summary: Get paginated collections of papers, optionally filtered by reviewing service
+      summary: Get paginated collections of refereed preprints, optionally filtered by reviewing service
       parameters:
         - in: query
           name: reviewedBy
@@ -45,12 +60,19 @@ paths:
             type: array
             items:
               type: string
-          description: The IDs of the reviewing services for which papers are requested. If specified, only papers that were reviewed by at least one of the specified reviewing services are returned. Is combined with the query parameter using a logical AND. If not specified, this filter is not applied.
+          description: The IDs of the reviewing services for which refereed preprints are requested. If specified, only refereed preprints that were reviewed by at least one of the specified reviewing services are returned. Is combined with the query and publishedIn parameters using a logical AND. If not specified, this filter is not applied.
         - in: query
           name: query
           schema:
             type: string
-          description: A search string to filter the results by. The search string is matched against the paper DOI, title, abstract, and authors. The search is case-insensitive and matches partial words (e.g. the search string "covid" would match "COVID-19"). Is combined with the reviewedBy parameter using a logical AND. If not specified, this filter is not applied.
+          description: A search string to filter the results by. The search string is matched against the refereed preprint DOI, title, abstract, and authors. The search is case-insensitive and matches partial words (e.g. the search string "covid" would match "COVID-19"). Is combined with the reviewedBy and publishedIn parameters using a logical AND. If not specified, this filter is not applied.
+        - in: query
+          name: publishedIn
+          schema:
+            type: array
+            items:
+              type: string
+          description: The journals to filter the results by. If specified, only refereed preprints that were published in at least one of the specified journals are returned. Is combined with the reviewedBy and query parameters using a logical AND. If not specified, this filter is not applied.
         - in: query
           name: page
           schema:
@@ -78,7 +100,7 @@ paths:
           description: The direction to sort the results in.
       responses:
         "200":
-          description: An array of papers, filtered, sorted, and paged by the given parameters.
+          description: An array of refereed preprints, filtered, sorted, and paged by the given parameters.
           content:
             application/json:
               schema:
@@ -87,7 +109,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Paper"
+                      $ref: "#/components/schemas/RefereedPreprint"
                   paging:
                     $ref: "#/components/schemas/PagingInfo"
         "400":
@@ -97,95 +119,129 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
       tags:
-        - Paper Details
+        - Refereed Preprint Details
+
+  /paper/:
+    get:
+      summary: Get details about a refereed preprint by DOI or slug.
+      parameters:
+        - in: query
+          name: doi
+          schema:
+            type: string
+            format: doi
+          description: The DOI of the refereed preprint. Either the DOI or the slug parameter must be specified.
+        - in: query
+          name: slug
+          schema:
+            type: string
+          description: The slug of the refereed preprint. Either the DOI or the slug parameter must be specified.
+      responses:
+        "200":
+          description: The details of the refereed preprint.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RefereedPreprint"
+        "400":
+          description: Bad request. The request parameters are invalid. The response body contains a JSON object with a detail property describing the error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: The refereed preprint with the given DOI or slug does not exist.
+      tags:
+        - Refereed Preprint Details
 
 components:
   schemas:
-    Paper:
+    RefereedPreprint:
       type: object
       properties:
         doi:
           type: string
           format: doi
-          description: The DOI of the paper.
+          description: The DOI of the refereed preprint.
           example: "10.1101/2020.05.22.111161"
         version:
           type: string
-          description: The version of the paper.
+          description: The version of the refereed preprint.
           example: "1.0"
         source:
           type: string
-          description: The source of the paper. Either "bioRxiv" or "medRxiv".
+          description: The source of the refereed preprint. Either "bioRxiv" or "medRxiv".
           example: "bioRxiv"
         journal:
           type: string
-          description: The journal the paper was published in.
+          description: The journal the refereed preprint was published in.
           example: "bioRxiv"
         title:
           type: string
-          description: The title of the paper.
+          description: The title of the refereed preprint.
           example: "A SARS-CoV-2 protein interaction map reveals targets for drug repurposing"
         abstract:
           type: string
-          description: The abstract of the paper.
+          description: The abstract of the refereed preprint.
           example: "The COVID-19 pandemic urgently needs..."
         journal_doi:
           type: string
           nullable: true
           format: doi
-          description: The DOI of the published version of this paper. Null if the paper has not been published.
+          description: The DOI of the published version of this refereed preprint. Null if the refereed preprint has not been published.
           example: "10.15252/embj.20105114"
         published_journal_title:
           type: string
           nullable: true
-          description: The title of the journal the paper was published in. Null if the paper has not been published.
+          description: The title of the journal the refereed preprint was published in. Null if the refereed preprint has not been published.
           example: "EMBO Journal"
         pub_date:
           type: string
           format: date-time
-          description: The date the paper was published.
+          description: The date the refereed preprint was published.
           example: "2020-05-22T00:00:00Z"
         authors:
           type: array
           items:
             $ref: "#/components/schemas/Author"
-          description: The authors of the paper.
-        revdate:
-          type: string
-          format: date-time
-          nullable: true
-          description: The date the paper was reviewed. Null if the paper has not been reviewed.
+          description: The authors of the refereed preprint.
+        review_dates:
+          type: array
+          items:
+            type: string
+            format: date-time
+          description: The dates the refereed preprint was reviewed on.
         entities:
           type: array
           items:
             type: string
-          description: The entities (e.g. genes, proteins, diseases) mentioned in the paper's figures.
+          description: The entities (e.g. genes, proteins, diseases) mentioned in the refereed preprint's figures.
         assays:
           type: array
           items:
             type: string
-          description: The assays (e.g. ELISA, PCR) mentioned in the paper's figures.
+          description: The assays (e.g. ELISA, PCR) mentioned in the refereed preprint's figures.
         main_topics:
           type: array
           items:
             type: array
             items:
               type: string
-          description: The main topics of the paper.
+          description: The main topics of the refereed preprint.
         highlighted_entities:
           type: array
           items:
             type: string
-          description: The highlighted entities (e.g. genes, proteins, diseases) mentioned in the paper's abstract.
+          description: The highlighted entities (e.g. genes, proteins, diseases) mentioned in the refereed preprint's abstract.
         slug:
           type: string
-          description: The slug of the paper. Can be used to construct a URL to the paper's page on the Early Evidence Base platform.
+          description: The slug of the refereed preprint. Can be used to construct a URL to the refereed preprint's page on the Early Evidence Base platform.
           example: "a-sars-cov-2-protein-interaction-map-reveals-targets-for-drug-repurposing"
         reviewed_by:
           type: array
           items:
             type: string
-          description: The IDs of the reviewing services that reviewed this paper.
+          description: The IDs of the reviewing services that reviewed this refereed preprint.
           example: ["review commons"]
 
     Author:
@@ -214,6 +270,18 @@ components:
           type: string
           description: The given names of the author.
           example: "Jane John"
+
+    PublisherDescription:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of the publisher.
+          example: "EMBO Molecular Medicine"
+        n_papers:
+          type: integer
+          description: The number of refereed preprints published by the publisher.
+          example: 10
 
     ReviewingServiceDescription:
       type: object

@@ -4,7 +4,7 @@ v-card(flat)
   v-card-text
     v-chip-group(v-model="selectedReviewers" mandatory column multiple)
       span(v-for="service in this.reviewing_services" :key="`${service.id}-chip`")
-        v-chip(:value="service.id" :disabled="loadingRecords" filter filter-icon="mdi-check" 
+        v-chip(:value="service.id" :disabled="loadingRecords" filter filter-icon="mdi-check" outlined
                active-class="active-chip" text-color="black")
           img(v-if="imageFileName(service.id)" :src="require(`@/assets/partner-logos/` + imageFileName(service.id))" height="24px" :alt="serviceId2Name(service.id)").pa-1
           | {{ serviceId2Name(service.id) }}

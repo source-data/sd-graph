@@ -60,6 +60,10 @@ html, body {
 .container.main-content {
   max-width: 100%;
   width: 100%;
+
+  @media only screen and (max-width: 1280px) {
+    padding: 10px !important;
+  }
 }
 
 .v-input__control:has(input:disabled) {

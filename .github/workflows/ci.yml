@@ -82,4 +82,5 @@ jobs:
       run: docker-compose -f docker-compose.ci.yml build ${{ matrix.image }}
 
     - name: Push the Docker images
-      run: docker-compose -f docker-compose.ci.yml push ${{ matrix.image }}
+      # retry up to 3 times
+      run: docker-compose -f docker-compose.ci.yml push ${{ matrix.image }} || docker-compose -f docker-compose.ci.yml push ${{ matrix.image }} || docker-compose -f docker-compose.ci.yml push ${{ matrix.image }}
