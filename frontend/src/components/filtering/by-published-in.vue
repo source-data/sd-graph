@@ -5,7 +5,9 @@ v-card(flat).flex-grow-1
   v-card-text
     v-autocomplete(
       v-model="selectedPublishers"
-      :items="publishers.map(p => p.id)"
+      :items="publishers"
+      :item-value="publisherValue"
+      :item-text="publisherText"
       :disabled="loadingRecords"
       label="Select publishers"
       multiple outlined deletable-chips
@@ -32,25 +34,28 @@ export default {
       }
     }
   },
-  methods: {},
+  methods: {
+    publisherText(publisher) {
+      return `(${publisher.n_papers}) ${publisher.id}`
+    },
+    publisherValue(publisher) {
+      return publisher.id
+    }
+  },
 }
 </script>
 
 <style lang="scss" scoped>
   ::v-deep .v-chip__content {
-    display: inline-block !important;
-    white-space: nowrap;
+    display: inline !important;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: calc(100%);
     padding: 5px 20px 5px 0px;
   }
 
   ::v-deep .v-chip__content .v-chip__close {
     position: absolute;
     top: 6px;
-    right: 0;
-    margin-right: 5px;
-    width: 24px;
+    right: 10px;
   }
 </style>
