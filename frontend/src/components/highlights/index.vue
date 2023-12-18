@@ -48,7 +48,7 @@ div(style="max-width: 100%;").d-flex.mr-auto.ml-auto
 
       v-row(v-for="article in records" :key="article.id")
         v-col(cols=12)
-          HighlightedListItem(:article="article" :open-preprint-boxes="openedByDefault" :open-reviewed-boxes="[0]")
+          HighlightedListItem(:article="article" :open-preprint-boxes="openedByDefault" :open-reviewed-boxes="[0,2]")
       v-row(v-if="paging.totalItems > 0" justify="start")
         v-col(cols=6).px-0.d-flex
           v-pagination(
