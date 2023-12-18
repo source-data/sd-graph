@@ -1,5 +1,14 @@
 <template lang="pug">
 v-container(fluid).pa-0.ma-0
+  v-btn(
+    color="primary"
+    fixed
+    bottom
+    right
+    style="bottom: 75px;"
+    fab @click="$vuetify.goTo(0)")
+    v-icon mdi-arrow-up
+  
   v-row.d-none.d-lg-flex.pa-3
     v-col(cols=3)
       v-card.fixed-filter-panel

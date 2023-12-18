@@ -24,6 +24,7 @@ app.$store.subscribe((mutation) => {
   if (shouldTriggerUpdate.includes(mutation.type)) {
     // Reset pagination if we are not just trying to get to another page
     const shouldResetPagination = mutation.type !== "byFilters/setCurrentPage"
+    window.scrollTo(0, 0);
     app.$store.dispatch('byFilters/updateRecords', shouldResetPagination);
   }
 })
