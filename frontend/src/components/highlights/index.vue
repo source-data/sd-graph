@@ -11,7 +11,7 @@ div(style="max-width: 100%;").d-flex.mr-auto.ml-auto
       h2 {{ paging.totalItems }} reviewed preprints found {{ query != '' ? `for search term "${query}" ` : '' }} in the selected sources
     v-container(fluid v-if="paging.totalItems == 0")
       h2 Sorry, we couldn't find any results
-      p Try changing some of the filter values
+      p Try changing some of the filter values.
     v-container(fluid :class="{'highlights-loading': loadingRecords}")
       v-row(align="center" justify="start")
         v-col(cols=8).px-0.d-flex
