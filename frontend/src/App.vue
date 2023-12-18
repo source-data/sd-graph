@@ -1,5 +1,6 @@
 <template lang="pug">
 v-app
+  Snackbar
   TopNavBar
   v-main.main-padding
     v-container.main-content
@@ -11,6 +12,7 @@ v-app
 <script>
 import TopNavBar from './layouts/top-nav-bar'
 import Banner from './layouts/banner'
+import Snackbar from "./components/helpers/snackbar.vue";
 import Footer from './layouts/footer'
 
 export default {
@@ -19,7 +21,8 @@ export default {
   components: {
     TopNavBar,
     Banner,
-    Footer
+    Footer,
+    Snackbar
   },
   metaInfo: {
     meta: [
