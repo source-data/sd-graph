@@ -293,6 +293,11 @@ export default {
       return fullLink
     },
   },
+  watch: {
+    openPreprintBoxes: function (newVal) {
+      this.dataOpenPreprintBoxes = newVal
+    },
+  },
   mounted() {
     const doi = this.article.doi;
     const highlightDoi = this.expandedReview ? this.expandedReview.doi : null;

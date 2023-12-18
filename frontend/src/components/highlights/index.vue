@@ -1,14 +1,11 @@
 <template lang="pug">
 div(style="max-width: 100%;").d-flex.mr-auto.ml-auto
-  v-container(v-if="showAlert").mt-6
-    v-alert(color="red lighten-2" outlined) {{ error }}
-
   v-container(v-if="loadingRecords").mt-6
     v-progress-circular(:size="70" :width="7" color="primary" indeterminate).ml-auto
 
   span(v-else style="max-width:100%;").mt-3
     v-container(fluid v-if="paging.totalItems > 0" :class="{'highlights-loading': loadingRecords}")
-      h2 {{ paging.totalItems }} reviewed preprints found {{ query != '' ? `for search term "${query}" ` : '' }} in the selected sources
+      h2 {{ paging.totalItems }} reviewed preprints found
     v-container(fluid v-if="paging.totalItems == 0")
       h2 Sorry, we couldn't find any results
       p Try changing some of the filter values
@@ -46,10 +43,12 @@ div(style="max-width: 100%;").d-flex.mr-auto.ml-auto
                 v-btn(x-small v-bind="attrs" v-on="on" icon aria-label="ascending" value="asc")
                   v-icon(dense) mdi-sort-ascending
               span Sort earliest first
+      v-row
+        v-switch(v-model="openAbstracts" dense label="Collapse all abstracts").pl-3.mt-0
 
       v-row(v-for="article in records" :key="article.id")
         v-col(cols=12)
-          HighlightedListItem(:article="article" :open-preprint-boxes="[]" :open-reviewed-boxes="[0]")
+          HighlightedListItem(:article="article" :open-preprint-boxes="openedByDefault" :open-reviewed-boxes="[0]")
       v-row(v-if="paging.totalItems > 0" justify="start")
         v-col(cols=6).px-0.d-flex
           v-pagination(
@@ -66,7 +65,8 @@ import { mapState } from 'vuex'
 export default {
   data() {
     return {
-      showAlert: false
+      openAbstracts: false,
+      openedByDefault: [0]
     }
   },
   components: {
@@ -99,15 +99,16 @@ export default {
       }
     }
   },
-  methods: {},
   watch: {
-    error() {
-      this.showAlert = true;
-      window.setInterval(() => {
-        this.showAlert = false;
-      }, 5000)    
+    openAbstracts(nv) {
+      if (nv) {
+        this.openedByDefault = []
+      }
+      else {
+        this.openedByDefault = [0]
+      }
     }
-  }
+  },
 }
 </script>
 
