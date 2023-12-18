@@ -11,12 +11,12 @@ v-card(v-if="article" color="tertiary")
         v-list(dense flat outlined)
           v-list-item
             v-list-item-title
-              v-btn(@click="copyFullUrlToClipboard" elevation=0 plain depressed v-ripple="false")
+              v-btn(@click="copyToClipboard(getFullStandaloneDoiUrl)" elevation=0 plain depressed v-ripple="false")
                 v-icon(color="primary") mdi-link-variant
                 span.ml-1 Copy link to clipboard
           v-list-item
             v-list-item-title
-              v-btn(@click="copyCitationToClipboard" elevation=0 plain depressed v-ripple="false")
+              v-btn(@click="copyToClipboard(citationText(true))" elevation=0 plain depressed v-ripple="false")
                 v-icon(color="primary") mdi-content-copy
                 span.ml-2 Copy citation
           v-list-item
@@ -89,7 +89,7 @@ v-card(v-if="article" color="tertiary")
 
             span.pb-0.d-flex.flex-row.align-center
               b.mr-3 Reviewed by
-              v-bottom-sheet(v-model="dialog" inset)
+              v-bottom-sheet(v-model="dialog" eager inset)
                 template(v-slot:activator="{ on, attrs }")
                   v-chip-group
                     v-chip(
@@ -100,7 +100,7 @@ v-card(v-if="article" color="tertiary")
                       v-bind="attrs"
                       v-on="on" v-for='source in article.reviewed_by')
                       img(v-if="imageFileName(source)" :src="require(`@/assets/partner-logos/` + imageFileName(source))" height="24px" :alt="serviceId2Name(source)").pa-1
-                      span(v-else) {{ serviceId2Name(service.id) }}
+                      span(v-else) {{ serviceId2Name(source) }}
                       v-icon(right small) mdi-information
 
                 InfoCardsReviewServiceSummaryGraph(
@@ -144,7 +144,7 @@ v-card(v-if="article" color="tertiary")
             h3 Cite reviewed preprint
             v-tooltip(color="tooltip" bottom transition="fade-transition")
                 template(v-slot:activator="{ on, hover, attrs }")
-                  v-card(@click="copyCitationToClipboard" v-on:click.stop v-bind="attrs" v-on="on" icon elevation=0 plain depressed v-ripple="false").pl-2
+                  v-card(@click="copyToClipboard(citationText(true))" v-on:click.stop v-bind="attrs" v-on="on" icon elevation=0 plain depressed v-ripple="false").pl-2
                     v-icon(color="primary") mdi-content-copy
                 span Click to copy reviewed preprint citation
         v-expansion-panel-content
@@ -158,8 +158,8 @@ import { BASE_URL } from '../../lib/http'
 import { serviceId2Name, normalizeServiceName } from '../../store/by-filters'
 import '@source-data/render-rev'
 import { parse as parseDocmaps } from '@source-data/render-rev/src/docmaps.js'
-import { mapGetters } from 'vuex'
-import InfoCardsReviewServiceSummaryGraph from '../review-service-info/review-service-summary-graph.vue'
+import { mapState, mapGetters } from 'vuex'
+import InfoCardsReviewServiceSummaryGraph from '../helpers/review-service-summary-graph.vue'
 
 export default {
   components: {
@@ -225,11 +225,9 @@ export default {
     responseId() {
       return this.article.doi + '#rev0-ar'
     },
-    copyFullUrlToClipboard () {
-      navigator.clipboard.writeText(this.getFullStandaloneDoiUrl);
-    },
-    copyCitationToClipboard () {
-      navigator.clipboard.writeText(this.citationText(true));
+    copyToClipboard (text) {
+      this.$store.commit("setSnack", { message: "Text copied to clipboard!", color: "gray" });
+      return navigator.clipboard.writeText(text);
     },
     selectReviewerInfo(value) {
       this.selectedSource = value;
@@ -262,6 +260,7 @@ export default {
   },
   computed: {
     ...mapGetters('byFilters', ['reviewingService']),
+    ...mapState(['snackMessage, snackColor']),
 
     authorList() {
       // first, clone the authors array because sort() operates in-place on the array it's called on.
