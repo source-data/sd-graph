@@ -85,12 +85,16 @@ export default {
 
 <style lang="scss">
 .fixed-filter-panel {
-  position: sticky !important;
+  position: fixed !important;
+  height: auto;
+  width: calc(23.5%);
   top: 160px;
 }
 
 .v-app-bar--hide-shadow  ~ main .fixed-filter-panel {
-  position: sticky !important;
+  position: fixed !important;
+  height: auto;
+  width: calc(23.5%);
   top: 25px;
 }
 </style>
