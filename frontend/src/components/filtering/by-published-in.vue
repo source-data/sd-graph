@@ -10,7 +10,7 @@ v-card(flat).flex-grow-1
       :item-text="publisherText"
       :disabled="loadingRecords"
       label="Select publishers"
-      multiple outlined deletable-chips
+      multiple outlined deletable-chips hide-details
       chips)
 </template>
 
