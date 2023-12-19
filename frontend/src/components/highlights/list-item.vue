@@ -78,14 +78,14 @@ v-card(v-if="article" color="tertiary")
     v-card.no-bottom-radius
       v-card-title 
         span.d-flex.flex-column
-          h3(style="color: black;") Preprint review timeline
+          h4(style="color: black;") Preprint review timeline
           //- TODO: enable this when the functionality is ready
             //- v-tooltip(bottom transition="fade-transition")
             //-   template(v-slot:activator="{ on, hover, attrs }")
             //-     v-btn(@click="???" v-bind="attrs" v-on="on" icon elevation=0 plain depressed v-ripple="false")
             //-       v-icon(color="primary") mdi-download-circle
             //-   span Download all review data
-
+      v-card-subtitle
           span.pb-0.d-flex.flex-row.align-center
             b.mr-3 Reviewed by
             v-bottom-sheet(v-model="dialog" eager inset)
