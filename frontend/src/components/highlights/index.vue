@@ -43,7 +43,7 @@ div(style="max-width: 100%;").d-flex.mr-auto.ml-auto
                 v-btn(x-small v-bind="attrs" v-on="on" icon aria-label="ascending" value="asc")
                   v-icon(dense) mdi-sort-ascending
               span Sort earliest first
-      v-row
+      v-row(v-if="paging.totalItems > 0")
         v-switch(v-model="openAbstracts" dense label="Collapse all abstracts").pl-3.mt-0
 
       v-row(v-for="article in records" :key="article.id")
