@@ -170,7 +170,10 @@ export const byFilters = {
           commit('setRecords', data)
         })
         .catch(function () {
-          state.error = "An unexpected server error occurred. Please try again in a moment..."
+          commit("setSnack", 
+            { message: "An unexpected server error occured. Please try again in a moment...", 
+              color: "red" }, 
+            { root: true });
         })
         .finally(() => {
           commit('setNotLoading')
