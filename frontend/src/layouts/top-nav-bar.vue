@@ -4,7 +4,8 @@
     height=90
     color="tertiary"
     hide-on-scroll
-    scroll-off-screen
+    scroll-threshold=0
+    scroll-off-screen tile elevation=1
   )
     v-row
       v-col(cols=3)

@@ -1,5 +1,14 @@
 <template lang="pug">
 v-container(fluid).pa-0.ma-0
+  v-btn(
+    color="primary"
+    fixed
+    bottom
+    right
+    style="bottom: 75px;"
+    fab @click="$vuetify.goTo(0)")
+    v-icon mdi-arrow-up
+  
   v-row.d-none.d-lg-flex.pa-3
     v-col(cols=3)
       v-card.fixed-filter-panel
@@ -36,6 +45,7 @@ v-container(fluid).pa-0.ma-0
           v-btn(icon @click="showMobileFilterDialog = false")
             v-icon mdi-close
           v-toolbar-title Content filters
+          v-progress-circular(v-if="loadingRecords" :size="40" :width="7" color="primary" indeterminate).ml-auto
         v-card-text
           v-col.mt-3
             v-row
@@ -85,12 +95,16 @@ export default {
 
 <style lang="scss">
 .fixed-filter-panel {
-  position: sticky !important;
+  position: fixed !important;
+  height: auto;
+  width: calc(23.5%);
   top: 160px;
 }
 
 .v-app-bar--hide-shadow  ~ main .fixed-filter-panel {
-  position: sticky !important;
+  position: fixed !important;
+  height: auto;
+  width: calc(23.5%);
   top: 25px;
 }
 </style>

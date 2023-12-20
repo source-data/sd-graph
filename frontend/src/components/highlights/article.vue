@@ -1,8 +1,17 @@
 <template lang="pug">
   v-container(fluid).pa-0
+    v-btn(
+      color="primary"
+      fixed
+      bottom
+      right
+      style="bottom: 75px;"
+      fab @click="$vuetify.goTo(0)")
+      v-icon mdi-arrow-up
+
     v-row(v-if="article")
       v-col.d-flex.align-center
-        HighlightedListItem(:article="article" :expandedReview="expandedReview" :open-preprint-boxes=[0, 1, 2] :open-reviewed-boxes=[0, 1, 2]).ml-auto.mr-auto
+        HighlightedListItem(:article="article" :expandedReview="expandedReview" :open-preprint-boxes=[0, 1, 2] :open-reviewed-boxes=[0, 1]).ml-auto.mr-auto
     v-row(v-else)
       v-col
         v-card

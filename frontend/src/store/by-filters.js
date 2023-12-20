@@ -56,8 +56,6 @@ export const byFilters = {
 
     setReviewingServices (state, reviewing_services) {
       state.reviewing_services = reviewing_services
-      if (state.reviewed_bys.length === 0)
-        state.reviewed_bys = reviewing_services.map(s => s.id)
     },
 
     setPublishers (state, publishers) {
@@ -147,15 +145,27 @@ export const byFilters = {
               })
           })
           .catch(function () {
-            state.error = "An unexpected server error occured. Please try again in a moment..."
+            commit("setSnack", 
+              { message: "An unexpected server error occured. Please try again in a moment...", 
+                color: "red" }, 
+              { root: true });  
+          })
+          .finally(() => {
             commit('setNotLoading')
           })
         })
         .catch(function (error) {
-          if (error.response.status === 400)
-            state.error = "There was an error with your request. Please check your request and try again in a moment..."
-          else
-            state.error = "An unexpected server error occured. Please try again in a moment..."
+          if (error.response.status === 400) {
+            commit("setSnack", 
+              { message: "There was an error with your request. Please check your request and try again in a moment...", 
+                color: "red" }, 
+              { root: true });
+          } else {
+            commit("setSnack", 
+              { message: "An unexpected server error occured. Please try again in a moment...", 
+                color: "red" }, 
+              { root: true });
+          } 
 
           commit('setNotLoading')
         })
@@ -166,7 +176,7 @@ export const byFilters = {
 
       const routeParams = {
         ...(state.query !== "" ? {query: state.query} : {}),
-        reviewedBy: state.reviewed_bys,
+        ...(state.reviewed_bys.length !== 0 ? {reviewedBy: state.reviewed_bys} : {}),
         ...(state.published_in.length !== 0 ? {publishedIn: state.published_in} : {}),
         page: (resetPagination ? 1 : state.paging.currentPage),
         sortBy: state.paging.sortedBy,
@@ -181,7 +191,10 @@ export const byFilters = {
           commit('setRecords', data)
         })
         .catch(function () {
-          state.error = "An unexpected server error occurred. Please try again in a moment..."
+          commit("setSnack", 
+            { message: "An unexpected server error occured. Please try again in a moment...", 
+              color: "red" }, 
+            { root: true });
         })
         .finally(() => {
           commit('setNotLoading')

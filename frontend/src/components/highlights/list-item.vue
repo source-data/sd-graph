@@ -11,12 +11,12 @@ v-card(v-if="article" color="tertiary")
         v-list(dense flat outlined)
           v-list-item
             v-list-item-title
-              v-btn(@click="copyFullUrlToClipboard" elevation=0 plain depressed v-ripple="false")
+              v-btn(@click="copyToClipboard(getFullStandaloneDoiUrl)" elevation=0 plain depressed v-ripple="false")
                 v-icon(color="primary") mdi-link-variant
                 span.ml-1 Copy link to clipboard
           v-list-item
             v-list-item-title
-              v-btn(@click="copyCitationToClipboard" elevation=0 plain depressed v-ripple="false")
+              v-btn(@click="copyToClipboard(citationText(true))" elevation=0 plain depressed v-ripple="false")
                 v-icon(color="primary") mdi-content-copy
                 span.ml-2 Copy citation
           v-list-item
@@ -75,51 +75,51 @@ v-card(v-if="article" color="tertiary")
                 v-chip-group(v-if="article.assays.length > 0" :key="3" column)
                   v-chip(v-for="(item, index) in article.assays"  outlined :key="`assays-${index}`").green--text {{ item }}
 
-    v-expansion-panels(accordion multiple v-model="dataOpenReviewedBoxes")
-      v-expansion-panel(readonly)
-        v-expansion-panel-header(hide-actions)
-          span.d-flex.flex-column
-            h3(style="color: black;") Preprint review timeline
-            //- TODO: enable this when the functionality is ready
-              //- v-tooltip(bottom transition="fade-transition")
-              //-   template(v-slot:activator="{ on, hover, attrs }")
-              //-     v-btn(@click="???" v-bind="attrs" v-on="on" icon elevation=0 plain depressed v-ripple="false")
-              //-       v-icon(color="primary") mdi-download-circle
-              //-   span Download all review data
+    v-card.no-bottom-radius
+      v-card-title 
+        span.d-flex.flex-column
+          h4(style="color: black;") Preprint review timeline
+          //- TODO: enable this when the functionality is ready
+            //- v-tooltip(bottom transition="fade-transition")
+            //-   template(v-slot:activator="{ on, hover, attrs }")
+            //-     v-btn(@click="???" v-bind="attrs" v-on="on" icon elevation=0 plain depressed v-ripple="false")
+            //-       v-icon(color="primary") mdi-download-circle
+            //-   span Download all review data
+      v-card-subtitle
+          span.pb-0.d-flex.flex-row.align-center
+            b.mr-3 Reviewed by
+            v-bottom-sheet(v-model="dialog" eager inset)
+              template(v-slot:activator="{ on, attrs }")
+                v-chip-group
+                  v-chip(
+                    v-ripple="false" small
+                    color="secondary"
+                    outlined
+                    @click="selectReviewerInfo(source)"
+                    v-bind="attrs"
+                    v-on="on" v-for='source in article.reviewed_by')
+                    img(v-if="imageFileName(source)" :src="require(`@/assets/partner-logos/` + imageFileName(source))" height="24px" :alt="serviceId2Name(source)").pa-1
+                    span(v-else) {{ serviceId2Name(source) }}
+                    v-icon(right small) mdi-information
 
-            span.pb-0.d-flex.flex-row.align-center
-              b.mr-3 Reviewed by
-              v-bottom-sheet(v-model="dialog" inset)
-                template(v-slot:activator="{ on, attrs }")
-                  v-chip-group
-                    v-chip(
-                      v-ripple="false" small
-                      color="secondary"
-                      outlined
-                      @click="selectReviewerInfo(source)"
-                      v-bind="attrs"
-                      v-on="on" v-for='source in article.reviewed_by')
-                      img(v-if="imageFileName(source)" :src="require(`@/assets/partner-logos/` + imageFileName(source))" height="24px" :alt="serviceId2Name(source)").pa-1
-                      span(v-else) {{ serviceId2Name(service.id) }}
-                      v-icon(right small) mdi-information
+              InfoCardsReviewServiceSummaryGraph(
+                :service_name="serviceId2Name(selectedSource)",
+                :url="reviewingService(selectedSource).url",
+                :peer_review_policy="reviewingService(selectedSource).peer_review_policy",
+                :review_requested_by="reviewingService(selectedSource).review_requested_by",
+                :reviewer_selected_by="reviewingService(selectedSource).reviewer_selected_by",
+                :review_coverage="reviewingService(selectedSource).review_coverage",
+                :reviewer_identity_known_to="reviewingService(selectedSource).reviewer_identity_known_to",
+                :competing_interests="reviewingService(selectedSource).competing_interests",
+                :public_interaction="reviewingService(selectedSource).public_interaction",
+                :opportunity_for_author_response="reviewingService(selectedSource).opportunity_for_author_response",
+                :recommendation="reviewingService(selectedSource).recommendation",
+              ).px-0.mt-2
+      v-card-text
+        span.review-process.d-flex.align-start.justify-start
+          render-rev-timeline(:ref='article.doi + "-rev-timeline"')
 
-                InfoCardsReviewServiceSummaryGraph(
-                  :service_name="serviceId2Name(selectedSource)",
-                  :url="reviewingService(selectedSource).url",
-                  :peer_review_policy="reviewingService(selectedSource).peer_review_policy",
-                  :review_requested_by="reviewingService(selectedSource).review_requested_by",
-                  :reviewer_selected_by="reviewingService(selectedSource).reviewer_selected_by",
-                  :review_coverage="reviewingService(selectedSource).review_coverage",
-                  :reviewer_identity_known_to="reviewingService(selectedSource).reviewer_identity_known_to",
-                  :competing_interests="reviewingService(selectedSource).competing_interests",
-                  :public_interaction="reviewingService(selectedSource).public_interaction",
-                  :opportunity_for_author_response="reviewingService(selectedSource).opportunity_for_author_response",
-                  :recommendation="reviewingService(selectedSource).recommendation",
-                ).px-0.mt-2
-        v-expansion-panel-content(eager).pt-0
-          span.review-process.d-flex.align-start.justify-start
-            render-rev-timeline(:ref='article.doi + "-rev-timeline"')
-
+    v-expansion-panels(accordion multiple v-model="dataOpenReviewedBoxes").no-top-radius
       v-expansion-panel(v-if="maybeReviewSummary")
         v-expansion-panel-header
           span
@@ -144,7 +144,7 @@ v-card(v-if="article" color="tertiary")
             h3 Cite reviewed preprint
             v-tooltip(color="tooltip" bottom transition="fade-transition")
                 template(v-slot:activator="{ on, hover, attrs }")
-                  v-card(@click="copyCitationToClipboard" v-on:click.stop v-bind="attrs" v-on="on" icon elevation=0 plain depressed v-ripple="false").pl-2
+                  v-card(@click="copyToClipboard(citationText(true))" v-on:click.stop v-bind="attrs" v-on="on" icon elevation=0 plain depressed v-ripple="false").pl-2
                     v-icon(color="primary") mdi-content-copy
                 span Click to copy reviewed preprint citation
         v-expansion-panel-content
@@ -158,7 +158,7 @@ import { BASE_URL } from '../../lib/http'
 import { serviceId2Name, normalizeServiceName } from '../../store/by-filters'
 import '@source-data/render-rev'
 import { parse as parseDocmaps } from '@source-data/render-rev/src/docmaps.js'
-import { mapGetters } from 'vuex'
+import { mapState, mapGetters } from 'vuex'
 import InfoCardsReviewServiceSummaryGraph from '../helpers/review-service-summary-graph.vue'
 
 export default {
@@ -225,11 +225,9 @@ export default {
     responseId() {
       return this.article.doi + '#rev0-ar'
     },
-    copyFullUrlToClipboard () {
-      navigator.clipboard.writeText(this.getFullStandaloneDoiUrl);
-    },
-    copyCitationToClipboard () {
-      navigator.clipboard.writeText(this.citationText(true));
+    copyToClipboard (text) {
+      this.$store.commit("setSnack", { message: "Text copied to clipboard!", color: "gray" });
+      return navigator.clipboard.writeText(text);
     },
     selectReviewerInfo(value) {
       this.selectedSource = value;
@@ -262,6 +260,7 @@ export default {
   },
   computed: {
     ...mapGetters('byFilters', ['reviewingService']),
+    ...mapState(['snackMessage, snackColor']),
 
     authorList() {
       // first, clone the authors array because sort() operates in-place on the array it's called on.
@@ -292,6 +291,11 @@ export default {
       let tweetContent = this.getFullStandaloneDoiUrl
       let fullLink = "https://twitter.com/intent/tweet?text=" + tweetContent
       return fullLink
+    },
+  },
+  watch: {
+    openPreprintBoxes: function (newVal) {
+      this.dataOpenPreprintBoxes = newVal
     },
   },
   mounted() {
@@ -367,9 +371,17 @@ export default {
   .v-expansion-panel-header:not(.v-expansion-panel-header--active) .hide-when-not-expanded {
     display: none;
   }
-
   .paper-title {
     letter-spacing: normal;
     line-height: normal;
+  }
+
+  .no-bottom-radius {
+    border-radius: 4px 4px 0 0 !important;
+  }
+
+  .no-top-radius>:first-child {
+    border-radius: 0 0 !important;
+    border-top: 1px solid rgb(0, 0, 0, 0.1);
   }
 </style>

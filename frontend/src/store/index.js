@@ -9,19 +9,15 @@ export default new Vuex.Store({
     byFilters
   },
   state: {
-    loadingRecords: false,
+    snackMessage: "",
+    snackColor: ""
   },
-  getters: {
-
-  },
+  getters: {},
   mutations: {
-    setIsLoading (state) {
-      state.loadingRecords = true
-    },
-    setNotLoading (state) {
-      state.loadingRecords = false
-    },
+    setSnack (state, snackInfo) {
+      state.snackMessage = snackInfo.message;
+      state.snackColor = snackInfo.color
+    }
   },
-  actions: {
-  },
+  actions: {},
 })
