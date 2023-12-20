@@ -10,6 +10,10 @@ v-container(fluid).pa-0.ma-0
             v-divider
           v-row
             ByReviewingService
+          v-row
+            v-divider
+          v-row
+            ByPublishedIn
     v-col(cols=9)
       v-row
         Highlights
@@ -40,6 +44,10 @@ v-container(fluid).pa-0.ma-0
               v-divider
             v-row
               ByReviewingService
+            v-row
+              v-divider
+            v-row
+              ByPublishedIn
     Highlights
 </template>
 
@@ -48,6 +56,7 @@ v-container(fluid).pa-0.ma-0
 import { mapState } from 'vuex'
 import Highlights from '../components/highlights/index.vue'
 import ByReviewingService from '../components/filtering/by-reviewing-service.vue'
+import ByPublishedIn from '../components/filtering/by-published-in.vue'
 import SearchBar from '../components/filtering/by-simple-search-query.vue'
 
 export default {
@@ -55,6 +64,7 @@ export default {
   components: {
     Highlights,
     ByReviewingService,
+    ByPublishedIn,
     SearchBar
   },
   data() {
