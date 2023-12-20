@@ -3,7 +3,7 @@ v-card(flat)
   v-card-title Filter by reviewer
   v-card-subtitle Filter the reviewed preprints by the reviewer
   v-card-text
-    v-chip-group(v-model="selectedReviewers" mandatory column multiple)
+    v-chip-group(v-model="selectedReviewers" column multiple)
       span(v-for="service in this.reviewing_services" :key="`${service.id}-chip`")
         v-chip(:value="service.id" :disabled="loadingRecords" filter filter-icon="mdi-check" outlined
                active-class="active-chip" text-color="black")
