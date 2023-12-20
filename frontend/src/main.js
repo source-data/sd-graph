@@ -18,7 +18,7 @@ const app = new Vue({
 }).$mount('#app')
 
 const shouldTriggerUpdate = ["byFilters/setReviewedBys", "byFilters/setQuery", "byFilters/setSortedBy", 
-                             "byFilters/setSortedOrder", "byFilters/setCurrentPage"];
+                             "byFilters/setSortedOrder", "byFilters/setCurrentPage", "byFilters/setPublishedIn"];
 
 app.$store.subscribe((mutation) => {
   if (shouldTriggerUpdate.includes(mutation.type)) {

@@ -1,6 +1,7 @@
 <template lang="pug">
 v-card(flat).flex-grow-1
-  v-card-title Search for terms
+  v-card-title Filter by terms
+  v-card-subtitle Filter the reviewed preprints by terms such as keywords in titles, author, doi, etc.
   v-card-text.d-flex.d-flex-row.align-center
     v-text-field(
       :value="currentQuery" v-on:keyup.enter="currentQuery = $event.target.value"
