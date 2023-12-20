@@ -159,7 +159,7 @@ import { serviceId2Name, normalizeServiceName } from '../../store/by-filters'
 import '@source-data/render-rev'
 import { parse as parseDocmaps } from '@source-data/render-rev/src/docmaps.js'
 import { mapGetters } from 'vuex'
-import InfoCardsReviewServiceSummaryGraph from '../review-service-info/review-service-summary-graph.vue'
+import InfoCardsReviewServiceSummaryGraph from '../helpers/review-service-summary-graph.vue'
 
 export default {
   components: {
