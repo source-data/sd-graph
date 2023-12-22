@@ -116,8 +116,7 @@ v-card(v-if="article" color="tertiary")
                 :recommendation="reviewingService(selectedSource).recommendation",
               ).px-0.mt-2
       v-card-text
-        span.review-process.d-flex.align-start.justify-start
-          render-rev-timeline(:ref='article.doi + "-rev-timeline"')
+        span.review-process.d-flex.align-start.justify-start(:ref='article.doi + "-rev-timeline"')
 
     v-expansion-panels(accordion multiple v-model="dataOpenReviewedBoxes").no-top-radius
       v-expansion-panel(v-if="maybeReviewSummary")
@@ -156,8 +155,7 @@ v-card(v-if="article" color="tertiary")
 import MarkdownIt from 'markdown-it'
 import { BASE_URL } from '../../lib/http'
 import { serviceId2Name, normalizeServiceName } from '../../store/by-filters'
-import '@source-data/render-rev'
-import { parse as parseDocmaps } from '@source-data/render-rev/src/docmaps.js'
+import { parseDocmaps, RenderRevTimeline } from '@source-data/render-rev'
 import { mapState, mapGetters } from 'vuex'
 import InfoCardsReviewServiceSummaryGraph from '../helpers/review-service-summary-graph.vue'
 
@@ -309,7 +307,9 @@ export default {
         if (reviewWithSummary)
           this.maybeReviewSummary = reviewWithSummary.summaries[0]
 
-        const timeline = this.$refs[doi + "-rev-timeline"];
+        const timelineContainer = this.$refs[doi + "-rev-timeline"];
+        const timeline = new RenderRevTimeline();
+        timelineContainer.appendChild(timeline);
         timeline.reviewProcess = reviewProcess;
         timeline.highlightItem = highlightDoi;
         const md = new MarkdownIt({
