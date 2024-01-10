@@ -24,17 +24,21 @@ export default {
     Footer,
     Snackbar
   },
-  metaInfo: {
-    meta: [
-      {
-        vmid: 'description',
-        name: 'description',
-        content: 'Early Evidence Base (EEB) is an experimental platform that combines artificial intelligence with human curation and expert peer-review to highlight results posted in bioRxiv preprints developed by EMBO Press.',
-      }
-    ],
-    title: 'Accessing early scientific findings',
-    // all titles will be injected into this template
-    titleTemplate: '%s | Early Evidence Base'
+  metaInfo () {
+    return {
+      meta: [
+        {
+          vmid: 'description',
+          name: 'description',
+          content: this.$t('meta.description'),
+        }
+      ],
+      title: this.$t('meta.title'),
+      // all titles will be injected into this template
+      titleTemplate: (titleChunk) => titleChunk ?
+        this.$t('meta.titleTemplate', {titleChunk})
+        : this.$t('meta.title'),
+    }
   },
   data: () => ({}),
 

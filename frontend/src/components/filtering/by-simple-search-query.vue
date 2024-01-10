@@ -1,11 +1,11 @@
 <template lang="pug">
 v-card(flat).flex-grow-1
-  v-card-title Filter by terms
-  v-card-subtitle Filter the reviewed preprints by terms such as keywords in titles, author, doi, etc.
+  v-card-title {{ $t('filters.search.title') }}
+  v-card-subtitle {{ $t('filters.search.subtitle') }}
   v-card-text.d-flex.d-flex-row.align-center
     v-text-field(
       :value="currentQuery" v-on:keyup.enter="currentQuery = $event.target.value"
-      placeholder="keywords, authors, doi"
+      :placeholder="$t('filters.search.placeholder')"
       prepend-icon="mdi-magnify"
       hide-details
       outlined
@@ -14,7 +14,7 @@ v-card(flat).flex-grow-1
       template(v-slot:activator="{ on, hover, attrs }")
         v-btn(text v-bind="attrs" v-on="on" @click="currentQuery = ''" icon :disabled="query === ''")
           v-icon(dense) mdi-close-circle
-      span Clear search
+      span {{ $t('filters.search.clear') }}
 </template>
 
 <script>

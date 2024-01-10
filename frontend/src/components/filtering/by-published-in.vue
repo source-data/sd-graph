@@ -1,7 +1,7 @@
 <template lang="pug">
 v-card(flat).flex-grow-1
-  v-card-title Filter by journal
-  v-card-subtitle Filter the reviewed preprints by the journal they were published in
+  v-card-title {{ $t('filters.published_in.title') }}
+  v-card-subtitle {{ $t('filters.published_in.subtitle') }}
   v-card-text
     v-autocomplete(
       v-model="selectedPublishers"
@@ -9,7 +9,7 @@ v-card(flat).flex-grow-1
       :item-value="publisherValue"
       :item-text="publisherText"
       :disabled="loadingRecords"
-      label="Select publishers"
+      :label="$t('filters.published_in.label')"
       multiple outlined deletable-chips hide-details
       chips)
 </template>

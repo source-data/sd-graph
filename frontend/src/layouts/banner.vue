@@ -2,19 +2,18 @@
   .banner-title-wrapper
     v-row.d-flex.flex-grow-1.align-baseline
       span.text-md-h4.text-sm-h5.text-h5.pointer.banner-title
-        a(:href="$router.resolve({name: 'Home'}).href")
-          | Early Evidence Base
+        a(:href="$router.resolve({name: 'Home'}).href") {{ $t('app.title') }}
       span.ml-1.text-sm-body-2.text-caption.font-italic.d-none.d-sm-flex.align-end
-        span an initiative by
+        span {{ $t('app.credits_prefix') }}
         a(href="https://embo.org" target="_blank")
-          img(src="../assets/EMBO_logo.svg" alt="EMBO Logo" height="30rem").ml-2
+          img(src="../assets/EMBO_logo.svg" :alt="$t('logo.alt.embo')" height="30rem").ml-2
     v-row
       .text-md-h5.text-sm-h6.text-subtitle-2.pointer.banner-subtitle
-        a(:href="$router.resolve({name: 'Home'}).href") Collecting and Assessing Reviewed Preprints
+        a(:href="$router.resolve({name: 'Home'}).href") {{ $t('app.subtitle') }}
     v-row.d-flex.d-sm-none
       span.mt-1.text-caption.font-italic.d-flex.align-center
-        span an initiative by
-        img(src="../assets/EMBO_logo.svg" alt="EMBO Logo" height="20rem").ml-2
+        span {{ $t('app.credits_prefix') }}
+        img(src="../assets/EMBO_logo.svg" alt="$t('logo.alt.embo')" height="20rem").ml-2
 </template>
 
 <style lang="scss" scoped>

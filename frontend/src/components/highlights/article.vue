@@ -15,14 +15,8 @@
     v-row(v-else)
       v-col
         v-card
-          v-card-title(v-if="article_slug")
-            | The requested article was not found.
-          v-card-title(v-else)
-            | The article with doi:
-            |
-            code {{ article_doi }}
-            |
-            | was not found.
+          v-card-title(v-if="article_slug") {{ $t('single_article.not_found.slug') }}
+          v-card-title(v-else v-html="$t('single_article.not_found.doi_html', {doi: article_doi})")
     div
       script(v-if="article" v-html="generate_jsonld(article)" type="application/ld+json")
 
