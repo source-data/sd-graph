@@ -167,6 +167,13 @@ export default new VueI18n({
       'logo.alt.embo_press': 'EMBO Press Logo',
       'logo.alt.sourcedata': 'SourceData Logo',
       'logo.alt.github': 'GitHub Logo',
+
+      /*
+       * snackbar messages
+       */
+      'snack.message.copied': 'Text copied to clipboard!',
+      'snack.message.error.server': 'An unexpected server error occured. Please try again in a moment...',
+      'snack.message.error.request': 'There was an error with your request. Please check your request and try again in a moment...',
     },
   }
 })

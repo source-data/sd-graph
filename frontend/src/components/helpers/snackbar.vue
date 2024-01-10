@@ -28,7 +28,7 @@ v-snackbar(v-model='show' :top="true" :color='color' timeout="3000" centered)
       snackMessage(nv, ov) {
         if (nv != "" && nv != ov) {
           this.show = true;
-          this.message = this.snackMessage;
+          this.message = this.$t(this.snackMessage);
           this.color = this.snackColor;
 
           this.$store.commit("setSnack", { message: "", color: "" });

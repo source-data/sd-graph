@@ -138,7 +138,7 @@ export const byFilters = {
                 commit('setPublishers', data)
               })
               .catch(function () {
-                state.error = "An unexpected server error occured. Please try again in a moment..."
+                state.error = "snack.message.error.server"
               })
               .finally(() => {
                 commit('setNotLoading')
@@ -146,7 +146,7 @@ export const byFilters = {
           })
           .catch(function () {
             commit("setSnack", 
-              { message: "An unexpected server error occured. Please try again in a moment...", 
+              { message: "snack.message.error.server", 
                 color: "red" }, 
               { root: true });  
           })
@@ -157,12 +157,12 @@ export const byFilters = {
         .catch(function (error) {
           if (error.response.status === 400) {
             commit("setSnack", 
-              { message: "There was an error with your request. Please check your request and try again in a moment...", 
+              { message: "snack.message.error.request", 
                 color: "red" }, 
               { root: true });
           } else {
             commit("setSnack", 
-              { message: "An unexpected server error occured. Please try again in a moment...", 
+              { message: "snack.message.error.server", 
                 color: "red" }, 
               { root: true });
           } 
@@ -192,7 +192,7 @@ export const byFilters = {
         })
         .catch(function () {
           commit("setSnack", 
-            { message: "An unexpected server error occured. Please try again in a moment...", 
+            { message: "snack.message.error.server", 
               color: "red" }, 
             { root: true });
         })

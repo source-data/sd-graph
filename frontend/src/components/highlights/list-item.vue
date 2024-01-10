@@ -211,7 +211,7 @@ export default {
       return this.article.doi + '#rev0-ar'
     },
     copyToClipboard (text) {
-      this.$store.commit("setSnack", { message: "Text copied to clipboard!", color: "gray" });
+      this.$store.commit("setSnack", { message: "snack.message.copied", color: "gray" });
       return navigator.clipboard.writeText(text);
     },
     selectReviewerInfo(value) {
