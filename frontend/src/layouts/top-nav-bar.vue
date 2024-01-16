@@ -20,6 +20,7 @@
         justify-end
       )
         v-tab(to="/refereed-preprints") Browse
+        v-tab(to="/advanced-search") Advanced Search
         v-spacer
         v-tab(to="/about") About
         v-tab(to="/contact") Contact

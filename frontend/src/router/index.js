@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Home from '../views/Home.vue'
+import AdvancedSearch from '../views/AdvancedSearch.vue'
 
 
 Vue.use(VueRouter)
@@ -41,6 +42,12 @@ const routes = [
     path: '/refereed-preprints',
     name: 'Home',
     component: Home,
+    props: true,
+  },
+  {
+    path: '/advanced-search',
+    name: 'AdvancedSearch',
+    component: AdvancedSearch,
     props: true,
   },
   {
