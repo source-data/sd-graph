@@ -155,7 +155,7 @@ v-card(v-if="article" color="tertiary")
 import MarkdownIt from 'markdown-it'
 import { BASE_URL } from '../../lib/http'
 import { serviceId2Name, normalizeServiceName } from '../../store/by-filters'
-import { parseDocmaps, RenderRevTimeline } from '@source-data/render-rev'
+import { parseDocmaps, RenderRevTimeline, RenderRevTimelineHorizontal } from '@source-data/render-rev'
 import { mapState, mapGetters } from 'vuex'
 import InfoCardsReviewServiceSummaryGraph from '../helpers/review-service-summary-graph.vue'
 
@@ -181,6 +181,9 @@ export default {
 
       // We grab the review from the docmaps, as it's easier to work with it by not relying on the render-rev component
       maybeReviewSummary: null,
+      reviewProcess: null,
+      windowWidth: window.innerWidth,
+      breakpoint: 800,
     }
   },
   methods: {
@@ -254,7 +257,24 @@ export default {
         return citationText.replace(/<[^>]*>?/gm, '')
       else 
         return citationText
-    }
+    },
+    updateReviewTimeline() {
+      const doi = this.article.doi;
+      const timelineContainer = this.$refs[doi + "-rev-timeline"];
+      timelineContainer.innerHTML = "";
+      const timeline = this.windowWidth < this.breakpoint ?  new RenderRevTimeline() : new RenderRevTimelineHorizontal();
+      timelineContainer.appendChild(timeline);
+      timeline.reviewProcess = this.reviewProcess;
+      timeline.highlightItem = this.expandedReview ? this.expandedReview.doi : null;
+      const md = new MarkdownIt({
+        html: true,
+        linkify: true,
+        typographer: true
+      });
+      timeline.options = {
+        renderMarkdown: src => md.render(src),
+      };
+    },
   },
   computed: {
     ...mapGetters('byFilters', ['reviewingService']),
@@ -297,8 +317,15 @@ export default {
     },
   },
   mounted() {
+    window.addEventListener("resize", () => {
+      const breakpointCrossed = (this.windowWidth < this.breakpoint && window.innerWidth >= this.breakpoint)
+        || (this.windowWidth >= this.breakpoint && window.innerWidth < this.breakpoint);
+      this.windowWidth = window.innerWidth;
+      if (breakpointCrossed) {
+        this.updateReviewTimeline();
+      }
+    });
     const doi = this.article.doi;
-    const highlightDoi = this.expandedReview ? this.expandedReview.doi : null;
     fetch(`${BASE_URL}/api/v2/docmap/${doi}`)
       .then(response => response.json())
       .then(parseDocmaps)
@@ -306,20 +333,8 @@ export default {
         let reviewWithSummary = reviewProcess.timeline.groups.map(g => g.items).flat().find(i => i.type === "reviews" && i.summaries.length > 0);
         if (reviewWithSummary)
           this.maybeReviewSummary = reviewWithSummary.summaries[0]
-
-        const timelineContainer = this.$refs[doi + "-rev-timeline"];
-        const timeline = new RenderRevTimeline();
-        timelineContainer.appendChild(timeline);
-        timeline.reviewProcess = reviewProcess;
-        timeline.highlightItem = highlightDoi;
-        const md = new MarkdownIt({
-          html: true,
-          linkify: true,
-          typographer: true
-        });
-        timeline.options = {
-          renderMarkdown: src => md.render(src),
-        };
+        this.reviewProcess = reviewProcess;
+        this.updateReviewTimeline();
       });
   }
 }
