@@ -56,10 +56,6 @@ v-card(v-if="article" color="tertiary")
           div.d-flex.align-center
             v-list-item.px-0
               span.d-flex.flex-column.no-pointer-events
-                v-chip-group(v-if="article.main_topics.length > 0" :key="0" column)
-                  v-chip(v-for="(item, index) in article.main_topics"  outlined :key="`topics-${index}`").purple--text {{ item.slice(0,3).join(", ") }}
-                v-chip-group(v-if="article.highlighted_entities.length > 0" :key="1" column)
-                  v-chip(v-for="(item, index) in article.highlighted_entities"  outlined :key="`highlighted-entities-${index}`").red--text {{ item }}
                 v-chip-group(v-if="article.entities.length > 0" :key="2" column)
                   v-chip(v-for="(item, index) in article.entities"  outlined :key="`entities-${index}`").orange--text {{ item }}
                 v-chip-group(v-if="article.assays.length > 0" :key="3" column)
@@ -267,8 +263,7 @@ export default {
       return this.article.info
     },
     hasFigureKeywords() {
-      return this.article.main_topics.length > 0 || this.article.highlighted_entities.length > 0 || 
-        this.article.entities.length > 0 || this.article.assays.length > 0
+      return this.article.entities.length > 0 || this.article.assays.length > 0
     },
     generateInternalUrl () {
       if (this.article.slug) {

@@ -13,7 +13,7 @@ export default new VueI18n({
        * website banner
        */
       'app.title': 'Early Evidence Base',
-      'app.subtitle': 'Collecting and Assessing Reviewed Preprints',
+      'app.subtitle': 'Discover and Cite Reviewed Preprints',
       'app.credits_prefix': 'an initiative by',
 
       /*
@@ -27,7 +27,7 @@ export default new VueI18n({
       /*
        * about page
        */
-      'about.title': 'About EEB',
+      'about.title': 'About Early Evidence Base',
       'about.text_html': `
         <p>
           <i>Early Evidence Base</i> (EEB) is an <b>experimental platform</b> that combines artificial intelligence with human curation and expert peer-review to highlight results posted in preprints. EEB is a technology experiment developed by <a href="https://embopress.org" target="_blank" rel="noopener">EMBO Press</a> and <a href="https://sourcedata.io" target="_blank" rel="noopener">SourceData</a>.
@@ -60,7 +60,7 @@ export default new VueI18n({
       /*
        * not found page
        */
-      'not_found.title': "Oops, you've encountered an error 404",
+      'not_found.title': "Page not found",
       'not_found.message': "It appears the page you were looking for doesn't exist. Sorry about that.",
 
       /*
@@ -150,7 +150,7 @@ export default new VueI18n({
       'article.abstract.title': 'Abstract',
       'article.figure_keywords.title': 'Preprint figure keywords',
       'article.figure_keywords.info.title': 'Keywords deduced from the figures.',
-      'article.figure_keywords.info.message': 'Green text means this, orange text means that...',
+      'article.figure_keywords.info.message': "All keywords are extracted from this preprint's figure captions. Orange keywords are genes or gene products mentioned in the captions, while green keywords are experimental assays used to observe or measure the assayed components of an experiment.",
       'article.reviews.title': 'Preprint review timeline',
       'article.reviews.peer_reviewed_by': 'Reviewed by',
       'article.reviews.summary.title': 'Automated summary of preprint reviews',
