@@ -13,39 +13,29 @@ v-card(v-if="article" color="tertiary")
             v-list-item-title
               v-btn(@click="copyToClipboard(getFullStandaloneDoiUrl)" elevation=0 plain depressed v-ripple="false")
                 v-icon(color="primary") mdi-link-variant
-                span.ml-1 Copy link to clipboard
+                span.ml-1 {{ $t('article.actions.copy.link') }}
           v-list-item
             v-list-item-title
               v-btn(@click="copyToClipboard(citationText(true))" elevation=0 plain depressed v-ripple="false")
                 v-icon(color="primary") mdi-content-copy
-                span.ml-2 Copy citation
+                span.ml-2 {{ $t('article.actions.copy.citation') }}
           v-list-item
             v-list-item-title
               v-btn(elevation=0 plain depressed v-ripple="false")
                 a(:href="getTweetHref" target="_blank")
                   v-icon(color="gray") mdi-twitter
-                  span.ml-2 Share on X
+                  span.ml-2 {{ $t('article.actions.share.x') }}
       
   v-card-subtitle.pb-1
     p.mb-0 {{ authorList }}
 
-    span
-      | Posted
-      |
-      b {{ displayDate(article.pub_date) }}
-      |  on
-      |
-      i {{ article.journal }}
-      |
-      a(:href="href(article.doi)" target="_blank" rel="noopener" class="ml-2")
-        |
-        | doi.org/{{ article.doi }}
+    span(v-html="$t('article.info.posted_on', {date: displayDate(article.pub_date), server: article.journal, url: href(article.doi), doi: article.doi})")
   v-card-text
     v-expansion-panels(accordion multiple v-model="dataOpenPreprintBoxes").mb-3.mt-1
       v-expansion-panel(mandatory eager)
         v-expansion-panel-header(color="tertiary")
             span
-              h3.mb-1 Abstract
+              h3.mb-1 {{ $t('article.abstract.title') }}
               span.sample-text.hide-when-expanded.text-body-2 {{ preview(article.abstract) }}
         v-expansion-panel-content(color="tertiary")
           p(class="text--primary").text-body-1 {{ article.abstract }}
@@ -53,23 +43,19 @@ v-card(v-if="article" color="tertiary")
       v-expansion-panel(v-if="hasFigureKeywords")
         v-expansion-panel-header(color="tertiary")
           span.d-flex.align-center
-            h3 Preprint figure keywords
+            h3 {{ $t('article.figure_keywords.title') }}
             v-tooltip(color="tooltip" bottom transition="fade-transition")
               template(v-slot:activator="{ on, hover, attrs }")
                 v-card(color="transparent" flat v-on:click.stop v-bind="attrs" v-on="on").ml-1
                   v-icon(color="grey-lighten-1") mdi-information-outline
               span <!-- TODO: Explain what these are and what the colors mean -->
-                h3 Keywords deduced from the figures. 
-                p(style="max-width: 250px;") Green text means this, orange text means that...
+                h3 {{ $t('article.figure_keywords.info.title') }}
+                p(style="max-width: 250px;") {{ $t('article.figure_keywords.info.message') }}
       
         v-expansion-panel-content(color="tertiary")
           div.d-flex.align-center
             v-list-item.px-0
               span.d-flex.flex-column.no-pointer-events
-                v-chip-group(v-if="article.main_topics.length > 0" :key="0" column)
-                  v-chip(v-for="(item, index) in article.main_topics"  outlined :key="`topics-${index}`").purple--text {{ item.slice(0,3).join(", ") }}
-                v-chip-group(v-if="article.highlighted_entities.length > 0" :key="1" column)
-                  v-chip(v-for="(item, index) in article.highlighted_entities"  outlined :key="`highlighted-entities-${index}`").red--text {{ item }}
                 v-chip-group(v-if="article.entities.length > 0" :key="2" column)
                   v-chip(v-for="(item, index) in article.entities"  outlined :key="`entities-${index}`").orange--text {{ item }}
                 v-chip-group(v-if="article.assays.length > 0" :key="3" column)
@@ -78,7 +64,7 @@ v-card(v-if="article" color="tertiary")
     v-card.no-bottom-radius
       v-card-title 
         span.d-flex.flex-column
-          h4(style="color: black;") Preprint review timeline
+          h4(style="color: black;") {{ $t('article.reviews.title') }}
           //- TODO: enable this when the functionality is ready
             //- v-tooltip(bottom transition="fade-transition")
             //-   template(v-slot:activator="{ on, hover, attrs }")
@@ -87,7 +73,7 @@ v-card(v-if="article" color="tertiary")
             //-   span Download all review data
       v-card-subtitle
           span.pb-0.d-flex.flex-row.align-center
-            b.mr-3 Reviewed by
+            b.mr-3 {{ $t('article.reviews.peer_reviewed_by') }}
             v-bottom-sheet(v-model="dialog" eager inset)
               template(v-slot:activator="{ on, attrs }")
                 v-chip-group
@@ -123,17 +109,14 @@ v-card(v-if="article" color="tertiary")
         v-expansion-panel-header
           span
             span.d-flex.align-center
-              h3 Automated summary of preprint reviews
+              h3 {{ $t('article.reviews.summary.title') }}
               v-tooltip(color="tooltip" bottom transition="fade-transition")
                 template(v-slot:activator="{ on, hover, attrs }")
                   v-card(flat color="transparent" v-on:click.stop v-bind="attrs" v-on="on").ml-1
                     v-icon(color="grey-lighten-1") mdi-information-outline
-                p(style="max-width: 250px;")
-                  | This summary was generated automatically using ChatGPT-4 based on the content of the reviews. 
-                  | Currently, this feature is limited to Review Commons reviews.
-                  | To access the full content of the original reviews, click on "Peer Review".
+                p(style="max-width: 250px;") {{ $t('article.reviews.summary.info.message') }}
             span.sample-text.hide-when-expanded.text-body-2 {{ preview(maybeReviewSummary) }}
-            
+
         v-expansion-panel-content(eager)
           p(class="text--primary").text-body-1 {{ maybeReviewSummary }}
 
@@ -145,7 +128,7 @@ v-card(v-if="article" color="tertiary")
                 template(v-slot:activator="{ on, hover, attrs }")
                   v-card(@click="copyToClipboard(citationText(true))" v-on:click.stop v-bind="attrs" v-on="on" icon elevation=0 plain depressed v-ripple="false").pl-2
                     v-icon(color="primary") mdi-content-copy
-                span Click to copy reviewed preprint citation
+                span {{ $t('article.cite.btn.tooltip') }}
         v-expansion-panel-content
           span.d-flex.flex-row.align-top
             p(v-html="this.citationText(false)").mb-2.text-body-1
@@ -227,7 +210,7 @@ export default {
       return this.article.doi + '#rev0-ar'
     },
     copyToClipboard (text) {
-      this.$store.commit("setSnack", { message: "Text copied to clipboard!", color: "gray" });
+      this.$store.commit("setSnack", { message: "snack.message.copied", color: "gray" });
       return navigator.clipboard.writeText(text);
     },
     selectReviewerInfo(value) {
@@ -248,11 +231,18 @@ export default {
     citationText(stripHtmlFormatting) {
       const date = new Date(this.article.pub_date)       
       const year = date.getFullYear()
-      
-      const reviewedByText = this.article.reviewed_by.map(r => "peer reviewed by <b><i>" + serviceId2Name(r) + "</i></b>").join(", ")
 
-      let citationText = `${this.authorList} (${year}). ${this.article.title}. <b><i>${this.article.journal}</i></b> doi.org/${this.article.doi}, ${reviewedByText} ${this.getFullStandaloneDoiUrl}.`
-      
+      const reviewedByText = this.article.reviewed_by.map(r => this.$t('article.cite.text.reviewed_by', {service: serviceId2Name(r)})).join(", ")
+
+      let citationText = this.$t('article.cite.text.citation', {
+        authors: this.authorList,
+        year,
+        title: this.article.title,
+        journal: this.article.journal,
+        doi: this.article.doi,
+        reviewedBy: reviewedByText,
+        reviewedPreprintUrl: this.getFullStandaloneDoiUrl,
+      })
       if (stripHtmlFormatting)
         return citationText.replace(/<[^>]*>?/gm, '')
       else 
@@ -293,8 +283,7 @@ export default {
       return this.article.info
     },
     hasFigureKeywords() {
-      return this.article.main_topics.length > 0 || this.article.highlighted_entities.length > 0 || 
-        this.article.entities.length > 0 || this.article.assays.length > 0
+      return this.article.entities.length > 0 || this.article.assays.length > 0
     },
     generateInternalUrl () {
       if (this.article.slug) {

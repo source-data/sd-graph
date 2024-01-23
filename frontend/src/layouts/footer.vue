@@ -2,13 +2,13 @@
   v-footer(padless).d-flex.flex-grow-1
     router-link(to="/about")
       v-list-item(index="1")
-        span About
+        span {{ $t('about.title') }}
     router-link(to="/contact")
       v-list-item(index="3")
-        span Contact
+        span {{ $t('contact.title') }}
     v-spacer 
     a(href="https://github.com/source-data/sd-graph" target="_blank" rel="noopener").pr-2.ml-auto.mr-2
-      img(src="../assets/github-mark.png" alt="EMBO Logo").gh-badge
+      img(src="../assets/github-mark.png" alt="$t('logo.alt.github')").gh-badge
     span EMBO &#169; {{ thisYear }}
 </template>
 

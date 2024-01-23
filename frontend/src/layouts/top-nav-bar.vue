@@ -19,10 +19,10 @@
         row
         justify-end
       )
-        v-tab(to="/refereed-preprints") Browse
+        v-tab(to="/refereed-preprints") {{ $t('article_list.title') }}
         v-spacer
-        v-tab(to="/about") About
-        v-tab(to="/contact") Contact
+        v-tab(to="/about") {{ $t('about.title') }}
+        v-tab(to="/contact") {{ $t('contact.title') }}
 </template>
 
 <script>

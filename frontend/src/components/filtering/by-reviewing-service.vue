@@ -1,7 +1,7 @@
 <template lang="pug">
 v-card(flat)
-  v-card-title Filter by reviewer
-  v-card-subtitle Filter the reviewed preprints by the reviewer
+  v-card-title {{ $t('filters.reviewed_by.title') }}
+  v-card-subtitle {{ $t('filters.reviewed_by.subtitle') }}
   v-card-text
     v-chip-group(v-model="selectedReviewers" column multiple)
       span(v-for="service in this.reviewing_services" :key="`${service.id}-chip`")

@@ -5,10 +5,10 @@ div(style="max-width: 100%;").d-flex.mr-auto.ml-auto
 
   span(v-else style="max-width:100%;").mt-3
     v-container(fluid v-if="paging.totalItems > 0" :class="{'highlights-loading': loadingRecords}")
-      h2 {{ paging.totalItems }} reviewed preprints found
+      h2 {{ $t('article_list.gt_0.title', {n: paging.totalItems}) }}
     v-container(fluid v-if="paging.totalItems == 0")
-      h2 Sorry, we couldn't find any results
-      p Try changing some of the filter values.
+      h2 {{ $t('article_list.eq_0.title') }}
+      p {{ $t('article_list.eq_0.subtitle') }}
     v-container(fluid :class="{'highlights-loading': loadingRecords}")
       v-row(align="center" justify="start")
         v-col(cols=8).px-0.d-flex
@@ -23,28 +23,26 @@ div(style="max-width: 100%;").d-flex.mr-auto.ml-auto
           v-btn-toggle(v-model="sortBy" mandatory)
             v-tooltip(color="tooltip" bottom transition="fade-transition")
               template(v-slot:activator="{ on, hover, attrs }")
-                v-btn(x-small v-bind="attrs" v-on="on" outlined value="preprint-date")
-                  | preprint date
-              span Sort by preprint date
+                v-btn(x-small v-bind="attrs" v-on="on" outlined value="preprint-date") {{ $t('article_list.sort.by.preprint_date.label') }}
+              span {{ $t('article_list.sort.by.preprint_date.tooltip') }}
             v-tooltip(color="tooltip" bottom transition="fade-transition")
               template(v-slot:activator="{ on, hover, attrs }")
-                v-btn(x-small outlined value="reviewing-date" v-bind="attrs" v-on="on")
-                  | reviewing date
-              span Sort by revewing date
+                v-btn(x-small outlined value="reviewing-date" v-bind="attrs" v-on="on") {{ $t('article_list.sort.by.reviewing_date.label') }}
+              span {{ $t('article_list.sort.by.reviewing_date.tooltip') }}
 
           v-btn-toggle(v-model="sortedOrder" mandatory).ml-3
             v-tooltip(color="tooltip" right transition="fade-transition")
               template(v-slot:activator="{ on, hover, attrs }")
-                v-btn(x-small v-bind="attrs" v-on="on" icon aria-label="descending" value="desc")
+                v-btn(x-small v-bind="attrs" v-on="on" icon :aria-label="$t('article_list.sort.order.desc.label')" value="desc")
                   v-icon(dense) mdi-sort-descending
-              span Show latest first
+              span {{ $t('article_list.sort.order.desc.tooltip') }}
             v-tooltip(color="tooltip" right transition="fade-transition")
               template(v-slot:activator="{ on, hover, attrs }")
-                v-btn(x-small v-bind="attrs" v-on="on" icon aria-label="ascending" value="asc")
+                v-btn(x-small v-bind="attrs" v-on="on" icon :aria-label="$t('article_list.sort.order.asc.label')" value="asc")
                   v-icon(dense) mdi-sort-ascending
-              span Sort earliest first
+              span {{ $t('article_list.sort.order.asc.tooltip') }}
       v-row(v-if="paging.totalItems > 0")
-        v-switch(v-model="openAbstracts" dense label="Collapse all abstracts").pl-3.mt-0
+        v-switch(v-model="openAbstracts" dense :label="$t('article_list.collapse_abstracts')").pl-3.mt-0
 
       v-row(v-for="article in records" :key="article.id")
         v-col(cols=12)

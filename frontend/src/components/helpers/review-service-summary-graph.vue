@@ -2,139 +2,133 @@
 v-card
   v-card-title
     span(slot)
-      h3 About 
-        a(:href="url" target="_blank" rel="noopener") {{ service_name }}
-          
+      h3(v-html="$t('review_service_summary.title_html', {url, name: service_name})")
   v-card-text
-    h3.mb-1 Process
+    h3.mb-1 {{ $t('review_service_summary.process.title') }}
     v-container.grey.lighten-4.mb-5.rounded-lg
       v-row(v-if="review_requested_by" no-gutters)
         v-row(dense)
           v-col.d-flex.align-center
             b
-              span(v-if="review_requested_by==='Authors'") Author-driven
-              span(v-else) Author-independent
+              span(v-if="review_requested_by==='Authors'") {{ $t('review_service_summary.process.submit.author_driven') }}
+              span(v-else) {{ $t('review_service_summary.process.submit.author_independent') }}
             v-tooltip(color="tooltip" right transition="fade-transition")
               template(v-slot:activator="{ on, hover, attrs }")
                 v-card(color="transparent" flat v-on:click.stop v-bind="attrs" v-on="on").ml-2
                   v-icon(color="grey-lighten-1") mdi-information-outline
               span
-                i Who submitted the manuscript or initiated the feedback process? 
-                b.ml-1 {{ review_requested_by }}.
+                i {{ $t('review_service_summary.process.submit.tooltip.question') }}
+                b.ml-1 {{ $t('review_service_summary.process.submit.tooltip.answer', {review_requested_by}) }}
       
 
       v-row(v-if="reviewer_selected_by" no-gutters)
         v-row(dense)
           v-col.d-flex.align-center
             b
-              span(v-if="reviewer_selected_by==='Editor, service, or community'") Service-selected reviewers
-              span(v-else-if="reviewer_selected_by==='Self-nominated'") Self-nominated reviewers
-              span(v-else-if="reviewer_selected_by==='Authors'") Author-selected reviewers
+              span(v-if="reviewer_selected_by==='Editor, service, or community'") {{ $t('review_service_summary.process.reviewer_selection.service') }}
+              span(v-else-if="reviewer_selected_by==='Self-nominated'") {{ $t('review_service_summary.process.reviewer_selection.self') }}
+              span(v-else-if="reviewer_selected_by==='Authors'") {{ $t('review_service_summary.process.reviewer_selection.author') }}
             v-tooltip(color="tooltip" right transition="fade-transition")
               template(v-slot:activator="{ on, hover, attrs }")
                 v-card(color="transparent" flat v-on:click.stop v-bind="attrs" v-on="on").ml-2
                   v-icon(color="grey-lighten-1") mdi-information-outline
               span
-                i Who selects the reviewers? 
-                b.ml-1 {{ reviewer_selected_by }} select the reviewers.
+                i {{ $t('review_service_summary.process.reviewer_selection.tooltip.question') }}
+                b.ml-1 {{ $t('review_service_summary.process.reviewer_selection.tooltip.answer', {reviewer_selected_by}) }}
 
       v-row(v-if="public_interaction" no-gutters)
         v-row(dense)
           v-col.d-flex.align-center
             b
-              span(v-if="public_interaction=='Included'") Public feedback
-              span(v-else) No public interactions
+              span(v-if="public_interaction=='Included'") {{ $t('review_service_summary.process.public_interaction.yes') }}
+              span(v-else) {{ $t('review_service_summary.process.public_interaction.no') }}
             v-tooltip(color="tooltip" right transition="fade-transition")
               template(v-slot:activator="{ on, hover, attrs }")
                 v-card(color="transparent" flat v-on:click.stop v-bind="attrs" v-on="on").ml-2
                   v-icon(color="grey-lighten-1") mdi-information-outline
               span
-                i Was there an opportunity for the public to engage as an integral part of the process? 
-                b.ml-1 {{ public_interaction }}.
+                i {{ $t('review_service_summary.process.public_interaction.tooltip.question') }}
+                b.ml-1 {{ $t('review_service_summary.process.public_interaction.tooltip.answer', {public_interaction}) }}
 
       v-row(v-if="opportunity_for_author_response" no-gutters)
         v-row(dense)
           v-col.d-flex.align-center
             b
-              span(v-if="opportunity_for_author_response=='Included'") Authors reply
-              span(v-else)  No author reply
+              span(v-if="opportunity_for_author_response=='Included'") {{ $t('review_service_summary.process.author_response.yes') }}
+              span(v-else) {{ $t('review_service_summary.process.author_response.no') }}
             v-tooltip(color="tooltip" right transition="fade-transition")
               template(v-slot:activator="{ on, hover, attrs }")
                 v-card(color="transparent" flat v-on:click.stop v-bind="attrs" v-on="on").ml-2
                   v-icon(color="grey-lighten-1") mdi-information-outline
               span
-                i Was the author’s response included as an integral part of the process?  
-                b.ml-1 {{ opportunity_for_author_response }}.
+                i {{ $t('review_service_summary.process.author_response.tooltip.question') }}
+                b.ml-1 {{ $t('review_service_summary.process.author_response.tooltip.answer', {opportunity_for_author_response}) }}
 
       v-row(v-if="recommendation" no-gutters)
         v-row(dense)
           v-col.d-flex.align-center
             b
-              span(v-if="recommendation=='Binary decision'") Binary decision 
-              span(v-else-if="recommendation=='Other scale or rating'") Scaled rating
-              span(v-else) No decision
+              span(v-if="recommendation=='Binary decision'") {{ $t('review_service_summary.process.recommendation.binary') }}
+              span(v-else-if="recommendation=='Other scale or rating'") {{ $t('review_service_summary.process.recommendation.scale') }}
+              span(v-else) {{ $t('review_service_summary.process.recommendation.no') }}
             v-tooltip(color="tooltip" right transition="fade-transition")
               template(v-slot:activator="{ on, hover, attrs }")
                 v-card(color="transparent" flat v-on:click.stop v-bind="attrs" v-on="on").ml-2
                   v-icon(color="grey-lighten-1") mdi-information-outline
               span
-                i Does the service provide a decision/recommendation or a scalar rating after the review process?   
-                b.ml-1 Recommendation provided: {{ recommendation }}.
+                i {{ $t('review_service_summary.process.recommendation.tooltip.question') }}
+                b.ml-1 {{ $t('review_service_summary.process.recommendation.tooltip.answer', {recommendation}) }}
 
-    h3.mb-1 Policy
+    h3.mb-1 {{ $t('review_service_summary.policy.title') }}
     v-container.grey.lighten-4.rounded-lg
       v-row(v-if="peer_review_policy" no-gutters)
         v-row(dense)
           v-col.d-flex.flex-row.align-center
-            span Reviewing guidelines:
-            b.prd_val 
-              | Yes
-              | (
-              a(:href="peer_review_policy" target="_blank" rel="noopener") read more
-              | )
+            span {{ $t('review_service_summary.policy.guidelines.title') }}
+            b.prd_val(v-html="$t('review_service_summary.policy.guidelines.description_html', {url: peer_review_policy})")
 
             v-tooltip(color="tooltip" right transition="fade-transition")
               template(v-slot:activator="{ on, hover, attrs }")
                 v-card(color="transparent" flat v-on:click.stop v-bind="attrs" v-on="on").ml-2
                   v-icon(color="grey-lighten-1") mdi-information-outline
               span
-                i Explicit guidelines for reviewers 
+                i {{ $t('review_service_summary.policy.guidelines.tooltip') }}
 
       v-row(v-if="review_coverage" no-gutters)
         v-row(dense)
           v-col.d-flex.flex-row.align-center
-            span(v-if="review_coverage") Review coverage:
-            b.prd_val {{ review_coverage }}
+            span(v-if="review_coverage") {{ $t('review_service_summary.policy.coverage.title') }}
+            b.prd_val {{  $t('review_service_summary.policy.coverage.description', {review_coverage}) }}
             v-tooltip(color="tooltip" right transition="fade-transition") 
               template(v-slot:activator="{ on, hover, attrs }")
                 v-card(color="transparent" flat v-on:click.stop v-bind="attrs" v-on="on").ml-2
                   v-icon(color="grey-lighten-1") mdi-information-outline
               span
-                i Does the feedback cover the entire paper or only a certain section or aspect?
+                i {{ $t('review_service_summary.policy.coverage.tooltip') }}
 
       v-row(v-if="reviewer_identity_known_to" no-gutters)
         v-row(dense)
           v-col.d-flex.flex-row.align-center
-            span(v-if="reviewer_identity_known_to") Reviewer identity known to:
-            b.prd_val {{ reviewer_identity_known_to }}
+            span(v-if="reviewer_identity_known_to") {{ $t('review_service_summary.policy.identity.title') }}
+            b.prd_val {{ $t('review_service_summary.policy.identity.description', {reviewer_identity_known_to}) }}
             v-tooltip(color="tooltip" right transition="fade-transition")
               template(v-slot:activator="{ on, hover, attrs }")
                 v-card(color="transparent" flat v-on:click.stop v-bind="attrs" v-on="on").ml-2
                   v-icon(color="grey-lighten-1") mdi-information-outline
               span
-                i Are the identities of reviewers known to everyone (public), editors or service, or no one?
+                i {{ $t('review_service_summary.policy.identity.tooltip') }}
 
       v-row(v-if="competing_interests" no-gutters)
         v-row(dense)
           v-col.d-flex.flex-row.align-center
-            span(v-if="competing_interests==='Checked'") Competing interests:
-            b.prd_val {{ competing_interests }}
+            span(v-if="competing_interests==='Checked'") {{ $t('review_service_summary.policy.competing_interests.title') }}
+            b.prd_val {{ $t('review_service_summary.policy.competing_interests.description', {competing_interests}) }}
             v-tooltip(color="tooltip" right transition="fade-transition")
               template(v-slot:activator="{ on, hover, attrs }")
                 v-card(color="transparent" flat v-on:click.stop v-bind="attrs" v-on="on").ml-2
                   v-icon(color="grey-lighten-1") mdi-information-outline
               span
-                i Is a declaration of competing interest required?
+                i {{ $t('review_service_summary.policy.competing_interests.tooltip') }}
 </template>
 
 <script>

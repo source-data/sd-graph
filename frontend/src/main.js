@@ -5,12 +5,14 @@ import store from './store'
 import VueMeta from 'vue-meta'
 import vuetify from './plugins/vuetify';
 import './scss/main.scss'
+import i18n from './i18n'
 
 Vue.use(VueMeta)
 
 Vue.config.productionTip = false
 
 const app = new Vue({
+  i18n,
   router,
   store,
   vuetify,
