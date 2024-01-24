@@ -426,7 +426,7 @@ components:
     PaperSortBy:
       type: string
       description: The field to sort the result by.
-      default: preprint-date
+      default: reviewing-date
       enum:
       - preprint-date
       - reviewing-date
@@ -491,7 +491,7 @@ components:
           $ref: '#/components/schemas/SortOrder'
       example:
         next: /api/v2/papers/?page=3
-        sortedBy: preprint-date
+        sortedBy: reviewing-date
         current: /api/v2/papers/?page=2
         totalItems: 195
         perPage: 10
@@ -532,7 +532,7 @@ components:
       example:
         paging:
           next: /api/v2/papers/?page=3
-          sortedBy: preprint-date
+          sortedBy: reviewing-date
           current: /api/v2/papers/?page=2
           totalItems: 195
           perPage: 10

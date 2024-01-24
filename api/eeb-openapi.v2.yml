@@ -316,7 +316,7 @@ components:
       enum:
         - preprint-date
         - reviewing-date
-      default: preprint-date
+      default: reviewing-date
       description: The field to sort the result by.
 
     SortOrder:
