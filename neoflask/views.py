@@ -11,6 +11,7 @@ from flask import (
     Response,
     url_for,
 )
+from math import ceil
 from .sitemap import create_sitemap
 from .converter import LuceneQueryConverter, ReviewServiceConverter, ListConverter
 from .queries import (
@@ -24,6 +25,7 @@ from .queries import (
     COVID19, REFEREED_PREPRINTS,
     COLLECTION_NAMES, 
     SUBJECT_COLLECTIONS,
+    REFEREED_PREPRINTS_V2,
 )
 from neoflask.cache import cache
 from neotools import ask_neo
@@ -41,22 +43,6 @@ def n_months_ago(n):
     n_months_ago = date.today() + relativedelta(months=-n)
     first_day_of_that_month = n_months_ago.replace(day=1)
     return str(first_day_of_that_month)
-
-
-def get_all_dois_and_slugs():
-    refereed_preprints = ask_neo(BY_REVIEWING_SERVICE(), limit_date='1900-01-01')
-    by_auto_topics = ask_neo(BY_AUTO_TOPICS(), limit_date='1900-01-01')
-    automagic = ask_neo(AUTOMAGIC(), limit_date='1900-01-01')
-    app.logger.info("gathering all dois")
-
-    dois_and_slugs = []
-    for collection in refereed_preprints, by_auto_topics, automagic:
-        for sub_collection in collection:
-            papers = sub_collection['papers']
-            new_dois_and_slugs = [(paper['doi'], paper.get('slug', None)) for paper in papers]
-            dois_and_slugs += new_dois_and_slugs
-    dois_and_slugs = set(dois_and_slugs)  # remove duplicates
-    return dois_and_slugs
 
 
 @app.route('/')
@@ -82,20 +68,15 @@ def doi_redirect(doi):
     return render_template('index.html')
 
 
-# @app.route('/doc')
-# def doc():
-#     return render_template('doc.html', name='me')
-
-
 @app.route('/sitemap.xml', methods=['GET'])
 @cache.cached()
 def sitemap():
     """
     Generate dynamically a sitemap.
     """
-    dois_and_slugs = get_all_dois_and_slugs()
-    app.logger.info(f"generating sitemap with {len(dois_and_slugs)} links.")
-    sitemap = create_sitemap(dois_and_slugs)
+    refereed_preprints = ask_neo(REFEREED_PREPRINTS_V2())
+    n_pages = ceil(refereed_preprints[0]['n_total'] / 10)
+    sitemap = create_sitemap(n_pages)
     return Response(sitemap, mimetype='text/xml')
 
 
