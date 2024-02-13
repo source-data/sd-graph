@@ -148,7 +148,6 @@ export default {
   },
   props: {
     article: Object,
-    expandedReview: Object,
 
     // Props for the expansion panels that should be opened by default, passed from the parent component
     openPreprintBoxes: Array,
@@ -255,7 +254,7 @@ export default {
       const timeline = this.windowWidth < this.breakpoint ?  new RenderRevTimeline() : new RenderRevTimelineHorizontal();
       timelineContainer.appendChild(timeline);
       timeline.reviewProcess = this.reviewProcess;
-      timeline.highlightItem = this.expandedReview ? this.expandedReview.doi : null;
+      timeline.highlightItem = this.expandedReview;
       const md = new MarkdownIt({
         html: true,
         linkify: true,
@@ -278,6 +277,38 @@ export default {
       }
       authorsSortedByPosition.sort(byPosition);
       return authorsSortedByPosition.map(author => `${author.surname ? author.surname + ' ' : ''}${author.given_names ? author.given_names : ''}${author.collab ? author.collab : ''}${(author.corresp == 'yes' ? '*' : '')}`).join(', ')
+    },
+    expandedReview() {
+      let hash = this.$route.hash;
+      if (!hash) {
+        return undefined;
+      }
+
+      // restricted to RC reviews for now
+      const group = this.reviewProcess.timeline.groups.find(group => group.publisher.name === "review commons")
+      if (!group) {
+        return undefined;
+      }
+
+      if (hash === '#rev0-ar') {  // expand response
+        const item = group.items.find(item => item.type === "response");
+        const content = item.contents[0];
+        return {group, item, content};
+      }
+
+      const match = hash.match(/^#rev0-rr([0-9]+)$/);
+      if (!match) {
+        return undefined;
+      }
+      const reviewIdx = Number(match[1]) - 1;  // convert from 1- to 0-based indexing
+
+      const item = group.items.find(item => item.type === "reviews");
+      if (reviewIdx < 0 || reviewIdx >= item.contents.length) {
+        return undefined;
+      }
+      const content = item.contents[reviewIdx];
+      return {group, item, content};
+
     },
     info () {
       return this.article.info

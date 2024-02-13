@@ -11,7 +11,7 @@
 
     v-row(v-if="article")
       v-col.d-flex.align-center
-        HighlightedListItem(:article="article" :expandedReview="expandedReview" :open-preprint-boxes=[0, 1, 2] :open-reviewed-boxes=[0, 1]).ml-auto.mr-auto
+        HighlightedListItem(:article="article" :open-preprint-boxes=[0, 1, 2] :open-reviewed-boxes=[0, 1]).ml-auto.mr-auto
     v-row(v-else)
       v-col
         v-card
@@ -68,30 +68,6 @@ export default {
       article_slug: undefined,
       publicPath: 'https://eeb.embo.org',
     }
-  },
-  computed: {
-    expandedReview () {
-      let hash = this.$route.hash;
-      if (!hash) {
-        return undefined;
-      }
-
-      if (hash === '#rev0-ar') {
-        return this.article.review_process.response;
-      }
-
-      let match = hash.match(/^#rev0-rr([0-9]+)$/);
-      if (!match) {
-        return undefined;
-      }
-
-      let reviewIdx = Number(match[1]);
-      let numReviews = this.article.review_process.reviews.length;
-      if (reviewIdx <= 0 || reviewIdx > numReviews) {
-        return undefined;
-      }
-      return this.article.review_process.reviews[reviewIdx - 1];
-    },
   },
   methods: {
     getArticle (params) {
