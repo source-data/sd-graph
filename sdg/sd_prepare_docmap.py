@@ -348,7 +348,7 @@ create_published_article_docmaps = UpdateOrCreateTask(
         type: 'docmap',
         provider: 'https://eeb.embo.org',
         publisher_name: TOLOWER(publisher_title),
-        id: '%(docmaps_api_url)s' + apoc.create.uuid(),
+        id: '%(docmaps_api_url)s' + apoc.create.uuid()
     })
     // if no docmap for this publisher exists, set the necessary properties
     ON CREATE SET
