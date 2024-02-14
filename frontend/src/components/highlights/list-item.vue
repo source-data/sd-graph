@@ -83,7 +83,9 @@ v-card(v-if="article" color="tertiary")
                     outlined
                     @click="selectReviewerInfo(source)"
                     v-bind="attrs"
-                    v-on="on" v-for='source in article.reviewed_by')
+                    v-on="on"
+                    v-for='source in article.reviewed_by'
+                    :key="source")
                     img(v-if="imageFileName(source)" :src="require(`@/assets/partner-logos/` + imageFileName(source))" height="24px" :alt="serviceId2Name(source)").pa-1
                     span(v-else) {{ serviceId2Name(source) }}
                     v-icon(right small) mdi-information
@@ -102,7 +104,9 @@ v-card(v-if="article" color="tertiary")
                 :recommendation="reviewingService(selectedSource).recommendation",
               ).px-0.mt-2
       v-card-text
-        span.review-process.d-flex.align-start.justify-start(:ref='article.doi + "-rev-timeline"')
+        span.review-process.d-flex.align-start.justify-start
+          render-rev-timeline.d-md-none(ref="render-rev-timeline")
+          render-rev-timeline-horizontal.d-none.d-md-block(ref="render-rev-timeline-horizontal")
 
     v-expansion-panels(accordion multiple v-model="dataOpenReviewedBoxes").no-top-radius
       v-expansion-panel(v-if="maybeReviewSummary")
@@ -137,7 +141,7 @@ v-card(v-if="article" color="tertiary")
 <script>
 import MarkdownIt from 'markdown-it'
 import { serviceId2Name, normalizeServiceName } from '../../store/by-filters'
-import { RenderRevTimeline, RenderRevTimelineHorizontal } from '@source-data/render-rev'
+import '@source-data/render-rev'
 import { mapGetters, mapState } from 'vuex'
 import InfoCardsReviewServiceSummaryGraph from '../helpers/review-service-summary-graph.vue'
 
@@ -161,8 +165,6 @@ export default {
       selectedSource: null,
 
       reviewProcess: null,
-      windowWidth: window.innerWidth,
-      breakpoint: 800,
     }
   },
   methods: {
@@ -245,21 +247,12 @@ export default {
         return citationText
     },
     updateReviewTimeline() {
-      const doi = this.article.doi;
-      const timelineContainer = this.$refs[doi + "-rev-timeline"];
-      timelineContainer.innerHTML = "";
-      const timeline = this.windowWidth < this.breakpoint ?  new RenderRevTimeline() : new RenderRevTimelineHorizontal();
-      timelineContainer.appendChild(timeline);
-      timeline.reviewProcess = this.reviewProcess;
-      timeline.highlightItem = this.expandedReview;
-      const md = new MarkdownIt({
-        html: true,
-        linkify: true,
-        typographer: true
-      });
-      timeline.options = {
-        renderMarkdown: src => md.render(src),
-      };
+      const timelines = [this.$refs["render-rev-timeline"], this.$refs["render-rev-timeline-horizontal"]];
+      for (let timeline of timelines) {
+        timeline.highlightItem = this.expandedReview;
+        timeline.options = this.timelineOptions;
+        timeline.reviewProcess = this.reviewProcess;
+      }
     },
   },
   computed: {
@@ -338,30 +331,24 @@ export default {
       }
       return reviewWithSummary.summaries[0]
     },
+    timelineOptions() {
+      return {
+        renderMarkdown: src => this.mdRender(src),
+      }
+    },
   },
   watch: {
     openPreprintBoxes: function (newVal) {
       this.dataOpenPreprintBoxes = newVal
     },
-    windowWidth() {
-      const breakpointCrossed = (this.windowWidth < this.breakpoint && window.innerWidth >= this.breakpoint)
-        || (this.windowWidth >= this.breakpoint && window.innerWidth < this.breakpoint);
-      if (breakpointCrossed) {
-        this.updateReviewTimeline();
-      }
-    }
   },
-  mounted() {
-    window.addEventListener("resize", () => {
-      this.windowWidth = window.innerWidth;
-    });
-
+  created() {
     const doi = this.article.doi;
     this.$store.dispatch("byArticleId/fetchReviewProcessForDoi", doi).then(() => {
       this.reviewProcess = this.getReviewProcessForDoi(doi);
       this.updateReviewTimeline();
     });
-  }
+  },
 }
 </script>
 
@@ -424,4 +411,5 @@ export default {
     border-radius: 0 0 !important;
     border-top: 1px solid rgb(0, 0, 0, 0.1);
   }
+
 </style>
