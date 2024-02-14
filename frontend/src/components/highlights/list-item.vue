@@ -136,10 +136,9 @@ v-card(v-if="article" color="tertiary")
 
 <script>
 import MarkdownIt from 'markdown-it'
-import { BASE_URL } from '../../lib/http'
 import { serviceId2Name, normalizeServiceName } from '../../store/by-filters'
-import { parseDocmaps, RenderRevTimeline, RenderRevTimelineHorizontal } from '@source-data/render-rev'
-import { mapState, mapGetters } from 'vuex'
+import { RenderRevTimeline, RenderRevTimelineHorizontal } from '@source-data/render-rev'
+import { mapGetters, mapState } from 'vuex'
 import InfoCardsReviewServiceSummaryGraph from '../helpers/review-service-summary-graph.vue'
 
 export default {
@@ -161,8 +160,6 @@ export default {
       dialog: false,
       selectedSource: null,
 
-      // We grab the review from the docmaps, as it's easier to work with it by not relying on the render-rev component
-      maybeReviewSummary: null,
       reviewProcess: null,
       windowWidth: window.innerWidth,
       breakpoint: 800,
@@ -266,6 +263,7 @@ export default {
     },
   },
   computed: {
+    ...mapGetters('byArticleId', ['getReviewProcessForDoi']),
     ...mapGetters('byFilters', ['reviewingService']),
     ...mapState(['snackMessage, snackColor']),
 
@@ -330,32 +328,39 @@ export default {
       let fullLink = "https://twitter.com/intent/tweet?text=" + tweetContent
       return fullLink
     },
+    maybeReviewSummary() {
+      if (!this.reviewProcess) {
+        return null;
+      }
+      let reviewWithSummary = this.reviewProcess.timeline.groups.map(g => g.items).flat().find(i => i.type === "reviews" && i.summaries.length > 0);
+      if (!reviewWithSummary) {
+        return null;
+      }
+      return reviewWithSummary.summaries[0]
+    },
   },
   watch: {
     openPreprintBoxes: function (newVal) {
       this.dataOpenPreprintBoxes = newVal
     },
-  },
-  mounted() {
-    window.addEventListener("resize", () => {
+    windowWidth() {
       const breakpointCrossed = (this.windowWidth < this.breakpoint && window.innerWidth >= this.breakpoint)
         || (this.windowWidth >= this.breakpoint && window.innerWidth < this.breakpoint);
-      this.windowWidth = window.innerWidth;
       if (breakpointCrossed) {
         this.updateReviewTimeline();
       }
+    }
+  },
+  mounted() {
+    window.addEventListener("resize", () => {
+      this.windowWidth = window.innerWidth;
     });
+
     const doi = this.article.doi;
-    fetch(`${BASE_URL}/api/v2/docmap/${doi}`)
-      .then(response => response.json())
-      .then(parseDocmaps)
-      .then(reviewProcess => {
-        let reviewWithSummary = reviewProcess.timeline.groups.map(g => g.items).flat().find(i => i.type === "reviews" && i.summaries.length > 0);
-        if (reviewWithSummary)
-          this.maybeReviewSummary = reviewWithSummary.summaries[0]
-        this.reviewProcess = reviewProcess;
-        this.updateReviewTimeline();
-      });
+    this.$store.dispatch("byArticleId/fetchReviewProcessForDoi", doi).then(() => {
+      this.reviewProcess = this.getReviewProcessForDoi(doi);
+      this.updateReviewTimeline();
+    });
   }
 }
 </script>
