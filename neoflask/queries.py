@@ -1129,7 +1129,7 @@ WHERE
     AND NOT isEmpty(a.published_journal_title)
 RETURN
   a.published_journal_title AS id,
-  COUNT(*) AS n_papers
+  COUNT(DISTINCT vzp.doi) AS n_papers
 ORDER BY TOLOWER(id) ASC
     '''
     returns = ['id', 'n_papers']
