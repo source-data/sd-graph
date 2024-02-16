@@ -97,7 +97,6 @@ v-card(v-if="article" color="tertiary")
                 :review_coverage="reviewingService(selectedSource).review_coverage",
                 :reviewer_identity_known_to="reviewingService(selectedSource).reviewer_identity_known_to",
                 :competing_interests="reviewingService(selectedSource).competing_interests",
-                :public_interaction="reviewingService(selectedSource).public_interaction",
                 :opportunity_for_author_response="reviewingService(selectedSource).opportunity_for_author_response",
                 :recommendation="reviewingService(selectedSource).recommendation",
               ).px-0.mt-2
