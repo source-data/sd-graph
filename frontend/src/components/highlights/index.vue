@@ -19,28 +19,31 @@ div(style="max-width: 100%;").d-flex.mr-auto.ml-auto
             :total-visible="10"
           )
       v-row(v-if="paging.totalItems > 0")
-        v-col.d-flex
-          v-btn-toggle(v-model="sortBy" mandatory)
-            v-tooltip(color="tooltip" bottom transition="fade-transition")
-              template(v-slot:activator="{ on, hover, attrs }")
-                v-btn(x-small v-bind="attrs" v-on="on" outlined value="preprint-date") {{ $t('article_list.sort.by.preprint_date.label') }}
-              span {{ $t('article_list.sort.by.preprint_date.tooltip') }}
-            v-tooltip(color="tooltip" bottom transition="fade-transition")
-              template(v-slot:activator="{ on, hover, attrs }")
-                v-btn(x-small outlined value="reviewing-date" v-bind="attrs" v-on="on") {{ $t('article_list.sort.by.reviewing_date.label') }}
-              span {{ $t('article_list.sort.by.reviewing_date.tooltip') }}
+        v-col.sort-controls.d-flex.flex-wrap.flex-column.flex-sm-row
+          .input-group.d-flex.justify-space-between.justify-sm-start.flex-grow-1.flex-sm-grow-0
+            label {{ $t('article_list.sort.by.label') }}
+            v-btn-toggle(v-model="sortBy" mandatory).ml-1
+              v-tooltip(color="tooltip" bottom transition="fade-transition")
+                template(v-slot:activator="{ on, hover, attrs }")
+                  v-btn(small v-bind="attrs" v-on="on" outlined value="preprint-date") {{ $t('article_list.sort.by.preprint_date.label') }}
+                span {{ $t('article_list.sort.by.preprint_date.tooltip') }}
+              v-tooltip(color="tooltip" bottom transition="fade-transition")
+                template(v-slot:activator="{ on, hover, attrs }")
+                  v-btn(small outlined value="reviewing-date" v-bind="attrs" v-on="on") {{ $t('article_list.sort.by.reviewing_date.label') }}
+                span {{ $t('article_list.sort.by.reviewing_date.tooltip') }}
 
-          v-btn-toggle(v-model="sortedOrder" mandatory).ml-3
-            v-tooltip(color="tooltip" right transition="fade-transition")
-              template(v-slot:activator="{ on, hover, attrs }")
-                v-btn(x-small v-bind="attrs" v-on="on" icon :aria-label="$t('article_list.sort.order.desc.label')" value="desc")
-                  v-icon(dense) mdi-sort-descending
-              span {{ $t('article_list.sort.order.desc.tooltip') }}
-            v-tooltip(color="tooltip" right transition="fade-transition")
-              template(v-slot:activator="{ on, hover, attrs }")
-                v-btn(x-small v-bind="attrs" v-on="on" icon :aria-label="$t('article_list.sort.order.asc.label')" value="asc")
-                  v-icon(dense) mdi-sort-ascending
-              span {{ $t('article_list.sort.order.asc.tooltip') }}
+          .input-group.d-flex.justify-space-between.justify-sm-start.flex-grow-1.flex-sm-grow-0
+            label {{ $t('article_list.sort.order.label') }}
+            v-btn-toggle(v-model="sortedOrder" mandatory).ml-1
+              v-tooltip(color="tooltip" bottom transition="fade-transition")
+                template(v-slot:activator="{ on, hover, attrs }")
+                  v-btn(small v-bind="attrs" v-on="on" outlined value="desc") {{ $t('article_list.sort.order.desc.label') }}
+                span {{ $t('article_list.sort.order.desc.tooltip') }}
+              v-tooltip(color="tooltip" bottom transition="fade-transition")
+                template(v-slot:activator="{ on, hover, attrs }")
+                  v-btn(small v-bind="attrs" v-on="on" outlined value="asc") {{ $t('article_list.sort.order.asc.label') }}
+                span {{ $t('article_list.sort.order.asc.tooltip') }}
+
       v-row(v-if="paging.totalItems > 0")
         v-switch(v-model="openAbstracts" dense :label="$t('article_list.collapse_abstracts')").pl-3.mt-0
 
@@ -118,5 +121,8 @@ export default {
   .v-expansion-panel, .v-card {
     background-color: #eeeeee !important;
   }
+}
+.sort-controls {
+  gap: 1rem;
 }
 </style>
