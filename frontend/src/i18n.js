@@ -20,13 +20,14 @@ export default new VueI18n({
        */
       'meta.description': 'Early Evidence Base (EEB) is an experimental platform that combines artificial intelligence with human curation and expert peer-review to highlight results posted in bioRxiv preprints developed by EMBO Press.',
       // the title of the page will be "Accessing early scientific findings | Early Evidence Base"
-      'meta.title': 'Accessing early scientific findings',
+      'meta.title': 'Latest Reviewed Preprints',
       'meta.titleTemplate': '{titleChunk} | Early Evidence Base',
 
       /*
        * about page
        */
-      'about.title': 'About Early Evidence Base',
+      'about.title': 'About',
+      'about.heading': 'About Early Evidence Base',
       'about.text_html': `
         <p>
           <i>Early Evidence Base</i> (EEB) is an <b>experimental platform</b> that combines artificial intelligence with human curation and expert peer-review to highlight results posted in preprints. EEB is a technology experiment developed by <a href="https://embopress.org" target="_blank" rel="noopener">EMBO Press</a> and <a href="https://sourcedata.io" target="_blank" rel="noopener">SourceData</a>.
@@ -52,6 +53,7 @@ export default new VueI18n({
        * contact page
        */
       'contact.title': 'Contact',
+      'contact.heading': 'Contact',
       'contact.text_html': `
         <p>
           EEB is under development and is run as an experiment to push boundaries in transparency and scientific publishing. Please send us your thoughts, suggestions and feedback to: <a href="mailto:thomas.lemberger@embo.org" type="primary">thomas.lemberger@embo.org</a>`,
