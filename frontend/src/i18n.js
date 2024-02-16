@@ -68,12 +68,12 @@ export default new VueI18n({
        * filters component
        */
       'filters.published_in.title': 'Filter by journal',
-      'filters.published_in.subtitle': 'Filter the reviewed preprints by the journal they were published in',
-      'filters.published_in.label': 'Select publishers',
-      'filters.reviewed_by.title': 'Filter by reviewer',
-      'filters.reviewed_by.subtitle': 'Filter the reviewed preprints by the reviewer',
-      'filters.search.title': 'Filter by terms',
-      'filters.search.subtitle': 'Filter the reviewed preprints by terms such as keywords in titles, author, doi, etc.',
+      'filters.published_in.subtitle': 'Select reviewed preprints published in specific journals',
+      'filters.published_in.label': 'Select one or several journals',
+      'filters.reviewed_by.title': 'Filter by reviewing platforms',
+      'filters.reviewed_by.subtitle': 'Filter preprints reviewed by the selected peer review platforms',
+      'filters.search.title': 'Search',
+      'filters.search.subtitle': 'Search for keywords, authors, DOIs, ...',
       'filters.search.placeholder': 'keywords, authors, doi',
       'filters.search.clear': 'Clear search',
 
