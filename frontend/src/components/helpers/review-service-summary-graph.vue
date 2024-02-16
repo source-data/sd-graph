@@ -18,7 +18,8 @@ v-card
                   v-icon(color="grey-lighten-1") mdi-information-outline
               span
                 i {{ $t('review_service_summary.process.submit.tooltip.question') }}
-                b.ml-1 {{ $t('review_service_summary.process.submit.tooltip.answer', {review_requested_by}) }}
+                b.ml-1(v-if="review_requested_by==='Authors'") {{ $t('review_service_summary.process.submit.tooltip.answer.author_driven') }}
+                b.ml-1(v-else) {{ $t('review_service_summary.process.submit.tooltip.answer.author_independent') }}
       
 
       v-row(v-if="reviewer_selected_by" no-gutters)
@@ -34,21 +35,9 @@ v-card
                   v-icon(color="grey-lighten-1") mdi-information-outline
               span
                 i {{ $t('review_service_summary.process.reviewer_selection.tooltip.question') }}
-                b.ml-1 {{ $t('review_service_summary.process.reviewer_selection.tooltip.answer', {reviewer_selected_by}) }}
-
-      v-row(v-if="public_interaction" no-gutters)
-        v-row(dense)
-          v-col.d-flex.align-center
-            b
-              span(v-if="public_interaction=='Included'") {{ $t('review_service_summary.process.public_interaction.yes') }}
-              span(v-else) {{ $t('review_service_summary.process.public_interaction.no') }}
-            v-tooltip(color="tooltip" right transition="fade-transition")
-              template(v-slot:activator="{ on, hover, attrs }")
-                v-card(color="transparent" flat v-on:click.stop v-bind="attrs" v-on="on").ml-2
-                  v-icon(color="grey-lighten-1") mdi-information-outline
-              span
-                i {{ $t('review_service_summary.process.public_interaction.tooltip.question') }}
-                b.ml-1 {{ $t('review_service_summary.process.public_interaction.tooltip.answer', {public_interaction}) }}
+                b.ml-1(v-if="reviewer_selected_by==='Editor, service, or community'") {{ $t('review_service_summary.process.reviewer_selection.tooltip.answer.service') }}
+                b.ml-1(v-else-if="reviewer_selected_by==='Self-nominated'") {{ $t('review_service_summary.process.reviewer_selection.tooltip.answer.self') }}
+                b.ml-1(v-else-if="reviewer_selected_by==='Authors'") {{ $t('review_service_summary.process.reviewer_selection.tooltip.answer.author') }}
 
       v-row(v-if="opportunity_for_author_response" no-gutters)
         v-row(dense)
@@ -62,14 +51,15 @@ v-card
                   v-icon(color="grey-lighten-1") mdi-information-outline
               span
                 i {{ $t('review_service_summary.process.author_response.tooltip.question') }}
-                b.ml-1 {{ $t('review_service_summary.process.author_response.tooltip.answer', {opportunity_for_author_response}) }}
+                b.ml-1(v-if="opportunity_for_author_response=='Included'") {{ $t('review_service_summary.process.author_response.tooltip.answer.yes') }}
+                b.ml-1(v-else) {{ $t('review_service_summary.process.author_response.tooltip.answer.no') }}
 
       v-row(v-if="recommendation" no-gutters)
         v-row(dense)
           v-col.d-flex.align-center
             b
               span(v-if="recommendation=='Binary decision'") {{ $t('review_service_summary.process.recommendation.binary') }}
-              span(v-else-if="recommendation=='Other scale or rating'") {{ $t('review_service_summary.process.recommendation.scale') }}
+              span(v-else-if="recommendation=='Scale or rating'") {{ $t('review_service_summary.process.recommendation.scale') }}
               span(v-else) {{ $t('review_service_summary.process.recommendation.no') }}
             v-tooltip(color="tooltip" right transition="fade-transition")
               template(v-slot:activator="{ on, hover, attrs }")
@@ -128,7 +118,9 @@ v-card
                 v-card(color="transparent" flat v-on:click.stop v-bind="attrs" v-on="on").ml-2
                   v-icon(color="grey-lighten-1") mdi-information-outline
               span
-                i {{ $t('review_service_summary.policy.competing_interests.tooltip') }}
+                i {{ $t('review_service_summary.policy.competing_interests.tooltip.question') }}
+                b.ml-1(v-if="competing_interests=='Checked'") {{ $t('review_service_summary.policy.competing_interests.tooltip.answer.yes') }}
+                b.ml-1(v-else) {{ $t('review_service_summary.policy.competing_interests.tooltip.answer.no') }}
 </template>
 
 <script>
@@ -144,7 +136,6 @@ export default {
     review_coverage: String,
     reviewer_identity_known_to: String,
     competing_interests: String,
-    public_interaction: String,
     opportunity_for_author_response: String,
     recommendation: String,
   },

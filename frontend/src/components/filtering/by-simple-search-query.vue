@@ -4,17 +4,16 @@ v-card(flat).flex-grow-1
   v-card-subtitle {{ $t('filters.search.subtitle') }}
   v-card-text.d-flex.d-flex-row.align-center
     v-text-field(
-      :value="currentQuery" v-on:keyup.enter="currentQuery = $event.target.value"
+      v-model="inputQuery"
+      v-on:keyup.enter="setActiveQuery"
+      @click:append-outer="setActiveQuery"
+      @click:clear="clearActiveQuery"
       :placeholder="$t('filters.search.placeholder')"
-      prepend-icon="mdi-magnify"
-      hide-details
+      append-outer-icon="mdi-magnify"
       outlined
+      clearable
+      :error-messages="errorMessages"
     ).mt-0.pt-0
-    v-tooltip(color="tooltip" bottom transition="fade-transition")
-      template(v-slot:activator="{ on, hover, attrs }")
-        v-btn(text v-bind="attrs" v-on="on" @click="currentQuery = ''" icon :disabled="query === ''")
-          v-icon(dense) mdi-close-circle
-      span {{ $t('filters.search.clear') }}
 </template>
 
 <script>
@@ -23,12 +22,15 @@ import { mapState } from 'vuex'
 export default {
   data: function() {
     return {
+      inputQuery: null,
+      minQueryLength: 3,
+      errorMessages: [],
     }
   },
   computed: {
     ...mapState('byFilters', ['query', 'loadingRecords']),
 
-    currentQuery: {
+    activeQuery: {
       set(value) {
         this.$vuetify.goTo(0);
         this.$store.commit("byFilters/setQuery", value);
@@ -38,6 +40,25 @@ export default {
       }
     }
   },
-  methods: {}
+  methods: {
+    clearActiveQuery() {
+      this.errorMessages = [];
+      if (this.activeQuery) {
+        this.activeQuery = '';
+      }
+    },
+    setActiveQuery() {
+      this.errorMessages = [];
+      const inputQuery = this.inputQuery || '';
+      if (inputQuery.length < this.minQueryLength) {
+        this.errorMessages = [this.$t('filters.search.errorMessages.minLength', { min: this.minQueryLength })];
+        return;
+      }
+      if (inputQuery === this.activeQuery) {
+        return;
+      }
+      this.activeQuery = inputQuery;
+    }
+  }
 }
 </script>

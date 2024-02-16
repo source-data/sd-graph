@@ -11,7 +11,6 @@ v-app
 
 <script>
 import TopNavBar from './layouts/top-nav-bar'
-import Banner from './layouts/banner'
 import Snackbar from "./components/helpers/snackbar.vue";
 import Footer from './layouts/footer'
 
@@ -20,7 +19,6 @@ export default {
 
   components: {
     TopNavBar,
-    Banner,
     Footer,
     Snackbar
   },
