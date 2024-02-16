@@ -165,8 +165,6 @@ export default new VueI18n({
        * logo alt texts
        */
       'logo.alt.embo': 'EMBO Logo',
-      'logo.alt.embo_press': 'EMBO Press Logo',
-      'logo.alt.sourcedata': 'SourceData Logo',
       'logo.alt.github': 'GitHub Logo',
 
       /*
