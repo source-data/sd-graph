@@ -53,6 +53,7 @@ export const byArticleId = {
         })
       const data = { promise, reviewProcess: undefined }
       commit('setReviewProcessForDoi', {doi, data})
+      return promise
     },
   },
 }
