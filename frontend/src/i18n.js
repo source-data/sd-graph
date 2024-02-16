@@ -82,6 +82,7 @@ export default new VueI18n({
       'filters.search.subtitle': 'Search for keywords, authors, DOIs, ...',
       'filters.search.placeholder': 'keywords, authors, doi',
       'filters.search.clear': 'Clear search',
+      'filters.search.errorMessages.minLength': 'Please enter at least {min} characters.',
 
       /*
        * review service summary component
