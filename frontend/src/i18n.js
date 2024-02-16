@@ -14,7 +14,6 @@ export default new VueI18n({
        */
       'app.title': 'Early Evidence Base',
       'app.subtitle': 'Discover and Cite Reviewed Preprints',
-      'app.credits_prefix': 'an initiative by',
 
       /*
        * the meta keys are used for the meta tags in the head section of the page
