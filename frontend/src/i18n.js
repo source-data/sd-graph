@@ -59,6 +59,12 @@ export default new VueI18n({
           EEB is under development and is run as an experiment to push boundaries in transparency and scientific publishing. Please send us your thoughts, suggestions and feedback to: <a href="mailto:thomas.lemberger@embo.org" type="primary">thomas.lemberger@embo.org</a>`,
 
       /*
+       * for developers
+       */
+      'for_devs.title': 'For developers',
+      // just a link to the GitHub repo
+
+      /*
        * not found page
        */
       'not_found.title': "Page not found",
@@ -169,7 +175,6 @@ export default new VueI18n({
        * logo alt texts
        */
       'logo.alt.embo': 'EMBO Logo',
-      'logo.alt.github': 'GitHub Logo',
 
       /*
        * snackbar messages
