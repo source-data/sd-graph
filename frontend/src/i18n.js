@@ -18,7 +18,7 @@ export default new VueI18n({
       /*
        * the meta keys are used for the meta tags in the head section of the page
        */
-      'meta.description': 'Early Evidence Base (EEB) is an experimental platform that combines artificial intelligence with human curation and expert peer-review to highlight results posted in bioRxiv preprints developed by EMBO Press.',
+      'meta.description': 'Early Evidence Base aggregates reviewed preprints across several platforms and makes them citable.',
       // the title of the page will be "Accessing early scientific findings | Early Evidence Base"
       'meta.title': 'Latest Reviewed Preprints',
       'meta.titleTemplate': '{titleChunk} | Early Evidence Base',
