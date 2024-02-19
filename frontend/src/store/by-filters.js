@@ -12,7 +12,7 @@ const _serviceId2Name = {
   'elife': 'eLife',
   'embo press': 'EMBO Press',
   'peerage of science': 'Peerage of Science',
-  'mit press - journals': 'Rapid Reviews: COVID-19',
+  'mit press - journals': 'Rapid Reviews Infectious Diseases',
   'peer community in': 'Peer Community In',
   'peer ref': 'Peer Ref'
 }
