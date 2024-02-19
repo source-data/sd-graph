@@ -12,8 +12,8 @@ const _serviceId2Name = {
   'elife': 'eLife',
   'embo press': 'EMBO Press',
   'peerage of science': 'Peerage of Science',
-  'MIT Press - Journals': 'Rapid Reviews: COVID-19',
-  'Peer Community In': 'Peer Community In',
+  'mit press - journals': 'Rapid Reviews: COVID-19',
+  'peer community in': 'Peer Community In',
   'peer ref': 'Peer Ref'
 }
 
@@ -22,7 +22,7 @@ export function normalizeServiceName(serviceName) {
 }
 
 export function serviceId2Name(serviceId) {
-  return _serviceId2Name[serviceId]
+  return serviceId ? _serviceId2Name[serviceId.toLowerCase()] : serviceId
 }
 
 export const byFilters = {

@@ -332,6 +332,9 @@ export default {
     },
     timelineOptions() {
       return {
+        publisherName: name => {
+          return serviceId2Name(name) || name;
+        },
         renderMarkdown: src => this.mdRender(src),
       }
     },
