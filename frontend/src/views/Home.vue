@@ -1,147 +1,111 @@
 <template lang="pug">
-  v-container(fluid)
-    v-row
-      v-col
-        QuickAccess
-    v-row
-      v-col
+v-container(fluid).pa-0.ma-0
+  v-btn(
+    color="primary"
+    fixed
+    bottom
+    right
+    style="bottom: 75px;"
+    fab @click="$vuetify.goTo(0)")
+    v-icon mdi-arrow-up
+  
+  v-row.d-none.d-lg-flex.pa-3
+    v-col(cols=3)
+      v-card.fixed-filter-panel
+        v-card-text
+          v-row
+            SearchBar
+          v-row
+            v-divider
+          v-row
+            ByReviewingService
+          v-row
+            v-divider
+          v-row
+            ByPublishedIn
+    v-col(cols=9)
+      v-row
         Highlights
+
+  v-row(justify="center").d-lg-none
+    v-dialog(
+      v-model="showMobileFilterDialog"
+      fullscreen
+      hide-overlay
+      transition="dialog-bottom-transition")
+      template(v-slot:activator="{ on, attrs }")
+        v-btn(
+          color="primary"
+          v-bind="attrs"
+          v-on="on").mr-auto.ml-3
+          v-icon(left) mdi-filter-variant
+          | Content filters
+      v-card
+        v-toolbar(color="tertiary")
+          v-btn(icon @click="showMobileFilterDialog = false")
+            v-icon mdi-close
+          v-toolbar-title Content filters
+          v-progress-circular(v-if="loadingRecords" :size="40" :width="7" color="primary" indeterminate).ml-auto
+        v-card-text
+          v-col.mt-3
+            v-row
+              SearchBar
+            v-row
+              v-divider
+            v-row
+              ByReviewingService
+            v-row
+              v-divider
+            v-row
+              ByPublishedIn
+    Highlights
 </template>
 
 
 <script>
-import QuickAccess from '../components/quick-access/index.vue'
+import { mapState } from 'vuex'
 import Highlights from '../components/highlights/index.vue'
-import Intro from '../layouts/intro.vue'
-
-import { REFEREED_PREPRINTS, AUTO_TOPICS, AUTOMAGIC, FULLTEXT_SEARCH } from '../components/quick-access/tab-names'
-import { serviceSlug2Id } from '../store/by-reviewing-service'
-
-function getStoreNameForCollection (collection, service) {
-  let storeName = undefined
-  switch (collection) {
-    case 'refereed-preprints':
-      storeName = REFEREED_PREPRINTS
-      break
-    case 'all':
-      switch (service) {
-        case 'auto-topics':
-          storeName = AUTO_TOPICS
-          break
-        case 'automagic':
-          storeName = AUTOMAGIC
-          break
-        case 'search':
-          storeName = FULLTEXT_SEARCH
-          break
-      }
-      break
-  }
-  return storeName
-}
-
-function initApp (collection, service, $store) {
-  /**
-   * App initialization
-   * This function is responsible of loading required data in multiple steps
-   * prioritising the content that needs to be rendered first, based on the
-   * QuickAccess tab that is currently selected
-   */
-  let initialLoad = null
-  let delayedLoad = []
-  const storeName = getStoreNameForCollection(collection, service)
-  switch (storeName) {
-    case REFEREED_PREPRINTS:
-      initialLoad = REFEREED_PREPRINTS
-      delayedLoad = [
-        AUTO_TOPICS,
-        AUTOMAGIC,
-      ]
-      break;
-    case AUTO_TOPICS:
-      initialLoad = AUTO_TOPICS
-      delayedLoad = [
-        REFEREED_PREPRINTS,
-        AUTOMAGIC,
-      ]
-      break;
-    case AUTOMAGIC:
-      initialLoad = AUTOMAGIC
-      delayedLoad = [
-        REFEREED_PREPRINTS,
-        AUTO_TOPICS,
-      ]
-      break;
-    case FULLTEXT_SEARCH:
-      initialLoad = null
-      delayedLoad = [
-        AUTO_TOPICS,
-        REFEREED_PREPRINTS,
-        AUTOMAGIC,
-      ]
-      break;
-  }
-
-  const initialLightAppLoad = (storeName) => {
-    if (!storeName) {
-      return Promise.resolve()
-    }
-    return $store.dispatch(`${storeName}/getAll`)
-      .then(() => {
-        if (storeName === REFEREED_PREPRINTS) {
-          const serviceId = serviceSlug2Id(service)
-          $store.commit('byReviewingService/showRecord', { id: serviceId })
-        }
-        return $store.dispatch('highlights/listByCurrent', storeName)
-      })
-      .then(() => {
-        $store.commit('highlights/sortRecords', {
-            sortBy: 'posting_date',
-            direction: 'desc',
-          })
-        $store.commit('highlights/updateSelectedTab', storeName)
-      })
-  }
-  const secondHeavyFullAppLoad = (delayedStores) => {
-    $store.dispatch('statsFromFlask')
-    delayedStores.forEach((storeName) => {
-      $store.dispatch(`${storeName}/getAll`)
-    })
-  }
-  initialLightAppLoad(initialLoad).then(() => secondHeavyFullAppLoad(delayedLoad))
-}
+import ByReviewingService from '../components/filtering/by-reviewing-service.vue'
+import ByPublishedIn from '../components/filtering/by-published-in.vue'
+import SearchBar from '../components/filtering/by-simple-search-query.vue'
 
 export default {
   name: 'home',
   components: {
-    QuickAccess,
     Highlights,
-    Intro,
+    ByReviewingService,
+    ByPublishedIn,
+    SearchBar
+  },
+  data() {
+    return {
+      showMobileFilterDialog: false
+    }
+  },
+  computed: {
+    ...mapState('byFilters', ['loadingRecords']),
   },
   props: {
     collection: String,
     service: String,
   },
-
-  created () {
-    initApp(this.collection, this.service, this.$store)
-  },
-
-  beforeRouteUpdate (to, from, next) {
-    if (to.params.collection === 'refereed-preprints' && to.params.service !== from.params.service) {
-      const serviceId = serviceSlug2Id(to.params.service)
-      this.$store.commit('byReviewingService/showRecord', { id: serviceId })
-      this.$store.commit('highlights/updateCurrentPage', 1) // reset pagination if we are navigating to a different sub-app
-    }
-    const storeName = getStoreNameForCollection(to.params.collection, to.params.service)
-    this.$store.dispatch('highlights/listByCurrent', storeName)
-    next()
-  },
-
+  watch: {}
 }
 </script>
 
 <style lang="scss">
+.fixed-filter-panel {
+  position: fixed !important;
+  height: auto;
+  width: calc(23.5%);
+  top: 160px;
+}
 
-
+.v-app-bar--hide-shadow  ~ main .fixed-filter-panel {
+  position: fixed !important;
+  height: auto;
+  width: calc(23.5%);
+  top: 25px;
+}
 </style>
+

@@ -9,6 +9,19 @@ const opts = {
   icons: {
     iconfont: 'fa',
   },
+  theme: {
+    themes: {
+      light: {
+        primary: '#0a5769',
+        secondary: '#0d648c',
+        tertiary: '#e1ecf0',
+        accent: '#aecbeb',
+        error: '#b71c1c',
+        tooltip: '#000000'
+      },
+    },
+    options: { customProperties: true },
+  },
 }
 
 export default new Vuetify(opts)

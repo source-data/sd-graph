@@ -257,7 +257,8 @@ link_articles_to_contribs = UpdateOrCreateTask(
     ORDER BY jats.publication_date DESC
     WITH DISTINCT doi, sd, COLLECT(jats)[0] AS most_recent
     MATCH (most_recent)-[:has_author]->(au:Contrib)
-    RETURN DISTINCT doi, sd, au
+    OPTIONAL MATCH (au)-[:has_orcid]->(auth_id:Contrib_id)
+    RETURN DISTINCT doi, sd, au, auth_id
     """,
     """
     MERGE (sd)-[r:has_author]->(sdau:SDContrib {
@@ -267,6 +268,7 @@ link_articles_to_contribs = UpdateOrCreateTask(
         surname: au.surname,
         concat_name: au.given_names + ' ' + au.surname + ' ' + au.collab
     })
+    SET sdau.orcid = auth_id.text
     """,
 )
 

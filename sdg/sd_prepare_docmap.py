@@ -59,7 +59,7 @@ create_preprint_docmaps = UpdateOrCreateTask(
         generatedAt: toString(DATETIME()),
         provider: 'https://eeb.embo.org',
         publisher_url: rs.url,
-        publisher_name: TOLOWER(rs.name),
+        publisher_name: rs.name,
         publisher_peer_review_policy: rs.peer_review_policy,
         id: '%(docmaps_api_url)s' + apoc.create.uuid(),
         first_step: first_step
@@ -347,8 +347,8 @@ create_published_article_docmaps = UpdateOrCreateTask(
     MERGE (docmap:Docmap {
         type: 'docmap',
         provider: 'https://eeb.embo.org',
-        publisher_name: TOLOWER(publisher_title),
-        id: '%(docmaps_api_url)s' + apoc.create.uuid(),
+        publisher_name: publisher_title,
+        id: '%(docmaps_api_url)s' + apoc.create.uuid()
     })
     // if no docmap for this publisher exists, set the necessary properties
     ON CREATE SET

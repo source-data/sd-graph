@@ -39,6 +39,8 @@ CALL db.index.fulltext.drop("abstract");
 CALL db.index.fulltext.drop("abstract_jats");
 CALL db.index.fulltext.drop("title_jats");
 CALL db.index.fulltext.drop("caption");
+CALL db.index.fulltext.drop("fulltextIndexArticles");
+
 
 // create
 CALL db.index.fulltext.createNodeIndex("name",["SDContrib"], ["concat_name", "surname"]);
@@ -50,3 +52,20 @@ CALL db.index.fulltext.createNodeIndex("abstract", ["SDArticle"], ["abstract"], 
 CALL db.index.fulltext.createNodeIndex("abstract_jats", ["Article"], ["abstract"], {analyzer: "simple"});
 CALL db.index.fulltext.createNodeIndex("title_jats", ["Article"], ["title"], {analyzer: "simple"});
 CALL db.index.fulltext.createNodeIndex("caption", ["SDPanel"], ["caption"], {analyzer: "english"});
+CALL db.index.fulltext.createNodeIndex(
+    "fulltextIndexArticles",
+    [
+        "SDArticle",  // articles
+        "SDContrib"   // authors
+    ],
+    [
+        "doi",
+        "journal_doi",
+        "title",
+        "abstract",
+        "concat_name",
+        "surname",
+        "orcid"
+    ],
+    {analyzer: "english"}
+);

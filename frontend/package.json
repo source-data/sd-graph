@@ -11,10 +11,11 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "5.2.0",
-    "@source-data/render-rev": "^0.1.35",
+    "@source-data/render-rev": "^0.2.7",
     "axios": "^0.21.4",
     "markdown-it": "^13.0.0",
     "vue": "^2.6.11",
+    "vue-i18n": "^8.28.2",
     "vue-meta": "^2.4.0",
     "vue-router": "^3.1.6",
     "vuetify": "^2.3.10",

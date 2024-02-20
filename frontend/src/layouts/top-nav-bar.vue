@@ -1,45 +1,43 @@
 <template lang="pug">
   v-app-bar(
     app
-    clipped-left
-    prominent
-    height=220
-    color="blue-grey darken-2"
+    height=90
+    color="tertiary"
     hide-on-scroll
-    fade-img-on-scroll
-    scroll-threshold="80"
-    :src='require("@/assets/EEB_HP_Banner.jpg")'
+    scroll-threshold=0
+    scroll-off-screen tile elevation=1
   )
-    Banner
-    v-container(fluid).fill-height.align-end.pa-0
-      v-row.align-center.pa-0
-        .mr-auto
-          a(href="https://embo.org" target="_blank" rel="noopener").pa-2
-            img(src="../assets/EMBO_logo.svg" alt="EMBO Logo").logo-EMBO
-        .d-flex
-          a(href="https://embopress.org" target="_blank" rel="noopener").pa-2
-            img(src="../assets/EEB_EP_LOGO.png" alt="EMBO Press Logo").logo-EP
-          a(href="https://sourcedata.io" target="_blank" rel="noopener").pa-2
-            img(src="../assets/EEB_SD_LOGO.png" alt="SourceData Logo")
+
+    v-toolbar-title
+      .text-md-h4.text-sm-h5.text-h5.pointer.banner-title
+        a(:href="$router.resolve({name: 'Home'}).href") {{ $t('app.title') }}
+      .text-md-h5.text-sm-h6.text-subtitle-2.pointer.banner-subtitle
+        a(:href="$router.resolve({name: 'Home'}).href") {{ $t('app.subtitle') }}
+
+    v-spacer
+
+    a(href="https://embo.org" target="_blank")
+      img(src="../assets/EMBO_logo.svg" :alt="$t('logo.alt.embo')" height="40rem").ml-2
+
+    template(v-slot:extension)
+      v-tabs(
+        center-active
+        show-arrows
+        wrap
+        row
+        justify-end
+      )
+        v-tab(to="/refereed-preprints") {{ $t('article_list.title') }}
+        v-spacer
+        v-tab(to="/about") {{ $t('about.title') }}
+        v-tab(to="/contact") {{ $t('contact.title') }}
 </template>
 
-<script>
-
-import Banner from './banner'
-
-export default {
-  components: {
-    Banner
-  }
-}
-</script>
-
 <style lang="scss" scoped>
-.logo-EMBO {
-  height: 55px;
+.banner-title {
+  color:#0a5769;
 }
-
-.logo-EP {
-  max-height: 80px;
+.banner-subtitle {
+  color:#217b90;
 }
 </style>

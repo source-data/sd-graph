@@ -28,8 +28,11 @@ RUN addgroup --system flask \
 RUN pip install cmake \
   && pip install cython
 
+WORKDIR /app
+
 # Requirements are installed here to ensure they will be cached.
-COPY ./requirements /requirements
+COPY requirements/ /requirements
+COPY api/server api/server
 RUN pip install --upgrade pip  \
     pip install --no-cache-dir -r /requirements/production.txt \
     && rm -rf /requirements
@@ -50,7 +53,5 @@ RUN mkdir -p /app/log
 RUN chown flask:flask /app/log
 
 USER flask
-
-WORKDIR /app
 
 ENTRYPOINT ["/entrypoint"]

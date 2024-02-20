@@ -1,7 +1,5 @@
-import json
 from argparse import ArgumentParser
-from datetime import datetime
-import requests
+from requests import get
 from tqdm import tqdm, trange
 from tqdm.contrib.logging import logging_redirect_tqdm
 import common.logging
@@ -9,70 +7,64 @@ from . import EEB_INTERNAL_API
 
 logger = common.logging.get_logger(__name__)
 
-def cache_warm_up(base_url, no_progress=False):
-    logger.info(f"Warming up cache using base URL {base_url}")
-    dois = []
-    slugs = []
-    # warm up the stats method
-    url = base_url + '/v1/stats'
-    r = requests.get(url)
-    logger.info(f"Method /stats warmed up: {r.status_code == 200}")
-    for method in ['by_reviewing_service/', 'automagic/', 'by_auto_topics/']:
-        logger.info(f'Warming up collections for method "{method}"')
-        url = base_url + '/v1/' + method
-        # warm up of the main methods
-        response = requests.get(url)
-        if response.status_code == 200:
-            collections = None
-            try:
-                collections = response.json()
-            except json.decoder.JSONDecodeError:
-                logger.error(f"content: {response.content}")
-                raise
-            N_collections = len(collections)
-            with logging_redirect_tqdm():
-                for collection in tqdm(collections, disable=no_progress):
-                    papers = collection['papers']
-                    new_dois = [paper['doi'] for paper in papers]
-                    logger.info(f'  Warming up collection \"{collection["id"]}\" with {len(new_dois)} DOIs')
-                    # warm up of the multiple doi method
-                    multi_dois_url = base_url + "/v1/dois/"
-                    r = requests.post(multi_dois_url, json={'dois': new_dois})
-                    if r.status_code == 200:
-                        dois += new_dois
-                        slugs += [paper['slug'] for paper in papers]
-                    else:
-                        logger.warning(f"  Failed to warm up collection \"{collection['id']}\" of method \"{method}\"! Status code: {r.status_code}, message: {r.text}")
-        else:
-            logger.warning(f"Failed to fetch collections of method \"{method}\"! Status code: {response.status_code}, message: {response.text}")
 
-    # remove duplicates
-    dois = set(dois)
-    slugs = set(slugs)
-
-    N_dois = len(dois)
-    N_slugs = len(slugs)
-    logger.info(f"fetched {N_dois} unique dois, {N_slugs} unique slugs.")
-
-    num_slug_successes = warmup_individual_method(lambda slug: f"{base_url}/v1/slug/{slug}", slugs, no_progress)
-    logger.info(f"cache warmed up with {num_slug_successes} out of {N_slugs} slugs.")
-
-    num_docmap_successes = warmup_individual_method(lambda doi: f"{base_url}/v2/docmap/{doi}", dois, no_progress)
-    logger.info(f"cache warmed up with {num_docmap_successes} out of {N_dois} DOIs.")
+def get_json(base_url, path):
+    url = f"{base_url}{path}"
+    response = get(url)
+    response.raise_for_status()
+    return response.json()
 
 
-def warmup_individual_method(get_url, params, no_progress):
-    successes = 0
-    logger.info(f"Warming up cache for {get_url('{param}')} with {len(params)} params.")
+def get_paper_ids(papers):
+    return [
+        {"doi": paper["doi"], "slug": paper["slug"]}
+        for paper in papers["items"]
+    ]
+
+
+def warmup_individual_method(base_url, get_path, params, no_progress):
+    logger.info(f"Warming up cache for {get_path('{param}')} with {len(params)} params.")
     with logging_redirect_tqdm():
         for param in tqdm(params, disable=no_progress):
-            url = get_url(param)
-            r = requests.get(url)
-            if r.status_code == 200:
-                successes += 1
-            else:
-                logger.warning(f"Failed to warm up cache for {url}! Status code: {r.status_code}, message: {r.text}")
-    return successes
+            path = get_path(param)
+            get_json(base_url, path)
+
+
+def warmup_paged_method(base_url, path_first_page, no_progress):
+    response = get_json(base_url, path_first_page)
+    yield get_paper_ids(response)
+    n_pages = response["paging"]["totalPages"]
+
+    with logging_redirect_tqdm():
+        for page in trange(2, n_pages + 1, disable=no_progress):
+            path_next_page = response["paging"]["next"]
+            if not path_next_page:
+                logger.error(f"Expected {n_pages} pages, but only got {page - 1}")
+            response = get_json(base_url, path_next_page)
+            yield get_paper_ids(response)
+        if response["paging"]["next"]:
+            logger.error(f"Expected {n_pages} pages, but got more.")
+
+
+def cache_warm_up(base_url, no_progress=False):
+    logger.info(f"Warming up cache using base URL {base_url}")
+
+    path_papers = "/api/v2/papers/"
+    logger.info("warming up %s", path_papers)
+    paper_ids = [
+        pid
+        for pids in warmup_paged_method(base_url, path_papers, no_progress)
+        for pid in pids
+    ]
+
+    logger.info("warming up /api/v2/paper/ for slugs and DOIs")
+    slugs = set([pid["slug"] for pid in paper_ids])
+    dois = set([pid["doi"] for pid in paper_ids])
+    warmup_individual_method(base_url, lambda slug: f"/api/v2/paper/?slug={slug}", slugs, no_progress)
+    warmup_individual_method(base_url, lambda doi: f"/api/v2/paper/?doi={doi}", dois, no_progress)
+
+    logger.info("warming up /api/v2/docmap/{doi}")
+    warmup_individual_method(base_url, lambda doi: f"/api/v2/docmap/{doi}", dois, no_progress)
 
 
 if __name__ == '__main__':

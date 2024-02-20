@@ -1,7 +1,6 @@
 from collections import namedtuple
 from datetime import date, timedelta
 from functools import wraps
-import pdb
 from dateutil.relativedelta import relativedelta
 from flask import (
     abort,
@@ -12,6 +11,7 @@ from flask import (
     Response,
     url_for,
 )
+from math import ceil
 from .sitemap import create_sitemap
 from .converter import LuceneQueryConverter, ReviewServiceConverter, ListConverter
 from .queries import (
@@ -25,11 +25,12 @@ from .queries import (
     COVID19, REFEREED_PREPRINTS,
     COLLECTION_NAMES, 
     SUBJECT_COLLECTIONS,
+    REFEREED_PREPRINTS_V2,
 )
-from neotools.db import Query
-from typing import Dict
+from neoflask.cache import cache
+from neotools import ask_neo
 import re
-from . import app, cache, get_db
+from . import app
 
 
 DOI_REGEX = re.compile(r'10.\d{4,9}/[-._;()/:A-Z0-9]+$', flags=re.IGNORECASE)
@@ -42,36 +43,6 @@ def n_months_ago(n):
     n_months_ago = date.today() + relativedelta(months=-n)
     first_day_of_that_month = n_months_ago.replace(day=1)
     return str(first_day_of_that_month)
-
-def ask_neo(query: Query, **kwargs) -> Dict:
-    """
-    Run a query and return the database results as dictionary with the keys specified in the query.returns list.
-    """
-    def tx_funct(tx, code, params):
-        results = tx.run(code, params)
-        data = [r.data(*query.returns) for r in results]  # consuming the data inside the transaction https://neo4j.com/docs/api/python-driver/current/transactions.html
-        return data
-    # use the map of name of substitution variable in cypher to the name and default value of the var in the request
-    for var_in_cypher, var_in_request in query.map.items():
-        query.params[var_in_cypher] = kwargs.get(var_in_request['req_param'], var_in_request['default'])
-    data = get_db().query_with_tx_funct(tx_funct, query)
-    return data
-
-
-def get_all_dois_and_slugs():
-    refereed_preprints = ask_neo(BY_REVIEWING_SERVICE(), limit_date='1900-01-01')
-    by_auto_topics = ask_neo(BY_AUTO_TOPICS(), limit_date='1900-01-01')
-    automagic = ask_neo(AUTOMAGIC(), limit_date='1900-01-01')
-    app.logger.info("gathering all dois")
-
-    dois_and_slugs = []
-    for collection in refereed_preprints, by_auto_topics, automagic:
-        for sub_collection in collection:
-            papers = sub_collection['papers']
-            new_dois_and_slugs = [(paper['doi'], paper.get('slug', None)) for paper in papers]
-            dois_and_slugs += new_dois_and_slugs
-    dois_and_slugs = set(dois_and_slugs)  # remove duplicates
-    return dois_and_slugs
 
 
 @app.route('/')
@@ -97,20 +68,15 @@ def doi_redirect(doi):
     return render_template('index.html')
 
 
-# @app.route('/doc')
-# def doc():
-#     return render_template('doc.html', name='me')
-
-
 @app.route('/sitemap.xml', methods=['GET'])
 @cache.cached()
 def sitemap():
     """
     Generate dynamically a sitemap.
     """
-    dois_and_slugs = get_all_dois_and_slugs()
-    app.logger.info(f"generating sitemap with {len(dois_and_slugs)} links.")
-    sitemap = create_sitemap(dois_and_slugs)
+    refereed_preprints = ask_neo(REFEREED_PREPRINTS_V2())
+    n_pages = ceil(refereed_preprints[0]['n_total'] / 10)
+    sitemap = create_sitemap(n_pages)
     return Response(sitemap, mimetype='text/xml')
 
 
