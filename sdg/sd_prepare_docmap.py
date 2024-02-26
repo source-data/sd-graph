@@ -61,7 +61,7 @@ create_preprint_docmaps = UpdateOrCreateTask(
         publisher_url: rs.url,
         publisher_name: rs.name,
         publisher_peer_review_policy: rs.peer_review_policy,
-        id: '%(docmaps_api_url)s' + apoc.create.uuid(),
+        id: '%(docmaps_api_url)s' + doi + '/' + apoc.text.snakeCase(rs.name),
         first_step: first_step
     })
     MERGE (docmap)<-[:steps]-(step:Step {id: first_step})
@@ -348,7 +348,7 @@ create_published_article_docmaps = UpdateOrCreateTask(
         type: 'docmap',
         provider: 'https://eeb.embo.org',
         publisher_name: publisher_title,
-        id: '%(docmaps_api_url)s' + apoc.create.uuid()
+        id: '%(docmaps_api_url)s' + preprint.doi + '/' + apoc.text.snakeCase(publisher_title)
     })
     // if no docmap for this publisher exists, set the necessary properties
     ON CREATE SET
@@ -367,22 +367,12 @@ create_published_article_docmaps = UpdateOrCreateTask(
         type: 'journal-publication',
         uri: 'https://doi.org/' + published_article_doi
     })
-    MERGE (rev)<-[:content]-(doi:Content {
+    MERGE (rev)<-[:content]-(content:Content {
         type: 'web-page', 
         url: pub.uri,
         id: published_article_doi,
         service: 'https://doi.org/'
     })
-    // If we updated an existing docmap, add our newly added step as the next step after the so-far final step.
-    WITH
-        COUNT(docmap) AS num_docmaps_updated_or_created,
-        docmap,
-        step AS new_step
-    OPTIONAL MATCH (docmap)<-[:steps]-(existing_step:Step)
-    WHERE
-        ID(existing_step) <> ID(new_step)
-        AND existing_step.next_step IS NULL
-    SET existing_step.next_step = new_step.id
     """ % {"docmaps_api_url": DOCMAPS_API_URL},
 )
 
