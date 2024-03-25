@@ -327,14 +327,16 @@ create_published_article_docmaps = UpdateOrCreateTask(
         preprint,
         a.publication_date as preprint_publication_date,
         a.journal_doi as published_article_doi,
-        apoc.convert.toString(a.published_journal_title) as publisher_title
+        apoc.convert.toString(a.published_journal_title) as publisher_title,
+        a.published_date as published_date
     // order by and collect to get the newest version
     ORDER BY DATETIME(preprint_publication_date)
     RETURN DISTINCT
         preprint,
         COLLECT(preprint_publication_date)[0] as preprint_publication_date,
         published_article_doi,
-        publisher_title
+        publisher_title,
+        published_date
     """,
     """
     WITH
@@ -342,6 +344,7 @@ create_published_article_docmaps = UpdateOrCreateTask(
         preprint_publication_date,
         published_article_doi,
         publisher_title,
+        published_date,
         '_:b-'+apoc.create.uuid() as id_step,
         '_:b-'+apoc.create.uuid() AS id_action
     MERGE (docmap:Docmap {
@@ -365,10 +368,11 @@ create_published_article_docmaps = UpdateOrCreateTask(
     MERGE (action)<-[:outputs]-(pub:PublishedArticle {
         doi: published_article_doi,
         type: 'journal-publication',
+        published: published_date,
         uri: 'https://doi.org/' + published_article_doi
     })
     MERGE (rev)<-[:content]-(content:Content {
-        type: 'web-page', 
+        type: 'web-page',
         url: pub.uri,
         id: published_article_doi,
         service: 'https://doi.org/'

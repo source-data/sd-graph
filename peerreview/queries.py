@@ -23,13 +23,15 @@ class UpdatePublicationStatus(Query):
 MATCH (a:Article {doi: $preprint_doi})
 SET
     a.journal_doi = $published_doi,
-    a.published_journal_title = $published_journal_title
+    a.published_journal_title = $published_journal_title,
+    a.published_date = $published_date
 RETURN a
     """
     map = {
         "preprint_doi": [],
         "published_doi": [],
         "published_journal_title": [],
+        "published_date": [],
     }
     returns = ["a"]
 

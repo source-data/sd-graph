@@ -13,6 +13,17 @@ from .queries import (
 logger = common.logging.get_logger(__name__)
 
 
+def _date_from_parts(parts):
+    if len(parts) < 1 or len(parts) > 3:
+        return None
+    if len(parts) == 1:
+        parts.append(1)
+        parts.append(1)
+    if len(parts) == 2:
+        parts.append(1)
+    return f"{parts[0]}-{parts[1]}-{parts[2]}"
+
+
 class PublicationUpdate:
 
     def __init__(self, db):
@@ -31,26 +42,27 @@ class PublicationUpdate:
     def update_status(self, preprint_doi, published_doi):
         cross_ref_metadata = self.crossref.details(published_doi)
         published_journal_title = cross_ref_metadata.get('container-title', '')
+        published_date = _date_from_parts(cross_ref_metadata.get('published', {}).get('date-parts', [[]])[0])
+
         params = {
             'preprint_doi': preprint_doi,
             'published_doi': published_doi,
             'published_journal_title': published_journal_title,
+            'published_date': published_date,
         }
         update_published_status = UpdatePublicationStatus(params=params)
         self.db.query(update_published_status)
-        return published_journal_title
+        return published_journal_title, published_date
 
     def run(self, limit_date: str):
         not_yet_published = self.get_not_published(limit_date)
         logger.info(f"{len(not_yet_published)} preprints posted since {limit_date} with no journal publication info yet.")
-        msg = ''
-        N = len(not_yet_published)
         with logging_redirect_tqdm():
             for preprint_doi in tqdm(not_yet_published):
                 published_doi = self.check_publication_status(preprint_doi)
                 if (published_doi is not None) and (published_doi != "NA"):
-                    journal = self.update_status(preprint_doi, published_doi)
-                    logger.info(f"{preprint_doi} --> {published_doi} in {journal}")
+                    journal, date = self.update_status(preprint_doi, published_doi)
+                    logger.info(f"{preprint_doi} --> {published_doi} in {journal} on {date}")
 
 
 class BiorxivPubUpdate(PublicationUpdate):
@@ -110,23 +122,13 @@ class CrossRefPreprintApi(API):
             n_items_fetched += len(items)
             logger.info(f"Fetched {n_items_fetched}/{message['total-results']} items from CrossRef API.")
 
-            def date_from_parts(parts):
-                if len(parts) < 1 or len(parts) > 3:
-                    return None
-                if len(parts) == 1:
-                    parts.append(1)
-                    parts.append(1)
-                if len(parts) == 2:
-                    parts.append(1)
-                return f"{parts[0]}-{parts[1]}-{parts[2]}"
-
             for item in items:
                 relation = item['relation']['is-preprint-of'][0]
                 if relation['id-type'] != 'doi':
                     continue
                 preprint_doi = item['DOI']
                 published_doi = relation['id']
-                indexed_date = date_from_parts(item['indexed']['date-parts'][0])
+                indexed_date = _date_from_parts(item['indexed']['date-parts'][0])
                 new_data.append({
                     'preprint_doi': preprint_doi,
                     'published_doi': published_doi,
