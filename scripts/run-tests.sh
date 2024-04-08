@@ -50,32 +50,6 @@ set +o allexport
 echo "Starting docker-compose service"
 eeb up -d flask
 
-# waits until neo4j is ready by trying to execute a cypher query using the cypher-shell interface
-wait_for_neo4j=$(
-cat <<'END_HEREDOC'
-t=0
-until echo "MATCH(n) RETURN COUNT(n);" | cypher-shell -a $NEO_URI -u $NEO_USERNAME -p $NEO_PASSWORD;
-do
-    if [[ $t -gt 60 ]]; then
-        echo "Neo4j not ready after 60 seconds, aborting"
-        exit 1
-    fi
-    t=$((t+1))
-    echo -ne "\r"
-    echo -ne "Waiting for Neo4j to be ready... ($t s)"
-    sleep 1
-done
-
-echo -ne "\r"
-if [[ $t -gt 0 ]]; then
-    echo "Neo4j ready after $t seconds"
-else
-    echo "Neo4j already up"
-fi
-END_HEREDOC
-)
-eeb exec --no-TTY neo4j bash -c "$wait_for_neo4j"
-
 echo "Installing test dependencies"
 eeb exec --no-TTY flask pip install pytest
 
