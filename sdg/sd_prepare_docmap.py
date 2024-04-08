@@ -9,7 +9,7 @@ from neotools.flow import (
 from sdg import DB, EEB_PUBLIC_API
 
 DOCMAPS_API_URL = EEB_PUBLIC_API + "docmaps/v1/docmap/"
-REVIEW_MATERIAL_API_URL = EEB_PUBLIC_API + "v2/review_material/"
+DOI_URL = "https://doi.org/"
 
 purge_docmap_graph_tasks = [
     DetachDeleteAll("Resource"),
@@ -98,14 +98,10 @@ create_referee_report_actions = UpdateOrCreateTask(
         review,
         '_:b-'+apoc.create.uuid() AS action_uuid,
         // filtering NULLs to prevent error in MERGE
-        CASE WHEN review.link_html IS NOT NULL
-            THEN review.link_html
-            ELSE ''
-        END AS link_html,
-        CASE WHEN review.hypothesis_id IS NOT NULL
-            THEN review.hypothesis_id
-            ELSE ''
-        END AS hypothesis_id
+        CASE WHEN review.doi IS NOT NULL
+            THEN '%(doi_url)s' + review.doi
+            ELSE 'https://biorxiv.org/content/' + doi + '#review'
+        END AS web_page_link
     MERGE (step)<-[:assertions]-(assertion:Assertion {
         item: preprint_uri,
         status: 'reviewed'
@@ -114,7 +110,7 @@ create_referee_report_actions = UpdateOrCreateTask(
     MERGE (action)<-[:outputs]-(rev:RefereeReport {
         published: review.posting_date,
         type: 'review',
-        uri: '%(review_material_api_url)s' + id(review)
+        uri: web_page_link
     })
     // review.doi and .runningNumber can be null and must therefore be set outside the merge query
     ON CREATE SET
@@ -122,30 +118,12 @@ create_referee_report_actions = UpdateOrCreateTask(
         rev.runningNumber = review.review_idx
     // realization on eeb as json
     MERGE (rev)<-[:content]-(content_on_eeb:Content {
-        type: 'web-page', 
-        url: '%(review_material_api_url)s' + id(review),
-        id: toString(id(review)),
-        service: 'https://eeb.embo.org/'
-    })
-    // realization on hypothesis as HTML
-    MERGE (rev)<-[:content]-(content_on_hypothesis:Content {
-        type: 'web-page', 
-        url: link_html,
-        id: hypothesis_id,
-        service: 'https://hypothes.is/'
-    })
-    // realization on biorxiv in context of the preprint
-    MERGE (rev)<-[:content]-(content_incontext:Content {
-        type: 'web-page', 
-        url: 'https://biorxiv.org/content/' + doi + '#review',
-        id: doi,
-        service: 'https://biorxiv.org'
+        type: 'web-page',
+        url: web_page_link
     })
     MERGE (rev)<-[:content]-(:Content {
-        type: 'text', 
-        text: review.text,
-        id: toString(id(review)),
-        service: 'https://eeb.embo.org/'
+        type: 'text',
+        text: review.text
     })
     WITH DISTINCT action, review
     WHERE review.review_idx IS NOT NULL
@@ -155,7 +133,9 @@ create_referee_report_actions = UpdateOrCreateTask(
         role: 'peer-reviewer'
     })
     SET action.index = review.review_idx
-    """ % {"review_material_api_url": REVIEW_MATERIAL_API_URL},
+    """ % {
+        "doi_url": DOI_URL,
+    },
 )
 
 
@@ -228,47 +208,29 @@ create_response_actions = UpdateOrCreateTask(
         response,
         step,
         '_:b-'+apoc.create.uuid() AS action_uuid,
-        CASE WHEN response.link_html IS NOT NULL
-            THEN response.link_html
-            ELSE ''
-        END AS link_html,
-        CASE WHEN response.hypothesis_id IS NOT NULL
-            THEN response.hypothesis_id
-            ELSE ''
-        END AS hypothesis_id
+        CASE WHEN response.doi IS NOT NULL
+            THEN '%(doi_url)s' + response.doi
+            ELSE 'https://biorxiv.org/content/' + doi + '#review'
+        END AS web_page_link
     MERGE (step)<-[:actions]-(action:Action {id: action_uuid})
     MERGE (action)<-[:outputs]-(reply:AuthorReply {
         published: response.posting_date,
         type: 'author-response',
-        uri: '%(review_material_api_url)s' + id(response)
+        uri: web_page_link
     })
     // as above with reviews, response.doi can be null and must be set outside the merge query
     ON CREATE SET reply.doi = response.doi
     MERGE (reply)<-[:content]-(content:Content {
         type: 'web-page',
-        url: '%(review_material_api_url)s' + id(response),
-        id: toString(id(response)),
-        service: 'https://eeb.embo.org'
-    })
-    MERGE (reply)<-[:content]-(content_on_hypothesis:Content {
-        type: 'web-page', 
-        url: link_html,
-        id: hypothesis_id,
-        service: 'https://hypothes.is'
-    })
-    MERGE (reply)<-[:content]-(content_incontext:Content {
-        type: 'web-page', 
-        url: 'https://biorxiv.org/content/' + doi + '#review',
-        id: doi,
-        service: 'https://biorxiv.org'
+        url: web_page_link
     })
     MERGE (reply)<-[:content]-(:Content {
-        type: 'text', 
-        text: response.text,
-        id: toString(id(response)),
-        service: 'https://eeb.embo.org/'
+        type: 'text',
+        text: response.text
     })
-    """ % {"review_material_api_url": REVIEW_MATERIAL_API_URL},
+    """ % {
+        "doi_url": DOI_URL,
+    },
 )
 
 
@@ -387,7 +349,7 @@ Tasks = purge_docmap_graph_tasks + [
     create_review_summary_action,
     create_response_actions,
     create_participants,
-    create_published_article_docmaps,
+    # create_published_article_docmaps,
 ]
 
 
