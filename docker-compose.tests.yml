@@ -4,6 +4,7 @@ services:
       neo4j:
         condition: service_healthy
       redis:
+        condition: service_healthy
     env_file:
       - ./.env.ci
 
