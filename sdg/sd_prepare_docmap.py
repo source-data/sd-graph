@@ -326,9 +326,10 @@ RETURN DISTINCT
     MERGE (action)<-[:outputs]-(pub:PublishedArticle {
         doi: published_article_doi,
         type: 'journal-publication',
-        published: published_date,
         uri: 'https://doi.org/' + published_article_doi
     })
+    ON CREATE SET
+        pub.published = toString(DATETIME(published_date))
     MERGE (rev)<-[:content]-(content:Content {
         type: 'web-page',
         url: pub.uri,
