@@ -274,31 +274,27 @@ create_participants = UpdateOrCreateTask(
 create_published_article_docmaps = UpdateOrCreateTask(
     "creating Docmaps for published articles",
     """
-    MATCH
-        (a:Article),
-        (Docmap)<-[:steps]-(Step)<-[:inputs]-(preprint:Preprint)
-    WHERE
-        // only update or create docmaps for preprints that have reviews/replies from one of the reviewing services.
-        // If they do, a Docmap has been created above in the first step, and that is the one found here.
-        a.doi = preprint.doi
-        // these are fields needed to construct the new docmap.
-        AND a.journal_doi IS NOT NULL
-        AND a.published_journal_title IS NOT NULL
-        AND a.publication_date IS NOT NULL
-    WITH DISTINCT
-        preprint,
-        a.publication_date as preprint_publication_date,
-        a.journal_doi as published_article_doi,
-        apoc.convert.toString(a.published_journal_title) as publisher_title,
-        a.published_date as published_date
-    // order by and collect to get the newest version
-    ORDER BY DATETIME(preprint_publication_date)
-    RETURN DISTINCT
-        preprint,
-        COLLECT(preprint_publication_date)[0] as preprint_publication_date,
-        published_article_doi,
-        publisher_title,
-        published_date
+MATCH (a:Article)
+WHERE
+    // these are fields needed to construct the new docmap.
+    a.journal_doi IS NOT NULL
+    AND a.published_journal_title IS NOT NULL
+    AND a.publication_date IS NOT NULL
+MATCH (Docmap)<-[:steps]-(Step)<-[:inputs]-(preprint:Preprint {doi: a.doi})
+WITH DISTINCT
+    preprint,
+    a.publication_date as preprint_publication_date,
+    a.journal_doi as published_article_doi,
+    apoc.convert.toString(a.published_journal_title) as publisher_title,
+    a.published_date as published_date
+// order by and collect to get the newest version
+ORDER BY DATETIME(preprint_publication_date)
+RETURN DISTINCT
+    preprint,
+    COLLECT(preprint_publication_date)[0] as preprint_publication_date,
+    published_article_doi,
+    publisher_title,
+    published_date
     """,
     """
     WITH
@@ -349,7 +345,7 @@ Tasks = purge_docmap_graph_tasks + [
     create_review_summary_action,
     create_response_actions,
     create_participants,
-    # create_published_article_docmaps,
+    create_published_article_docmaps,
 ]
 
 
