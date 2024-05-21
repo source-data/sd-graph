@@ -30,24 +30,18 @@ export default new VueI18n({
       'about.heading': 'About Early Evidence Base',
       'about.text_html': `
         <p>
-          <i>Early Evidence Base</i> (EEB) is an <b>experimental platform</b> that combines artificial intelligence with human curation and expert peer-review to highlight results posted in preprints. EEB is a technology experiment developed by <a href="https://embopress.org" target="_blank" rel="noopener">EMBO Press</a> and <a href="https://sourcedata.io" target="_blank" rel="noopener">SourceData</a>.
+          Early Evidence Base (EEB) is a platform that aggregates peer-reviewed preprints, making them accessible, citable, and discoverable. EBB showcases the value of the peer review process and helps researchers, particularly young scientists, demonstrate their scientific output before formal publication in a journal. EEB aggregates, publishes, exchanges, filters, and mines this new type of publishing object – the "reviewed preprint" – across a distributed network of resources.
         <p>
-          Preprints provide the scientific community with early access to scientific evidence. For experts, this communication channel is an efficient way to accesss research without delay and thus to accelerate scientific progress. But for non-experts, navigating preprints can be challenging: in absence of peer-review and journal certification, interpreting the data and evaluating the strength of the conclusions is often impossible; finding specific and relevant information in the rapidly accumulating corpus of preprints is becoming increasingly difficult.
+          Citing a reviewed preprint indexed on EEB is easy: just append the preprint doi to the url "https://eeb.embo.org/doi/". The recommended format is the following:
         <p>
-          The COVID-19 pandemic has made this tradeoff even more visible. The urgency in understanding and combatting SARS-CoV-2 viral infection has stimulated an unprecedented rate of preprint posting. It has however also revealed the risk resulting from misinterpretation of preliminary results shared in preprint and with amplification or perpetuating prelimature claims by non-experts or the media.
+          <div class="pl-4">
+            Moussa AT, Cosenza MR., Wohlfromm T, Brobeil K, Hill A, Patrizi A, Müller-Decker K, Holland-Letz T, Jauch A, Kraft B, Krämer A (2023). STIL overexpression shortens lifespan and reduces tumor formation in mice.
+            <b>bioRxiv</b> doi.org/10.1101/2023.12.04.569842, peer reviewed by <b>Review Commons</b> eeb.embo.org/doi/10.1101/2023.12.04.569842.
+          </div>
+        </p>
+
         <p>
-          To experiment with ways in which technology and human expertise can be combined to address these issues, EMBO has built the EEB. The platform prioritizes preprints in complementary ways:
-          <ul>
-            <li>
-              Refereed Preprints are preprints that are associated with reviews. EEB prioritizes such preprints and integrates the content of the reviews as well as the authors' response, when available, to provide rich context and in-depth analyses of the reported research.
-            </li>
-            <li>
-              To highlight the importance of experimental evidence, EEB automatically highlights and organizes preprints around scientific topics and emergent areas of research.
-            </li>
-            <li>
-              Finally, EEB provides an automated selection of preprints that are enriched in studies that were peer reviewed, may bridge several areas of research and use a diversity of experimental approaches.
-            </li>
-          </ul>`,
+          EEB is also a technological experiment. The DocMaps format (<a href="https://docmaps.knowledgefutures.org/roadmap" target="_blank" rel="noopener">docmaps.knowledgefutures.org/roadmap</a>) is implemented to expose the peer review process in the machine-readable structure format. The peer review process is visualized using the open-source RenderRev library (<a href="https://github.com/source-data/render-rev" target="_blank" rel="noopener">github.com/source-data/render-rev</a>) to provide an intuitive and direct access to the content of the referee reports and the reply from the authors.`,
 
       /*
        * contact page
