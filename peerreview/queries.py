@@ -18,6 +18,15 @@ RETURN DISTINCT a.doi AS doi
     returns = ["doi"]
 
 
+class PublishedNoDate(Query):
+    code = """
+MATCH (a:Article)
+WHERE EXISTS(a.journal_doi) AND NOT EXISTS(a.published_date)
+RETURN DISTINCT a.doi AS preprint_doi, a.journal_doi AS published_doi
+    """
+    returns = ["preprint_doi", "published_doi"]
+
+
 class UpdatePublicationStatus(Query):
     code = """
 MATCH (a:Article {doi: $preprint_doi})

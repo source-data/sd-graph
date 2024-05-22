@@ -7,7 +7,7 @@ from peerreview.neohypo import BioRxiv, CrossRefDOI
 from sdg.sdnode import API
 from . import DB
 from .queries import (
-    NotYetPublished, UpdatePublicationStatus,
+    NotYetPublished, UpdatePublicationStatus, PublishedNoDate,
 )
 
 logger = common.logging.get_logger(__name__)
@@ -64,6 +64,13 @@ class PublicationUpdate:
                     journal, date = self.update_status(preprint_doi, published_doi)
                     logger.info(f"{preprint_doi} --> {published_doi} in {journal} on {date}")
 
+    def up_date(self):
+        published = [(r['preprint_doi'], r['published_doi']) for r in self.db.query(PublishedNoDate())]
+        logger.info(f"{len(published)} preprints posted with no journal publication date yet.")
+        with logging_redirect_tqdm():
+            for preprint_doi, published_doi in tqdm(published):
+                journal, date = self.update_status(preprint_doi, published_doi)
+                logger.info(f"{preprint_doi} --> {published_doi} in {journal} on {date}")
 
 class BiorxivPubUpdate(PublicationUpdate):
     def check_publication_status(self, preprint_doi):
