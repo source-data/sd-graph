@@ -174,8 +174,7 @@ update_local_neo4j() {
     docker-compose -f docker-compose.deploy.yml run --rm flask python -m sdg.sdneo PUBLICSEARCH --api sdapi
   }
 
-  merge_and_precompute_graph() {
-    # daily
+  merge_graph() {
     log "generate merged graph"
     docker-compose -f docker-compose.deploy.yml run --rm flask python -m sdg.sd_processing
 
@@ -184,7 +183,9 @@ update_local_neo4j() {
 
     log "advanced graph data science"
     docker-compose -f docker-compose.deploy.yml run --rm flask python -m sdg.algonet
+  }
 
+  precompute_graph() {
     log "build preprint peer review descriptor voc"
     cat sdg/build_preprint_review_descriptor_voc.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
 
@@ -199,6 +200,11 @@ update_local_neo4j() {
 
     log "generate stats report"
     cat sdg/SD-stats.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
+  }
+
+  merge_and_precompute_graph() {
+    merge_graph
+    precompute_graph
   }
 
   update_close() {
@@ -252,6 +258,13 @@ update_local_neo4j() {
       import_peer_reviews # daily
       smarttag # daily
       merge_and_precompute_graph # daily
+      update_close # track update status
+      ;;
+    "reviews")
+      log "Running reviews update"
+      update_open # track update status
+      import_peer_reviews # daily
+      precompute_graph # weekly
       update_close # track update status
       ;;
   esac
@@ -375,7 +388,7 @@ main() {
         echo "Options:"
         echo "  --help        | -h"
         echo "  --stage_name  | -s (staging|production)"
-        echo "  --periodicity | -p (daily|weekly|monthly)"
+        echo "  --periodicity | -p (reviews|daily|weekly|monthly)"
         echo "  --log_dir    | -l 'quoted/path/to/log/directory'"
         echo ""
         echo "example of usage:"
@@ -405,7 +418,7 @@ main() {
   esac
 
   case $PERIODICITY in
-    "daily"|"weekly"|"monthly")
+    "reviews"|"daily"|"weekly"|"monthly")
     # valid periodicity, continue
     ;;
     *)
