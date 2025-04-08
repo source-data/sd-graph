@@ -31,6 +31,10 @@ services:
       - ./data/neo4j-plugins:/plugins
     env_file:
       - ./.env
+    deploy:
+      resources:
+        limits:
+          memory: ${NEO4J_MEMORY_LIMIT:-4G}
 
   redis:
     image: redis:6
