@@ -206,7 +206,7 @@ CROSSREF_PREPRINT_API_GRAPH_MODEL = {
         'journal-title': lambda d: d['institution'][0]['name'] if 'institution' in d else '',  # for obscure reasons; journal would be d['container-title']
         'publication-date': lambda d: date(*d['posted']['date-parts'][0]).isoformat() if 'posted' in d else '',  # journal: d['ublished-online']['date-parts']
         'title': lambda d: d['title'],
-        'abstract': lambda d: d['abstract'],  # contains jats namespaced formatting tags
+        'abstract': lambda d: d.get('abstract', ''),  # contains jats namespaced formatting tags
     },
     'children': {
         'has_author': {
