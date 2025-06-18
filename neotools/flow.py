@@ -2,6 +2,7 @@
 
 from time import perf_counter
 from common.logging import get_logger
+from neotools import FLOW_BATCH_SIZE
 
 Logger = get_logger(__name__)
 
@@ -77,11 +78,24 @@ class UpdateOrCreateTask(DbTask):
     The action query is then run in batches of 10000 nodes as returned by the iterate query.
     """
 
+    default_batch_size = 10000  # Default batch size for APOC periodic iterate
+
     def __init__(self, description, iterate_query, action_query):
         super().__init__(description)
         self.iterate_query = iterate_query
         self.action_query = action_query
-        self.apoc_params = "{batchSize: 10000}"
+
+        try:
+            batch_size = int(FLOW_BATCH_SIZE)
+        except ValueError:
+            self.logger.warning(
+                "Provided FLOW_BATCH_SIZE '%s' is not an integer, using default value of %d",
+                FLOW_BATCH_SIZE,
+                self.default_batch_size,
+            )
+            batch_size = self.default_batch_size
+
+        self.apoc_params = f"{{batchSize: {batch_size}}}"
 
     def _run(self, tx):
         self.logger.debug("Running update/create query")
