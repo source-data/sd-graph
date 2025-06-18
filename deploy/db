@@ -16,8 +16,11 @@ describe_length() {
 }
 
 mail_developers(){
-  local developers_emails="mainar@embl.de,lemberge@embl.de,eidens@embl.de"
-  # local developers_emails="mainar@embl.de"
+  local developers_emails=$DB_DEPLOY_EMAILS
+  if [ -z "$developers_emails" ]; then
+    echo "No developers emails specified. Please set DB_DEPLOY_EMAILS in your .env file."
+    exit 1
+  fi
   local subject=$1
   local body_prefix=$2
 
@@ -362,6 +365,7 @@ cleanup() {
 }
 
 main() {
+  load_dotenv
 
   # parse arguments
   while [ $# -gt 0 ]; do
@@ -453,7 +457,6 @@ main() {
       exit 1
     fi
 
-    load_dotenv
     update_local_neo4j $PERIODICITY
     NEO4J_DUMP_NAME="neo4j.dump"
     dump_local_neo4j $NEO4J_DUMP_NAME
