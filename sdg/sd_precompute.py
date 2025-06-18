@@ -32,7 +32,7 @@ create_viz_papers = UpdateOrCreateTask(
     """,
 )
 
-create_by_rev_service_collections = SimpleDbTask(
+create_by_rev_service_collections = UpdateOrCreateTask(
     "creating VizCollections for the reviewing service collections",
     """
     UNWIND [
@@ -90,11 +90,14 @@ create_by_rev_service_collections = SimpleDbTask(
         peer_review_date
     ORDER BY peer_review_date DESC
     // keep most recent peer review date
-    WITH DISTINCT
+    RETURN DISTINCT
         reviewing,
         descriptor,
         doi,
         COLLECT(DISTINCT peer_review_date)[0] AS earliest_review_date
+    """,
+    """
+    WITH reviewing, descriptor, doi, earliest_review_date
     MATCH (paper:VizPaper {doi: doi})
     WITH
         reviewing,
@@ -104,7 +107,7 @@ create_by_rev_service_collections = SimpleDbTask(
         paper.pub_date AS pub_date,
         earliest_review_date
     ORDER BY reviewing.rank ASC, pub_date DESC
-    MERGE (col:VizCollection {name: "refereed-preprints"})
+    MERGE (col:VizCollection {name: 'refereed-preprints'})
     MERGE (subcol:VizSubCollection {name: reviewing.name})
     MERGE (subcol)-[:HasDesciption]->(descr:VizDescriptor)
     SET descr = descriptor
