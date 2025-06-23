@@ -267,6 +267,7 @@ update_local_neo4j() {
       log "Running reviews update"
       update_open # track update status
       import_peer_reviews # daily
+      smarttag # daily
       precompute_graph # weekly
       update_close # track update status
       ;;
