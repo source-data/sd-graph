@@ -8,6 +8,7 @@ services:
       - redis
     volumes:
       - .:/app
+      - pip_modules:/app/src  # use modules installed in the image
       - ./log:/log
       - ${BIORXIV_PATH}:/app/biorxiv # to be provided in .env
       - ${MECADOI_PATH}:/app/mecadoi
@@ -40,3 +41,6 @@ services:
     image: redis:6
     volumes:
       - ./data/redis-data:/data
+
+volumes:
+  pip_modules:
