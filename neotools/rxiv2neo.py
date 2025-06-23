@@ -93,8 +93,9 @@ class MECALoader:
                             path_full_text = self.find_alternative(xml_file_list, path_full_text)
                             logger.warning(f"Trying {path_full_text} instead.")
                         self.load_full_text(z, meca_archive, path_full_text)
-                except BadZipFile:
-                    logger.error(f"not a zip file: {meca_archive}")
+                except Exception:
+                    logger.error(f"Error processing MECA archive {meca_archive}", exc_info=True)
+                    skipped += 1
         if count is not None:
             logger.info(f"skipped {skipped} out of {count+1}")
         else:
