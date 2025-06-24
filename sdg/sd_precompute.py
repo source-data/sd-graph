@@ -33,7 +33,7 @@ create_sd_articles = UpdateOrCreateTask(
     CREATE (sda:SDArticle {
         abstract: a.abstract,
         doi: a.doi,
-        journalName: a.journal_title,
+        journalName: toLower(a.journal_title),
         nb_figures: 0,
         pub_date: a.publication_date,
         source: 'sd_precompute',
