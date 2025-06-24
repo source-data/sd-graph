@@ -20,6 +20,28 @@ purge_viz_graph_tasks = [
     DetachDeleteAll("VizDescriptor"),
 ]
 
+create_sd_articles = UpdateOrCreateTask(
+    "creating SDArticle nodes from Article nodes",
+    """
+    MATCH (a:Article)
+    WHERE NOT EXISTS {
+        MATCH (s:SDArticle {doi: a.doi})
+    }
+    RETURN DISTINCT a
+    """,
+    """
+    CREATE (sda:SDArticle {
+        abstract: a.abstract,
+        doi: a.doi,
+        journalName: a.journal_title,
+        nb_figures: 0,
+        pub_date: a.publication_date,
+        source: 'sd_precompute',
+        title: a.title
+    })
+    """,
+)
+
 create_viz_papers = UpdateOrCreateTask(
     "creating VizPapers from biorxiv/medrxiv preprints",
     "MATCH (a:SDArticle) WHERE a.journalName IN ['biorxiv', 'medrxiv'] RETURN a",
@@ -447,6 +469,7 @@ create_automagic_collection = SimpleDbTask(
 
 
 Tasks = purge_viz_graph_tasks + [
+    create_sd_articles,
     create_viz_papers,
     create_by_rev_service_collections,
     link_exp_assays,
