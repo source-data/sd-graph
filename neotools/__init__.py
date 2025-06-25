@@ -5,6 +5,9 @@ from neotools.db import Instance, Query
 from typing import Dict
 
 load_dotenv()
+
+FLOW_BATCH_SIZE = os.getenv('FLOW_BATCH_SIZE')
+
 def get_db():
     NEO_URI = os.getenv('NEO_URI')
     NEO_USERNAME = os.getenv("NEO_USERNAME")

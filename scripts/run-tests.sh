@@ -36,10 +36,10 @@ if [[ "$architecture" == "arm64" ]]; then
     echo "Running on an arm64 machine, using docker-compose.arm64.yml"
     arch_flag="--file=docker-compose.arm64.yml"
 fi
-alias eeb="docker-compose --file=docker-compose.deploy.yml ${arch_flag} --file=docker-compose.tests.yml"
+alias eeb="docker compose --file=docker-compose.deploy.yml ${arch_flag} --file=docker-compose.tests.yml"
 
-# output the docker-compose version for debugging
-docker-compose --version
+# output the docker compose version for debugging
+docker compose --version
 
 env_file=.env.ci
 echo "Setting up environment variables from $env_file"
@@ -47,7 +47,7 @@ set -o allexport
 source "$env_file"
 set +o allexport
 
-echo "Starting docker-compose service"
+echo "Starting docker compose service"
 eeb up -d flask
 
 echo "Installing test dependencies"

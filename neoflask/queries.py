@@ -4,35 +4,21 @@ from neotools.db import Query
 class COVID19(Query):
 
     code = '''
-WITH
-    "2019-nCoV OR 2019nCoV OR COVID-19 OR SARS-CoV-2 OR SARS-CoV2 OR SAR-CoV2 OR SRAS-CoV-2" AS search_query
-// CALL db.index.fulltext.createNodeIndex("abstract_jats", ["Article"], ["abstract"], {analyzer: "english"});
-CALL db.index.fulltext.queryNodes("title_jats", search_query) YIELD node, score
-WITH node.doi AS doi, node.version AS version, node, score
-ORDER BY score DESC, version DESC
-WITH DISTINCT doi, COLLECT(node) AS versions, COLLECT(score) AS scores
-WHERE scores[0] > 0.02
-WITH doi, versions[0] AS most_recent, scores[0] AS score
-MATCH (a:Article {doi:doi, version: most_recent.version})-->(f:Fig)
-WITH COLLECT(DISTINCT doi) AS from_title
-
-WITH
-    "2019-nCoV OR 2019nCoV OR COVID-19 OR SARS-CoV-2 OR SARS-CoV2 OR SAR-CoV2 OR SRAS-CoV-2" AS search_query,
-    from_title
-    CALL db.index.fulltext.queryNodes("abstract_jats", search_query) YIELD node, score
-WITH node.doi AS doi, node.version AS version, node, score,
- from_title
-ORDER BY score DESC, version DESC
-WITH DISTINCT doi, COLLECT(node) AS versions, COLLECT(score) AS scores,
-  from_title
-WHERE scores[0] > 0.01
-WITH doi, versions[0] AS most_recent, scores[0] AS score,
-  from_title
-MATCH (a:Article {doi:doi, version: most_recent.version})-->(f:Fig)
-WITH COLLECT(DISTINCT a{.*, score: score}) AS from_abstract, from_title
-UNWIND from_abstract AS a
-WITH a
-WHERE a.doi IN from_title
+WITH "2019-nCoV OR 2019nCoV OR COVID-19 OR SARS-CoV-2 OR SARS-CoV2 OR SAR-CoV2 OR SRAS-CoV-2" AS search_query
+CALL db.index.fulltext.queryNodes("fulltextIndexArticles", search_query)
+YIELD node, score                                   // nodes are either SDArticle or SDContrib
+WHERE node.doi IS NOT NULL AND score >= $min_score  // filter to SDArticle nodes based on DOI presence
+WITH node.doi AS doi, score
+// grab the most recent version of the article
+CALL {
+    WITH doi
+    MATCH (article:Article {doi: doi})
+    WITH article
+    ORDER BY article.version DESC
+    return COLLECT(article)[0] AS a
+}
+WITH a, score
+WHERE a IS NOT NULL
 RETURN
     a.doi AS id,
     a.publication_date AS pub_date,
@@ -44,6 +30,9 @@ RETURN
     a.score AS score
 ORDER BY DATETIME(pub_date) DESC, score DESC
     '''
+    map = {
+      'min_score': {'req_param': 'min_score', 'default': 10.0},
+    }
     returns = ['id', 'pub_date', 'title', 'abstract', 'version', 'doi', 'journal', 'score']
 
 
