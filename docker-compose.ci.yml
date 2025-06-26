@@ -8,8 +8,10 @@ services:
   flask_deploy:
     image: ghcr.io/source-data/sd-graph_deploy_flask:${IMAGE_TAG}
     build:
+      args:
+        BUILD_TARGET: deploy
       context: .
-      dockerfile: ./compose/local/flask/Dockerfile
+      dockerfile: ./compose/flask/Dockerfile
     labels:
       org.opencontainers.image.source: ${IMAGE_SOURCE}
       org.opencontainers.image.revision: ${IMAGE_REVISION}
@@ -18,7 +20,7 @@ services:
     image: ghcr.io/source-data/sd-graph_flask:${IMAGE_TAG}
     build:
       context: .
-      dockerfile: ./compose/webserver/Dockerfile
+      dockerfile: ./compose/flask/Dockerfile
       labels:
         org.opencontainers.image.source: ${IMAGE_SOURCE}
         org.opencontainers.image.revision: ${IMAGE_REVISION}

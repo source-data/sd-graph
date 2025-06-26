@@ -1,7 +1,0 @@
-#!/bin/bash
-
-set -o errexit
-set -o pipefail
-set -o nounset
-
-uv run gunicorn neoflask.wsgi:app --bind 0.0.0.0:5000 --chdir=/app/neoflask --timeout 60
