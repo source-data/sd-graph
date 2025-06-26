@@ -2,7 +2,6 @@
 FROM python:3.7-slim-buster
 
 ENV PYTHONUNBUFFERED 1
-ENV DOCKERIZE_VERSION v0.6.1
 
 RUN apt-get update \
   # dependencies for building Python packages
@@ -11,8 +10,6 @@ RUN apt-get update \
   && apt-get install -y libpq-dev \
   # Translations dependencies
   && apt-get install -y gettext \
-  # Dockerize dependency
-  && apt-get install -y openssl wget \
   # install git to install requirements that are only published in GitHub
   && apt-get install -y git \
   && apt-get install -y x11-apps \
@@ -20,11 +17,6 @@ RUN apt-get update \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
-
-
-RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
-    && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
-    && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
 WORKDIR /app
 

@@ -12,14 +12,15 @@ services:
   flask:
     image: ghcr.io/source-data/sd-graph_flask:${IMAGE_TAG}
     depends_on:
-      - neo4j
+      neo4j:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - production_flask_logs:/app/log
     env_file:
       - ./.env
     shm_size: '16gb'
-    # ports:
-    #   - "5000:5000"
     command: /start
 
   neo4j:
@@ -35,9 +36,12 @@ services:
       - production_neo4j_logs:/logs
     env_file:
       - ./.env
-    # ports:
-    #   - "7474:7474"
-    #   - "7687:7687"
+    healthcheck:
+      test: cypher-shell -u ${NEO_USERNAME} -p ${NEO_PASSWORD} --non-interactive "MATCH (n) RETURN ID(n) LIMIT 1"
+      # wait up to 10 minutes for neo4j to be ready
+      interval: 10s
+      timeout: 10s
+      retries: 60
 
   traefik:
     image: ghcr.io/source-data/sd-graph_traefik:${IMAGE_TAG}
@@ -49,7 +53,6 @@ services:
       - production_traefik_logs:/var/log/traefik
     ports:
       - "0.0.0.0:80:80"
-      # - "8080:8080" # debugging UI
       - "0.0.0.0:443:443"
 
   vuejs:
@@ -58,11 +61,11 @@ services:
       - flask
     env_file:
       - ./.env
-    # ports:
-    #   - "9080:80"
 
   redis:
     image: redis:6
+    healthcheck:
+      test: redis-cli --raw incr ping
     ulimits:
       nofile:
         soft: 12000

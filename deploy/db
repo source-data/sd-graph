@@ -216,21 +216,10 @@ update_local_neo4j() {
     cat sdg/update_close.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
   }
 
-  wait_for_neo4j() {
-    log "Waiting for neo4j to become available..."
-    docker-compose -f docker-compose.deploy.yml run --rm flask dockerize -wait tcp://neo4j:7687 -timeout 360s
-    if [ $? -ne 0 ]; then
-        log "neo4j probably failed to start, check the neo4j log for details. Aborting"
-        exit 1
-    fi
-    log "neo4j is available"
-  }
-
 
   log "starting docker"
   docker-compose -f docker-compose.deploy.yml build
   docker-compose -f docker-compose.deploy.yml up -d
-  wait_for_neo4j
 
 
   local PERIODICITY=$1
@@ -320,6 +309,7 @@ deploy_database(){
   log "  * scp loading neo4j dump on remote"
   ssh $SERVER_ADDRESS "cd /home/ec2-user/sd-graph && ./deploy/__db__/remote"
 
+  # TODO: can this wait be removed?
   local wait_for_docker_in_minutes=5
   log "  * waiting $wait_for_docker_in_minutes minutes to be sure docker is up and running"
   sleep $(( $wait_for_docker_in_minutes * 60 ))
