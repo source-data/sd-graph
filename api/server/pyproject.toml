@@ -1,0 +1,12 @@
+[project]
+name = "swagger_server"
+version = "1.0.0"
+description = "Early Evidence Base API"
+readme = "README.md"
+dependencies = [
+    "connexion",
+    "connexion[swagger-ui]",
+    "python_dateutil",
+    "setuptools",
+    "swagger-ui-bundle>=0.0.2",
+]
