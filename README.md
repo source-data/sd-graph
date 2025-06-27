@@ -39,17 +39,6 @@ docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u $NEO_USERNAME
 
 See a few sections below on how import a dump to load content into the neo4j database.
 
-### Note for running on arm64 hosts like M1 Macbooks
-
-Use docker-compose.arm64.yml together with docker-compose.yml to make this app run on ARM-based computers (tested on an M1 Macbook) like so:
-
-```bash
-docker compose --file docker-compose.yml --file docker-compose.arm64.yml build
-docker compose --file docker-compose.yml --file docker-compose.arm64.yml up
-```
-
-See https://docs.docker.com/compose/extends/#multiple-compose-files for more info on the concepts behind multiple compose files.
-
 ### For frontend development
 
 If you want to run only the frontend locally and use the backend on a remote server, you can run:

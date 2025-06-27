@@ -34,7 +34,7 @@ class SDNeo:
         def filter_existing_complete_articles(doi_list: List[str]):
             filtered_list = []
             for doi in doi_list:
-                if not re.match('^10.\d{4,9}/[-._;()/:A-Z0-9]+$', doi, flags=re.IGNORECASE):
+                if not re.match(r'^10.\d{4,9}/[-._;()/:A-Z0-9]+$', doi, flags=re.IGNORECASE):
                     logger.warning(f"{doi} is not a doi. Ignored.")
                 else:
                     results = self.db.query(SDARTICLE_LOADING_STATUS(params={'doi': doi}))  # 'complete' | 'partial' | 'absent'

@@ -275,7 +275,7 @@ class XMLNodeTestCase(NodeTestCase):
         super().assert_nodes_equal(expected, actual)
 
     def test_jats(self):
-        input = b'''<?xml version="1.0" encoding="UTF-8"?>
+        input = br'''<?xml version="1.0" encoding="UTF-8"?>
         <!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) Journal Archiving and Interchange DTD v1.2d1 20170631//EN" "JATS-archivearticle1.dtd">
         <article xmlns:mml="http://www.w3.org/1998/Math/MathML" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" article-type="article" dtd-version="1.2d1" specific-use="production" xml:lang="en">
             <front>

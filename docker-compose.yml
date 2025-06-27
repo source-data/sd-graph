@@ -17,6 +17,8 @@ services:
         condition: service_healthy
     volumes:
       - .:/app
+      - /app/.venv  # use virtual environment from the image
+      - /app/src  # use git-based modules installed in the image
       - ./log:/log
       # - ${BIORXIV_PATH}:/app/biorxiv # to be provided in .env
       # - /tmp/.X11-unix:/tmp/.X11-unix

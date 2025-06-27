@@ -1,5 +1,6 @@
-node_modules
 .git
 .gitignore
-./data
-./dumps
+.venv
+data
+dumps
+node_modules

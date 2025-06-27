@@ -10,7 +10,8 @@ services:
         condition: service_healthy
     volumes:
       - .:/app
-      - pip_modules:/app/src  # use modules installed in the image
+      - /app/.venv  # use virtual environment from the image
+      - /app/src  # use git-based modules installed in the image
       - ./log:/log
       - ${BIORXIV_PATH}:/app/biorxiv # to be provided in .env
       - ${MECADOI_PATH}:/app/mecadoi
@@ -51,6 +52,3 @@ services:
       test: redis-cli --raw incr ping
     volumes:
       - ./data/redis-data:/data
-
-volumes:
-  pip_modules:

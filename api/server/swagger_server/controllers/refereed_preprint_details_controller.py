@@ -52,7 +52,7 @@ def papers_url(reviewed_by=None, query=None, page=None, per_page=None, sort_by=N
 
 @cache.memoize()  # memoize handles function parameters, .cached does not
 def papers_get(reviewed_by=None, query=None, published_in=None, page=None, per_page=None, sort_by=None, sort_order=None):  # noqa: E501
-    """Get paginated collections of refereed preprints, optionally filtered by reviewing service
+    r"""Get paginated collections of refereed preprints, optionally filtered by reviewing service
 
      # noqa: E501
 
