@@ -28,15 +28,7 @@ else
     exec 2>/dev/null
 fi
 
-
-# check if we're on an arm64 machine (specifically an M1/M2/etc Macbook), and use the corresponding file in that case
-arch_flag=""
-architecture=`uname -m`
-if [[ "$architecture" == "arm64" ]]; then
-    echo "Running on an arm64 machine, using docker-compose.arm64.yml"
-    arch_flag="--file=docker-compose.arm64.yml"
-fi
-alias eeb="docker compose --file=docker-compose.deploy.yml ${arch_flag} --file=docker-compose.tests.yml"
+alias eeb="docker compose --file=docker-compose.deploy.yml --file=docker-compose.tests.yml"
 
 # output the docker compose version for debugging
 docker compose --version
