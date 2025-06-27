@@ -37,7 +37,7 @@ class LuceneQueryConverter(BaseConverter):
 
 
     def to_python(self, text: str) -> str:
-        """
+        r"""
         Escapes lucene special characters.
 
         Here's what Lucene says needs to be escaped: `+ - && || ! ( ) { } [ ] ^ " ~ * ? : \`
