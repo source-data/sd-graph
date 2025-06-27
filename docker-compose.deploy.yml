@@ -18,7 +18,7 @@ services:
     env_file:
       - ./.env
     shm_size: '16gb'
-    command: /start
+    command: /runserver
     working_dir: /app
 
   neo4j:

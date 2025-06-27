@@ -46,7 +46,7 @@ RUN uv pip install -e api/server
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy the entrypoint script into the image, which runs the server
-COPY compose/flask/entrypoint /entrypoint
-RUN chmod +x /entrypoint
+COPY compose/flask/runserver /runserver
+RUN chmod +x /runserver
 
-ENTRYPOINT ["/entrypoint"]
+CMD ["/runserver"]
