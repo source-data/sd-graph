@@ -265,13 +265,6 @@ update_local_neo4j() {
 }
 
 
-
-publish_on_twitter(){
-  log "publishing on twitter"
-  docker-compose -f docker-compose.deploy.yml run --rm flask python -m twitter.update --limit-date 2020-07-01 # --GO_LIVE to go live with Twitter updates
-}
-
-
 dump_local_neo4j(){
   local DUMP_NAME=$1
   log "[dumping neo4j] - start"

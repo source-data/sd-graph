@@ -52,7 +52,7 @@ def configure_logging():
 
     # extend the basic config with each package's custom, but very similar configuration.
     config = copy.deepcopy(BASE_CONFIG)
-    for module_name in ['neoflask', 'neotools', 'ontoneo', 'peerreview', 'sdg', 'twitter']:
+    for module_name in ['neoflask', 'neotools', 'ontoneo', 'peerreview', 'sdg']:
         module_handler_name = f'{module_name}_file'
         config['handlers'][module_handler_name] = {
             'class': 'logging.handlers.RotatingFileHandler',
