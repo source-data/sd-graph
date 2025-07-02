@@ -39,7 +39,7 @@ webserver = []
 [tool.uv.sources]
 ai = { git = "https://github.com/source-data/ai.git", tag = "2020-05-04_001" }
 hypothepy = { git = "https://github.com/embo-press/hypothepy", rev = "dc4e0ba5bcbc46fcb0a9ced97218a388c590228d" }
-smtag = { git = "https://github.com/source-data/soda-roberta.git", rev = "6efa6dea9fc6e1173e98d784f14e1665f4c946e1" }
+smtag = { git = "https://github.com/source-data/soda-roberta.git", rev = "938dab016348ae547d6f2663bf307d5470290706" }
 
 [tool.uv]
 override-dependencies = ["tokenizers>=0.14.1"]
