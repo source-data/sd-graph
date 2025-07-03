@@ -1,41 +1,47 @@
-FROM python:3.12-slim
+FROM python:3.11-slim
 
 # build target: either `webserver` or `deploy`. This is used to determine whether to
 # install git and to select the dependency group to sync.
 ARG BUILD_TARGET=webserver
 
-# Validate the BUILD_TARGET argument.
-RUN if [ "${BUILD_TARGET}" = "webserver" ] || [ "${BUILD_TARGET}" = "deploy" ]; then \
-    echo "BUILD_TARGET: ${BUILD_TARGET}"; \
-  else \
-    echo "Invalid BUILD_TARGET: ${BUILD_TARGET}. Must be 'webserver' or 'deploy'." \
-    && exit 1 ; \
-  fi
-
-# Install git if the build target is `deploy`. It's needed to install some dependencies.
-RUN if [ "${BUILD_TARGET}" = "deploy" ]; then \
-    apt-get update \
-    && apt-get install -y --no-install-recommends git \
-    && rm -rf /var/lib/apt/lists/* ; \
-  fi
-
-# use intermediate layers following these guidelines:
-# https://docs.astral.sh/uv/guides/integration/docker/#intermediate-layers
+# Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 # Use `/app` as the application's working directory
 WORKDIR /app
 
-# Install dependencies
+# Install build dependencies:
+# git for building git-based dependencies: ai, hypothepy, smtag
+# the rest for building tokenizers (transitive dependency through smtag -> transformers)
+ARG BUILD_PACKAGES="git build-essential curl libssl-dev openssl pkg-config"
+RUN if [ "${BUILD_TARGET}" = "deploy" ]; then \
+  apt-get update \
+  && apt-get install -y --no-install-recommends ${BUILD_PACKAGES} \
+  # install rust, also for building tokenizers
+  && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y ; \
+fi
+# Set rust environment variables
+ENV PATH="/root/.cargo/bin:$PATH"
+
+# Install dependencies using intermediate layers following these guidelines:
+# https://docs.astral.sh/uv/guides/integration/docker/#intermediate-layers
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     uv sync --locked --no-install-project --group="${BUILD_TARGET}"
 
+# Uninstall build dependencies
+RUN if [ "${BUILD_TARGET}" = "deploy" ]; then \
+  apt-get purge -y --auto-remove ${BUILD_PACKAGES} \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/* \
+  && rustup self uninstall -y ; \
+fi
+
 # Copy the project into the image
 ADD . /app
 
-# Sync the project
+# Install dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --group="${BUILD_TARGET}"
 

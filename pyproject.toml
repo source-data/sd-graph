@@ -3,7 +3,7 @@ name = "sd-graph"
 version = "0.1.0"
 description = "Discover refereed preprints in the field of molecular biology."
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 dependencies = [
     "connexion[swagger-ui]<3.0.0",
     "flask>=2.2.5",
@@ -42,4 +42,4 @@ hypothepy = { git = "https://github.com/embo-press/hypothepy", rev = "dc4e0ba5bc
 smtag = { git = "https://github.com/source-data/soda-roberta.git", rev = "938dab016348ae547d6f2663bf307d5470290706" }
 
 [tool.uv]
-override-dependencies = ["tokenizers>=0.14.1"]
+override-dependencies = ["transformers==4.24.0"]

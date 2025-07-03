@@ -15,6 +15,7 @@ services:
       - ./log:/log
       - ${BIORXIV_PATH}:/app/biorxiv # to be provided in .env
       - ${MECADOI_PATH}:/app/mecadoi
+      - ~/.cache/huggingface:/root/.cache/huggingface
     env_file:
       - ./.env
     shm_size: '16gb'
