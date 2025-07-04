@@ -39,11 +39,11 @@ set -o allexport
 source "$env_file"
 set +o allexport
 
+echo "Building docker compose service"
+docker compose --file=docker-compose.ci.yml build flask_deploy
+
 echo "Starting docker compose service"
 eeb up -d flask
-
-echo "Installing test dependencies"
-eeb exec --no-TTY flask uv add pytest
 
 echo "Running tests"
 eeb exec --no-TTY flask python -m unittest $@ 1>&3 2>&4  # redirect stdout/stderr to file descriptors 3 and 4, defined above. We always want to display test results, even when running in quiet mode.

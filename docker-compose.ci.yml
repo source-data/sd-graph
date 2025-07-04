@@ -6,39 +6,39 @@
 version: '3'
 services:
   flask_deploy:
-    image: ghcr.io/source-data/sd-graph_deploy_flask:${IMAGE_TAG}
+    image: ghcr.io/source-data/sd-graph_deploy_flask:${IMAGE_TAG:-latest}
     build:
       args:
         BUILD_TARGET: deploy
       context: .
       dockerfile: ./compose/flask/Dockerfile
     labels:
-      org.opencontainers.image.source: ${IMAGE_SOURCE}
-      org.opencontainers.image.revision: ${IMAGE_REVISION}
+      org.opencontainers.image.source: ${IMAGE_SOURCE:-}
+      org.opencontainers.image.revision: ${IMAGE_REVISION:-}
 
   flask:
-    image: ghcr.io/source-data/sd-graph_flask:${IMAGE_TAG}
+    image: ghcr.io/source-data/sd-graph_flask:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: ./compose/flask/Dockerfile
       labels:
-        org.opencontainers.image.source: ${IMAGE_SOURCE}
-        org.opencontainers.image.revision: ${IMAGE_REVISION}
+        org.opencontainers.image.source: ${IMAGE_SOURCE:-}
+        org.opencontainers.image.revision: ${IMAGE_REVISION:-}
 
   traefik:
-    image: ghcr.io/source-data/sd-graph_traefik:${IMAGE_TAG}
+    image: ghcr.io/source-data/sd-graph_traefik:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: ./compose/production/traefik/Dockerfile
       labels:
-        org.opencontainers.image.source: ${IMAGE_SOURCE}
-        org.opencontainers.image.revision: ${IMAGE_REVISION}
+        org.opencontainers.image.source: ${IMAGE_SOURCE:-}
+        org.opencontainers.image.revision: ${IMAGE_REVISION:-}
 
   vuejs:
-    image: ghcr.io/source-data/sd-graph_vuejs:${IMAGE_TAG}
+    image: ghcr.io/source-data/sd-graph_vuejs:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: ./compose/production/vuejs/Dockerfile
       labels:
-        org.opencontainers.image.source: ${IMAGE_SOURCE}
-        org.opencontainers.image.revision: ${IMAGE_REVISION}
+        org.opencontainers.image.source: ${IMAGE_SOURCE:-}
+        org.opencontainers.image.revision: ${IMAGE_REVISION:-}
