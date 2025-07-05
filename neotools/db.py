@@ -138,7 +138,7 @@ class Instance:
         else:
             clause = None
         q = Query()
-        q.code = f"MATCH (a), (b) WHERE id(a)={a.id} AND id(b)={b.id} {cl} (a)-[r:{r}]->(b) RETURN r;"
+        q.code = f"MATCH (a) WHERE id(a)={a.id} MATCH (b) WHERE id(b)={b.id} {cl} (a)-[r:{r}]->(b) RETURN r;"
         q.returns = ['r']
         res = self.query_with_tx_funct(self._tx_funct_single, q)
         rel = res['r']
