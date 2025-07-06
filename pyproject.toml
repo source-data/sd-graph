@@ -27,7 +27,7 @@ deploy = [
     "hypothepy",
     "jinja2>=3.1.6",
     "networkx>=3.5",
-    "openai>=1.91.0",
+    "openai<1.0.0",
     "pandas>=2.3.0",
     "pytest>=8.4.1",
     "pyyaml>=6.0.2",
