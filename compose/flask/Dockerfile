@@ -12,11 +12,13 @@ WORKDIR /app
 
 # Install build dependencies:
 # git for building git-based dependencies: ai, hypothepy, smtag
+# libgmp-dev, libmpfr-dev, and libmpc-dev for building cdlib
 # the rest for building tokenizers (transitive dependency through smtag -> transformers)
 ARG BUILD_PACKAGES="git build-essential curl libssl-dev openssl pkg-config"
+ARG RUN_PACKAGES="libgmp-dev libmpfr-dev libmpc-dev"
 RUN if [ "${BUILD_TARGET}" = "deploy" ]; then \
   apt-get update \
-  && apt-get install -y --no-install-recommends ${BUILD_PACKAGES} \
+  && apt-get install -y --no-install-recommends ${BUILD_PACKAGES} ${RUN_PACKAGES} \
   # install rust, also for building tokenizers
   && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y ; \
 fi
