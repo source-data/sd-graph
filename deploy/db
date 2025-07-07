@@ -111,8 +111,6 @@ update_local_neo4j() {
   }
 
   update_fulltext_biorxiv() {
-    # run monthly
-
     log "updating meca archives"
     # only downloads MECA archives from 2021 onwards
     aws s3 sync \
@@ -221,45 +219,19 @@ update_local_neo4j() {
   docker-compose -f docker-compose.deploy.yml build
   docker-compose -f docker-compose.deploy.yml up -d
 
-
   local PERIODICITY=$1
-  case $PERIODICITY in
-    "monthly")
-      log "Running monthly update"
-      update_open # track update status
-      update_fulltext_biorxiv # monthly
-      import_peer_reviews # daily
-      mark_peer_reviews_as_published # weekly
-      smarttag # daily
-      # import_SD # monthly
-      merge_and_precompute_graph # daily
-      update_close # track update status
-      ;;
-    "weekly")
-      log "Running weekly update, it's Monday!"
-      update_open # track update status
-      import_peer_reviews # daily
-      mark_peer_reviews_as_published # weekly
-      smarttag # daily
-      merge_and_precompute_graph # daily
-      update_close # track update status
-      ;;
-    "daily")
-      log "Running daily update"
-      update_open # track update status
-      import_peer_reviews # daily
-      smarttag # daily
-      merge_and_precompute_graph # daily
-      update_close # track update status
-      ;;
-    "reviews")
-      log "Running reviews update"
-      update_open # track update status
-      import_peer_reviews # daily
-      precompute_graph # weekly
-      update_close # track update status
-      ;;
-  esac
+  log "Running ${PERIODICITY} update"
+  update_open # track update status
+
+  if [ "$PERIODICITY" == "weekly" ]; then
+    update_fulltext_biorxiv
+  fi
+
+  import_peer_reviews
+  mark_peer_reviews_as_published
+  smarttag
+  merge_and_precompute_graph
+  update_close
 
   log "done"
 }
@@ -375,7 +347,7 @@ main() {
         echo "Options:"
         echo "  --help        | -h"
         echo "  --stage_name  | -s (staging|production)"
-        echo "  --periodicity | -p (reviews|daily|weekly|monthly)"
+        echo "  --periodicity | -p (daily|weekly)"
         echo "  --log_dir    | -l 'quoted/path/to/log/directory'"
         echo ""
         echo "example of usage:"
@@ -405,11 +377,11 @@ main() {
   esac
 
   case $PERIODICITY in
-    "reviews"|"daily"|"weekly"|"monthly")
+    "daily"|"weekly")
     # valid periodicity, continue
     ;;
     *)
-    echo "[ERROR] Argument - please specify a valid --periodicity (daily|weekly|monthly)"
+    echo "[ERROR] Argument - please specify a valid --periodicity (daily|weekly)"
     exit 1
     ;;
   esac
