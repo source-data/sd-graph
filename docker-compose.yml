@@ -1,57 +1,32 @@
-version: '3'
-# volumes:
-#   local_neo4j_data: {}
-#   local_neo4j_logs: {}
-
-
 services:
   flask:
+    image: ghcr.io/source-data/sd-graph_deploy_flask:${IMAGE_TAG:-latest}
     build:
+      args:
+        BUILD_TARGET: deploy
       context: .
-      dockerfile: ./compose/local/flask/Dockerfile
-    image: neoflask_local_flask
+      dockerfile: ./compose/flask/Dockerfile
+    labels:
+      org.opencontainers.image.source: ${IMAGE_SOURCE:-}
+      org.opencontainers.image.revision: ${IMAGE_REVISION:-}
     depends_on:
       neo4j:
         condition: service_healthy
       redis:
         condition: service_healthy
-    volumes:
-      - .:/app
-      - /app/.venv  # use virtual environment from the image
-      - /app/src  # use git-based modules installed in the image
-      - ./log:/log
-      # - ${BIORXIV_PATH}:/app/biorxiv # to be provided in .env
-      # - /tmp/.X11-unix:/tmp/.X11-unix
-      # - /tmp:/tmp
-    environment:
-      - XAUTHORITY=${XAUTH} # needs to make sure export XAUTH before i.e. in .bashrc
-      - DISPLAY=${DISPLAY} # this seems to be exported by default 
     env_file:
       - ./.env
-    ports:
-      # - "0.0.0.0:5000:5000"
-      - "5050:5000"
-    shm_size: '16gb'
-    command: /runserver
 
   neo4j:
     image: neo4j:4.4
-    environment:
-      - NEO4JLABS_PLUGINS=["apoc", "graph-data-science"]
-    ulimits:
-      nofile:
-        soft: 40000
-        hard: 40000
-    volumes:
-      - ./data/neo4j-data:/data
-      - ./data/neo4j-logs:/logs
-      - ./data/neo4j-plugins:/plugins
-      - ./data/neo4j-import:/import
+    deploy:
+      resources:
+        limits:
+          memory: ${NEO4J_MEMORY_LIMIT:-4G}
     env_file:
       - ./.env
-    ports:
-      - "7474:7474"
-      - "7687:7687"
+    environment:
+      - NEO4JLABS_PLUGINS=["apoc", "graph-data-science"]
     healthcheck:
       test: cypher-shell -u ${NEO_USERNAME} -p ${NEO_PASSWORD} --non-interactive "MATCH (n) RETURN ID(n) LIMIT 1"
       # wait up to 10 minutes for neo4j to be ready
@@ -59,23 +34,19 @@ services:
       timeout: 10s
       retries: 60
 
+
   vuejs:
+    image: ghcr.io/source-data/sd-graph_vuejs:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: ./compose/local/vuejs/Dockerfile
-    image: neoflask_local_vuejs
-    volumes:
-      - './frontend:/app'
-      - '/app/node_modules'
+      labels:
+        org.opencontainers.image.source: ${IMAGE_SOURCE:-}
+        org.opencontainers.image.revision: ${IMAGE_REVISION:-}
     env_file:
       - ./.env
-    ports:
-      - "8080:8080"
-    command: /start
 
   redis:
     image: redis:6
     healthcheck:
       test: redis-cli --raw incr ping
-    volumes:
-      - ./data/redis-data:/data
