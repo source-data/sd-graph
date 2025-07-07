@@ -1,14 +1,10 @@
 services:
   flask:
-    image: ghcr.io/source-data/sd-graph_deploy_flask:${IMAGE_TAG:-latest}
     build:
       args:
         BUILD_TARGET: deploy
       context: .
       dockerfile: ./compose/flask/Dockerfile
-    labels:
-      org.opencontainers.image.source: ${IMAGE_SOURCE:-}
-      org.opencontainers.image.revision: ${IMAGE_REVISION:-}
     depends_on:
       neo4j:
         condition: service_healthy
@@ -36,13 +32,9 @@ services:
 
 
   vuejs:
-    image: ghcr.io/source-data/sd-graph_vuejs:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: ./compose/local/vuejs/Dockerfile
-      labels:
-        org.opencontainers.image.source: ${IMAGE_SOURCE:-}
-        org.opencontainers.image.revision: ${IMAGE_REVISION:-}
     env_file:
       - ./.env
 

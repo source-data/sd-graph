@@ -46,6 +46,11 @@ services:
     volumes:
       - production_redis:/data
 
+  vuejs:
+    image: ghcr.io/source-data/sd-graph_vuejs:${IMAGE_TAG:-latest}
+    build:
+      dockerfile: ./compose/production/vuejs/Dockerfile
+
 volumes:
   production_flask_logs: {}
   production_neo4j_data: {}
