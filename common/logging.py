@@ -47,8 +47,7 @@ def configure_logging():
     """Sets up the logging infrastructure: all needed directories & files, handlers, loggers, etc."""
 
     # Make sure our logfile directory exists
-    if not os.path.exists(LOGGING_BASE_DIR):
-        os.mkdir(LOGGING_BASE_DIR)
+    os.makedirs(LOGGING_BASE_DIR, exist_ok=True)
 
     # extend the basic config with each package's custom, but very similar configuration.
     config = copy.deepcopy(BASE_CONFIG)
