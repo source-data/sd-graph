@@ -163,7 +163,7 @@ def name_hypothesis_community():
             stop_words='english',
             token_pattern=r'[ΑαΒβΓγΔδΕεΖζΗηΘθΙιΚκΛλΜμΝνΞξΟοΠπΡρΣσςΤτΥυΦφΧχΨψΩωA-Za-z0-9\-–—‐−]{3,}',
             max_df=0.01,
-            min_df=0
+            min_df=0.0,
         )
         vectorizer.fit_transform(corpus)
         keywords = vectorizer.get_feature_names()
