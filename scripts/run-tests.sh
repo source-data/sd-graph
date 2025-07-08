@@ -28,10 +28,7 @@ else
     exec 2>/dev/null
 fi
 
-alias eeb="docker compose --file=docker-compose.deploy.yml --file=docker-compose.tests.yml"
-
-# output the docker compose version for debugging
-docker compose --version
+alias eeb="docker compose --file=docker-compose.yml --file=docker-compose.tests.yml"
 
 env_file=.env.ci
 echo "Setting up environment variables from $env_file"
@@ -40,7 +37,7 @@ source "$env_file"
 set +o allexport
 
 echo "Building docker compose service"
-docker compose --file=docker-compose.ci.yml build flask_deploy
+eeb build flask
 
 echo "Starting docker compose service"
 eeb up -d flask

@@ -22,9 +22,26 @@ docker-compose down --volumes # to clean the content of the volumes
 
 This can solve some issues, for example if you run `build` with a wrong config file.
 
+### Compose files
+
+This repository contains multiple docker-compose files that are [merged together](https://docs.docker.com/compose/how-tos/multiple-compose-files/merge/) to define the services and their configurations for different environments (production, testing). The files are:
+
+- `docker-compose.yml`: the main compose file that defines the services and their dependencies. This file is used as the base configuration for all environments.
+- `docker-compose.override.yml`: the override compose file that extends the main compose file with additional configurations for development. It is automatically used by Docker Compose if present and no other compose files are specified. This file is used both for local development and for running the database deployment.
+- `docker-compose.prod.yml`: the production compose file that extends the main compose file with production-specific configurations.
+- `docker-compose.tests.yml`: the tests compose file that extends the main compose file with configurations for running tests. Used in `scripts/run-tests.sh` and CI.
+
+If you run `docker-compose up` (or any other sub-command) without specifying a compose file, `docker-compose` will use the `docker-compose.yml` and `docker-compose.override.yml` files by default. If you want to run the production setup, use this command:
+
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+```
+
 ### First time setup:
 
 ```bash
+# copy the example .env file and edit with your desired config
+# .env.example.prod is for the production webserver
 cp .env.example .env
 docker-compose build
 docker-compose up
@@ -145,7 +162,7 @@ docker run --rm \
 
 ```bash
 # Make sure you dont have your neo4j running:
-docker-compose -f production.yml down
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml down
 
 sudo mkdir dumps
 sudo chown 7474:7474 dumps
@@ -188,7 +205,7 @@ wget https://oc.embl.de/index.php/s/<token>/download
 
 
 # build docker
-docker-compose -f production.yml build
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml build
 
 # force load the database with the dump
 # THIS WILL OVERWRITE THE EXISTING DB
@@ -201,8 +218,8 @@ docker run --rm \
  bin/neo4j-admin load --from=/app/download --database=neo4j --force  # WILL OVERWRITE!
 
 # start the services
-docker-compose -f production.yml up -d --remove-orphans
-docker-compose -f production.yml run --rm flask python -m neoflask.cache_warm_up  # warm up cache
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --remove-orphans
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml run --rm flask python -m neoflask.cache_warm_up  # warm up cache
 ```
 
 
@@ -211,6 +228,6 @@ Something like this will (generally) be enough, but really depends on your chang
 
 ```bash
 git pull
-docker-compose -f production.yml build
-docker-compose -f production.yml up -d --remove-orphans
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml build
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --remove-orphans
 ```
