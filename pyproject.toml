@@ -31,6 +31,7 @@ deploy = [
     "openai<1.0.0",
     "pandas>=2.3.0",
     "pytest>=8.4.1",
+    "python-igraph>=0.11.9",
     "pyyaml>=6.0.2",
     "scikit-learn>=1.7.0",
     "smtag",
