@@ -2,8 +2,8 @@ services:
   flask:
     image: ghcr.io/source-data/sd-graph_flask:${IMAGE_TAG:-latest}
     build:
-      context: .
-      dockerfile: ./compose/flask/Dockerfile
+      args:
+        BUILD_TARGET: webserver
       labels:
         org.opencontainers.image.source: ${IMAGE_SOURCE:-}
         org.opencontainers.image.revision: ${IMAGE_REVISION:-}
