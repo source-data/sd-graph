@@ -35,6 +35,8 @@ services:
         org.opencontainers.image.revision: ${IMAGE_REVISION:-}
     depends_on:
       - flask
+    env_file:
+      - ./.env
     volumes:
       - production_traefik:/etc/traefik/acme
       - production_traefik_logs:/var/log/traefik
