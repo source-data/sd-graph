@@ -1,4 +1,4 @@
 #!/bin/bash
 
 # To be exectued on the remote host
-docker-compose -f production.yml exec flask python -m neoflask.cache_warm_up http://localhost:5000 "$@"
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml exec flask python -m neoflask.cache_warm_up http://localhost:5000 "$@"

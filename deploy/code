@@ -25,10 +25,10 @@ update() {
     REMOTE_HOST="$2"
     # Use shell heredoc to make long command more readable
     ssh ec2-user@${REMOTE_HOST} << EOF
-        cd sd-graph/                                   && \
-        git pull                                       && \
-        export IMAGE_TAG="${IMAGE_TAG}"                && \
-        docker-compose -f production.yml pull          && \
+        cd sd-graph/                                                          && \
+        git pull                                                              && \
+        export IMAGE_TAG="${IMAGE_TAG}"                                       && \
+        docker-compose -f docker-compose.yml -f docker-compose.prod.yml pull  && \
         sudo systemctl restart sd-graph
 EOF
 }
