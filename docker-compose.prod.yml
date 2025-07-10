@@ -1,0 +1,62 @@
+services:
+  flask:
+    image: ghcr.io/source-data/sd-graph_flask:${IMAGE_TAG:-latest}
+    build:
+      args:
+        BUILD_TARGET: webserver
+      labels:
+        org.opencontainers.image.source: ${IMAGE_SOURCE:-}
+        org.opencontainers.image.revision: ${IMAGE_REVISION:-}
+    depends_on:
+      neo4j:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - ./.env
+    volumes:
+      - production_flask_logs:/app/log
+
+  neo4j:
+    environment:
+      - NEO4JLABS_PLUGINS=["apoc"]
+    volumes:
+      - production_neo4j_data:/data
+      - production_neo4j_logs:/logs
+
+
+  traefik:
+    image: ghcr.io/source-data/sd-graph_traefik:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: ./compose/production/traefik/Dockerfile
+      labels:
+        org.opencontainers.image.source: ${IMAGE_SOURCE:-}
+        org.opencontainers.image.revision: ${IMAGE_REVISION:-}
+    depends_on:
+      - flask
+    env_file:
+      - ./.env
+    volumes:
+      - production_traefik:/etc/traefik/acme
+      - production_traefik_logs:/var/log/traefik
+    ports:
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
+
+  redis:
+    volumes:
+      - production_redis:/data
+
+  vuejs:
+    image: ghcr.io/source-data/sd-graph_vuejs:${IMAGE_TAG:-latest}
+    build:
+      dockerfile: ./compose/production/vuejs/Dockerfile
+
+volumes:
+  production_flask_logs: {}
+  production_neo4j_data: {}
+  production_neo4j_logs: {}
+  production_traefik: {}
+  production_traefik_logs: {}
+  production_redis: {}

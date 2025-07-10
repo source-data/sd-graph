@@ -47,12 +47,11 @@ def configure_logging():
     """Sets up the logging infrastructure: all needed directories & files, handlers, loggers, etc."""
 
     # Make sure our logfile directory exists
-    if not os.path.exists(LOGGING_BASE_DIR):
-        os.mkdir(LOGGING_BASE_DIR)
+    os.makedirs(LOGGING_BASE_DIR, exist_ok=True)
 
     # extend the basic config with each package's custom, but very similar configuration.
     config = copy.deepcopy(BASE_CONFIG)
-    for module_name in ['neoflask', 'neotools', 'ontoneo', 'peerreview', 'sdg', 'twitter']:
+    for module_name in ['neoflask', 'neotools', 'ontoneo', 'peerreview', 'sdg']:
         module_handler_name = f'{module_name}_file'
         config['handlers'][module_handler_name] = {
             'class': 'logging.handlers.RotatingFileHandler',

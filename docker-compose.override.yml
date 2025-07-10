@@ -1,0 +1,35 @@
+services:
+  flask:
+    ports:
+      - "127.0.0.1:5050:5000"
+    volumes:
+      - .:/app
+      - /app/.venv  # use virtual environment from the image
+      - /app/src  # use git-based modules installed in the image
+      - ./log:/log
+      - ${BIORXIV_PATH}:/app/biorxiv
+      - ${MECADOI_PATH}:/app/mecadoi
+      - ~/.cache/huggingface:/root/.cache/huggingface
+
+  neo4j:
+    ports:
+      - "127.0.0.1:7474:7474"
+      - "127.0.0.1:7687:7687"
+    volumes:
+      - ./data/neo4j-data:/data
+      - ./data/neo4j-logs:/logs
+      - ./data/neo4j-plugins:/plugins
+
+  redis:
+    volumes:
+      - ./data/redis-data:/data
+
+  vuejs:
+    build:
+      dockerfile: ./compose/local/vuejs/Dockerfile
+    volumes:
+      - './frontend:/app'
+      - '/app/node_modules'
+    ports:
+      - "8080:8080"
+    command: /start

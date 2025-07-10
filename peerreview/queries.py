@@ -10,7 +10,9 @@ class NotYetPublished(Query):
     code = """
 MATCH (a:Article)
 WHERE
-    (DATETIME(a.publication_date) > DATETIME($limit_date))
+    a.publication_date IS NOT NULL
+    AND a.publication_date <> ""
+    AND (DATETIME(a.publication_date) > DATETIME($limit_date))
     AND NOT EXISTS(a.journal_doi)
 RETURN DISTINCT a.doi AS doi
     """

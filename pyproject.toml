@@ -1,0 +1,53 @@
+[project]
+name = "sd-graph"
+version = "0.1.0"
+description = "Discover refereed preprints in the field of molecular biology."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "connexion[swagger-ui]<3.0.0",
+    "flask>=2.2.5",
+    "flask-caching>=2.3.1",
+    "flask-cors>=6.0.1",
+    "flask-dotenv>=0.1.2",
+    "gunicorn>=23.0.0",
+    "lxml>=5.4.0",
+    "neo4j>=5.28.1",
+    "python-dotenv>=1.1.1",
+    "redis>=6.2.0",
+    "requests>=2.32.4",
+    "tqdm>=4.67.1",
+    "werkzeug>=2.2.3",
+]
+
+[dependency-groups]
+deploy = [
+    "ai",
+    "cdlib>=0.1.9",
+    "hypothepy",
+    "infomap>=1.2.1",
+    "jinja2>=3.1.6",
+    "networkx<=2.5",
+    "openai<1.0.0",
+    "pandas>=2.3.0",
+    "pytest>=8.4.1",
+    "python-igraph>=0.11.9",
+    "pyyaml>=6.0.2",
+    "scikit-learn>=1.7.0",
+    "smtag",
+    "tenacity>=9.1.2",
+    "wurlitzer>=2.0.1",
+]
+webserver = []
+
+[tool.uv.sources]
+ai = { git = "https://github.com/source-data/ai.git", tag = "2020-05-04_001" }
+hypothepy = { git = "https://github.com/embo-press/hypothepy", rev = "dc4e0ba5bcbc46fcb0a9ced97218a388c590228d" }
+smtag = { git = "https://github.com/source-data/soda-roberta.git", rev = "938dab016348ae547d6f2663bf307d5470290706" }
+
+[tool.uv]
+override-dependencies = [
+    "numpy<2.0.0",  # networkx
+    "scipy<1.13.0",  # cdlib
+    "transformers==4.24.0",
+]

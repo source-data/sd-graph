@@ -101,18 +101,16 @@ update_local_neo4j() {
     # RUN THIS ONLY MANUALLY
     # remove indices from automatic steps
     log "defining indices"
-    cat sdg/SD-indices.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
+    cat sdg/SD-indices.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
   }
 
   update_open() {
     # always start with this when updating db
     log "opening the update"
-    cat sdg/update_open.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
+    cat sdg/update_open.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
   }
 
   update_fulltext_biorxiv() {
-    # run monthly
-
     log "updating meca archives"
     # only downloads MECA archives from 2021 onwards
     aws s3 sync \
@@ -122,7 +120,7 @@ update_local_neo4j() {
       s3://biorxiv-src-monthly/Current_Content $BIORXIV_PATH
 
     log "remove prelim articles obtained from the CrossRef and bioRxiv APIs"
-    cat neotools/purge_prelim.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
+    cat neotools/purge_prelim.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
 
     log "import full text biorxiv preprints"
     biorxiv_folder_name() {
@@ -140,69 +138,69 @@ update_local_neo4j() {
     for delta in "${delta_3rd_to_last_month}" "${delta_2nd_to_last_month}" "${delta_last_month}"; do
       folder_name=`biorxiv_folder_name "${delta}"`
       log "importing full text biorxiv preprints from ${BIORXIV_PATH}/${folder_name}"
-      docker-compose -f docker-compose.deploy.yml run --rm flask python -m neotools.rxiv2neo "/app/biorxiv/$folder_name" --type meca
+      docker-compose run --rm flask python -m neotools.rxiv2neo "/app/biorxiv/$folder_name" --type meca
     done
   }
 
   import_peer_reviews() {
     # daily
     log "import peer reviews from peer-review databases & complete our db with biorxiv prelim api if our meca-fulltext-db missed one"
-    docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.neohypo hypothesis
-    docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.neohypo rrc19
-    docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.neohypo pci
+    docker-compose run --rm flask python -m peerreview.neohypo hypothesis
+    docker-compose run --rm flask python -m peerreview.neohypo rrc19
+    docker-compose run --rm flask python -m peerreview.neohypo pci
 
     aws s3 sync s3://mecadoi-archives/batch/deposited "${MECADOI_PATH}"
-    docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.mecadoi --input-dir "/app/mecadoi" --no-dry-run
+    docker-compose run --rm flask python -m peerreview.mecadoi --input-dir "/app/mecadoi" --no-dry-run
 
-    docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.summarization --no-dry-run
+    docker-compose run --rm flask python -m peerreview.summarization --no-dry-run
   }
 
   mark_peer_reviews_as_published() {
     # weekly
     log "updates publication status (find out if a preprint has been published in a journal)"
-    docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.published # maybe run only once a week?
+    docker-compose run --rm flask python -m peerreview.published # maybe run only once a week?
   }
 
   smarttag() {
     # daily
 
     log "smarttag specified collection of preprints"
-    docker-compose -f docker-compose.deploy.yml run --rm flask python -m sdg.sdneo subject-collections --api eebapi
-    docker-compose -f docker-compose.deploy.yml run --rm flask python -m sdg.sdneo refereed-preprints --api eebapi
+    docker-compose run --rm flask python -m sdg.sdneo subject-collections --api eebapi
+    docker-compose run --rm flask python -m sdg.sdneo refereed-preprints --api eebapi
   }
 
   import_SD() {
     # manually
     log "import source data public data. Logging to `log/sdg.sdneo-publicsearch.log`"
-    docker-compose -f docker-compose.deploy.yml run --rm flask python -m sdg.sdneo PUBLICSEARCH --api sdapi
+    docker-compose run --rm flask python -m sdg.sdneo PUBLICSEARCH --api sdapi
   }
 
   merge_graph() {
     log "generate merged graph"
-    docker-compose -f docker-compose.deploy.yml run --rm flask python -m sdg.sd_processing
+    docker-compose run --rm flask python -m sdg.sd_processing
 
     log "neo4j graph data science"
-    docker-compose -f docker-compose.deploy.yml run --rm flask python -m sdg.sd_gds
+    docker-compose run --rm flask python -m sdg.sd_gds
 
     log "advanced graph data science"
-    docker-compose -f docker-compose.deploy.yml run --rm flask python -m sdg.algonet
+    docker-compose run --rm flask python -m sdg.algonet
   }
 
   precompute_graph() {
     log "build preprint peer review descriptor voc"
-    cat sdg/build_preprint_review_descriptor_voc.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
+    cat sdg/build_preprint_review_descriptor_voc.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
 
     log "review service descriptors"
-    cat sdg/describe_review_services.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
+    cat sdg/describe_review_services.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
 
     log "precompute the graph used by front end"
-    docker-compose -f docker-compose.deploy.yml run --rm flask python -m sdg.sd_precompute
+    docker-compose run --rm flask python -m sdg.sd_precompute
 
     log "precompute pilot docmap graph"
-    docker-compose -f docker-compose.deploy.yml run --rm flask python -m sdg.sd_prepare_docmap
+    docker-compose run --rm flask python -m sdg.sd_prepare_docmap
 
     log "generate stats report"
-    cat sdg/SD-stats.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
+    cat sdg/SD-stats.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
   }
 
   merge_and_precompute_graph() {
@@ -213,73 +211,29 @@ update_local_neo4j() {
   update_close() {
     # always run at the end of a db update
     log "closing the update"
-    cat sdg/update_close.cql | docker-compose -f docker-compose.deploy.yml run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
-  }
-
-  wait_for_neo4j() {
-    log "Waiting for neo4j to become available..."
-    docker-compose -f docker-compose.deploy.yml run --rm flask dockerize -wait tcp://neo4j:7687 -timeout 360s
-    if [ $? -ne 0 ]; then
-        log "neo4j probably failed to start, check the neo4j log for details. Aborting"
-        exit 1
-    fi
-    log "neo4j is available"
+    cat sdg/update_close.cql | docker-compose run --rm neo4j cypher-shell -a bolt://neo4j:7687 -u neo4j -p $NEO_PASSWORD
   }
 
 
   log "starting docker"
-  docker-compose -f docker-compose.deploy.yml build
-  docker-compose -f docker-compose.deploy.yml up -d
-  wait_for_neo4j
-
+  docker-compose build
+  docker-compose up -d
 
   local PERIODICITY=$1
-  case $PERIODICITY in
-    "monthly")
-      log "Running monthly update"
-      update_open # track update status
-      update_fulltext_biorxiv # monthly
-      import_peer_reviews # daily
-      mark_peer_reviews_as_published # weekly
-      smarttag # daily
-      # import_SD # monthly
-      merge_and_precompute_graph # daily
-      update_close # track update status
-      ;;
-    "weekly")
-      log "Running weekly update, it's Monday!"
-      update_open # track update status
-      import_peer_reviews # daily
-      mark_peer_reviews_as_published # weekly
-      smarttag # daily
-      merge_and_precompute_graph # daily
-      update_close # track update status
-      ;;
-    "daily")
-      log "Running daily update"
-      update_open # track update status
-      import_peer_reviews # daily
-      smarttag # daily
-      merge_and_precompute_graph # daily
-      update_close # track update status
-      ;;
-    "reviews")
-      log "Running reviews update"
-      update_open # track update status
-      import_peer_reviews # daily
-      precompute_graph # weekly
-      update_close # track update status
-      ;;
-  esac
+  log "Running ${PERIODICITY} update"
+  update_open # track update status
+
+  if [ "$PERIODICITY" == "weekly" ]; then
+    update_fulltext_biorxiv
+  fi
+
+  import_peer_reviews
+  mark_peer_reviews_as_published
+  smarttag
+  merge_and_precompute_graph
+  update_close
 
   log "done"
-}
-
-
-
-publish_on_twitter(){
-  log "publishing on twitter"
-  docker-compose -f docker-compose.deploy.yml run --rm flask python -m twitter.update --limit-date 2020-07-01 # --GO_LIVE to go live with Twitter updates
 }
 
 
@@ -289,7 +243,7 @@ dump_local_neo4j(){
   log "  * stopping docker-compose"
 
   # Make sure you dont have your neo4j running:
-  docker-compose -f docker-compose.deploy.yml down
+  docker-compose down
 
   # rotate backup once before we dump, just in case some old files are still there
   rotate_backup
@@ -303,7 +257,7 @@ dump_local_neo4j(){
   log "[dumping neo4j] - done"
 
   log "  * restarting docker-compose"
-  docker-compose -f docker-compose.deploy.yml up -d
+  docker-compose up -d
 
 }
 
@@ -320,6 +274,7 @@ deploy_database(){
   log "  * scp loading neo4j dump on remote"
   ssh $SERVER_ADDRESS "cd /home/ec2-user/sd-graph && ./deploy/__db__/remote"
 
+  # TODO: can this wait be removed?
   local wait_for_docker_in_minutes=5
   log "  * waiting $wait_for_docker_in_minutes minutes to be sure docker is up and running"
   sleep $(( $wait_for_docker_in_minutes * 60 ))
@@ -355,13 +310,13 @@ send_notifications(){
   reviewed_by="review commons"
   recipient="${NOTIFICATIONS_RECIPIENT}"
   sender="${NOTIFICATIONS_SENDER}"
-  docker-compose -f docker-compose.deploy.yml run --rm flask python -m peerreview.notify --after "${after}" --reviewed-by "${reviewed_by}" --recipient "${recipient}" --sender "${sender}" --no-dry-run
+  docker-compose run --rm flask python -m peerreview.notify --after "${after}" --reviewed-by "${reviewed_by}" --recipient "${recipient}" --sender "${sender}" --no-dry-run
   # Update the time when the last notifications were sent to now.
   date "${date_format}" > "${file_last_notification}"
 }
 
 cleanup() {
-  docker-compose -f docker-compose.deploy.yml down
+  docker-compose down
 }
 
 main() {
@@ -392,7 +347,7 @@ main() {
         echo "Options:"
         echo "  --help        | -h"
         echo "  --stage_name  | -s (staging|production)"
-        echo "  --periodicity | -p (reviews|daily|weekly|monthly)"
+        echo "  --periodicity | -p (daily|weekly)"
         echo "  --log_dir    | -l 'quoted/path/to/log/directory'"
         echo ""
         echo "example of usage:"
@@ -422,11 +377,11 @@ main() {
   esac
 
   case $PERIODICITY in
-    "reviews"|"daily"|"weekly"|"monthly")
+    "daily"|"weekly")
     # valid periodicity, continue
     ;;
     *)
-    echo "[ERROR] Argument - please specify a valid --periodicity (daily|weekly|monthly)"
+    echo "[ERROR] Argument - please specify a valid --periodicity (daily|weekly)"
     exit 1
     ;;
   esac

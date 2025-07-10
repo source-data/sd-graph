@@ -1,32 +1,19 @@
 services:
   flask:
-    depends_on:
-      neo4j:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
     env_file:
       - ./.env.ci
 
   neo4j:
     env_file:
       - ./.env.ci
-    healthcheck:
-      test: cypher-shell -u ${NEO_USERNAME} -p ${NEO_PASSWORD} --non-interactive "MATCH (n) RETURN ID(n) LIMIT 1"
-      # wait up to 10 minutes for neo4j to be ready
-      interval: 10s
-      timeout: 10s
-      retries: 60
     ports:
-      - 7474:7474
-      - 7687:7687
+      - "127.0.0.1:7474:7474"
+      - "127.0.0.1:7687:7687"
     volumes:
       - ./tests/data/neo4j-data:/data
       - ./tests/data/neo4j-logs:/logs
       - ./tests/data/neo4j-plugins:/plugins
 
   redis:
-    healthcheck:
-      test: redis-cli --raw incr ping
     volumes:
       - ./tests/data/redis-data:/data

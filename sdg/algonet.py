@@ -163,16 +163,16 @@ def name_hypothesis_community():
             stop_words='english',
             token_pattern=r'[ΑαΒβΓγΔδΕεΖζΗηΘθΙιΚκΛλΜμΝνΞξΟοΠπΡρΣσςΤτΥυΦφΧχΨψΩωA-Za-z0-9\-–—‐−]{3,}',
             max_df=0.01,
-            min_df=0
+            min_df=0.0,
         )
         vectorizer.fit_transform(corpus)
-        keywords = vectorizer.get_feature_names()
+        keywords = vectorizer.get_feature_names_out()
         concatenated_summaries = []
         for community_id, module in collections.items():
             summaries = module['summaries']
             concatenated_summaries.append(' '.join([a for a in summaries]))
         X = vectorizer.transform(concatenated_summaries)
-        keywords = vectorizer.get_feature_names()
+        keywords = vectorizer.get_feature_names_out()
         N, M = X.shape
         X = X.toarray()
         community_ids = list(collections.keys())
