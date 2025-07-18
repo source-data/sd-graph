@@ -167,7 +167,8 @@ class Instance:
             q = Query()
             q.code = f'''
                     UNWIND $batch AS row
-                    MATCH (s), (t) WHERE id(s) = row.source AND id(t) = row.target
+                    MATCH (s) WHERE id(s) = row.source
+                    MATCH (t) WHERE id(t) = row.target
                     {clause} (s) -[r:{rel_label}]-> (t)
                     RETURN r
                     '''

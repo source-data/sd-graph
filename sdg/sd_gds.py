@@ -190,7 +190,7 @@ add_text_descr_to_hypothesis_task = UpdateOrCreateTask(
 )
 
 reset_self_test_hypotheses_task = UpdateOrCreateTask(
-    "Flag possible self-test hypotheses",
+    "reset self-test hypotheses",
     "MATCH (h:Hypothesis) RETURN h",
     "SET h.self_test = False",
 )
@@ -209,8 +209,8 @@ flag_self_test_hypotheses_task = UpdateOrCreateTask(
 )
 
 reset_boring_hypotheses_task = UpdateOrCreateTask(
-    "reset boring hypotheses",
-    "MATCH (h:Hypothesis) RETURN h",
+    "reset boring entities",
+    "MATCH (h:H_Entity) RETURN h",
     "SET h.boring = False",
 )
 

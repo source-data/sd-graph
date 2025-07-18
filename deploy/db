@@ -129,13 +129,11 @@ update_local_neo4j() {
       local YEAR=`date --date="-$month_delta month" +%Y`
       echo "${MONTH}_${YEAR}"
     }
-    # Biorxiv only publishes monthly updates when the month is over, meaning the 1st of September we get access to August content
+    # Import everything from the current and the previous month to ensure we get all preprints.
+    local delta_this_month=0
     local delta_last_month=1
-    # But their S3 archive might not update at the exact right time so try to import the 2nd- and 3rd-to-last month's archives as well
-    local delta_2nd_to_last_month=2
-    local delta_3rd_to_last_month=3
 
-    for delta in "${delta_3rd_to_last_month}" "${delta_2nd_to_last_month}" "${delta_last_month}"; do
+    for delta in "${delta_last_month}" "${delta_this_month}"; do
       folder_name=`biorxiv_folder_name "${delta}"`
       log "importing full text biorxiv preprints from ${BIORXIV_PATH}/${folder_name}"
       docker-compose run --rm flask python -m neotools.rxiv2neo "/app/biorxiv/$folder_name" --type meca
