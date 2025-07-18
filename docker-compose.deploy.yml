@@ -1,0 +1,20 @@
+services:
+  flask:
+    volumes:
+      - .:/app
+      - /app/.venv  # use virtual environment from the image
+      - /app/src  # use git-based modules installed in the image
+      - ./log:/log
+      - ${BIORXIV_PATH}:/app/biorxiv
+      - ${MECADOI_PATH}:/app/mecadoi
+      - ~/.cache/huggingface:/root/.cache/huggingface
+
+  neo4j:
+    volumes:
+      - ./data/neo4j-data:/data
+      - ./data/neo4j-logs:/logs
+      - ./data/neo4j-plugins:/plugins
+
+  redis:
+    volumes:
+      - ./data/redis-data:/data
