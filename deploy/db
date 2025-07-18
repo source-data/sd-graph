@@ -133,10 +133,9 @@ update_local_neo4j() {
       echo "${MONTH}_${YEAR}"
     }
     # Import everything from the current and the previous month to ensure we get all preprints.
-    local delta_this_month=0
-    local delta_last_month=1
-
-    for delta in "${delta_last_month}" "${delta_this_month}"; do
+    local first_month_delta=1
+    local last_month_delta=0
+    for ((delta=${first_month_delta}; delta >= ${last_month_delta}; delta -= 1)); do
       folder_name=`biorxiv_folder_name "${delta}"`
       log "importing full text biorxiv preprints from ${BIORXIV_PATH}/${folder_name}"
       eeb run --rm flask python -m neotools.rxiv2neo "/app/biorxiv/$folder_name" --type meca
