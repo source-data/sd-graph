@@ -64,8 +64,14 @@ on_exit(){
   local last_cmd=$current_command
   if [ $last_exit_code -eq 0 ]; then
     mail_developers "$STAGE_NAME $PERIODICITY: success" "$last_cmd exited with code $last_exit_code"
+
+    # clean up docker resources after successful deployments: --rmi=local removes the flask image
+    # that is built during execution of this script, --volumes is mostly for removing the anonymous
+    # volumes that hold the venv.
+    docker-compose -f docker-compose.yml -f docker-compose.deploy.yml down --rmi=local --volumes
   else
     mail_developers "$STAGE_NAME $PERIODICITY: errors" "$last_cmd exited with code $last_exit_code on line $line_number"
+    # keep docker resources around after failed deployments for debugging/viewing container logs
   fi
 }
 
@@ -239,10 +245,9 @@ update_local_neo4j() {
 dump_local_neo4j(){
   local DUMP_NAME=$1
   log "[dumping neo4j] - start"
-  log "  * stopping docker-compose"
 
-  # Make sure you dont have your neo4j running:
-  docker-compose -f docker-compose.yml -f docker-compose.deploy.yml down
+  log "  * stopping docker-compose"
+  docker-compose -f docker-compose.yml -f docker-compose.deploy.yml stop
 
   # rotate backup once before we dump, just in case some old files are still there
   rotate_backup
@@ -256,8 +261,7 @@ dump_local_neo4j(){
   log "[dumping neo4j] - done"
 
   log "  * restarting docker-compose"
-  docker-compose -f docker-compose.yml -f docker-compose.deploy.yml up --detach flask
-
+  docker-compose -f docker-compose.yml -f docker-compose.deploy.yml start
 }
 
 deploy_database(){
@@ -318,10 +322,6 @@ send_notifications(){
       --no-dry-run
   # Update the time when the last notifications were sent to now.
   date "${date_format}" > "${file_last_notification}"
-}
-
-cleanup() {
-  docker-compose -f docker-compose.yml -f docker-compose.deploy.yml down
 }
 
 main() {
@@ -424,7 +424,6 @@ main() {
     rotate_backup
     cache_warmup $REMOTE_HOST
     send_notifications
-    cleanup
   ) 9>${LOCK_FILE}
 
   log "##"
