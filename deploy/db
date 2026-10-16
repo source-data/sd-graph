@@ -161,7 +161,7 @@ update_local_neo4j() {
     docker-compose -f docker-compose.yml -f docker-compose.deploy.yml run --rm flask python -m peerreview.summarization --no-dry-run
   }
 
-  mark_peer_reviews_as_published() {
+  mark_preprint_as_published() {
     # weekly
     log "updates publication status (find out if a preprint has been published in a journal)"
     docker-compose -f docker-compose.yml -f docker-compose.deploy.yml run --rm flask python -m peerreview.published # maybe run only once a week?
@@ -233,7 +233,11 @@ update_local_neo4j() {
   fi
 
   import_peer_reviews
-  mark_peer_reviews_as_published
+
+  if [ "$PERIODICITY" == "weekly" ]; then
+    mark_preprint_as_published
+  fi
+
   smarttag
   merge_and_precompute_graph
   update_close
