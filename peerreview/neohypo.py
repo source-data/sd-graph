@@ -51,7 +51,7 @@ def doi_from_uri(uri):
     # how to do a uri-to-doi inverse lookup?
     # dirty for now: strip away the version postfix from the biorixv uri
     # 'https://www.biorxiv.org/content/10.1101/733097v2'
-    doi = re.search(r'10\.1101/[\d\.]+', uri)
+    doi = re.search(r'10\.(1101|64898)/[\d\.]+', uri)
     if doi is not None:
         doi = doi.group(0)
     else:
@@ -491,13 +491,13 @@ if __name__ == '__main__':
         'elife': '10.7554',
     }
     TARGET_PREFIXES = {
-        'biorxiv': '10.1101',
-        'elife': '10.7554',
+        'biorxiv': ['10.1101', '10.64898'],
+        'elife': ['10.7554'],
     }
     if source == 'pci':
-        CrossRefReviewFinder(DB).run(SOURCE_PREFIXES[source.lower()], [TARGET_PREFIXES[target.lower()]], type_filter='', limit=limit)
+        CrossRefReviewFinder(DB).run(SOURCE_PREFIXES[source.lower()], TARGET_PREFIXES[target.lower()], type_filter='', limit=limit)
     elif source == 'rrc19':
-        CrossRefReviewFinder(DB).run(SOURCE_PREFIXES[source.lower()], [TARGET_PREFIXES[target.lower()]], type_filter='type:peer-review', limit=limit)
+        CrossRefReviewFinder(DB).run(SOURCE_PREFIXES[source.lower()], TARGET_PREFIXES[target.lower()], type_filter='type:peer-review', limit=limit)
     elif source == 'hypothesis':
         Hypothelink(DB, HYPO).run(HYPO_GROUP_IDS)
     else:
