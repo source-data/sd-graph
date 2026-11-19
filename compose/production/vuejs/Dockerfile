@@ -8,7 +8,7 @@ COPY ./frontend .
 RUN npm run build
 
 # production stage
-FROM nginx:stable-alpine as production-stage
+FROM nginx:1.30-alpine as production-stage
 COPY --from=build-stage /app/dist /usr/share/nginx/html
 COPY ./compose/production/vuejs/nginx-default.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
