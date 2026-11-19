@@ -6,7 +6,8 @@ readme = "README.md"
 dependencies = [
     "connexion",
     "connexion[swagger-ui]",
-    "python_dateutil",
+    "python_dateutil<3",
     "setuptools",
+    "six",
     "swagger-ui-bundle>=0.0.2",
 ]
