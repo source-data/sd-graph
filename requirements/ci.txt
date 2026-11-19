@@ -1,3 +1,3 @@
-black
-flake8
-ruff
+black==25.12.0
+flake8==7.5.0
+ruff==0.15.12
